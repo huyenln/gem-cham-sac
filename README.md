@@ -1,119 +1,238 @@
 # Gem Chạm Sắc · Website
 
-Chạm Xanh · Gửi Sắc
+Static site cho cửa hàng Gem Chạm Sắc.
+Stack: HTML + CSS + 1 file JS nhỏ. Không build step.
 
 ---
 
-## 1. Cấu trúc thư mục
+## Cấu trúc
 
 ```
-gem-cham-sac/
-├── index.html              ← Trang chủ
-├── cau-chuyen.html         ← Câu chuyện
-├── mo-hinh.html            ← Mô hình
-├── san-pham.html           ← Sản phẩm
-├── ghe-tham.html           ← Ghé thăm
-├── css/
-│   └── style.css
-├── js/
-│   └── main.js             ← Mobile menu toggle
+.
+├── index.html              Trang chủ
+├── cau-chuyen.html
+├── mo-hinh.html
+├── san-pham.html
+├── ghe-tham.html
+├── 404.html                Fallback page
+├── CNAME                   Custom domain config (cho GitHub Pages)
+├── css/style.css
+├── js/main.js
 └── images/
-    ├── logo/               ← Logo Gem
-    ├── mascot/             ← 6 pose Udon
-    └── products/           ← Ảnh sản phẩm (full + thumb)
+    ├── logo/
+    ├── mascot/             6 pose Udon (PNG transparent)
+    └── products/           Ảnh sản phẩm (full + thumb)
 ```
 
 ---
 
-## 2. Deploy lên Netlify (5 phút, miễn phí, không cần code)
+## Deploy lên GitHub Pages + Namecheap domain
 
-1. Truy cập **https://app.netlify.com/drop**
-2. Kéo thả nguyên folder `gem-cham-sac` vào trang
-3. Netlify tự deploy, trả về URL dạng `https://random-name.netlify.app`
-4. Nhấn "Site settings" → "Change site name" → đổi thành `gem-cham-sac` (URL: `https://gem-cham-sac.netlify.app`)
+Repo đã được `git init` sẵn với 1 commit ban đầu trên branch `main`. Bạn chỉ cần làm tiếp các bước sau.
 
-**Custom domain (nếu có):**
-- Settings → Domain management → Add custom domain
-- Trỏ DNS theo hướng dẫn Netlify
+### Bước 1 — Mua domain trên Namecheap
 
----
+1. Vào https://www.namecheap.com
+2. Search `gemchamsac` → chọn `.com` hoặc `.org` (hoặc cả hai)
+3. Checkout. Khi checkout:
+   - **Bỏ tick** "WhoisGuard" nếu muốn save tiền (~$3/năm). Namecheap free WhoisGuard mặc định bây giờ — verify lại
+   - **Bỏ tick** mọi addon khác (SSL, Hosting, Email — không cần, GitHub Pages free SSL)
+4. Sau khi mua xong: vào **Domain List** trong account, sẽ thấy domain mới
 
-## 3. Setup Mailerlite (để email signup hoạt động)
+### Bước 2 — Tạo GitHub repo
 
-1. Đăng ký tại **https://www.mailerlite.com** (free tier 1000 subscribers)
-2. Vào **Forms → Create embedded form**
-3. Đặt tên (vd: "Gem subscribers"), customize style với màu:
-   - Primary: `#87965A` (sage deep)
-   - Background: `#FBF6EE` (paper white)
-4. Copy embed code Mailerlite cung cấp
-5. Mở 2 file `index.html` và `ghe-tham.html`, tìm comment `<!-- MAILERLITE FORM ... -->`
-6. **Xóa** đoạn `<form class="email-form" onsubmit=...>...</form>` ngay sau comment đó
-7. **Paste** embed code Mailerlite vào chỗ đó
-8. Save và re-upload lên Netlify (kéo thả lại folder)
+Trên GitHub.com:
 
----
+1. New repository
+2. Tên: `gem-cham-sac` (hoặc `gemchamsac` — đặt sao cũng được)
+3. **Public** (bắt buộc với GitHub Pages free)
+4. **KHÔNG** tick "Add README" / ".gitignore" / "license" (vì local đã có)
+5. Click "Create repository"
+6. Sau khi tạo, GitHub sẽ show URL dạng `git@github.com:USERNAME/gem-cham-sac.git` — copy lại
 
-## 4. Thêm/sửa ảnh sản phẩm
+### Bước 3 — Push code local lên GitHub
 
-**Format ảnh:**
-- Tên file: `<category>-<tên>.jpg` (vd: `vai-vun-tui-moi.jpg`)
-- Thumbnail (cho grid): `<tên>-thumb.jpg` (kích thước 600x600px)
-- Full image: max 1600px chiều dài, JPEG quality 85
+Trên máy bạn (terminal):
 
-**Thêm sản phẩm mới vào trang Sản phẩm:**
-- Mở file `san-pham.html`
-- Tìm section của category tương ứng
-- Copy 1 block `<div class="product-card">...</div>`
-- Sửa `src`, `alt`, tên sản phẩm, mô tả
+```bash
+cd /path/to/gem-cham-sac
+git remote add origin git@github.com:USERNAME/gem-cham-sac.git
+git push -u origin main
+```
 
----
+Thay `USERNAME` bằng GitHub username của bạn. Nếu chưa setup SSH key cho GitHub, dùng HTTPS URL thay thế: `https://github.com/USERNAME/gem-cham-sac.git`
 
-## 5. Thêm/sửa text
+### Bước 4 — Enable GitHub Pages
 
-Mọi text trên website nằm trong các file HTML. Tìm bằng Ctrl+F → sửa → save.
+Trên GitHub.com, ở repo vừa tạo:
 
-**Các chỗ cần update khi có thông tin:**
+1. Vào tab **Settings** → sidebar trái → **Pages**
+2. Phần **Source**: chọn **Deploy from a branch**
+3. Phần **Branch**: chọn **main** + folder **/(root)** → **Save**
+4. Đợi 1-2 phút, refresh → sẽ thấy "Your site is live at `https://USERNAME.github.io/gem-cham-sac/`"
 
-- **Ngày kết thúc Season 01**: hiện đang để "tháng 10/2026" - sửa trong:
-  - `index.html` (Season banner)
-  - `ghe-tham.html` (Season banner)
+Test thử URL đó — site đã live, nhưng URL chưa pretty. Tiếp tục:
 
-- **Giờ mở cửa**: đang để "Mời bạn liên hệ trước qua điện thoại" - sửa trong:
-  - `ghe-tham.html` (contact info block)
+### Bước 5 — Cấu hình DNS trên Namecheap
 
-- **Link IG/FB**: hiện để `href="#"` - sửa thành link thật trong tất cả 5 files (footer)
+Trên Namecheap, vào **Domain List** → **Manage** domain bạn vừa mua → tab **Advanced DNS**.
 
----
+Xóa tất cả record có sẵn (Namecheap parking page). Thêm các record sau:
 
-## 6. Test trước khi deploy
+| Type | Host | Value | TTL |
+|------|------|-------|-----|
+| A Record | @ | 185.199.108.153 | Automatic |
+| A Record | @ | 185.199.109.153 | Automatic |
+| A Record | @ | 185.199.110.153 | Automatic |
+| A Record | @ | 185.199.111.153 | Automatic |
+| CNAME Record | www | USERNAME.github.io. | Automatic |
 
-Mở `index.html` trực tiếp bằng browser (Chrome/Firefox) để xem trước. Test:
-- Trên desktop: full layout
-- Trên mobile: F12 → device toolbar → iPhone view
-- Click qua tất cả 5 trang xem link OK không
+(Thay `USERNAME` bằng GitHub username — chú ý có dấu `.` cuối)
 
----
+4 IP của A record là IP của GitHub Pages, đừng đổi.
 
-## 7. Maintenance notes
+Save lại. DNS propagation mất 5 phút đến vài giờ (thường 10-30 phút).
 
-**Khi muốn thêm bài blog/tạp chí (Season 02+):**
-- Tạo folder `blog/`
-- Mỗi bài là 1 file HTML
-- Thêm link "Tạp chí" vào navbar 5 files
+### Bước 6 — Verify custom domain trên GitHub
 
-**Khi muốn đổi màu sắc:**
-- Sửa các CSS variables ở đầu file `css/style.css` (block `:root`)
+Quay lại GitHub repo → **Settings** → **Pages**:
 
-**Khi muốn đổi mascot Udon sang pose khác:**
-- Có sẵn 6 pose trong `images/mascot/`: sit_stare, sit_happy, lying_smile, lying_flat, standing, portrait
-- Tìm `src="images/mascot/udon_X.png"` trong HTML, đổi thành pose khác
+1. Phần **Custom domain**: gõ `gemchamsac.com` (hoặc domain bạn mua) → **Save**
+2. File `CNAME` trong repo sẽ tự update với domain này (đã có sẵn `gemchamsac.com` rồi — nếu bạn dùng domain khác, sửa file `CNAME` rồi commit/push lại)
+3. Đợi DNS check pass (vài phút) — sẽ thấy "DNS check successful" ✓
+4. Tick **Enforce HTTPS** (xuất hiện sau khi DNS pass) — cho HTTPS tự động
+
+Đợi 10-30 phút để HTTPS cert được provision (Let's Encrypt). Sau đó:
+
+✅ Truy cập **https://gemchamsac.com** → website live với HTTPS.
 
 ---
 
-## 8. Future ideas (Season 02+)
+## Update website sau này
 
-- Trang Blog/Tạp chí
-- Lịch workshop với calendar embed
-- Form đăng ký workshop trực tiếp
-- Online catalog với product detail pages
-- E-commerce integration (Shopify Lite hoặc WooCommerce)
+### Cách 1 — Git CLI (recommend cho changes lớn)
+
+```bash
+cd /path/to/gem-cham-sac
+# Sửa file ...
+git add .
+git commit -m "Mô tả thay đổi"
+git push
+```
+
+Sau ~30 giây, thay đổi sẽ live trên website.
+
+### Cách 2 — GitHub web UI (quick fix)
+
+1. Vào file trên GitHub repo
+2. Click icon bút chì (Edit)
+3. Sửa → scroll xuống → **Commit changes**
+4. Live trong ~30 giây
+
+Tốt cho việc sửa text nhanh. Không tốt cho việc upload nhiều file ảnh.
+
+### Cách 3 — Upload file qua GitHub UI (cho ảnh mới)
+
+1. Vào folder `images/products/` trên GitHub
+2. **Add file** → **Upload files**
+3. Kéo thả ảnh vào → Commit
+
+Nhớ tên file đúng convention (xem section "Add product images" bên dưới).
+
+---
+
+## Tasks còn lại trước khi go-live
+
+### ⚠️ Bắt buộc
+
+- [ ] **Setup Mailerlite** — form email signup đang là demo (alert popup). Xem section dưới.
+- [ ] **Update placeholder text:**
+  - [ ] Ngày kết thúc Season 01 trong `index.html` và `ghe-tham.html` (đang để "tháng 10/2026")
+  - [ ] Giờ mở cửa trong `ghe-tham.html` (đang để "Mời bạn liên hệ trước qua điện thoại")
+  - [ ] Link Instagram trong tất cả 5 files (đang `href="#"`)
+  - [ ] Link Facebook trong tất cả 5 files (đang `href="#"`)
+
+### Nice to have
+
+- [ ] Test trên iPhone/Android thật (không chỉ devtool responsive)
+- [ ] Add Google Analytics (nếu muốn track traffic)
+- [ ] Add OpenGraph image cho khi share lên FB/Zalo
+
+---
+
+## Setup Mailerlite
+
+1. Đăng ký free tại https://www.mailerlite.com (free tier 1000 subscribers)
+2. Verify email
+3. Vào **Forms** → **Create embedded form**
+4. Customize style:
+   - Primary color: `#87965A`
+   - Background: `#FBF6EE` (hoặc transparent)
+   - Font: System default OK
+5. Copy đoạn HTML embed Mailerlite cung cấp
+6. Mở 2 file `index.html` và `ghe-tham.html`
+7. Tìm comment `<!-- MAILERLITE FORM HOME -->` và `<!-- MAILERLITE FORM GHETHAM -->`
+8. **Xóa** đoạn `<form class="email-form" onsubmit=...>...</form>` ngay sau comment đó
+9. **Paste** embed code Mailerlite vào chỗ vừa xóa
+10. Commit + push → form hoạt động thật
+
+---
+
+## Add product images
+
+Tên file convention:
+- `<category>-<tên>.jpg` — full image, max 1600px chiều dài, JPEG quality 85
+- `<category>-<tên>-thumb.jpg` — square 600x600, JPEG quality 82
+
+Category prefix: `vai-vun-`, `vpp-`, `2hand-`, `gom-`
+
+Thêm product vào trang Sản phẩm: mở `san-pham.html`, copy 1 block `<div class="product-card">...</div>`, sửa `src` + `alt` + tên.
+
+---
+
+## Edit colors / fonts
+
+Mở `css/style.css`, sửa các CSS variables ở đầu file (block `:root { ... }`).
+
+---
+
+## Tech notes
+
+- **Không có build step.** Edit HTML/CSS trực tiếp.
+- **Fonts** load từ Google Fonts CDN — cần internet để load font lúc đầu, sau đó cache.
+- **Lazy loading** đã được set cho ảnh sản phẩm (`loading="lazy"`).
+- **Mobile responsive** breakpoints: 640px, 768px, 960px.
+- **Browser support:** Chrome/Safari/Firefox/Edge versions từ 2022 trở đi.
+
+---
+
+## Troubleshooting
+
+**"Your site is live at..." nhưng custom domain không work:**
+- DNS chưa propagate. Đợi 30 phút - 24h.
+- Check DNS bằng `dig gemchamsac.com` hoặc https://www.whatsmydns.net
+
+**HTTPS không work / "Certificate not yet provisioned":**
+- Cert Let's Encrypt cần đến 24h để provision. Đợi tiếp.
+- Đảm bảo file `CNAME` có domain đúng + DNS records đúng.
+
+**Site update không reflect:**
+- Hard refresh: Cmd/Ctrl + Shift + R
+- Check GitHub Actions tab xem deploy có lỗi không.
+
+**Ảnh không hiển thị:**
+- Check tên file case-sensitive (Linux server case-sensitive, Mac không)
+- Check path bắt đầu bằng `images/` (không phải `/images/` hay `./images/`)
+
+---
+
+## Files map
+
+| Page | File | Purpose |
+|------|------|---------|
+| / | `index.html` | Trang chủ, hero, season banner, products teaser, email signup |
+| /cau-chuyen.html | Story page, mission, vision, values, 4 commitments |
+| /mo-hinh.html | 6-step circular process, roadmap 4 seasons |
+| /san-pham.html | Catalog 4 categories |
+| /ghe-tham.html | Address, hours, contact, map, prominent email signup |
+| /404.html | Fallback nếu URL không tồn tại |
