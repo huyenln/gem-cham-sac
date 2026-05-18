@@ -1,0 +1,24 @@
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
+
+# Backup files
+*.bak
+*.backup
+*.orig
+
+# Local-only assets (uncomment if you have working files not for public)
+# /drafts/
+# /raw-photos/
