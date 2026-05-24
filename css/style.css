@@ -735,6 +735,15 @@ p:last-child { margin-bottom: 0; }
     display: grid;
     grid-template-columns: 220px 1fr;
     gap: var(--space-12);
+    max-width: var(--container-max);    /* same 1200px as .container */
+    margin-inline: auto;                /* centers it */
+    padding-inline: var(--space-12);    /* matches .container at >=768px */
+  }
+
+  /* Neutralize nested .container inside grid since wrapper handles it */
+  .products-layout .container {
+    max-width: none;
+    padding-inline: 0;
   }
 
   .products-content {
