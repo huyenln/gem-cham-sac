@@ -726,11 +726,30 @@ p:last-child { margin-bottom: 0; }
 /* PRODUCT TOC */
 .product-toc { position: relative; }
 
+/* Scroll offset for sections to account for sticky header + TOC */
+#phu-kien-vai-vun,
+#van-phong-pham,
+#quan-ao-2hand,
+#gom-su-nhat,
+#dich-vu {
+  scroll-margin-top: 130px;
+}
+
+@media (min-width: 768px) {
+  #phu-kien-vai-vun,
+  #van-phong-pham,
+  #quan-ao-2hand,
+  #gom-su-nhat,
+  #dich-vu {
+    scroll-margin-top: 100px;
+  }
+}
+
 /* Mobile TOC: Horizontal sticky pills */
 .product-toc-mobile {
   display: block;
   position: sticky;
-  top: 80px;
+  top: 0;
   z-index: 50;
   background: var(--paper-cream);
   border-bottom: 1px solid rgba(135, 150, 90, 0.15);
