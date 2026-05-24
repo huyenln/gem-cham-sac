@@ -402,7 +402,7 @@ p:last-child { margin-bottom: 0; }
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease, transform 0.2s ease;
-  z-index: 100;
+  z-index: 200;
 }
 
 .udon-popup[aria-hidden="false"] {
@@ -421,7 +421,7 @@ p:last-child { margin-bottom: 0; }
     width: auto;
     max-width: none;
     transform: scale(0.95);
-    z-index: 101;
+    z-index: 200;
   }
 
   .udon-popup[aria-hidden="false"] {
@@ -485,7 +485,7 @@ p:last-child { margin-bottom: 0; }
   position: fixed;
   inset: 0;
   background: rgba(61, 74, 46, 0.4);
-  z-index: 100;
+  z-index: 199;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease;
