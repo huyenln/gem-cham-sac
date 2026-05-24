@@ -88,8 +88,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Open popup
     function openUdonPopup() {
+      const isMobile = window.matchMedia('(max-width: 767px)').matches;
+
+      if (isMobile) {
+        // Mobile: move popup to body for backdrop layering
+        if (udonPopup.parentElement !== document.body) {
+          document.body.appendChild(udonPopup);
+        }
+        // Show backdrop on mobile
+        createBackdrop();
+      } else {
+        // Desktop: move popup inside .hero-mascot for relative positioning
+        const heroMascot = document.querySelector('.hero-mascot');
+        if (heroMascot && udonPopup.parentElement !== heroMascot) {
+          heroMascot.appendChild(udonPopup);
+        }
+        // No backdrop on desktop
+      }
+
       udonPopup.setAttribute('aria-hidden', 'false');
-      createBackdrop();
       udonCloseBtn.focus();
     }
 
@@ -139,6 +156,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!udonPopup.contains(e.target) && !udonTrigger.contains(e.target)) {
           closeUdonPopup();
         }
+      }
+    });
+
+    // Close popup on resize across breakpoint (cleaner UX)
+    window.addEventListener('resize', function() {
+      if (udonPopup.getAttribute('aria-hidden') === 'false') {
+        closeUdonPopup();
       }
     });
   }
