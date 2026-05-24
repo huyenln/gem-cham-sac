@@ -724,7 +724,6 @@ p:last-child { margin-bottom: 0; }
 .map-embed iframe { width: 100%; height: 100%; border: 0; }
 
 /* PRODUCT TOC */
-.product-toc { position: relative; }
 
 /* Scroll offset for sections to account for sticky header + TOC */
 #phu-kien-vai-vun,
