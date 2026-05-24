@@ -16,7 +16,7 @@
 
   --font-display: 'Nunito', system-ui, sans-serif;
   --font-body: 'Be Vietnam Pro', system-ui, sans-serif;
-  --font-hand: 'Caveat', cursive;
+  --font-hand: 'Dancing Script', cursive;
 
   --text-xs: clamp(0.75rem, 0.7rem + 0.2vw, 0.85rem);
   --text-sm: clamp(0.875rem, 0.82rem + 0.25vw, 1rem);
