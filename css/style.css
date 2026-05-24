@@ -748,7 +748,7 @@ p:last-child { margin-bottom: 0; }
 .product-toc-mobile {
   display: block;
   position: sticky;
-  top: 0;
+  top: 72px;
   z-index: 50;
   background: var(--paper-cream);
   border-bottom: 1px solid rgba(135, 150, 90, 0.15);
