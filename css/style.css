@@ -725,6 +725,23 @@ p:last-child { margin-bottom: 0; }
 
 /* PRODUCT TOC */
 
+/* Grid layout for desktop TOC + content */
+.products-layout {
+  /* Mobile: single column, sidebar hidden via existing display:none */
+}
+
+@media (min-width: 768px) {
+  .products-layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: var(--space-12);
+  }
+
+  .products-content {
+    min-width: 0; /* prevent grid blowout */
+  }
+}
+
 /* Scroll offset for sections to account for sticky header + TOC */
 #phu-kien-vai-vun,
 #van-phong-pham,
@@ -802,10 +819,9 @@ p:last-child { margin-bottom: 0; }
 
   .product-toc-sidebar {
     display: block;
-    position: fixed;
-    left: var(--space-8);
-    top: 140px;
-    width: 200px;
+    position: sticky;
+    top: 100px;
+    align-self: start;
     z-index: 40;
   }
 
@@ -850,12 +866,6 @@ p:last-child { margin-bottom: 0; }
     font-weight: 500;
     border-left-color: var(--sage-deep);
     padding-left: var(--space-4);
-  }
-}
-
-@media (min-width: 1400px) {
-  .product-toc-sidebar {
-    left: calc((100vw - 1200px) / 2 - 240px);
   }
 }
 
