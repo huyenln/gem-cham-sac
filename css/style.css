@@ -731,7 +731,7 @@ p:last-child { margin-bottom: 0; }
 #quan-ao-2hand,
 #gom-su-nhat,
 #dich-vu {
-  scroll-margin-top: 145px;
+  scroll-margin-top: 150px; /* Mobile: header ~72px + TOC pills ~67px */
 }
 
 @media (min-width: 768px) {
@@ -740,7 +740,7 @@ p:last-child { margin-bottom: 0; }
   #quan-ao-2hand,
   #gom-su-nhat,
   #dich-vu {
-    scroll-margin-top: 100px;
+    scroll-margin-top: 90px; /* Desktop: header ~72px only (sidebar doesn't cover content) */
   }
 }
 
