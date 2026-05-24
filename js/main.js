@@ -60,15 +60,43 @@ document.addEventListener('DOMContentLoaded', function() {
   const udonCloseBtn = document.querySelector('.udon-popup-close');
 
   if (udonTrigger && udonPopup && udonCloseBtn) {
+    let backdrop = null;
+
+    // Create backdrop element
+    function createBackdrop() {
+      backdrop = document.createElement('div');
+      backdrop.className = 'udon-popup-backdrop';
+      backdrop.addEventListener('click', closeUdonPopup);
+      document.body.appendChild(backdrop);
+      // Trigger reflow to enable transition
+      backdrop.offsetHeight;
+      backdrop.classList.add('visible');
+    }
+
+    // Remove backdrop element
+    function removeBackdrop() {
+      if (backdrop) {
+        backdrop.classList.remove('visible');
+        setTimeout(() => {
+          if (backdrop && backdrop.parentNode) {
+            backdrop.parentNode.removeChild(backdrop);
+            backdrop = null;
+          }
+        }, 200); // Match CSS transition duration
+      }
+    }
+
     // Open popup
     function openUdonPopup() {
       udonPopup.setAttribute('aria-hidden', 'false');
+      createBackdrop();
       udonCloseBtn.focus();
     }
 
     // Close popup
     function closeUdonPopup() {
       udonPopup.setAttribute('aria-hidden', 'true');
+      removeBackdrop();
       udonTrigger.focus();
     }
 
