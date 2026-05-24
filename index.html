@@ -90,8 +90,21 @@
         </div>
 
         <div class="hero-mascot">
-          <img src="images/mascot/udon_sit_stare.png" alt="Udon - mascot của Gem Chạm Sắc" loading="eager">
-          <span class="hero-mascot-note top-right">~ đây là Udon ~</span>
+          <button class="udon-trigger" aria-label="Xem câu chuyện về Udon" tabindex="0">
+            <img src="images/mascot/udon_sit_stare.png" alt="Udon - mascot của Gem Chạm Sắc" loading="eager">
+            <span class="hero-mascot-note top-right">~ đây là Udon ~</span>
+          </button>
+
+          <!-- Udon popup -->
+          <div class="udon-popup" role="dialog" aria-labelledby="udon-popup-title" aria-hidden="true">
+            <button class="udon-popup-close" aria-label="Đóng">&times;</button>
+            <h3 id="udon-popup-title" class="udon-popup-title">Udon</h3>
+            <p class="udon-popup-body">
+              Udon là chú chó tam thể của chủ tiệm.<br><br>
+              Udon chưa đến cửa hàng được (chúng mình còn đang thuyết phục chủ nhà), nhưng Udon ở đây — trông website, chào mỗi ai ghé qua.
+            </p>
+            <p class="udon-popup-footer">❤ Hẹn gặp Udon ở Season 02?</p>
+          </div>
         </div>
       </div>
     </div>

@@ -339,12 +339,120 @@ p:last-child { margin-bottom: 0; }
   position: absolute;
   font-family: var(--font-hand);
   font-size: var(--text-lg);
-  color: var(--sage-deep);
+  color: var(--kraft);
   transform: rotate(-3deg);
   pointer-events: none;
 }
 .hero-mascot-note.top-right { top: 5%; right: 0; }
 @media (max-width: 899px) { .hero-mascot-note { font-size: var(--text-base); } }
+
+/* Udon trigger button */
+.udon-trigger {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0.2s ease;
+}
+.udon-trigger:hover {
+  transform: scale(1.02);
+}
+.udon-trigger:focus {
+  outline: 2px dashed var(--sage-deep);
+  outline-offset: 8px;
+}
+
+/* Udon popup */
+.udon-popup {
+  position: absolute;
+  top: 20%;
+  right: -340px;
+  max-width: 320px;
+  background: var(--paper-white);
+  border: 1px solid rgba(135, 150, 90, 0.3);
+  border-radius: 8px;
+  padding: var(--space-6);
+  box-shadow: 0 8px 24px rgba(61, 74, 46, 0.15);
+  transform: rotate(-1.5deg) scale(0.95);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 100;
+}
+
+.udon-popup[aria-hidden="false"] {
+  opacity: 1;
+  transform: rotate(-1.5deg) scale(1);
+  pointer-events: auto;
+}
+
+@media (max-width: 767px) {
+  .udon-popup {
+    top: auto;
+    bottom: -360px;
+    right: 50%;
+    transform: translateX(50%) rotate(-1.5deg) scale(0.95);
+  }
+
+  .udon-popup[aria-hidden="false"] {
+    transform: translateX(50%) rotate(-1.5deg) scale(1);
+  }
+}
+
+.udon-popup-close {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  background: none;
+  border: none;
+  font-size: 28px;
+  line-height: 1;
+  color: var(--ink-soft);
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.udon-popup-close:hover {
+  color: var(--ink-dark);
+}
+
+.udon-popup-close:focus {
+  outline: 2px solid var(--sage-deep);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.udon-popup-title {
+  font-family: var(--font-hand);
+  font-size: var(--text-2xl);
+  color: var(--sage-deep);
+  margin-bottom: var(--space-4);
+  font-weight: 600;
+}
+
+.udon-popup-body {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--ink-body);
+  line-height: 1.7;
+  margin-bottom: var(--space-4);
+}
+
+.udon-popup-footer {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--kraft);
+  margin-bottom: 0;
+}
 
 /* SECTION HEADER */
 .section-header { text-align: center; margin-bottom: var(--space-12); }

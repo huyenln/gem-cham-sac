@@ -53,4 +53,65 @@ document.addEventListener('DOMContentLoaded', function() {
       sections.forEach(section => observer.observe(section));
     }
   }
+
+  // Udon easter egg popup
+  const udonTrigger = document.querySelector('.udon-trigger');
+  const udonPopup = document.querySelector('.udon-popup');
+  const udonCloseBtn = document.querySelector('.udon-popup-close');
+
+  if (udonTrigger && udonPopup && udonCloseBtn) {
+    // Open popup
+    function openUdonPopup() {
+      udonPopup.setAttribute('aria-hidden', 'false');
+      udonCloseBtn.focus();
+    }
+
+    // Close popup
+    function closeUdonPopup() {
+      udonPopup.setAttribute('aria-hidden', 'true');
+      udonTrigger.focus();
+    }
+
+    // Toggle popup on Udon click
+    udonTrigger.addEventListener('click', function() {
+      const isHidden = udonPopup.getAttribute('aria-hidden') === 'true';
+      if (isHidden) {
+        openUdonPopup();
+      } else {
+        closeUdonPopup();
+      }
+    });
+
+    // Keyboard support for trigger
+    udonTrigger.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        const isHidden = udonPopup.getAttribute('aria-hidden') === 'true';
+        if (isHidden) {
+          openUdonPopup();
+        } else {
+          closeUdonPopup();
+        }
+      }
+    });
+
+    // Close button
+    udonCloseBtn.addEventListener('click', closeUdonPopup);
+
+    // Close on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && udonPopup.getAttribute('aria-hidden') === 'false') {
+        closeUdonPopup();
+      }
+    });
+
+    // Close when clicking outside popup (but not on Udon)
+    document.addEventListener('click', function(e) {
+      if (udonPopup.getAttribute('aria-hidden') === 'false') {
+        if (!udonPopup.contains(e.target) && !udonTrigger.contains(e.target)) {
+          closeUdonPopup();
+        }
+      }
+    });
+  }
 });
