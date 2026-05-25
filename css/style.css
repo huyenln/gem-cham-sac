@@ -405,6 +405,20 @@ p:last-child { margin-bottom: 0; }
   z-index: 200;
 }
 
+/* Mid-size desktop (768-1399px): fixed positioning from body level */
+@media (min-width: 768px) and (max-width: 1399px) {
+  .udon-popup {
+    position: fixed;
+    top: 50%;
+    right: var(--space-8);
+    transform: translateY(-50%) rotate(-1.5deg) scale(0.95);
+  }
+
+  .udon-popup[aria-hidden="false"] {
+    transform: translateY(-50%) rotate(-1.5deg) scale(1);
+  }
+}
+
 .udon-popup[aria-hidden="false"] {
   opacity: 1;
   transform: rotate(-1.5deg) scale(1);
