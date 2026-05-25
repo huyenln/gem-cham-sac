@@ -389,40 +389,34 @@ p:last-child { margin-bottom: 0; }
 
 /* Udon popup */
 .udon-popup {
-  position: absolute;
-  top: 20%;
-  right: -340px;
-  max-width: 320px;
+  position: fixed;
+  top: 70%;
+  right: var(--space-4);
+  width: 320px;
+  max-width: calc(100vw - var(--space-8));
   background: var(--paper-white);
   border: 1px solid rgba(135, 150, 90, 0.3);
   border-radius: 8px;
   padding: var(--space-6);
   box-shadow: 0 8px 24px rgba(61, 74, 46, 0.15);
-  transform: rotate(-1.5deg) scale(0.95);
+  transform: translateY(-50%) rotate(-1.5deg) scale(0.95);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease, transform 0.2s ease;
   z-index: 200;
 }
 
-/* Mid-size desktop (768-1399px): fixed positioning from body level */
-@media (min-width: 768px) and (max-width: 1399px) {
-  .udon-popup {
-    position: fixed;
-    top: 50%;
-    right: var(--space-8);
-    transform: translateY(-50%) rotate(-1.5deg) scale(0.95);
-  }
-
-  .udon-popup[aria-hidden="false"] {
-    transform: translateY(-50%) rotate(-1.5deg) scale(1);
-  }
-}
-
 .udon-popup[aria-hidden="false"] {
   opacity: 1;
-  transform: rotate(-1.5deg) scale(1);
+  transform: translateY(-50%) rotate(-1.5deg) scale(1);
   pointer-events: auto;
+}
+
+/* Wide desktop (≥1701px): popup không đè Udon, center vertically */
+@media (min-width: 1701px) {
+  .udon-popup {
+    top: 50%;
+  }
 }
 
 @media (max-width: 767px) {

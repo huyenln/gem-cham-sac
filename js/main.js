@@ -89,29 +89,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // Open popup
     function openUdonPopup() {
       const isMobile = window.matchMedia('(max-width: 767px)').matches;
-      const isMidSize = window.matchMedia('(min-width: 768px) and (max-width: 1399px)').matches;
 
       if (isMobile) {
         // Mobile: move popup to body for backdrop layering
         if (udonPopup.parentElement !== document.body) {
           document.body.appendChild(udonPopup);
         }
-        // Show backdrop on mobile
         createBackdrop();
-      } else if (isMidSize) {
-        // Mid-size (768-1399px): keep at body to prevent content shift
-        if (udonPopup.parentElement !== document.body) {
-          document.body.appendChild(udonPopup);
-        }
-        // No backdrop on mid-size desktop
-      } else {
-        // Large desktop (1400px+): move popup inside .hero-mascot for relative positioning
-        const heroMascot = document.querySelector('.hero-mascot');
-        if (heroMascot && udonPopup.parentElement !== heroMascot) {
-          heroMascot.appendChild(udonPopup);
-        }
-        // No backdrop on large desktop
       }
+      // Desktop: position:fixed in CSS handles positioning, no DOM move needed
 
       udonPopup.setAttribute('aria-hidden', 'false');
       udonCloseBtn.focus();
