@@ -1048,3 +1048,35 @@ p:last-child { margin-bottom: 0; }
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
 @media print { .site-header, .site-footer, .email-section { display: none; } }
+
+/* Mailerlite success message */
+.ml-success {
+  background: var(--paper-white);
+  border: 1px solid rgba(135, 150, 90, 0.3);
+  border-radius: 8px;
+  padding: var(--space-6);
+  margin-top: var(--space-4);
+  text-align: center;
+}
+
+.ml-success p {
+  margin: 0 0 var(--space-2) 0;
+  color: var(--ink-body);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
+
+.ml-success p:last-child {
+  margin-bottom: 0;
+}
+
+.ml-success p strong {
+  color: var(--ink-heading, var(--ink-body));
+  font-weight: 600;
+}
+
+/* Disabled state cho submit button */
+form.ml-subscribe button[type="submit"]:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

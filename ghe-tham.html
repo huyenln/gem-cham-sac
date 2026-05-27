@@ -172,11 +172,21 @@
           · Có dự án vì môi trường cần thêm bạn đồng hành
         </p>
 
-        <!-- MAILERLITE FORM GHETHAM — thay bằng embed code Mailerlite khi setup xong -->
-        <form class="email-form" onsubmit="event.preventDefault(); this.querySelector('input').value=''; alert('Cảm ơn bạn! (Đây là demo - Mailerlite chưa được tích hợp)');">
-          <input type="email" placeholder="email của bạn" required aria-label="Email">
+        <!-- MAILERLITE FORM GHETHAM -->
+        <form class="email-form ml-subscribe"
+              action="https://assets.mailerlite.com/jsonp/2380127/forms/188507892064716532/subscribe"
+              method="post"
+              data-form-id="41774242">
+          <input type="email" name="fields[email]" placeholder="email của bạn" required aria-label="Email" autocomplete="email">
+          <input type="hidden" name="ml-submit" value="1">
+          <input type="hidden" name="anticsrf" value="true">
           <button type="submit" class="btn btn-primary">Đồng hành cùng Gem</button>
         </form>
+
+        <div class="ml-success" hidden>
+          <p><strong>Cảm ơn bạn đã ghé qua.</strong></p>
+          <p>Chúng mình vừa gửi một email xác nhận đến hộp thư của bạn. Mở email và xác nhận để bắt đầu đồng hành cùng Gem nhé. Nếu chưa thấy, kiểm tra cả mục Spam/Promotions giúp chúng mình.</p>
+        </div>
 
         <p class="fine-print">Chúng mình không spam. Chỉ gửi khi thực sự có điều đáng kể.</p>
       </div>
@@ -215,5 +225,6 @@
   </footer>
 
   <script src="js/main.js"></script>
+  <script src="js/mailerlite.js" defer></script>
 </body>
 </html>
