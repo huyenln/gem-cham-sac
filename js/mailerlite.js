@@ -17,9 +17,12 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
       }
 
+      const tr = (key, fallback) =>
+        (window.GemI18n && window.GemI18n.t(key)) || fallback;
+
       const originalButtonText = button.textContent;
       button.disabled = true;
-      button.textContent = 'Đang gửi...';
+      button.textContent = tr('common.ml_sending', 'Đang gửi...');
 
       try {
         const formData = new FormData(form);
@@ -40,7 +43,7 @@ document.addEventListener('DOMContentLoaded', function () {
       } catch (err) {
         button.disabled = false;
         button.textContent = originalButtonText;
-        alert('Có lỗi xảy ra. Bạn thử lại sau giúp chúng mình nhé.');
+        alert(tr('common.ml_error', 'Có lỗi xảy ra. Bạn thử lại sau giúp chúng mình nhé.'));
         console.error('Mailerlite submit error:', err);
       }
     });

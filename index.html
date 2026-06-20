@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gem Chạm Sắc · Chạm Xanh · Gửi Sắc</title>
+  <title data-i18n="title.home">Gem Chạm Sắc · Chạm Xanh · Gửi Sắc</title>
   <meta name="description" content="Gem Chạm Sắc — một cửa hàng nhỏ theo mô hình kinh tế tuần hoàn, cho mọi thứ một vòng đời mới. Pop-up Experience Store đang mở cửa tại Hà Nội.">
 
   <meta property="og:title" content="Gem Chạm Sắc · Chạm Xanh · Gửi Sắc">
@@ -18,12 +18,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600&family=Dancing+Script:wght@400;500;600&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="css/style.css">
+  <script src="js/i18n.js" defer></script>
 </head>
 <body>
 
   <!-- HEADER -->
   <header class="site-header">
-    <nav class="nav" aria-label="Điều hướng chính">
+    <nav class="nav" data-i18n-attr="aria-label:nav.aria" aria-label="Điều hướng chính">
       <a href="index.html" class="nav-brand">
         <img src="images/logo/gem_logo_icon_120.png" alt="Gem Chạm Sắc" width="48" height="48">
         <span class="nav-brand-text">
@@ -33,29 +34,34 @@
       </a>
 
       <ul class="nav-menu">
-        <li><a href="index.html" class="active">Trang chủ</a></li>
-        <li><a href="cau-chuyen.html">Câu chuyện</a></li>
-        <li><a href="mo-hinh.html">Mô hình</a></li>
-        <li><a href="san-pham.html">Sản phẩm</a></li>
-        <li><a href="ghe-tham.html">Ghé thăm</a></li>
+        <li><a href="index.html" class="active" data-i18n="nav.home">Trang chủ</a></li>
+        <li><a href="cau-chuyen.html" data-i18n="nav.story">Câu chuyện</a></li>
+        <li><a href="mo-hinh.html" data-i18n="nav.model">Mô hình</a></li>
+        <li><a href="san-pham.html" data-i18n="nav.products">Sản phẩm</a></li>
+        <li><a href="ghe-tham.html" data-i18n="nav.visit">Ghé thăm</a></li>
       </ul>
 
       <span class="nav-season">
         <span class="pulse"></span>
-        Season 01 đang diễn ra
+        <span data-i18n="nav.season">Season 01 đang diễn ra</span>
       </span>
 
-      <button class="nav-toggle" aria-label="Mở menu">
+      <div class="lang-switch" role="group" data-i18n-attr="aria-label:lang.aria" aria-label="Ngôn ngữ">
+        <button type="button" class="lang-btn" data-lang="vi" aria-pressed="true">VI</button>
+        <button type="button" class="lang-btn" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+
+      <button class="nav-toggle" data-i18n-attr="aria-label:nav.menu_aria" aria-label="Mở menu">
         <span></span><span></span><span></span>
       </button>
     </nav>
 
     <div class="nav-mobile">
-      <a href="index.html">Trang chủ</a>
-      <a href="cau-chuyen.html">Câu chuyện</a>
-      <a href="mo-hinh.html">Mô hình</a>
-      <a href="san-pham.html">Sản phẩm</a>
-      <a href="ghe-tham.html">Ghé thăm</a>
+      <a href="index.html" data-i18n="nav.home">Trang chủ</a>
+      <a href="cau-chuyen.html" data-i18n="nav.story">Câu chuyện</a>
+      <a href="mo-hinh.html" data-i18n="nav.model">Mô hình</a>
+      <a href="san-pham.html" data-i18n="nav.products">Sản phẩm</a>
+      <a href="ghe-tham.html" data-i18n="nav.visit">Ghé thăm</a>
     </div>
   </header>
 
@@ -68,13 +74,13 @@
         <div class="hero-content">
           <p class="hero-tagline">Chạm Xanh · Gửi Sắc</p>
 
-          <h1>
+          <h1 data-i18n-html="home.hero_title">
             Hành trình của<br>
             những điều<br>
             <span class="accent">tử tế và bền vững.</span>
           </h1>
 
-          <p class="hero-desc">
+          <p class="hero-desc" data-i18n="home.hero_desc">
             Gem Chạm Sắc bắt đầu từ những bước nhỏ,
             với mong muốn tạo ra một không gian sống chậm,
             nuôi dưỡng thói quen tốt cho bản thân và môi trường.
@@ -82,17 +88,17 @@
 
           <div class="hero-actions">
             <a href="ghe-tham.html" class="btn btn-primary">
-              Ghé thăm Season 01
+              <span data-i18n="home.hero_cta1">Ghé thăm Season 01</span>
               <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </a>
-            <a href="cau-chuyen.html" class="btn btn-ghost">Đọc câu chuyện</a>
+            <a href="cau-chuyen.html" class="btn btn-ghost" data-i18n="home.hero_cta2">Đọc câu chuyện</a>
           </div>
         </div>
 
         <div class="hero-mascot">
-          <button class="udon-trigger" aria-label="Xem câu chuyện về Udon" tabindex="0">
-            <img src="images/mascot/udon_sit_stare.png" alt="Udon - mascot của Gem Chạm Sắc" loading="eager">
-            <span class="hero-mascot-note top-right">~ đây là Udon ~</span>
+          <button class="udon-trigger" data-i18n-attr="aria-label:home.udon_aria" aria-label="Xem câu chuyện về Udon" tabindex="0">
+            <img src="images/mascot/udon_sit_stare.png" data-i18n-attr="alt:home.udon_alt" alt="Udon - mascot của Gem Chạm Sắc" loading="eager">
+            <span class="hero-mascot-note top-right" data-i18n="home.udon_note">~ đây là Udon ~</span>
           </button>
         </div>
       </div>
@@ -105,13 +111,13 @@
       <div class="season-banner">
         <div class="season-grid">
           <div class="season-image">
-            <img src="images/products/vai-vun-tham-tron.jpg" alt="Không gian Gem Chạm Sắc">
+            <img src="images/products/vai-vun-tham-tron.jpg" data-i18n-attr="alt:home.season_img_alt" alt="Không gian Gem Chạm Sắc">
           </div>
 
           <div class="season-text">
-            <p class="season-label"><span class="pulse"></span> Season 01 · đang mở cửa</p>
+            <p class="season-label"><span class="pulse"></span> <span data-i18n="home.season_label">Season 01 · đang mở cửa</span></p>
             <h2>Pop-up Experience Store</h2>
-            <p class="lead">
+            <p class="lead" data-i18n="home.season_desc">
               Một không gian nhỏ để trải nghiệm sống bền vững,
               kết nối với cộng đồng những người yêu lối sống chậm,
               và bắt đầu hành trình "chạm xanh" cùng chúng mình.
@@ -120,16 +126,16 @@
             <div class="season-meta">
               <div class="season-meta-item">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                <span>Số 69, Ngõ 12 Nguyễn Văn Huyên<br>Phường Nghĩa Đô, Hà Nội</span>
+                <span data-i18n-html="home.season_addr">Số 69, Ngõ 12 Nguyễn Văn Huyên<br>Phường Nghĩa Đô, Hà Nội</span>
               </div>
               <div class="season-meta-item">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                <span>Mở cửa đến tháng 10/2026</span>
+                <span data-i18n="home.season_until">Mở cửa đến tháng 10/2026</span>
               </div>
             </div>
 
             <a href="ghe-tham.html" class="btn btn-text">
-              Xem chi tiết & ghé thăm
+              <span data-i18n="home.season_cta">Xem chi tiết & ghé thăm</span>
               <svg class="arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </a>
           </div>
@@ -142,8 +148,8 @@
   <section class="section">
     <div class="container">
       <div class="section-header">
-        <span class="hand">Điều chúng mình giữ,</span>
-        <h2>Ba điều làm nên Gem.</h2>
+        <span class="hand" data-i18n="home.values_eyebrow">Điều chúng mình giữ,</span>
+        <h2 data-i18n="home.values_title">Ba điều làm nên Gem.</h2>
       </div>
 
       <div class="values-grid">
@@ -151,24 +157,24 @@
           <div class="card-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2C7 7 7 13 12 22c5-9 5-15 0-20z"/><path d="M12 22V8"/></svg>
           </div>
-          <h3>Bền vững</h3>
-          <p>Mỗi nỗ lực nhỏ, đều đáng được giữ lại.</p>
+          <h3 data-i18n="values.sustainable_h">Bền vững</h3>
+          <p data-i18n="values.sustainable_p">Mỗi nỗ lực nhỏ, đều đáng được giữ lại.</p>
         </div>
 
         <div class="card value-card">
           <div class="card-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 11V6a3 3 0 016 0v5"/><path d="M5 11h14l-1.5 9h-11z"/></svg>
           </div>
-          <h3>Sự tiện lợi</h3>
-          <p>Sống xanh dễ tiếp cận cho nhiều đối tượng.</p>
+          <h3 data-i18n="values.convenient_h">Sự tiện lợi</h3>
+          <p data-i18n="values.convenient_p">Sống xanh dễ tiếp cận cho nhiều đối tượng.</p>
         </div>
 
         <div class="card value-card">
           <div class="card-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2l2 6h6l-5 4 2 7-7-4-7 4 2-7-5-4h6z"/></svg>
           </div>
-          <h3>Sáng tạo</h3>
-          <p>Mỗi món đồ là một cách kể chuyện riêng.</p>
+          <h3 data-i18n="values.creative_h">Sáng tạo</h3>
+          <p data-i18n="values.creative_p">Mỗi món đồ là một cách kể chuyện riêng.</p>
         </div>
       </div>
     </div>
@@ -178,48 +184,48 @@
   <section class="section">
     <div class="container">
       <div class="section-header">
-        <span class="hand">Sản phẩm,</span>
-        <h2>Đa dạng các sắc màu từ Gem.</h2>
-        <p>Mỗi sản phẩm độc bản, không cái nào giống cái nào — bởi vải vụn và đồ secondhand đều có câu chuyện riêng.</p>
+        <span class="hand" data-i18n="home.products_eyebrow">Sản phẩm,</span>
+        <h2 data-i18n="home.products_title">Đa dạng các sắc màu từ Gem.</h2>
+        <p data-i18n="home.products_desc">Mỗi sản phẩm độc bản, không cái nào giống cái nào — bởi vải vụn và đồ secondhand đều có câu chuyện riêng.</p>
       </div>
 
       <div class="product-grid">
         <div class="product-card">
           <div class="product-card-image">
-            <img src="images/products/vai-vun-tui-deo-cheo-thumb.jpg" alt="Túi đeo chéo vải caro" loading="lazy">
+            <img src="images/products/vai-vun-tui-deo-cheo-thumb.jpg" data-i18n-attr="alt:home.t1_h" alt="Túi đeo chéo vải caro" loading="lazy">
           </div>
-          <h4>Túi đeo chéo</h4>
-          <p>Vải caro · upcycled</p>
+          <h4 data-i18n="home.t1_h">Túi đeo chéo</h4>
+          <p data-i18n="home.t1_p">Vải caro · upcycled</p>
         </div>
 
         <div class="product-card">
           <div class="product-card-image">
-            <img src="images/products/vai-vun-goi-patchwork-thumb.jpg" alt="Gối vải ghép" loading="lazy">
+            <img src="images/products/vai-vun-goi-patchwork-thumb.jpg" data-i18n-attr="alt:home.t2_h" alt="Gối vải ghép" loading="lazy">
           </div>
-          <h4>Gối vải ghép</h4>
-          <p>Patchwork · vintage</p>
+          <h4 data-i18n="home.t2_h">Gối vải ghép</h4>
+          <p data-i18n="home.t2_p">Patchwork · vintage</p>
         </div>
 
         <div class="product-card">
           <div class="product-card-image">
-            <img src="images/products/vai-vun-tham-tron-thumb.jpg" alt="Thảm vải ghép tròn" loading="lazy">
+            <img src="images/products/vai-vun-tham-tron-thumb.jpg" data-i18n-attr="alt:home.t3_h" alt="Thảm vải ghép tròn" loading="lazy">
           </div>
-          <h4>Thảm vải ghép</h4>
-          <p>Patchwork · thủ công</p>
+          <h4 data-i18n="home.t3_h">Thảm vải ghép</h4>
+          <p data-i18n="home.t3_p">Patchwork · thủ công</p>
         </div>
 
         <div class="product-card">
           <div class="product-card-image">
-            <img src="images/products/vpp-so-kraft-thumb.jpg" alt="Sổ kraft handmade" loading="lazy">
+            <img src="images/products/vpp-so-kraft-thumb.jpg" data-i18n-attr="alt:home.t4_h" alt="Sổ kraft handmade" loading="lazy">
           </div>
-          <h4>Sổ kraft Gem</h4>
-          <p>Giấy tái chế</p>
+          <h4 data-i18n="home.t4_h">Sổ kraft Gem</h4>
+          <p data-i18n="home.t4_p">Giấy tái chế</p>
         </div>
       </div>
 
       <div style="text-align: center; margin-top: var(--space-12);">
         <a href="san-pham.html" class="btn btn-ghost">
-          Khám phá tất cả sản phẩm
+          <span data-i18n="home.products_more">Khám phá tất cả sản phẩm</span>
           <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </a>
       </div>
@@ -230,10 +236,10 @@
   <section class="section">
     <div class="container-narrow">
       <div class="email-section">
-        <img src="images/mascot/udon_sit_happy.png" alt="Udon cười" class="email-mascot">
-        <span class="hand">Đồng hành,</span>
-        <h2>Cùng nhau, một vòng đời nữa.</h2>
-        <p>
+        <img src="images/mascot/udon_sit_happy.png" data-i18n-attr="alt:home.email_mascot_alt" alt="Udon cười" class="email-mascot">
+        <span class="hand" data-i18n="home.email_eyebrow">Đồng hành,</span>
+        <h2 data-i18n="home.email_title">Cùng nhau, một vòng đời nữa.</h2>
+        <p data-i18n="home.email_desc">
           Để chúng mình báo bạn khi có workshop mới, khi Season 02 mở cửa,
           hay khi có một dự án nho nhỏ vì môi trường cần thêm bạn đồng hành.
         </p>
@@ -243,18 +249,18 @@
               action="https://assets.mailerlite.com/jsonp/2380127/forms/188507892064716532/subscribe"
               method="post"
               data-form-id="41774242">
-          <input type="email" name="fields[email]" placeholder="email của bạn" required aria-label="Email" autocomplete="email">
+          <input type="email" name="fields[email]" data-i18n-attr="placeholder:common.email_ph|aria-label:common.email_ph" placeholder="email của bạn" required aria-label="Email" autocomplete="email">
           <input type="hidden" name="ml-submit" value="1">
           <input type="hidden" name="anticsrf" value="true">
-          <button type="submit" class="btn btn-primary">Đăng ký</button>
+          <button type="submit" class="btn btn-primary" data-i18n="home.email_btn">Đăng ký</button>
         </form>
 
         <div class="ml-success" hidden>
-          <p><strong>Cảm ơn bạn đã ghé qua.</strong></p>
-          <p>Chúng mình vừa gửi một email xác nhận đến hộp thư của bạn. Mở email và xác nhận để bắt đầu đồng hành cùng Gem nhé. Nếu chưa thấy, kiểm tra cả mục Spam/Promotions giúp chúng mình.</p>
+          <p><strong data-i18n="common.ml_success_h">Cảm ơn bạn đã ghé qua.</strong></p>
+          <p data-i18n="common.ml_success_p">Chúng mình vừa gửi một email xác nhận đến hộp thư của bạn. Mở email và xác nhận để bắt đầu đồng hành cùng Gem nhé. Nếu chưa thấy, kiểm tra cả mục Spam/Promotions giúp chúng mình.</p>
         </div>
 
-        <p class="fine-print">Chúng mình không spam. Chỉ gửi khi thực sự có điều đáng kể.</p>
+        <p class="fine-print" data-i18n="common.fine_print">Chúng mình không spam. Chỉ gửi khi thực sự có điều đáng kể.</p>
       </div>
     </div>
   </section>
@@ -273,30 +279,36 @@
               <small>Chạm Xanh · Gửi Sắc</small>
             </span>
           </a>
-          <p>Mỗi một nỗ lực dù là nhỏ bé nhất, đều đáng được trân quý.</p>
+          <p data-i18n="footer.tagline">Mỗi một nỗ lực dù là nhỏ bé nhất, đều đáng được trân quý.</p>
         </div>
 
         <div>
-          <h4>Liên hệ</h4>
+          <h4 data-i18n="footer.contact">Liên hệ</h4>
           <a href="tel:+84824964996">(84) 82 496 4996</a>
-          <a href="https://www.google.com/maps/search/?api=1&query=Số+69+Ngõ+12+Nguyễn+Văn+Huyên+Hà+Nội" target="_blank" rel="noopener">Số 69, Ngõ 12 Nguyễn Văn Huyên, Phường Nghĩa Đô, Hà Nội</a>
+          <a href="https://www.google.com/maps/search/?api=1&query=Số+69+Ngõ+12+Nguyễn+Văn+Huyên+Hà+Nội" target="_blank" rel="noopener" data-i18n="footer.address">Số 69, Ngõ 12 Nguyễn Văn Huyên, Phường Nghĩa Đô, Hà Nội</a>
         </div>
 
         <div>
-          <h4>Theo dõi</h4>
+          <h4 data-i18n="footer.follow">Theo dõi</h4>
           <a href="https://gemchamsac.com">gemchamsac.com</a>
           <div class="footer-socials">
-            <!-- <a href="#" aria-label="Instagram">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.4a4 4 0 11-8 0 4 4 0 018 0zM17.5 6.5h.01"/></svg>
-            </a> -->
             <a href="https://web.facebook.com/gemchamsac" target="_blank" rel="noopener" aria-label="Facebook">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
+            </a>
+            <a href="https://www.instagram.com/gemchamsac_studio/" target="_blank" rel="noopener" aria-label="Instagram">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.4a4 4 0 11-8 0 4 4 0 018 0zM17.5 6.5h.01"/></svg>
+            </a>
+            <a href="https://www.threads.com/@gemchamsac_studio" target="_blank" rel="noopener" aria-label="Threads">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.472 12.01v-.017c.03-3.579.879-6.43 2.525-8.482C5.845 1.205 8.6.024 12.18 0h.014c2.746.02 5.043.725 6.826 2.098 1.677 1.29 2.858 3.13 3.509 5.467l-2.04.569c-1.104-3.96-3.898-5.984-8.304-6.015-2.91.022-5.11.936-6.54 2.717C4.307 6.504 3.616 8.914 3.589 12c.027 3.086.718 5.496 2.057 7.166 1.43 1.781 3.631 2.695 6.54 2.717 2.623-.02 4.358-.631 5.8-2.045 1.647-1.613 1.618-3.593 1.09-4.798-.31-.71-.873-1.3-1.634-1.75-.192 1.352-.622 2.446-1.284 3.272-.886 1.102-2.14 1.704-3.73 1.79-1.202.065-2.361-.218-3.259-.801-1.063-.689-1.685-1.74-1.752-2.964-.065-1.19.408-2.285 1.33-3.082.88-.76 2.119-1.207 3.583-1.291a13.853 13.853 0 0 1 3.02.142c-.126-.742-.375-1.332-.74-1.755-.503-.582-1.279-.878-2.309-.88h-.029c-.826 0-1.951.227-2.674 1.302L9.587 7.45c.97-1.435 2.547-2.225 4.476-2.225h.039c3.227.02 5.149 2.007 5.34 5.484.11.046.217.094.322.144 1.484.7 2.572 1.756 3.144 3.055.797 1.81.871 4.756-1.527 7.11-1.835 1.8-4.064 2.612-7.208 2.634Z"/></svg>
+            </a>
+            <a href="https://www.youtube.com/channel/UCupMv7SO3-XLMTfST1RufHw" target="_blank" rel="noopener" aria-label="YouTube">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="4"/><path d="M10 8.5l6 3.5-6 3.5z"/></svg>
             </a>
           </div>
         </div>
       </div>
 
-      <div class="footer-bottom">
+      <div class="footer-bottom" data-i18n="footer.copyright">
         © 2026 Gem Chạm Sắc · Hướng về NetZero 2050
       </div>
     </div>
@@ -304,13 +316,13 @@
 
   <!-- Udon popup - at body level to escape stacking context -->
   <div class="udon-popup" role="dialog" aria-labelledby="udon-popup-title" aria-hidden="true">
-    <button class="udon-popup-close" aria-label="Đóng">&times;</button>
-    <h3 id="udon-popup-title" class="udon-popup-title">Udon</h3>
-    <p class="udon-popup-body">
+    <button class="udon-popup-close" data-i18n-attr="aria-label:home.popup_close" aria-label="Đóng">&times;</button>
+    <h3 id="udon-popup-title" class="udon-popup-title" data-i18n="home.popup_title">Udon</h3>
+    <p class="udon-popup-body" data-i18n-html="home.popup_body">
       Udon là chú chó tam thể của chủ tiệm.<br><br>
       Udon chưa đến cửa hàng được (chúng mình còn đang thuyết phục chủ nhà), nhưng Udon ở đây — trông website, chào mỗi ai ghé qua.
     </p>
-    <p class="udon-popup-footer">❤ Hẹn gặp Udon ở Season 02?</p>
+    <p class="udon-popup-footer" data-i18n="home.popup_footer">❤ Hẹn gặp Udon ở Season 02?</p>
   </div>
 
   <script src="js/main.js"></script>

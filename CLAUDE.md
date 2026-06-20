@@ -6,6 +6,7 @@ Static website (5 trang) cho cửa hàng **Gem Chạm Sắc** — pop-up store s
 
 **Tagline:** Chạm Xanh · Gửi Sắc
 **Stack:** HTML + CSS + tiny vanilla JS. KHÔNG framework, KHÔNG build step.
+**Ngôn ngữ:** Song ngữ — Tiếng Việt (mặc định) / English, chuyển bằng nút `VI · EN` trên header (xem `js/i18n.js`).
 **Hosting:** GitHub Pages, deploy on push to `main`.
 
 ---
@@ -21,15 +22,17 @@ Static website (5 trang) cho cửa hàng **Gem Chạm Sắc** — pop-up store s
 ├── ghe-tham.html             Ghé thăm (địa chỉ + map + email signup)
 ├── 404.html                  Fallback page (Udon lạc đường)
 ├── CNAME                     gemchamsac.com (cho GitHub Pages custom domain)
-├── css/style.css             Single CSS file, ~700 lines, design tokens ở đầu
-├── js/main.js                Tiny — chỉ mobile menu toggle
+├── css/style.css             Single CSS file (~1200 lines), design tokens ở đầu
+├── js/main.js                Mobile menu toggle, product TOC scroll, Udon popup
+├── js/i18n.js                Song ngữ VI/EN: engine + STRINGS dictionary (data-i18n)
+├── js/gallery.js             Carousel/lightbox ảnh sản phẩm (data-gallery)
+├── js/mailerlite.js          Email subscribe handler (fetch no-cors → inline success)
 ├── images/
 │   ├── logo/                 Logo Gem variants
 │   ├── mascot/               6 pose Udon (PNG transparent)
-│   └── products/             Product photos (full + thumb)
+│   └── products/             Product photos (full + thumb; -2/-3… cho ảnh thêm góc)
 ├── docs/
-│   ├── brand.md              Brand identity reference đầy đủ
-│   └── tasks.md              Pending tasks chi tiết với options
+│   └── prompts.md            Ghi chú prompt
 └── README.md                 Deploy guide cho Anna
 ```
 
@@ -43,7 +46,7 @@ Static website (5 trang) cho cửa hàng **Gem Chạm Sắc** — pop-up store s
 
 ## Brand identity (đã LOCK, không thay đổi)
 
-**Read `docs/brand.md` for full details.** Quick reference:
+Quick reference:
 
 - **Colors** (CSS variables ở đầu `css/style.css`):
   - `--sage-deep: #87965A` (primary)
@@ -54,7 +57,7 @@ Static website (5 trang) cho cửa hàng **Gem Chạm Sắc** — pop-up store s
 - **Fonts:**
   - Heading: Nunito 700-800
   - Body: Be Vietnam Pro 400-500
-  - Handwriting: Dancing Script (đang migrate từ Caveat — xem Task 1)
+  - Handwriting: Dancing Script (đã chốt — migration từ Caveat đã hoàn tất)
 - **Voice tone:**
   - Xưng "chúng mình" (KHÔNG "chúng tôi")
   - Câu ngắn, line break theo nhịp đọc
@@ -72,15 +75,17 @@ Static website (5 trang) cho cửa hàng **Gem Chạm Sắc** — pop-up store s
 **Scope & content:**
 - 5 pages only. Không tạo thêm trang mới trừ khi user yêu cầu rõ.
 - KHÔNG hiện giá sản phẩm trên web. "Ghé cửa hàng" để biết giá.
-- Email signup placeholder: Mailerlite. Form HTML hiện là demo (alert popup), user sẽ paste embed code thật sau.
+- Email signup: **Mailerlite đã tích hợp** (account `2380127`, form `41774242`). `js/mailerlite.js` submit bằng `fetch` mode `no-cors` rồi hiện success inline (`.ml-success`) — KHÔNG load script Mailerlite, KHÔNG redirect. Form ở `index.html` và `ghe-tham.html`.
 - KHÔNG có e-commerce, KHÔNG có cart, KHÔNG có user account.
 
-**Products (4 categories hiện tại + 1 sẽ thêm):**
-1. Phụ kiện vải vụn (10 items có ảnh)
-2. Văn phòng phẩm bền vững (1 item có ảnh)
-3. Quần áo 2hand (empty state với Udon)
-4. Gốm sứ Nhật (empty state với Udon)
-5. **Đồ trang trí và lưu niệm khác** (sẽ thêm — Task 8)
+**Products (5 categories):**
+1. Phụ kiện vải vụn (14 sản phẩm — tên thương hiệu in sẵn trên ảnh: Origami Pouch, Oxford Shirt, Reimagine the Denim, Bloom Charm, Túi bút kẹp sổ, Thảm/Gối Chắp Sắc, Lót Cốc, Túi đeo chéo, Bookmark, Ví & thẻ vải ghép, Bìa sổ, Dây đeo cổ tay, Dây buộc tóc)
+2. Văn phòng phẩm bền vững (Sổ kraft spiral + Sổ khâu tay tái chế — ký gửi từ "Tiệm sổ Cún Con")
+3. Quần áo 2hand (1 card → gallery 23 ảnh, mỗi ảnh tự ghi tên món)
+4. Gốm sứ Nhật (1 card → gallery)
+5. Set quà tặng (gift sets: Quà tốt nghiệp… — Bloom Charm + thiệp hoa + bookmark/scrunchie)
+
+Ảnh sản phẩm mới là full-size (1080px+), KHÔNG kèm `-thumb`. Thumbnail card 600×600 được tạo bằng Pillow (center-crop). `.heic` (vd `gom-2`) KHÔNG hiển thị trên browser — convert sang `.jpg` trước khi dùng.
 
 **Loại trừ:**
 - Generic pens (bút bi nhập), sticky notes, tiger cartoon bookmarks — **KHÔNG đăng lên web** dù có bán tại cửa hàng. Lý do: clash với brand vintage/sustainable.
@@ -94,7 +99,28 @@ Static website (5 trang) cho cửa hàng **Gem Chạm Sắc** — pop-up store s
 - HTTPS đã enforce qua Let's Encrypt.
 - KHÔNG add npm/build tools. KHÔNG convert sang React/Vue/Next.
 - KHÔNG move CSS sang Tailwind. Plain CSS với CSS variables là intentional.
-- KHÔNG dùng JavaScript framework. Vanilla JS chỉ khi cần (mobile menu, smooth scroll).
+- KHÔNG dùng JavaScript framework. Vanilla JS chỉ khi cần (mobile menu, i18n, carousel, mailerlite).
+
+**Đa ngôn ngữ (VI/EN):**
+- Engine: `js/i18n.js` — toàn bộ chữ dịch được nằm trong object `STRINGS` (key → `{ vi, en }`). Mặc định `vi`, lưu lựa chọn ở `localStorage['gem-lang']`, áp dụng across pages.
+- Trong HTML, đánh dấu chữ cần dịch bằng attribute:
+  - `data-i18n="key"` → set `textContent`
+  - `data-i18n-html="key"` → set `innerHTML` (dùng khi có `<br>`/`<em>`/`<strong>`)
+  - `data-i18n-attr="placeholder:key|alt:key2"` → set attribute (placeholder, alt, aria-label, title…)
+- Thêm/sửa chữ: cập nhật `STRINGS` trong `js/i18n.js` + gắn `data-i18n` trên element. Nhớ nhúng `<script src="js/i18n.js" defer></script>` trong `<head>` mỗi trang.
+- Brand giữ nguyên, KHÔNG dịch: "Gem Chạm Sắc", "Chạm Xanh · Gửi Sắc", tên season (Pop-up Experience Store…).
+
+**Carousel ảnh sản phẩm:**
+- Engine: `js/gallery.js` (chỉ nhúng ở `san-pham.html`). Mỗi `.product-card` có `data-gallery="base1,base2,…"` (tên file gốc trong `images/products/`, KHÔNG kèm path/đuôi) sẽ click mở được lightbox carousel.
+- Thêm ảnh cho 1 sản phẩm: thả file theo convention (`<name>-2.jpg`, `<name>-3.jpg`…) vào `images/products/` rồi nối tên base vào `data-gallery` của card đó.
+- Modal có sẵn câu CTA "Mời các bạn qua cửa hàng xem & mua nhé!" (key `products.modal_cta`).
+
+**Mạng xã hội (links chính thức):**
+- Facebook: `web.facebook.com/gemchamsac`
+- Instagram: `instagram.com/gemchamsac_studio`
+- Threads: `threads.com/@gemchamsac_studio`
+- YouTube: `youtube.com/channel/UCupMv7SO3-XLMTfST1RufHw`
+- Footer (icon) trên 5 trang chính + danh sách text ở `ghe-tham.html`.
 
 ---
 
@@ -138,7 +164,7 @@ Static website (5 trang) cho cửa hàng **Gem Chạm Sắc** — pop-up store s
 ## Workflow recommended
 
 Khi nhận task:
-1. Đọc `docs/tasks.md` xem task có chi tiết không
+1. Đọc `docs/` (nếu có) xem task có chi tiết không
 2. Nếu task không rõ, ask user clarification trước khi code
 3. **Đọc file liên quan trước khi edit** (đừng đoán)
 4. Edit → preview local bằng `python3 -m http.server 8000` → test trên browser
@@ -259,22 +285,28 @@ the testing before bothering the user.
 
 ## Active tasks
 
-Xem `docs/tasks.md` để chi tiết. Priority order:
+**Đã xong:**
+- ✅ Font tiếng Việt (Caveat → Dancing Script)
+- ✅ Mailerlite tích hợp thật (thay form demo)
+- ✅ Footer/social links (FB, IG, Threads, YouTube)
+- ✅ TOC trang Sản phẩm + "Dịch vụ đặc biệt" + CTA workshop
+- ✅ Carousel ảnh sản phẩm (click mở lightbox) + CTA "Mời qua cửa hàng"
+- ✅ Song ngữ VI/EN (toggle header, `js/i18n.js`)
 
-1. **🐛 Bug — Font tiếng Việt lỗi trên PC** (Caveat → Dancing Script)
-2. **🐛 Bug — Udon ở email signup bị crop**
-3. **🐛 Bug — Footer links chưa đúng (IG, FB)**
-4. **🐛 Bug — Bỏ "01 —", "02 —" ở page hero**
-5. **✨ Feat — Mục lục trang Sản phẩm (TOC)**
-6. **✨ Feat — Thêm category "Đồ trang trí và lưu niệm khác"**
-7. **✨ Feat — Thêm section "Dịch vụ đặc biệt" + CTA workshop ở homepage**
-8. **✨ Feat — Flow điều hướng "Tiếp theo" giữa các pages**
-9. **🎨 Polish — Câu chuyện + Mô hình page hấp dẫn hơn** (xem `docs/tasks.md` cho 8 ideas A-H)
+**Đã xong (tiếp):**
+- ✅ Ảnh thật + carousel cho tất cả sản phẩm (vải vụn, 2hand, gốm, set quà), tên thương hiệu mới
+- ✅ Category "Set quà tặng" (gift sets)
+- ✅ TOC active-highlight fix (selector `.product-toc-mobile/.product-toc-sidebar`)
+
+**Còn lại / ý tưởng:**
+- ✨ Flow điều hướng "Tiếp theo" giữa các pages
+- 🎨 Polish Câu chuyện + Mô hình page hấp dẫn hơn
+- 📝 Bản dịch EN là first-pass — Anna review & chỉnh trong `STRINGS` (`js/i18n.js`)
+- 📸 Cân nhắc nén ảnh full-size (nhiều ảnh ~1–4MB) để tải nhanh hơn
 
 ---
 
 ## Reference docs
 
-- `docs/brand.md` — Brand identity reference đầy đủ (colors, fonts, voice, do/don't)
-- `docs/tasks.md` — Detailed task descriptions + options
+- `docs/prompts.md` — Ghi chú prompt
 - `README.md` — Deploy guide for Anna

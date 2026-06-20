@@ -3,37 +3,42 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Không tìm thấy trang · Gem Chạm Sắc</title>
+  <title data-i18n="title.nf">Không tìm thấy trang · Gem Chạm Sắc</title>
   <link rel="icon" type="image/png" href="/images/logo/gem_logo_icon_120.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600&family=Dancing+Script:wght@400;500;600&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/i18n.js" defer></script>
 </head>
 <body>
 
   <header class="site-header">
-    <nav class="nav" aria-label="Điều hướng chính">
+    <nav class="nav" data-i18n-attr="aria-label:nav.aria" aria-label="Điều hướng chính">
       <a href="/" class="nav-brand">
         <img src="/images/logo/gem_logo_icon_120.png" alt="Gem Chạm Sắc" width="48" height="48">
         <span class="nav-brand-text">Gem Chạm Sắc<small>Chạm Xanh · Gửi Sắc</small></span>
       </a>
+      <div class="lang-switch" role="group" data-i18n-attr="aria-label:lang.aria" aria-label="Ngôn ngữ">
+        <button type="button" class="lang-btn" data-lang="vi" aria-pressed="true">VI</button>
+        <button type="button" class="lang-btn" data-lang="en" aria-pressed="false">EN</button>
+      </div>
     </nav>
   </header>
 
   <section class="section" style="min-height: 60vh; display: flex; align-items: center;">
     <div class="container-narrow text-center">
-      <img src="/images/mascot/udon_sit_stare.png" alt="Udon đang nhìn ngơ ngác" style="width: 200px; height: auto; margin: 0 auto var(--space-6);">
+      <img src="/images/mascot/udon_sit_stare.png" data-i18n-attr="alt:nf.udon_alt" alt="Udon đang nhìn ngơ ngác" style="width: 200px; height: auto; margin: 0 auto var(--space-6);">
 
-      <p class="hand" style="font-size: var(--text-2xl); color: var(--kraft); margin-bottom: var(--space-3);">404</p>
-      <h1 class="mb-4">Hình như Udon lạc đường rồi.</h1>
-      <p class="lead mb-8">
+      <p class="hand" style="font-size: var(--text-2xl); color: var(--kraft); margin-bottom: var(--space-3);" data-i18n="nf.eyebrow">404</p>
+      <h1 class="mb-4" data-i18n="nf.h1">Hình như Udon lạc đường rồi.</h1>
+      <p class="lead mb-8" data-i18n-html="nf.lead">
         Trang bạn đang tìm không có ở đây.<br>
         Có thể link đã cũ, hoặc Udon vừa chôn xương ở đâu đó. Mời bạn quay lại.
       </p>
 
       <a href="/" class="btn btn-primary">
-        Về trang chủ
+        <span data-i18n="nf.btn">Về trang chủ</span>
         <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </a>
     </div>
@@ -41,9 +46,8 @@
 
   <footer class="site-footer">
     <div class="container">
-      <div class="footer-bottom">© 2026 Gem Chạm Sắc · Hướng về NetZero 2050</div>
+      <div class="footer-bottom" data-i18n="footer.copyright">© 2026 Gem Chạm Sắc · Hướng về NetZero 2050</div>
     </div>
   </footer>
-
 </body>
 </html>

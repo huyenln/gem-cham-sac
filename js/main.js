@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Product TOC: Smooth scroll and active state
-  const tocItems = document.querySelectorAll('.product-toc .toc-item');
+  const tocItems = document.querySelectorAll('.product-toc-mobile .toc-item, .product-toc-sidebar .toc-item');
   if (tocItems.length > 0) {
     // Smooth scroll on click
     tocItems.forEach(item => {
@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Add active class to corresponding TOC item
             const id = entry.target.getAttribute('id');
-            const activeItems = document.querySelectorAll(`.product-toc .toc-item[href="#${id}"]`);
+            const activeItems = document.querySelectorAll(`.product-toc-mobile .toc-item[href="#${id}"], .product-toc-sidebar .toc-item[href="#${id}"]`);
             activeItems.forEach(item => item.classList.add('active'));
           }
         });
