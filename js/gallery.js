@@ -50,7 +50,8 @@
         '<div class="pg-info">' +
           '<h3 class="pg-title"></h3>' +
           '<p class="pg-sub"></p>' +
-          '<p class="pg-cta" data-i18n="products.modal_cta">' + t('products.modal_cta', 'Mời các bạn qua cửa hàng xem & mua nhé!') + '</p>' +
+          '<p class="pg-cta" data-i18n="products.modal_cta">' + t('products.modal_cta', 'Mời các bạn qua cửa hàng hoặc liên hệ với chúng mình qua các trang mạng xã hội nhé!') + '</p>' +
+          '<a class="pg-contact btn btn-primary" href="ghe-tham.html" data-i18n="products.modal_contact">' + t('products.modal_contact', 'Liên hệ với chúng mình') + '</a>' +
         '</div>' +
       '</div>';
     document.body.appendChild(modal);

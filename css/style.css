@@ -211,6 +211,23 @@ p:last-child { margin-bottom: 0; }
 .nav-mobile.open { display: flex; }
 .nav-mobile a { font-size: var(--text-base); color: var(--ink-body); font-weight: 500; padding: var(--space-2) 0; }
 
+/* Narrow screens: keep brand, lang switch AND the menu toggle on screen.
+   The toggle must never be pushed off-screen (was overflowing before). */
+@media (max-width: 959px) {
+  .nav { gap: var(--space-3); }
+  .nav-brand { flex: 0 1 auto; min-width: 0; }
+  .nav-brand-text { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lang-switch, .nav-toggle { flex-shrink: 0; }
+}
+/* On phones, reclaim horizontal space so the brand name stays whole:
+   tighter padding, a smaller logo, and drop the decorative tagline. */
+@media (max-width: 599px) {
+  .nav { padding-inline: var(--space-4); gap: var(--space-2); }
+  .nav-brand { gap: var(--space-2); }
+  .nav-brand img { height: 40px; }
+  .nav-brand-text small { display: none; }
+}
+
 /* BUTTONS */
 .btn {
   display: inline-flex;
@@ -611,6 +628,61 @@ p:last-child { margin-bottom: 0; }
 
 .product-card h4 { font-size: var(--text-base); margin-bottom: var(--space-1); font-weight: 700; }
 .product-card p { font-size: var(--text-sm); color: var(--ink-soft); margin-bottom: 0; }
+
+/* HOME PRODUCT SLIDESHOW — auto-rotating showcase on the home page */
+.home-slideshow { position: relative; max-width: 520px; margin-inline: auto; }
+.hs-frame {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--paper-white);
+  border: 1px solid rgba(135, 150, 90, 0.15);
+  box-shadow: var(--shadow-paper);
+}
+.hs-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+  pointer-events: none;
+}
+.hs-slide.active { opacity: 1; pointer-events: auto; }
+.hs-slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hs-caption {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  padding: var(--space-8) var(--space-6) var(--space-4);
+  background: linear-gradient(to top, rgba(61, 74, 46, 0.78), rgba(61, 74, 46, 0));
+  color: var(--paper-white);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-lg);
+  text-align: left;
+}
+.hs-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: rgba(251, 246, 238, 0.9);
+  color: var(--ink-dark);
+  font-size: 24px;
+  line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--shadow-soft);
+  z-index: 2;
+}
+.hs-nav:hover { background: var(--paper-white); }
+.hs-nav:focus-visible { outline: 2px solid var(--sage-deep); outline-offset: 2px; }
+.hs-prev { left: var(--space-3); }
+.hs-next { right: var(--space-3); }
+.hs-dots { display: flex; gap: 7px; justify-content: center; margin-top: var(--space-4); flex-wrap: wrap; }
+.hs-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--sage-light); padding: 0; transition: background 0.2s ease; }
+.hs-dot.active { background: var(--sage-deep); }
+.hs-dot:focus-visible { outline: 2px solid var(--sage-deep); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .hs-slide { transition: none; } }
 
 .product-featured {
   position: relative;
@@ -1234,4 +1306,5 @@ html[lang="en"] .season-card.active::before { content: '● ongoing'; }
 .pg-title { font-size: var(--text-xl); margin-bottom: var(--space-1); }
 .pg-sub { color: var(--ink-soft); font-size: var(--text-sm); margin-bottom: var(--space-3); }
 .pg-cta { font-family: var(--font-hand); font-size: var(--text-xl); color: var(--sage-deep); margin-bottom: 0; }
+.pg-contact { margin-top: var(--space-4); }
 body.pg-lock { overflow: hidden; }
