@@ -147,8 +147,8 @@ Nhớ tên file đúng convention (xem section "Add product images" bên dưới
 
 - [ ] **Setup Mailerlite** — form email signup đang là demo (alert popup). Xem section dưới.
 - [ ] **Update placeholder text:**
-  - [ ] Ngày kết thúc Season 01 trong `index.html` và `ghe-tham.html` (đang để "tháng 10/2026")
-  - [ ] Giờ mở cửa trong `ghe-tham.html` (đang để "Mời bạn liên hệ trước qua điện thoại")
+  - [x] ~~Ngày kết thúc Season 01~~ → Đã chuyển sang **Season 02: A Space To Stay** (studio dài hạn, địa điểm mới 114 Lê Gia Đỉnh)
+  - [x] ~~Giờ mở cửa~~ → Open Studio 09:00–19:00 hàng ngày (cập nhật trong `js/i18n.js` + `ghe-tham.html`)
   - [ ] Link Instagram trong tất cả 5 files (đang `href="#"`)
   - [ ] Link Facebook trong tất cả 5 files (đang `href="#"`)
 

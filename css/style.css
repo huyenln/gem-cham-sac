@@ -911,6 +911,45 @@ p:last-child { margin-bottom: 0; }
 .season-card ul li { padding: var(--space-1) 0; padding-left: var(--space-4); position: relative; }
 .season-card ul li::before { content: '·'; position: absolute; left: 0; color: var(--sage-deep); font-weight: 700; }
 
+/* Season 02 card doubles as a link to its story page */
+a.season-card { display: block; text-decoration: none; color: inherit; transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease; }
+a.season-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-paper); }
+.season-card-more {
+  display: inline-block;
+  margin-top: var(--space-4);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--sage-deep);
+}
+a.season-card:hover .season-card-more { color: var(--kraft); }
+
+/* Completed (past) season */
+.season-card.done { opacity: 0.7; }
+.season-card.done::before {
+  content: '✓ đã qua';
+  position: absolute;
+  top: var(--space-4); right: var(--space-4);
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  color: var(--ink-soft);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+html[lang="en"] .season-card.done::before { content: '✓ wrapped'; }
+
+/* SEASON 02 STORY PAGE */
+.stay-list { list-style: none; padding: 0; margin: var(--space-6) 0; }
+.stay-list li { position: relative; padding: var(--space-3) 0 var(--space-3) var(--space-7); color: var(--ink-body); border-bottom: 1px solid rgba(135, 150, 90, 0.12); }
+.stay-list li:last-child { border-bottom: 0; }
+.stay-list li::before { content: '—'; position: absolute; left: 0; top: var(--space-3); color: var(--sage-deep); font-weight: 700; }
+.s2-credits { font-family: var(--font-display); font-size: var(--text-2xl); color: var(--sage-deep); line-height: 1.4; margin-bottom: var(--space-8); }
+.s2-info { display: grid; gap: var(--space-4); max-width: 520px; margin: 0 auto var(--space-8); text-align: left; }
+.s2-info-item { background: var(--paper-white); border: 1px solid rgba(135, 150, 90, 0.15); border-radius: var(--radius-md); padding: var(--space-4) var(--space-6); }
+.s2-info-item .label { font-family: var(--font-display); font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--kraft); display: block; margin-bottom: var(--space-1); }
+.s2-info-item .val { color: var(--ink-body); font-size: var(--text-sm); }
+
 /* PROCESS */
 .process-grid { display: grid; gap: var(--space-6); grid-template-columns: 1fr; }
 @media (min-width: 768px) { .process-grid { grid-template-columns: repeat(3, 1fr); } }

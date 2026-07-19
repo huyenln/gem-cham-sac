@@ -20,6 +20,7 @@ Static website (5 trang) cho cửa hàng **Gem Chạm Sắc** — pop-up store s
 ├── mo-hinh.html              Mô hình (process + roadmap 4 seasons)
 ├── san-pham.html             Sản phẩm (4 categories + dịch vụ đặc biệt)
 ├── ghe-tham.html             Ghé thăm (địa chỉ + map + email signup)
+├── season-02.html            Câu chuyện Season 02 (A Space To Stay + link FB reel)
 ├── 404.html                  Fallback page (Udon lạc đường)
 ├── CNAME                     gemchamsac.com (cho GitHub Pages custom domain)
 ├── css/style.css             Single CSS file (~1200 lines), design tokens ở đầu
@@ -73,7 +74,7 @@ Quick reference:
 ## Decisions đã chốt (ĐỪNG hỏi lại)
 
 **Scope & content:**
-- 5 pages only. Không tạo thêm trang mới trừ khi user yêu cầu rõ.
+- 5 trang chính + `season-02.html` (câu chuyện Season 02, không nằm trong nav). Không tạo thêm trang mới trừ khi user yêu cầu rõ.
 - KHÔNG hiện giá sản phẩm trên web. "Ghé cửa hàng" để biết giá.
 - Email signup: **Mailerlite đã tích hợp** (account `2380127`, form `41774242`). `js/mailerlite.js` submit bằng `fetch` mode `no-cors` rồi hiện success inline (`.ml-success`) — KHÔNG load script Mailerlite, KHÔNG redirect. Form ở `index.html` và `ghe-tham.html`.
 - KHÔNG có e-commerce, KHÔNG có cart, KHÔNG có user account.
@@ -91,8 +92,12 @@ Quick reference:
 - Generic pens (bút bi nhập), sticky notes, tiger cartoon bookmarks — **KHÔNG đăng lên web** dù có bán tại cửa hàng. Lý do: clash với brand vintage/sustainable.
 
 **Season hiện tại:**
-- Season 01 — Pop-up Experience Store, kéo dài 5 tháng đến ~tháng 10/2026.
+- **Season 02 — A Space To Stay** (đang diễn ra). Studio dài hạn, Open Studio 09:00–19:00 hàng ngày.
+- Địa điểm hiện tại: Tầng 3, Trung tâm Văn hóa - Thông tin và Thể thao Phường Hai Bà Trưng, 114 Lê Gia Đỉnh, Hà Nội. (Season 01 pop-up ở Nguyễn Văn Huyên đã kết thúc.)
+- Season 02 được kiến tạo bởi: Gem Chạm Sắc × Cool Vietnam × Âm Nhạc Vân Long. Trang `season-02.html` link tới FB reel `https://web.facebook.com/reel/1935073537146672`.
+- Roadmap ở `mo-hinh.html`: card `.active` = Season đang diễn ra, card `.done` = season đã qua (badge "✓ đã qua"). Card Season 02 là `<a>` link sang `season-02.html`.
 - 4 seasons total: 01 Pop-up, 02 A Space To Stay, 03 Circular Creative Community, 04 Social Enterprise & Learning Space.
+- Địa chỉ/giờ mở cửa là chữ dịch trong `js/i18n.js` (`footer.address`, `home.season_addr`, `visit.addr_value`, `visit.hours_value`, `s2.*`…) — sửa ở đó, nhớ cập nhật cả fallback HTML + link Google Maps trong các trang.
 
 **Tech:**
 - Deploy: push lên `main` → GitHub Pages auto-deploy ~30s.
