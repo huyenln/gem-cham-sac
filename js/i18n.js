@@ -396,6 +396,17 @@
     init();
   }
 
+  // Merge extra strings in from another script. Call at top level (before
+  // DOMContentLoaded) so the first apply() already sees them.
+  function add(map) {
+    Object.keys(map || {}).forEach(function (k) { STRINGS[k] = map[k]; });
+  }
+
   // Expose for other scripts (e.g. mailerlite.js dynamic button text)
-  window.GemI18n = { setLang: setLang, getLang: getLang, t: function (k) { return t(k, getLang()); } };
+  window.GemI18n = {
+    setLang: setLang,
+    getLang: getLang,
+    add: add,
+    t: function (k) { return t(k, getLang()); }
+  };
 })();
