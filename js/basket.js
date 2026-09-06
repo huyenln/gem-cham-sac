@@ -20,9 +20,8 @@
      CONFIG — Anna: đây là phần cần sửa
      ====================================================================== */
   var CONFIG = {
-    // TODO: đổi sang email chính thức của shop. Đang tạm dùng email của Huyền
-    // để prototype gửi được ngay mà không gửi lạc vào hộp thư người khác.
-    shopEmail: 'lgnhuyen@gmail.com',
+    // Email chính thức của shop — đơn hàng gửi về đây.
+    shopEmail: 'gemchamsac@gmail.com',
 
     zaloPhone: '84824964996',        // zalo.me/<số> — bỏ dấu +, giữ mã 84
     messengerHandle: 'gemchamsac',   // m.me/<handle>
@@ -54,22 +53,22 @@
      Sprint 4: bảng này chuyển vào Supabase, em gái sửa giá trong trang quản trị.
      ====================================================================== */
   var CATALOG = [
-    { sku: 'origami',    name: 'products.origami_h',   desc: 'products.origami_p',   price: null, sprite: 'pouch' },
-    { sku: 'oxford',     name: 'products.oxford_h',    desc: 'products.oxford_p',    price: null, sprite: 'shirt' },
-    { sku: 'denim',      name: 'products.denim_h',     desc: 'products.denim_p',     price: null, sprite: 'denim' },
-    { sku: 'bloom',      name: 'products.bloom_h',     desc: 'products.bloom_p',     price: null,  sprite: 'bloom' },
-    { sku: 'tuibut',     name: 'products.tuibut_h',    desc: 'products.tuibut_p',    price: null,  sprite: 'pencase' },
-    { sku: 'bookmark',   name: 'products.bookmark_h',  desc: 'products.bookmark_p',  price: null,  sprite: 'bookmark' },
-    { sku: 'biaso',      name: 'products.biaso_h',     desc: 'products.biaso_p',     price: null, sprite: 'journal' },
-    { sku: 'daydeo',     name: 'products.daydeo_h',    desc: 'products.daydeo_p',    price: null,  sprite: 'strap' },
-    { sku: 'scrunchie',  name: 'products.scrunchie_h', desc: 'products.scrunchie_p', price: null,  sprite: 'scrunchie' },
-    { sku: 'lotcoc',     name: 'products.lotcoc_h',    desc: 'products.lotcoc_p',    price: null,  sprite: 'coaster' },
-    { sku: 'goi',        name: 'products.goi_h',       desc: 'products.goi_p',       price: null, sprite: 'pillow' },
-    { sku: 'tham',       name: 'products.tham_h',      desc: 'products.tham_p',      price: null, sprite: 'rug' },
-    { sku: 'so-kraft',   name: 'products.pv1_h',       desc: 'products.pv1_p',       price: null,  sprite: 'spiral' },
-    { sku: 'so-khau',    name: 'products.sokhau_h',    desc: 'products.sokhau_p',    price: null,  sprite: 'stitched' },
-    { sku: 'gom',        name: 'products.cgom_h',      desc: 'products.cgom_p',      price: null, sprite: 'ceramic' },
-    { sku: 'set-qua',    name: 'products.setqua_h',    desc: 'products.setqua_p',    price: null, sprite: 'gift' }
+    { sku: 'origami',   name: 'products.origami_h',    desc: 'products.origami_p',    price: 66000, sprite: 'pouch' },
+    { sku: 'oxford',    name: 'products.oxford_h',     desc: 'products.oxford_p',     price: 120000, sprite: 'shirt' },
+    { sku: 'denim',     name: 'products.denim_h',      desc: 'products.denim_p',      price: 120000, priceMax: 200000, sprite: 'denim' },
+    { sku: 'bloom',     name: 'products.bloom_h',      desc: 'products.bloom_p',      price: 20000, priceMax: 45000, sprite: 'bloom' },
+    { sku: 'tuibut',    name: 'products.tuibut_h',     desc: 'products.tuibut_p',     price: 35000, sprite: 'pencase' },
+    { sku: 'bookmark',  name: 'products.bookmark_h',   desc: 'products.bookmark_p',   price: 20000, sprite: 'bookmark' },
+    { sku: 'biaso',     name: 'products.biaso_h',      desc: 'products.biaso_p',      price: null, sprite: 'journal' },   // chưa có trong catalog
+    { sku: 'daydeo',    name: 'products.daydeo_h',     desc: 'products.daydeo_p',     price: null, sprite: 'strap' },   // chưa có trong catalog
+    { sku: 'scrunchie', name: 'products.scrunchie_h',  desc: 'products.scrunchie_p',  price: 15000, sprite: 'scrunchie' },
+    { sku: 'lotcoc',    name: 'products.lotcoc_h',     desc: 'products.lotcoc_p',     price: 25000, sprite: 'coaster' },
+    { sku: 'goi',       name: 'products.goi_h',        desc: 'products.goi_p',        price: 120000, priceMax: 300000, sprite: 'pillow' },
+    { sku: 'tham',      name: 'products.tham_h',       desc: 'products.tham_p',       price: null, sprite: 'rug' },   // hàng đặt theo yêu cầu
+    { sku: 'so-kraft',  name: 'products.pv1_h',        desc: 'products.pv1_p',        price: 80000, priceMax: 200000, sprite: 'spiral' },
+    { sku: 'so-khau',   name: 'products.sokhau_h',     desc: 'products.sokhau_p',     price: 100000, sprite: 'stitched' },
+    { sku: 'gom',       name: 'products.cgom_h',       desc: 'products.cgom_p',       price: null, sprite: 'ceramic' },   // chưa có trong catalog
+    { sku: 'set-qua',   name: 'products.setqua_h',     desc: 'products.setqua_p',     price: null, sprite: 'gift' },   // chưa có trong catalog
   ];
 
   /* ======================================================================
@@ -171,6 +170,8 @@
     'basket.minus_aria':    { vi: `Giảm một`, en: `Decrease by one` },
     'basket.plus_aria':     { vi: `Thêm một`, en: `Increase by one` },
     'basket.price_tbd':     { vi: `Liên hệ`, en: `Ask us` },
+    'basket.from':          { vi: `từ`, en: `from` },
+    'basket.has_range':     { vi: `Vài món có giá theo khoảng vì mỗi cái một mẫu vải khác nhau — chúng mình báo giá đúng khi nhắn lại nhé.`, en: `Some pieces have a price range because every one is made from different fabric — we'll confirm the exact price when we reply.` },
     'basket.all_unpriced':  { vi: `Chúng mình sẽ báo giá cho bạn khi nhắn lại nhé.`, en: `We'll quote you when we reply.` },
     'basket.some_unpriced': { vi: `Vài món chưa có giá trên web — chúng mình báo bạn khi nhắn lại nhé.`, en: `Some pieces aren't priced online yet — we'll let you know when we reply.` },
     'basket.subtotal':      { vi: `Tổng`, en: `Subtotal` },
@@ -273,24 +274,42 @@
     return n.toLocaleString('vi-VN') + 'đ';
   }
 
+  // Nhiều món có giá theo khoảng (vd túi tái chế 120.000–200.000đ tuỳ mẫu),
+  // vì mỗi cái làm từ vải khác nhau. priceMax có nghĩa là "từ price đến priceMax".
+  function isRange(p) { return !!(p && p.price != null && p.priceMax != null); }
+
+  function hasRange() {
+    return items.some(function (it) { return isRange(bySku(it.sku)); });
+  }
+
   // price == null nghĩa là chưa chốt giá → hiện "Liên hệ", không bịa ra con số.
   // Một cái giá đã đăng là một lời hứa; sai giá là phải chịu hoặc làm khách thất vọng.
   function priceLabel(p, qty) {
     if (!p || p.price == null) return t('basket.price_tbd', 'Liên hệ');
-    return money(p.price * (qty || 1));
+    var q = qty || 1;
+    if (isRange(p)) {
+      // một ký hiệu đ ở cuối, không phải hai: "120.000–200.000đ"
+      return (p.price * q).toLocaleString('vi-VN') + '–' + money(p.priceMax * q);
+    }
+    return money(p.price * q);
   }
 
-  // Cả giỏ chưa có món nào biết giá thì đừng hiện "0đ" — nghe như miễn phí
+  // Tổng: món có khoảng giá thì cộng mức thấp nhất và ghi rõ là "từ".
+  // Không được cộng mức cao nhất — sẽ doạ khách bằng một con số không có thật.
   function subtotalLabel() {
     var sum = subtotal();
     if (sum === 0 && hasUnpriced()) return t('basket.price_tbd', 'Liên hệ');
+    if (hasRange() || hasUnpriced()) return t('basket.from', 'từ') + ' ' + money(sum);
     return money(sum);
   }
 
-  // Chú thích dưới phần tổng, tuỳ theo còn món nào chưa có giá
+  // Chú thích dưới phần tổng, tuỳ theo còn món nào chưa có giá / có khoảng giá
   function unpricedNoteKey() {
-    if (!hasUnpriced()) return null;
-    return subtotal() === 0 ? 'basket.all_unpriced' : 'basket.some_unpriced';
+    if (hasUnpriced()) {
+      return subtotal() === 0 ? 'basket.all_unpriced' : 'basket.some_unpriced';
+    }
+    if (hasRange()) return 'basket.has_range';
+    return null;
   }
 
   function addItem(sku) {
