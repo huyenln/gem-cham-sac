@@ -312,7 +312,22 @@
               '<label class="ad-f"><span>Tên (VI)</span><input class="wt-vi"></label>' +
               '<label class="ad-f"><span>Tên (EN)</span><input class="wt-en"></label>' +
             '</div>' +
-            '<label class="ad-f"><span>Mô tả ngắn (VI)</span><textarea class="wt-dvi" rows="2"></textarea></label>' +
+            '<label class="ad-f"><span>Mô tả ngắn — hiện ở thẻ ngoài danh sách</span>' +
+              '<textarea class="wt-dvi" rows="2"></textarea></label>' +
+            '<label class="ad-f"><span>Giới thiệu dài — cách đoạn bằng một dòng trống</span>' +
+              '<textarea class="wt-long" rows="7"></textarea></label>' +
+            '<label class="ad-f"><span>Bạn sẽ làm gì — mỗi dòng một ý</span>' +
+              '<textarea class="wt-what" rows="4"></textarea></label>' +
+            '<label class="ad-f"><span>Cần biết trước — mỗi dòng một ý</span>' +
+              '<textarea class="wt-note" rows="4"></textarea></label>' +
+            '<div class="ad-f">' +
+              '<span>Ảnh bìa</span>' +
+              '<div class="ad-img-row">' +
+                '<img class="wt-cover-prev ad-cover-prev" alt="" hidden>' +
+                '<label class="ad-btn ad-upload">Chọn ảnh' +
+                  '<input type="file" accept="image/*" hidden class="wt-cover-in"></label>' +
+              '</div>' +
+            '</div>' +
             '<div class="ad-f-row">' +
               '<label class="ad-f"><span>Thời lượng (phút)</span>' +
                 '<input type="number" class="wt-dur" min="15" max="480" step="15"></label>' +
@@ -340,6 +355,25 @@
       d.querySelector('.wt-vi').value    = t.name_vi || '';
       d.querySelector('.wt-en').value    = t.name_en || '';
       d.querySelector('.wt-dvi').value   = t.desc_vi || '';
+      d.querySelector('.wt-long').value  = t.long_vi || '';
+      d.querySelector('.wt-what').value  = t.what_vi || '';
+      d.querySelector('.wt-note').value  = t.note_vi || '';
+
+      var cover = t.cover || null;
+      var prev = d.querySelector('.wt-cover-prev');
+      if (cover) { prev.src = cover; prev.hidden = false; }
+      d.querySelector('.wt-cover-in').addEventListener('change', function (e) {
+        var file = (e.target.files || [])[0];
+        if (!file) return;
+        var lbl = e.target.closest('.ad-upload');
+        var was = lbl.firstChild.nodeValue;
+        lbl.firstChild.nodeValue = 'Đang tải…';
+        window.GemDB.uploadImage(file).then(function (url) {
+          cover = url; prev.src = url; prev.hidden = false;
+          toast('Đã tải ảnh — nhớ bấm Lưu');
+        }).catch(function (err) { toast('Tải ảnh không được: ' + (err.message || ''), true); })
+          .then(function () { lbl.firstChild.nodeValue = was; e.target.value = ''; });
+      });
       d.querySelector('.wt-dur').value   = t.duration_minutes == null ? '' : t.duration_minutes;
       d.querySelector('.wt-price').value = t.price == null ? '' : t.price;
 
@@ -352,6 +386,10 @@
           name_vi: name,
           name_en: d.querySelector('.wt-en').value.trim() || null,
           desc_vi: d.querySelector('.wt-dvi').value.trim() || null,
+          long_vi: d.querySelector('.wt-long').value.trim() || null,
+          what_vi: d.querySelector('.wt-what').value.trim() || null,
+          note_vi: d.querySelector('.wt-note').value.trim() || null,
+          cover: cover,
           duration_minutes: dur > 0 ? dur : 90,
           price: pr === '' ? null : parseInt(pr, 10)
         }).then(function () { toast('Đã lưu'); return load(); })

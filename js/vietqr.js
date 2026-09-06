@@ -485,11 +485,61 @@
       '<path d="' + d + '" fill="#000000"/></svg>';
   }
 
+  /**
+   * Vẽ mã QR ra ảnh PNG.
+   *
+   * Vẽ thẳng từ ma trận lên canvas, không đi đường SVG → ảnh: nạp SVG vào
+   * <img> thì một số trình duyệt đánh dấu canvas là "nhiễm bẩn" và chặn
+   * toBlob, nên đường đó hay chết đúng lúc cần.
+   *
+   * @returns {Promise<Blob>} ảnh PNG
+   */
+  function png(str, opts) {
+    opts = opts || {};
+    var m = matrix(str, opts);
+    var quiet = opts.quiet == null ? 4 : opts.quiet;
+    // Ô càng to thì app ngân hàng đọc từ ảnh càng chắc, nhất là khi khách
+    // chụp màn hình rồi cắt cúp lại.
+    var scale = opts.scale || 12;
+    var n = m.length;
+    var size = (n + quiet * 2) * scale;
+
+    var c = document.createElement('canvas');
+    c.width = size; c.height = size;
+    var g = c.getContext('2d');
+    g.fillStyle = '#ffffff';
+    g.fillRect(0, 0, size, size);
+    g.fillStyle = '#000000';
+    for (var r = 0; r < n; r++) {
+      for (var col = 0; col < n; col++) {
+        if (m[r][col]) {
+          g.fillRect((col + quiet) * scale, (r + quiet) * scale, scale, scale);
+        }
+      }
+    }
+
+    return new Promise(function (resolve, reject) {
+      if (c.toBlob) {
+        c.toBlob(function (b) { b ? resolve(b) : reject(new Error('không tạo được ảnh')); }, 'image/png');
+      } else {
+        // Safari cũ không có toBlob
+        try {
+          var parts = c.toDataURL('image/png').split(',');
+          var bin = atob(parts[1]);
+          var arr = new Uint8Array(bin.length);
+          for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+          resolve(new Blob([arr], { type: 'image/png' }));
+        } catch (e) { reject(e); }
+      }
+    });
+  }
+
   root.GemVietQR = {
     payload: payload,
     crc16: crc16,
     cleanRef: cleanRef,
     matrix: matrix,
-    svg: svg
+    svg: svg,
+    png: png
   };
 })(typeof window !== 'undefined' ? window : globalThis);

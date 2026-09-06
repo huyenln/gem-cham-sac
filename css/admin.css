@@ -373,3 +373,4 @@
   border-radius: var(--radius-md);
 }
 .ad-wt .ad-f textarea { min-height: 0; line-height: 1.5; resize: vertical; }
+.wt-cover-prev { width: 96px; height: 72px; object-fit: cover; border-radius: var(--radius-sm); }

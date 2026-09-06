@@ -215,7 +215,10 @@
     'basket.qr_name':       { vi: `Chủ tài khoản`, en: `Account name` },
     'basket.qr_amount':     { vi: `Số tiền`, en: `Amount` },
     'basket.qr_ref':        { vi: `Nội dung`, en: `Transfer note` },
-    'basket.qr_hint':       { vi: `Đang xem trên chính điện thoại này? Chụp màn hình rồi mở app ngân hàng, chọn quét từ ảnh — hoặc bấm “Chép” rồi nhập tay.`, en: `Reading this on the same phone? Screenshot it, then open your banking app and scan from your photos — or tap “Copy” and type it in.` },
+    'basket.qr_save':       { vi: `Lưu ảnh QR`, en: `Save QR image` },
+    'basket.qr_saving':     { vi: `Đang tạo ảnh…`, en: `Making the image…` },
+    'basket.qr_save_failed':{ vi: `Chưa lưu được ảnh. Bạn chụp màn hình cũng được nhé.`, en: `Could not save the image — a screenshot works too.` },
+    'basket.qr_hint':       { vi: `Đang xem trên chính điện thoại này? Bấm “Lưu ảnh QR” rồi mở app ngân hàng, chọn quét từ ảnh — hoặc bấm “Chép” rồi nhập tay.`, en: `Reading this on the same phone? Tap “Save QR image”, then open your banking app and scan from your photos — or tap “Copy” and type it in.` },
     'basket.done_qr_p':     { vi: `Chuyển xong bạn không cần báo lại — chúng mình thấy tiền về là nhắn cho bạn ngay.`, en: `No need to tell us once you've sent it — we'll message you as soon as the transfer lands.` },
     'basket.order_failed':  { vi: `Chưa gửi được đơn. Bạn nhắn Zalo cho chúng mình nhé.`, en: `We could not send the order. Please message us on Zalo.` },
     'basket.done_mail_p':   { vi: `Chúng mình vừa mở sẵn email cho bạn — bạn bấm Gửi trong app email là đơn về tới Gem nhé.`, en: `We've opened a pre-filled email for you — hit Send in your mail app and the order reaches Gem.` },
@@ -863,6 +866,8 @@
 
     return '<div class="gb-qr-wrap">' +
       (qrSvg ? '<div class="gb-qr">' + qrSvg + '</div>' : '') +
+      (qrSvg ? '<button type="button" class="btn btn-ghost gb-save-qr" ' +
+               'data-i18n="basket.qr_save">Lưu ảnh QR</button>' : '') +
       '<div class="gb-pay-rows">' +
         copyRow(t('basket.qr_bank', 'Ngân hàng'), PAY.bank_name) +
         copyRow(t('basket.qr_acc', 'Số tài khoản'), PAY.account_no) +
@@ -893,6 +898,47 @@
             : orderPay === 'qr' ? 'basket.done_qr_p' : 'basket.done_p') + '"></p>' +
         '<button type="button" class="btn btn-primary gb-done-btn" data-i18n="basket.done_btn"></button>' +
       '</div>';
+
+    /* Lưu ảnh QR về máy để đưa thẳng vào app ngân hàng.
+       Trên iPhone, nút tải xuống thường lưu vào Tệp chứ không vào Ảnh, mà app
+       ngân hàng lại đọc từ Ảnh — nên nếu máy có sẵn bảng chia sẻ thì dùng nó,
+       vì bảng đó có "Lưu vào Ảnh". Máy nào không có thì tải xuống như thường. */
+    var saveBtn = panelBody.querySelector('.gb-save-qr');
+    if (saveBtn) saveBtn.addEventListener('click', function () {
+      var was = saveBtn.textContent;
+      saveBtn.disabled = true;
+      saveBtn.textContent = t('basket.qr_saving', 'Đang tạo ảnh…');
+
+      window.GemVietQR.png(window.GemVietQR.payload({
+        bin: PAY.bank_bin,
+        account: PAY.account_no,
+        amount: orderSum > 0 ? orderSum : null,
+        ref: orderCode
+      }), { ecl: 'M', scale: 12 }).then(function (blob) {
+        var name = 'gem-' + (orderCode || 'qr') + '.png';
+        var file = null;
+        try { file = new File([blob], name, { type: 'image/png' }); } catch (e) { /* trình duyệt cũ */ }
+
+        if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+          return navigator.share({ files: [file] }).catch(function () { /* khách bấm huỷ */ });
+        }
+        var url = window.URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url; a.download = name;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(function () { window.URL.revokeObjectURL(url); }, 2000);
+      }).catch(function () {
+        err(t('basket.qr_save_failed', 'Chưa lưu được ảnh. Bạn chụp màn hình cũng được nhé.'));
+      }).then(function () {
+        saveBtn.disabled = false;
+        saveBtn.textContent = was;
+      });
+
+      function err(msg) {
+        var p = panelBody.querySelector('.gb-qr-hint');
+        if (p) { p.textContent = msg; p.removeAttribute('data-i18n'); }
+      }
+    });
 
     panelBody.querySelectorAll('.gb-copy').forEach(function (b) {
       b.addEventListener('click', function () {

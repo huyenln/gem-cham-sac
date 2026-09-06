@@ -1027,6 +1027,48 @@ Xoá sản phẩm **không** làm hỏng đơn cũ: `order_items.product_id` là
 > trên trang Sản phẩm** — thẻ đó nằm trong HTML cùng ảnh và thư viện ảnh. Ghi
 > chú này hiện ngay trên đầu danh sách trong trang quản trị.
 
+### Nút lưu ảnh QR — **ĐÃ XONG**
+
+`GemVietQR.png()` vẽ mã thẳng từ ma trận lên canvas rồi xuất PNG (636×636,
+mỗi ô 12px). **Không đi đường SVG → ảnh:** nạp SVG vào `<img>` thì một số
+trình duyệt đánh dấu canvas là “nhiễm bẩn” và chặn `toBlob`, nên đường đó hay
+chết đúng lúc cần.
+
+**Trên iPhone, nút tải xuống lưu vào Tệp chứ không vào Ảnh — mà app ngân hàng
+lại đọc từ Ảnh.** Nên nút này ưu tiên bảng chia sẻ của máy (`navigator.share`
+với file) vì bảng đó có “Lưu vào Ảnh”; máy nào không có thì tải xuống như
+thường.
+
+Đã kiểm bằng cách **đọc ngược ảnh khách tải về**: giải nén PNG, dựng lại ma
+trận, đọc mặt nạ từ thông tin định dạng, rồi so với ma trận thư viện chuẩn
+sinh ra từ chuỗi mong đợi → **0 ô lệch**. Nghĩa là ảnh tải về quét ra đúng số
+tiền và đúng mã đơn.
+
+### Trang giới thiệu workshop — **ĐÃ XONG**
+
+Bấm vào thẻ loại workshop mở trang riêng tại `?loai=<slug>` — gửi link cho
+nhau được, nút Back của trình duyệt quay lại lịch.
+
+Cột mới trên `workshop_types`: `long_vi/en` (giới thiệu dài), `what_vi/en`
+(“Bạn sẽ làm gì”), `note_vi/en` (“Cần biết trước”), `cover`, `images`. Cách
+nhập: mô tả dài cách đoạn bằng dòng trống, hai mục kia mỗi dòng một ý — không
+cần biết HTML.
+
+Trang gồm: ảnh bìa, tên, thời lượng + giá, giới thiệu dài, hai ô thông tin,
+thư viện ảnh, và **danh sách buổi sắp tới của đúng loại đó** kèm nút giữ chỗ.
+Vào form giữ chỗ từ đây thì nút “Quay lại” trả về chính trang giới thiệu, chứ
+không nhảy về lịch chung — mất chỗ đang đọc là bực.
+
+Nội dung dài **không** nhét vào `sessions_public`: làm thế là chép nguyên bài
+giới thiệu lên từng buổi. Trang gọi thêm một lượt `workshop_types` cho nhẹ.
+
+Chữ do người viết gõ dựng bằng `textContent`, không ghép vào `innerHTML`.
+
+> **Nội dung hiện tại là bản tạm.** Mình viết sẵn hai bài đúng giọng Gem để
+> Anna sửa lại chứ không phải viết từ đầu — cuối mỗi bài có ghi “(Đây là nội
+> dung tạm)”. Sửa trong **Quản trị → Đặt lịch → Loại workshop**. Chưa có ảnh
+> bìa và ảnh trong bài, tải lên ở cùng chỗ đó.
+
 ### Chưa làm — cần biết
 
 - **Nén ảnh sản phẩm.** `loading="lazy"` đã thêm, nhưng ảnh gốc vẫn nặng

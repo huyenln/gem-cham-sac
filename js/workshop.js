@@ -53,7 +53,14 @@
 
     'ws.other_h':       { vi: `Muốn giờ khác?`, en: `Want a different time?` },
     'ws.other_p':       { vi: `Em gái mình ở studio cả tuần, từ thứ Hai đến thứ Bảy — nhắn cho chúng mình là hẹn được một buổi riêng, kể cả chỉ một người. Chủ Nhật thì cần hẹn trước.`, en: `We're at the studio Monday to Saturday — message us and we'll arrange a session just for you, even for one person. Sundays need booking ahead.` },
-    'ws.other_zalo':    { vi: `Nhắn Zalo`, en: `Message on Zalo` }
+    'ws.other_zalo':    { vi: `Nhắn Zalo`, en: `Message on Zalo` },
+
+    'ws.type_more':     { vi: `Xem chi tiết`, en: `See details` },
+    'ws.type_back':     { vi: `Về danh sách workshop`, en: `All workshops` },
+    'ws.type_what':     { vi: `Bạn sẽ làm gì`, en: `What you'll do` },
+    'ws.type_note':     { vi: `Cần biết trước`, en: `Good to know` },
+    'ws.type_when':     { vi: `Sắp có buổi nào`, en: `Upcoming sessions` },
+    'ws.type_none':     { vi: `Chưa có buổi nào cho loại này. Nhắn cho chúng mình để hẹn riêng nhé.`, en: `No sessions scheduled for this one yet. Message us to arrange a time.` }
   };
 
   if (window.GemI18n && window.GemI18n.add) window.GemI18n.add(STRINGS);
@@ -165,6 +172,12 @@
 
   function typeKey(s) { return s.slug || s.name_vi || '?'; }
 
+  var _colors = null;
+  function colorFor(s) {
+    if (!_colors) _colors = colorMap(sessions);
+    return _colors[typeKey(s)] || 1;
+  }
+
   function money(n) {
     if (n == null) return t('ws.price_tbd', 'Liên hệ');
     return n.toLocaleString('vi-VN') + 'đ';
@@ -207,7 +220,153 @@
   }
 
   /* ---------- render ---------- */
-  var root, sessions = [], current = null;
+  var root, sessions = [], types = [], current = null, openType = null;
+
+  function typeBySlug(slug) {
+    if (!slug) return null;
+    for (var i = 0; i < types.length; i++) if (types[i].slug === slug) return types[i];
+    return null;
+  }
+
+  function pickField(o, field) {
+    var en = lang() === 'en';
+    return (en && o[field + '_en']) || o[field + '_vi'] || '';
+  }
+
+  // Mỗi dòng một ý — cách nhập dễ nhất cho người viết, và không cần HTML.
+  function lines(str) {
+    return String(str || '').split('\n')
+      .map(function (x) { return x.trim(); })
+      .filter(Boolean);
+  }
+
+  // Một dòng buổi học. Dùng chung cho lịch ngoài trang chính và cho danh
+  // sách "Sắp có buổi nào" trong trang giới thiệu.
+  function slotHTML(s) {
+    var full = s.seats_left <= 0;
+    var few = !full && s.seats_left <= 3;
+    var name = lang() === 'en' && s.name_en ? s.name_en : s.name_vi;
+    var p = vnParts(s.starts_at);
+    var seatTxt = full
+      ? t('ws.full', 'Đã đủ chỗ')
+      : fill(t(few ? 'ws.seats_few' : 'ws.seats_left', ''), { n: s.seats_left, cap: s.capacity });
+
+    return '<li class="ws-slot' + (full ? ' is-full' : '') + '" data-c="' + colorFor(s) + '">' +
+      '<span class="ws-time">' + esc(p.time) + '</span>' +
+      '<div class="ws-slot-body">' +
+        // Trong trang giới thiệu thì tên loại đã nằm ở tiêu đề, nên ở đó
+        // dòng này hiện NGÀY. Ngoài lịch thì ngày đã có ở tiêu đề ngày.
+        '<h4>' + esc(openType ? dayLabel(p.dow) + ' ' + p.date : name) + '</h4>' +
+        // Thời lượng và giá đã nói ở phần mô tả loại phía trên — lặp lại dưới
+        // từng buổi chỉ làm hàng nào cũng giống hàng nào.
+        '<p class="ws-meta">' +
+          '<span class="ws-seats' + (few ? ' few' : '') + (full ? ' none' : '') + '">' +
+            esc(seatTxt) + '</span>' +
+        '</p>' +
+      '</div>' +
+      '<div class="ws-act">' +
+        (full ? '' :
+          '<button type="button" class="btn btn-primary ws-pick" data-id="' + esc(s.id) + '">' +
+            t('ws.book', 'Giữ chỗ') + '</button>') +
+      '</div>' +
+    '</li>';
+  }
+
+  function wirePick() {
+    root.querySelectorAll('.ws-pick').forEach(function (b) {
+      b.addEventListener('click', function () { openForm(b.getAttribute('data-id')); });
+    });
+  }
+
+  /* ---------- trang giới thiệu một loại workshop ---------- */
+  function renderType(slug, pushState) {
+    var ty = typeBySlug(slug);
+    if (!ty) return renderList();
+    openType = ty;
+    current = null;
+
+    var name = pickField(ty, 'name');
+    var mine = sessions.filter(function (s) { return s.slug === slug; });
+
+    // Chữ do người viết gõ trong trang quản trị: dựng bằng textContent, không
+    // ghép vào innerHTML.
+    var longBox = document.createElement('div');
+    longBox.className = 'ws-long';
+    lines(pickField(ty, 'long')).forEach(function (para) {
+      var el = document.createElement('p');
+      el.textContent = para;
+      longBox.appendChild(el);
+    });
+
+    function listBox(cls, title, raw) {
+      var items = lines(raw);
+      if (!items.length) return null;
+      var wrap = document.createElement('div');
+      wrap.className = cls;
+      var h = document.createElement('h3');
+      h.textContent = title;
+      wrap.appendChild(h);
+      var ul = document.createElement('ul');
+      items.forEach(function (x) {
+        var li = document.createElement('li');
+        li.textContent = x;
+        ul.appendChild(li);
+      });
+      wrap.appendChild(ul);
+      return wrap;
+    }
+
+    root.innerHTML =
+      '<article class="ws-page">' +
+        '<button type="button" class="ws-back-list" data-i18n="ws.type_back"></button>' +
+        (ty.cover ? '<div class="ws-page-cover"><img src="' + esc(ty.cover) + '" alt=""></div>' : '') +
+        '<h2 class="ws-page-h">' + esc(name) + '</h2>' +
+        '<p class="ws-page-meta">' +
+          fill(t('ws.duration', '{n} phút'), { n: ty.duration_minutes }) +
+          ' · ' + esc(money(ty.price)) +
+        '</p>' +
+        '<div class="ws-long-slot"></div>' +
+        '<div class="ws-boxes"></div>' +
+        ((ty.images || []).length
+          ? '<div class="ws-page-gallery">' + ty.images.map(function (src) {
+              return '<img src="' + esc(src) + '" alt="" loading="lazy">';
+            }).join('') + '</div>'
+          : '') +
+        '<div class="ws-page-when">' +
+          '<h3 data-i18n="ws.type_when"></h3>' +
+          (mine.length
+            ? '<ul class="ws-slots">' + mine.map(slotHTML).join('') + '</ul>'
+            : '<p class="ws-empty" data-i18n="ws.type_none"></p>') +
+        '</div>' +
+      '</article>';
+
+    root.querySelector('.ws-long-slot').replaceWith(longBox);
+    var boxes = root.querySelector('.ws-boxes');
+    [listBox('ws-box', t('ws.type_what', 'Bạn sẽ làm gì'), pickField(ty, 'what')),
+     listBox('ws-box', t('ws.type_note', 'Cần biết trước'), pickField(ty, 'note'))]
+      .forEach(function (b) { if (b) boxes.appendChild(b); });
+
+    root.querySelector('.ws-back-list').addEventListener('click', function () {
+      history.pushState({}, '', location.pathname);
+      openType = null;
+      renderList();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    wirePick();
+
+    if (pushState) {
+      history.pushState({ loai: slug }, '', '?loai=' + encodeURIComponent(slug));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    document.title = name + ' · Gem Chạm Sắc';
+    translate();
+  }
+
+  function route() {
+    var slug = new URLSearchParams(location.search).get('loai');
+    if (slug && typeBySlug(slug)) renderType(slug, false);
+    else { openType = null; renderList(); }
+  }
 
   function renderList() {
     if (!sessions.length) {
@@ -232,13 +391,18 @@
     var legend = '<ul class="ws-types">' + types.map(function (s) {
       var name = lang() === 'en' && s.name_en ? s.name_en : s.name_vi;
       var desc = lang() === 'en' && s.desc_en ? s.desc_en : s.desc_vi;
+      var slug = s.slug || '';
+      var hasPage = !!typeBySlug(slug);
       return '<li class="ws-type" data-c="' + color[typeKey(s)] + '">' +
-        '<h3>' + esc(name) + '</h3>' +
-        (desc ? '<p>' + esc(desc) + '</p>' : '') +
-        '<p class="ws-type-meta">' +
-          fill(t('ws.duration', '{n} phút'), { n: s.duration_minutes }) +
-          ' · ' + esc(money(s.price)) +
-        '</p>' +
+        (hasPage ? '<a href="?loai=' + encodeURIComponent(slug) + '" data-slug="' + esc(slug) + '">' : '<div>') +
+          '<h3>' + esc(name) + '</h3>' +
+          (desc ? '<p>' + esc(desc) + '</p>' : '') +
+          '<p class="ws-type-meta">' +
+            fill(t('ws.duration', '{n} phút'), { n: s.duration_minutes }) +
+            ' · ' + esc(money(s.price)) +
+          '</p>' +
+          (hasPage ? '<span class="ws-type-more" data-i18n="ws.type_more"></span>' : '') +
+        (hasPage ? '</a>' : '</div>') +
       '</li>';
     }).join('') + '</ul>';
 
@@ -255,33 +419,7 @@
               '<span class="ws-dow">' + esc(dayLabel(d.p.dow)) + '</span>' +
               '<span class="ws-date">' + esc(d.p.date) + '</span>' +
             '</div>' +
-            '<ul class="ws-slots">' + d.items.map(function (s) {
-              var full = s.seats_left <= 0;
-              var few = !full && s.seats_left <= 3;
-              var name = lang() === 'en' && s.name_en ? s.name_en : s.name_vi;
-              var seatTxt = full
-                ? t('ws.full', 'Đã đủ chỗ')
-                : fill(t(few ? 'ws.seats_few' : 'ws.seats_left', ''), { n: s.seats_left, cap: s.capacity });
-
-              return '<li class="ws-slot' + (full ? ' is-full' : '') + '"' +
-                       ' data-c="' + color[typeKey(s)] + '">' +
-                '<span class="ws-time">' + esc(vnParts(s.starts_at).time) + '</span>' +
-                '<div class="ws-slot-body">' +
-                  '<h4>' + esc(name) + '</h4>' +
-                  // Thời lượng và giá đã nói ở phần mô tả loại phía trên —
-                  // lặp lại dưới từng buổi chỉ làm hàng nào cũng giống hàng nào.
-                  '<p class="ws-meta">' +
-                    '<span class="ws-seats' + (few ? ' few' : '') + (full ? ' none' : '') + '">' +
-                      esc(seatTxt) + '</span>' +
-                  '</p>' +
-                '</div>' +
-                '<div class="ws-act">' +
-                  (full ? '' :
-                    '<button type="button" class="btn btn-primary ws-pick" data-id="' + esc(s.id) + '">' +
-                      t('ws.book', 'Giữ chỗ') + '</button>') +
-                '</div>' +
-              '</li>';
-            }).join('') + '</ul>' +
+            '<ul class="ws-slots">' + d.items.map(slotHTML).join('') + '</ul>' +
           '</div>';
         }).join('') +
       '</section>';
@@ -289,8 +427,14 @@
 
     root.innerHTML = '<div class="ws-sched">' + legend + sched + '</div>';
 
-    root.querySelectorAll('.ws-pick').forEach(function (b) {
-      b.addEventListener('click', function () { openForm(b.getAttribute('data-id')); });
+    wirePick();
+    root.querySelectorAll('.ws-type a[data-slug]').forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        // Ctrl/Cmd-click và chuột giữa vẫn mở tab mới như link thường
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+        e.preventDefault();
+        renderType(a.getAttribute('data-slug'), true);
+      });
     });
     translate();
   }
@@ -331,7 +475,11 @@
         '</form>' +
       '</div>';
 
-    root.querySelector('.ws-back').addEventListener('click', renderList);
+    root.querySelector('.ws-back').addEventListener('click', function () {
+      // Vào form từ trang giới thiệu thì quay lại chính trang đó, không nhảy
+      // về lịch chung — người dùng mất chỗ đang đọc là bực.
+      if (openType) renderType(openType.slug, false); else renderList();
+    });
     root.querySelector('.ws-form').addEventListener('submit', submit);
     translate();
     root.querySelector('[name="name"]').focus();
@@ -417,9 +565,16 @@
   function load() {
     root.innerHTML = '<p class="ws-loading" data-i18n="ws.loading"></p>';
     translate();
-    window.GemDB.sessions().then(function (rows) {
-      sessions = rows || [];
-      renderList();
+    // Hai lượt gọi song song: buổi học cho lịch, loại workshop cho trang
+    // giới thiệu. Không nhét nội dung dài vào sessions_public vì như thế là
+    // chép lại nguyên bài giới thiệu trên từng buổi.
+    Promise.all([
+      window.GemDB.sessions(),
+      window.GemDB.workshopTypes()
+    ]).then(function (r) {
+      sessions = r[0] || [];
+      types = r[1] || [];
+      route();
     }).catch(renderError);
   }
 
@@ -430,12 +585,17 @@
     // Ngày/giờ và tên buổi dựng bằng JS nên phải vẽ lại khi đổi ngôn ngữ.
     // Phải so ngôn ngữ trước khi vẽ: translate() gọi setLang(), mà setLang()
     // lại phát chính sự kiện này — không chặn thì thành vòng lặp vô hạn.
+    window.addEventListener('popstate', function () {
+      if (sessions.length || types.length) route();
+    });
+
     var lastLang = lang();
     document.addEventListener('gem:langchange', function (e) {
       var l = (e.detail && e.detail.lang) || lang();
       if (l === lastLang) return;
       lastLang = l;
-      if (root.querySelector('.ws-sched')) renderList();
+      if (openType) renderType(openType.slug, false);
+      else if (root.querySelector('.ws-sched')) renderList();
     });
 
     load();
