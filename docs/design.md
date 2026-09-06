@@ -23,6 +23,7 @@
 11. [Information architecture](#11-information-architecture)
 12. [Bảo mật](#12-bảo-mật)
 13. [Chia sprint](#13-chia-sprint)
+13b. [Thông tin cấu hình](#13b-thông-tin-cấu-hình)
 14. [Còn phải chốt](#14-còn-phải-chốt)
 15. [Không làm](#15-không-làm)
 16. [Cần cập nhật CLAUDE.md](#16-cần-cập-nhật-claudemd)
@@ -674,6 +675,78 @@ trở nên liền mạch.
 
 ---
 
+## 13b. Thông tin cấu hình
+
+### Liên hệ
+
+| | |
+|---|---|
+| Email shop | `gemchamsac@gmail.com` (đã vào `js/basket.js`) |
+| Điện thoại / Zalo | `(84) 82 496 4996` |
+| Messenger | `m.me/gemchamsac` |
+
+### Tài khoản nhận tiền — cho VietQR (Sprint 5)
+
+| | |
+|---|---|
+| Ngân hàng | Techcombank |
+| Mã ngân hàng (BIN) | `970407` — *quét thử một lần để xác nhận* |
+| Số tài khoản | `9607060038` |
+| Chủ tài khoản | HO KINH DOANH GEM CHAM SAC |
+
+Số tài khoản này **không phải bí mật** — nó sẽ nằm trong QR trên web và dán ở
+quầy. Nhưng repo là public, nên cứ biết là nó công khai theo đúng nghĩa đen.
+
+**Chuỗi VietQR tĩnh** (bằng đúng 2 ảnh QR hiện có — không có số tiền, không có mã đơn):
+
+```
+00020101021138540010A00000072701240006970407011096070600380208QRIBFTTA53037045802VN6304803C
+```
+
+**Chuỗi động** (ví dụ 185.000đ, mã đơn `GEMA7K3`) — đây là thứ Sprint 5 sinh ra cho từng đơn:
+
+```
+00020101021238540010A00000072701240006970407011096070600380208QRIBFTTA530370454061850005802VN62110807GEMA7K363041024
+```
+
+Cấu trúc: chuẩn EMVCo (NAPAS bản địa hoá thành VietQR), ghép theo
+`thẻ(2) + độ dài(2) + giá trị`, kết thúc bằng CRC-16/CCITT-FALSE.
+Hai trường quan trọng: `54` = số tiền, `6208` = nội dung chuyển khoản (mã đơn).
+Trường `01` = `11` là QR tĩnh, `12` là QR cho một đơn.
+
+**Quy tắc mã đơn:** chỉ chữ HOA + số, 7–10 ký tự, bỏ O/0 và I/1 cho dễ đọc
+qua điện thoại, không dấu tiếng Việt (nhiều ngân hàng cắt dấu). Dạng `GEM` + 4 ký tự.
+
+### Supabase
+
+| | |
+|---|---|
+| Project | `gem-cham-sac` |
+| Ref / ID | `dxdovvqsfjeizsoprrfn` |
+| URL | `https://dxdovvqsfjeizsoprrfn.supabase.co` |
+| Region | `ap-southeast-1` (Singapore) |
+| Postgres | 17 |
+| Publishable key | `sb_publishable_jRv5IBMv5j7OAs1-x15IDw_DJ_HZqZs` |
+
+Publishable key **được thiết kế để lộ ra ngoài** — nó nằm trong JavaScript của
+trang, ai xem source cũng thấy. Cái bảo vệ dữ liệu là RLS trong database
+([§12](#12-bảo-mật)), không phải việc giấu key này.
+
+⚠️ **Không bao giờ đưa `service_role` key vào repo hay vào trang web.** Key đó
+bỏ qua toàn bộ RLS.
+
+**Trạng thái:** đã kết nối được, database còn trống (chưa có bảng nào).
+
+### Chủ tài khoản quản trị
+
+Cả ba là `owner`. Chưa có ai là `staff` — thêm khi tuyển người.
+
+- `gemchamsac@gmail.com`
+- `lgnhuyen@gmail.com`
+- `luongnguyenngocmai00@gmail.com`
+
+---
+
 ## 14. Còn phải chốt
 
 ### Chặn Sprint 1–2
@@ -683,13 +756,13 @@ trở nên liền mạch.
 
 ### Chặn Sprint 3
 
-- [ ] **Ai là `owner`, ai là `staff`** — kèm email để mở tài khoản
-- [ ] **Email chính thức của shop** — prototype đang tạm dùng `lgnhuyen@gmail.com`
+- [x] **Ai là `owner`** — ba email, xem §13b ✓
+- [x] **Email chính thức của shop** — `gemchamsac@gmail.com` ✓
 
 ### Chặn Sprint 4–5
 
 - [ ] Giá thật của 16 sản phẩm
-- [ ] Số tài khoản ngân hàng + tên chủ tài khoản (cho VietQR)
+- [x] Số tài khoản ngân hàng + tên chủ tài khoản — Techcombank 9607060038 ✓
 - [ ] Có đặt ngưỡng bắt buộc chuyển khoản thay COD không, và bao nhiêu
 - [ ] Dùng đối tác giao hàng nào cho COD (GHTK / GHN / Viettel Post / J&T)
 
