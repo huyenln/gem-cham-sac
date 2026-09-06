@@ -59,6 +59,11 @@ window.GemDB = (function () {
       return req('/rest/v1/sessions_public?select=*&order=starts_at.asc');
     },
 
+    // Bài Bản tin đã đăng, mới nhất lên trước. RLS lọc sẵn bài còn nháp.
+    posts: function () {
+      return req('/rest/v1/posts?select=*&order=happened_on.desc,created_at.desc');
+    },
+
     // Sản phẩm đang bán. RLS lọc sẵn hàng chưa đăng nên khách không thấy.
     products: function () {
       return req('/rest/v1/products?select=*&order=sort_order.asc');
@@ -203,6 +208,58 @@ window.GemDB = (function () {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
         body: JSON.stringify(row)
+      });
+    },
+
+    // Cả bài còn nháp, khác posts() ở chỗ đó.
+    adminPosts: function () {
+      return req('/rest/v1/posts?select=*&order=happened_on.desc,created_at.desc');
+    },
+
+    savePost: function (id, row) {
+      if (id) {
+        return req('/rest/v1/posts?id=eq.' + encodeURIComponent(id), {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+          body: JSON.stringify(row)
+        });
+      }
+      return req('/rest/v1/posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+        body: JSON.stringify(row)
+      });
+    },
+
+    deletePost: function (id) {
+      return req('/rest/v1/posts?id=eq.' + encodeURIComponent(id), { method: 'DELETE' });
+    },
+
+    /* ---------- ảnh ---------- */
+
+    // Tải một ảnh lên kho gem-media, trả về URL công khai để dán vào bài.
+    // Tên file gắn thêm thời gian + số ngẫu nhiên để hai ảnh trùng tên
+    // không đè lên nhau.
+    uploadImage: function (file) {
+      var clean = String(file.name || 'anh')
+        .normalize('NFD').replace(/[̀-ͯ]/g, '')
+        .replace(/đ/g, 'd').replace(/Đ/g, 'D')
+        .toLowerCase().replace(/[^a-z0-9.]+/g, '-').replace(/^-+|-+$/g, '');
+      var path = Date.now() + '-' + Math.random().toString(36).slice(2, 7) + '-' + clean;
+
+      return fetch(URL + '/storage/v1/object/gem-media/' + encodeURIComponent(path), {
+        method: 'POST',
+        headers: {
+          'apikey': KEY,
+          'Authorization': 'Bearer ' + (token || KEY),
+          'Content-Type': file.type || 'application/octet-stream'
+        },
+        body: file
+      }).then(function (res) {
+        if (!res.ok) {
+          return res.text().then(function (txt) { throw new Error(txt || ('HTTP ' + res.status)); });
+        }
+        return URL + '/storage/v1/object/public/gem-media/' + encodeURIComponent(path);
       });
     },
 

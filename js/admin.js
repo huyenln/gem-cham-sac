@@ -46,6 +46,8 @@
   var sessions = [];
   var orders = [];
   var products = [];
+  var posts = [];
+  var editingPost = null;   // null = xem danh sách, {} = bài mới, {…} = sửa bài
   var tab = 'today';
   var orderFilter = 'open';   // open | done | all
 
@@ -139,6 +141,7 @@
           '<button type="button" data-tab="orders">Đơn hàng</button>' +
           '<button type="button" data-tab="sessions">Đặt lịch</button>' +
           '<button type="button" data-tab="products">Sản phẩm</button>' +
+          '<button type="button" data-tab="posts">Bản tin</button>' +
         '</nav>' +
       '</header>' +
       '<main class="ad-main"><p class="ad-loading">Đang tải...</p></main>';
@@ -151,6 +154,7 @@
     el.root.querySelectorAll('.ad-tabs button').forEach(function (b) {
       b.addEventListener('click', function () {
         tab = b.getAttribute('data-tab');
+        editingPost = null;
         paintTabs();
         el.main.innerHTML = '<p class="ad-loading">Đang tải...</p>';
         load();          // mỗi tab lấy dữ liệu riêng, không nạp sẵn tất cả
@@ -530,11 +534,223 @@
     });
   }
 
+  /* ================= BẢN TIN ================= */
+
+  function slugify(s) {
+    return String(s || '')
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/đ/g, 'd').replace(/Đ/g, 'D')
+      .toLowerCase().replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '').slice(0, 60);
+  }
+
+  function renderPosts() {
+    if (editingPost !== null) return renderPostForm();
+
+    var list = posts.length ? posts.map(function (p) {
+      return '<div class="ad-post' + (p.is_published ? '' : ' is-hidden') + '" data-id="' + esc(p.id) + '">' +
+        (p.cover ? '<img class="ad-post-thumb" src="' + esc(p.cover) + '" alt="">' : '') +
+        '<div class="ad-post-body">' +
+          '<b>' + esc(p.title_vi) + '</b>' +
+          '<p class="ad-post-meta">' +
+            [p.happened_on, p.place].filter(Boolean).map(esc).join(' · ') +
+            (p.is_published ? '' : ' · <span class="ad-paid">nháp</span>') +
+          '</p>' +
+        '</div>' +
+        '<div class="ad-acts">' +
+          '<button type="button" class="ad-btn ad-edit">Sửa</button>' +
+          '<button type="button" class="ad-btn' + (p.is_published ? '' : ' on') + '" data-pub="' +
+            (p.is_published ? '0' : '1') + '">' +
+            (p.is_published ? 'Đang đăng' : 'Đăng bài') + '</button>' +
+        '</div>' +
+      '</div>';
+    }).join('') : '<div class="ad-empty"><p>Chưa có bài nào.</p></div>';
+
+    el.main.innerHTML =
+      '<div class="ad-filters"><button type="button" class="ad-filter active ad-new-post">+ Viết bài mới</button></div>' +
+      list;
+
+    el.main.querySelector('.ad-new-post').addEventListener('click', function () {
+      editingPost = {}; renderPostForm();
+    });
+
+    el.main.querySelectorAll('.ad-post').forEach(function (d) {
+      var id = d.getAttribute('data-id');
+      var p = posts.filter(function (x) { return x.id === id; })[0];
+
+      d.querySelector('.ad-edit').addEventListener('click', function () {
+        editingPost = p; renderPostForm();
+      });
+      d.querySelector('[data-pub]').addEventListener('click', function (e) {
+        e.target.disabled = true;
+        window.GemDB.savePost(id, { is_published: e.target.getAttribute('data-pub') === '1' })
+          .then(function () { toast('Đã cập nhật'); return load(); })
+          .catch(function () { e.target.disabled = false; toast('Không lưu được', true); });
+      });
+    });
+  }
+
+  function renderPostForm() {
+    var p = editingPost || {};
+    var isNew = !p.id;
+
+    function field(name, label, value, type) {
+      var input = type === 'area'
+        ? '<textarea name="' + name + '" rows="7"></textarea>'
+        : '<input type="' + (type || 'text') + '" name="' + name + '">';
+      return '<label class="ad-f"><span>' + esc(label) + '</span>' + input + '</label>';
+    }
+
+    el.main.innerHTML =
+      '<button type="button" class="ad-btn ad-cancel">‹ Về danh sách</button>' +
+      '<form class="ad-post-form">' +
+        '<h3>' + (isNew ? 'Bài mới' : 'Sửa bài') + '</h3>' +
+        field('title_vi', 'Tiêu đề (tiếng Việt)', p.title_vi) +
+        field('title_en', 'Tiêu đề (tiếng Anh) — để trống thì web dùng bản tiếng Việt', p.title_en) +
+        field('place', 'Ở đâu (ví dụ: BUV, Ngày Thanh niên LHQ)', p.place) +
+        field('happened_on', 'Ngày diễn ra', p.happened_on, 'date') +
+        field('excerpt_vi', 'Tóm tắt — hiện ở danh sách', p.excerpt_vi, 'area') +
+        field('body_vi', 'Nội dung — cách đoạn bằng một dòng trống', p.body_vi, 'area') +
+        field('excerpt_en', 'Tóm tắt tiếng Anh (không bắt buộc)', p.excerpt_en, 'area') +
+        field('body_en', 'Nội dung tiếng Anh (không bắt buộc)', p.body_en, 'area') +
+        '<div class="ad-f">' +
+          '<span>Ảnh bìa</span>' +
+          '<div class="ad-img-row">' +
+            (p.cover
+              ? '<img class="ad-cover-prev" src="' + esc(p.cover) + '" alt="">'
+              : '<img class="ad-cover-prev" alt="" hidden>') +
+            '<label class="ad-btn ad-upload">Chọn ảnh<input type="file" accept="image/*" hidden data-target="cover"></label>' +
+            (p.cover ? '<button type="button" class="ad-btn ad-danger ad-rm-cover">Bỏ ảnh</button>' : '') +
+          '</div>' +
+        '</div>' +
+        '<div class="ad-f">' +
+          '<span>Ảnh trong bài</span>' +
+          '<div class="ad-gal"></div>' +
+          '<label class="ad-btn ad-upload">Thêm ảnh<input type="file" accept="image/*" multiple hidden data-target="images"></label>' +
+        '</div>' +
+        '<label class="ad-check"><input type="checkbox" name="is_published"' +
+          (p.is_published ? ' checked' : '') + '><span>Đăng lên web</span></label>' +
+        '<div class="ad-acts">' +
+          '<button type="submit" class="ad-btn ad-primary">Lưu</button>' +
+          (isNew ? '' : '<button type="button" class="ad-btn ad-danger ad-del">Xoá bài</button>') +
+        '</div>' +
+        '<p class="ad-err" hidden></p>' +
+      '</form>';
+
+    var form = el.main.querySelector('.ad-post-form');
+    // Gán bằng .value chứ không nhét vào HTML — chữ có dấu ngoặc kép sẽ phá vỡ
+    // thuộc tính, và đây là chữ do người dùng gõ.
+    ['title_vi','title_en','place','happened_on','excerpt_vi','body_vi','excerpt_en','body_en']
+      .forEach(function (k) { if (form.elements[k]) form.elements[k].value = p[k] || ''; });
+
+    var cover = p.cover || null;
+    var images = (p.images || []).slice();
+
+    function paintGallery() {
+      var g = form.querySelector('.ad-gal');
+      g.innerHTML = images.map(function (src, i) {
+        return '<span class="ad-gal-item"><img src="' + esc(src) + '" alt="">' +
+               '<button type="button" data-rm="' + i + '" aria-label="Bỏ ảnh">×</button></span>';
+      }).join('');
+      g.querySelectorAll('[data-rm]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          images.splice(parseInt(b.getAttribute('data-rm'), 10), 1);
+          paintGallery();
+        });
+      });
+    }
+    paintGallery();
+
+    form.querySelectorAll('input[type="file"]').forEach(function (inp) {
+      inp.addEventListener('change', function () {
+        var files = Array.prototype.slice.call(inp.files || []);
+        if (!files.length) return;
+        var lbl = inp.closest('.ad-upload');
+        var was = lbl.firstChild.nodeValue;
+        lbl.firstChild.nodeValue = 'Đang tải…';
+        Promise.all(files.map(function (f) { return window.GemDB.uploadImage(f); }))
+          .then(function (urls) {
+            if (inp.getAttribute('data-target') === 'cover') {
+              cover = urls[0];
+              var prev = form.querySelector('.ad-cover-prev');
+              prev.src = cover; prev.hidden = false;
+            } else {
+              images = images.concat(urls);
+              paintGallery();
+            }
+            toast('Đã tải ảnh lên');
+          })
+          .catch(function (err) { toast('Tải ảnh không được: ' + (err.message || ''), true); })
+          .then(function () { lbl.firstChild.nodeValue = was; inp.value = ''; });
+      });
+    });
+
+    var rmCover = form.querySelector('.ad-rm-cover');
+    if (rmCover) rmCover.addEventListener('click', function () {
+      cover = null;
+      var prev = form.querySelector('.ad-cover-prev');
+      prev.hidden = true; prev.removeAttribute('src');
+    });
+
+    el.main.querySelector('.ad-cancel').addEventListener('click', function () {
+      editingPost = null; renderPosts();
+    });
+
+    var del = form.querySelector('.ad-del');
+    if (del) del.addEventListener('click', function () {
+      if (!window.confirm('Xoá hẳn bài này? Không lấy lại được.')) return;
+      window.GemDB.deletePost(p.id)
+        .then(function () { toast('Đã xoá'); editingPost = null; return load(); })
+        .catch(function () { toast('Không xoá được', true); });
+    });
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var err = form.querySelector('.ad-err');
+      var f = form.elements;
+      var title = f['title_vi'].value.trim();
+      if (!title) {
+        err.textContent = 'Bài cần có tiêu đề tiếng Việt.';
+        err.hidden = false;
+        return;
+      }
+      err.hidden = true;
+
+      var row = {
+        // slug làm nên địa chỉ bài. Giữ nguyên slug cũ khi sửa, kẻo link đã
+        // gửi cho người khác thành hỏng.
+        slug: p.slug || (slugify(title) || 'bai') + '-' + Math.random().toString(36).slice(2, 6),
+        title_vi: title,
+        title_en:   f['title_en'].value.trim() || null,
+        place:      f['place'].value.trim() || null,
+        happened_on: f['happened_on'].value || null,
+        excerpt_vi: f['excerpt_vi'].value.trim() || null,
+        excerpt_en: f['excerpt_en'].value.trim() || null,
+        body_vi:    f['body_vi'].value.trim() || null,
+        body_en:    f['body_en'].value.trim() || null,
+        cover: cover,
+        images: images,
+        is_published: f['is_published'].checked
+      };
+
+      var btn = form.querySelector('[type="submit"]');
+      btn.disabled = true; btn.textContent = 'Đang lưu…';
+      window.GemDB.savePost(p.id, row)
+        .then(function () { toast('Đã lưu'); editingPost = null; return load(); })
+        .catch(function (e2) {
+          btn.disabled = false; btn.textContent = 'Lưu';
+          err.textContent = 'Không lưu được. ' + (e2.message || '');
+          err.hidden = false;
+        });
+    });
+  }
+
   /* ---------- vòng đời ---------- */
   function render() {
     if (tab === 'today')    return renderToday();
     if (tab === 'orders')   return renderOrders();
     if (tab === 'products') return renderProducts();
+    if (tab === 'posts')    return renderPosts();
     renderSessions();
   }
 
@@ -544,6 +760,8 @@
       job = window.GemDB.adminOrders().then(function (rows) { orders = rows || []; });
     } else if (tab === 'products') {
       job = window.GemDB.adminProducts().then(function (rows) { products = rows || []; });
+    } else if (tab === 'posts') {
+      job = window.GemDB.adminPosts().then(function (rows) { posts = rows || []; });
     } else {
       // lấy từ đầu hôm nay theo giờ VN, để buổi sáng nay vẫn còn trong danh sách
       var from = new Date();

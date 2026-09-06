@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title data-i18n="title.workshop">Workshop · Gem Chạm Sắc</title>
-  <meta name="description" content="Workshop thủ công tái chế tại Gem Chạm Sắc, Hà Nội — làm bìa sổ từ vải vụn, làm giấy tái chế. Nhóm nhỏ, đặt chỗ trực tuyến.">
+  <title data-i18n="title.news">Bản tin · Gem Chạm Sắc</title>
+  <meta name="description" content="Bản tin Gem Chạm Sắc — workshop, hội chợ và những nơi chúng mình đã ghé qua. Hà Nội.">
 
   <link rel="icon" type="image/png" href="images/logo/gem_logo_icon_120.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -34,8 +34,8 @@
           </ul>
         </li>
         <li><a href="san-pham.html" data-i18n="nav.products">Sản phẩm</a></li>
-        <li><a href="workshop.html" class="active" data-i18n="nav.workshop">Workshop</a></li>
-        <li><a href="ban-tin.html" data-i18n="nav.news">Bản tin</a></li>
+        <li><a href="workshop.html" data-i18n="nav.workshop">Workshop</a></li>
+        <li><a href="ban-tin.html" class="active" data-i18n="nav.news">Bản tin</a></li>
         <li><a href="ghe-tham.html" data-i18n="nav.visit">Ghé thăm</a></li>
       </ul>
       <span class="nav-season"><span class="pulse"></span><span data-i18n="nav.season">Season 02 đang diễn ra</span></span>
@@ -52,46 +52,52 @@
       <a href="mo-hinh.html" class="nav-mobile-sub" data-i18n="nav.model">Mô hình</a>
       <a href="san-pham.html" data-i18n="nav.products">Sản phẩm</a>
       <a href="workshop.html" data-i18n="nav.workshop">Workshop</a>
-      <a href="ban-tin.html" data-i18n="nav.news">Bản tin</a>
+      <a href="ban-tin.html" class="active" data-i18n="nav.news">Bản tin</a>
       <a href="ghe-tham.html" data-i18n="nav.visit">Ghé thăm</a>
     </div>
   </header>
 
-  <!-- PAGE HERO -->
-  <section class="page-hero">
-    <div class="container">
-      <p class="eyebrow" data-i18n="ws.eyebrow">Workshop</p>
-      <h1 data-i18n="ws.hero_title">Tự tay làm một món đồ.</h1>
-      <p data-i18n="ws.hero_sub">Mỗi buổi chỉ nhận một nhóm nhỏ để ai cũng được chỉ tận tay. Chọn buổi bạn đi được, để lại tên và số điện thoại — chúng mình nhắn lại trước một ngày.</p>
-    </div>
-  </section>
+  <main>
+    <!-- PAGE HERO -->
+    <section class="page-hero">
+      <div class="container">
+        <p class="eyebrow" data-i18n="news.eyebrow">Bản tin</p>
+        <h1 data-i18n="news.h1">Chúng mình đã đi những đâu.</h1>
+        <p data-i18n="news.lede">Workshop, hội chợ, những buổi ngồi cùng nhau cắt vải. Ghi lại ở đây để nhớ, và để bạn biết lần tới gặp chúng mình ở đâu.</p>
+      </div>
+    </section>
 
-  <!-- DANH SÁCH BUỔI + FORM GIỮ CHỖ (dựng bởi js/workshop.js) -->
-  <section class="section">
-    <div class="container">
-      <div id="ws-root" class="ws-root"></div>
-    </div>
-  </section>
+    <!-- DANH SÁCH BÀI + ĐỌC MỘT BÀI (dựng bởi js/ban-tin.js) -->
+    <section class="section">
+      <div class="container">
+        <div id="news-root" class="news-root"></div>
+      </div>
+    </section>
 
-  <!-- HẸN GIỜ KHÁC -->
-  <section class="section-sm">
-    <div class="container">
-      <div class="ws-other">
-        <img src="images/mascot/udon_lying_smile.png" alt="Udon" class="ws-other-udon" loading="lazy">
-        <div>
-          <h2 data-i18n="ws.other_h">Muốn giờ khác?</h2>
-          <p data-i18n="ws.other_p">Em gái mình ở studio cả tuần, từ thứ Hai đến thứ Bảy — nhắn cho chúng mình là hẹn được một buổi riêng, kể cả chỉ một người. Chủ Nhật thì cần hẹn trước.</p>
-          <div class="ws-other-act">
-            <a href="https://zalo.me/84824964996" target="_blank" rel="noopener" class="btn btn-primary" data-i18n="ws.other_zalo">Nhắn Zalo</a>
-            <a href="https://m.me/gemchamsac" target="_blank" rel="noopener" class="btn btn-ghost">Messenger</a>
-            <a href="ghe-tham.html" class="btn btn-ghost" data-i18n="nav.visit">Ghé thăm</a>
+    <!-- Đăng ký email: đọc bản tin cũ xong thì mời nhận số tiếp theo -->
+    <section class="section-sm">
+      <div class="container">
+        <div class="email-section">
+          <img src="images/mascot/udon_sit_happy.png" data-i18n-attr="alt:home.email_mascot_alt" alt="Udon cười" class="email-mascot" loading="lazy">
+          <span class="hand" data-i18n="news.email_eyebrow">Số tiếp theo,</span>
+          <h2 data-i18n="news.email_h">gửi thẳng vào hộp thư của bạn.</h2>
+          <p data-i18n="news.email_p">
+            Chúng mình không gửi nhiều — chỉ khi có workshop mới, hội chợ, hoặc một mùa mới bắt đầu.
+          </p>
+          <form class="email-form ml-subscribe"
+                action="https://assets.mailerlite.com/jsonp/2380127/forms/41774242/subscribe"
+                method="post">
+            <input type="email" name="fields[email]" data-i18n-attr="placeholder:common.email_ph|aria-label:common.email_ph" placeholder="email của bạn" required aria-label="Email" autocomplete="email">
+            <button type="submit" class="btn btn-primary" data-i18n="news.email_btn">Nhận bản tin</button>
+          </form>
+          <div class="ml-success" hidden>
+            <p data-i18n="common.ml_success">Cảm ơn bạn. Chúng mình sẽ nhắn khi có tin mới.</p>
           </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
+  </main>
 
-  <!-- FOOTER -->
   <footer class="site-footer">
     <div class="container">
       <div class="footer-grid">
@@ -124,6 +130,8 @@
 
   <script src="js/main.js"></script>
   <script src="js/gem-db.js" defer></script>
-  <script src="js/workshop.js" defer></script>
+  <script src="js/ban-tin.js" defer></script>
+  <script src="js/mailerlite.js" defer></script>
+
 </body>
 </html>

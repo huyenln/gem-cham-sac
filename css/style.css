@@ -54,6 +54,10 @@ body {
 }
 
 img { max-width: 100%; height: auto; display: block; }
+/* `img { display: block }` ở trên là quy tắc của tác giả nên nó ĐÈ quy tắc
+   [hidden]{display:none} mặc định của trình duyệt — nghĩa là <img hidden>
+   vẫn hiện. Dòng này trả lại đúng nghĩa của thuộc tính hidden, cho mọi thẻ. */
+[hidden] { display: none !important; }
 a { color: var(--sage-deep); text-decoration: none; transition: color 0.2s ease; }
 a:hover { color: var(--ink-dark); }
 button { font: inherit; cursor: pointer; border: none; background: none; }
@@ -129,7 +133,9 @@ p:last-child { margin-bottom: 0; }
   max-width: var(--container-max);
   margin-inline: auto;
   padding-inline: var(--space-6);
-  gap: var(--space-6);
+  gap: var(--space-4);
+  /* Cho phép xuống hàng: dải "Season 02" cần một hàng riêng khi màn hẹp. */
+  flex-wrap: wrap;
 }
 @media (min-width: 768px) { .nav { padding-inline: var(--space-12); } }
 
@@ -153,8 +159,11 @@ p:last-child { margin-bottom: 0; }
   margin-top: 3px;
 }
 
-.nav-menu { display: none; list-style: none; gap: var(--space-6); align-items: center; }
-@media (min-width: 960px) { .nav-menu { display: flex; } }
+.nav-menu { display: none; list-style: none; gap: var(--space-4); align-items: center; }
+@media (min-width: 960px)  { .nav-menu { display: flex; } }
+@media (min-width: 1200px) { .nav-menu { gap: var(--space-5); } }
+/* Sáu mục rồi — không mục nào được xuống dòng, kẻo thanh nav cao gấp đôi */
+.nav-menu > li > a { white-space: nowrap; }
 
 .nav-menu a {
   font-size: var(--text-sm);
@@ -175,15 +184,27 @@ p:last-child { margin-bottom: 0; }
 }
 
 .nav-season {
-  display: none;
+  /* Trước đây badge nằm cùng hàng với nav và bị ẩn dưới 960px — khách vào
+     bằng điện thoại không biết cửa hàng đang mở. Giờ là một dải mảnh dưới
+     thanh nav ở mọi khổ màn hình: dễ thấy hơn, nhất quán, và nav có thêm
+     mục nữa cũng không vỡ (inline vốn đã chật từ khi có 6 mục).
+
+     flex-basis chứ không phải width: width 100% cộng thêm padding sẽ rộng
+     hơn hàng và đẩy cả trang tràn ngang. */
+  display: flex;
   align-items: center;
+  justify-content: center;
   gap: var(--space-2);
+  flex: 1 0 100%;
+  order: 10;
+  padding: var(--space-2) 0 0;
+  margin-top: var(--space-2);
+  border-top: 1px solid var(--paper-cream-warm);
   font-size: var(--text-xs);
   color: var(--sage-deep);
   font-weight: 600;
   white-space: nowrap;
 }
-@media (min-width: 960px) { .nav-season { display: inline-flex; } }
 
 .pulse {
   width: 8px; height: 8px;
@@ -998,9 +1019,10 @@ p:last-child { margin-bottom: 0; }
 .site-footer a { color: var(--paper-cream); opacity: 0.85; display: block; margin-bottom: var(--space-2); font-size: var(--text-sm); }
 .site-footer a:hover { color: var(--sage-light); opacity: 1; }
 
-.footer-socials { display: flex; gap: var(--space-3); margin-top: var(--space-3); }
+.footer-socials { display: flex; gap: var(--space-2); margin-top: var(--space-3); }
 .footer-socials a {
-  width: 36px; height: 36px;
+  /* 44px là vùng bấm tối thiểu — 36px cũ hay bị trượt sang icon bên cạnh */
+  width: 44px; height: 44px;
   display: flex; align-items: center; justify-content: center;
   border: 1px solid var(--sage-light);
   border-radius: 50%;
@@ -1078,6 +1100,21 @@ p:last-child { margin-bottom: 0; }
   border-radius: var(--radius-md);
   border: 1px solid rgba(135, 150, 90, 0.15);
 }
+/* Câu trích trong trang Câu chuyện. Trước đây căn giữa: với đoạn dài thì
+   mỗi lần xuống dòng mắt lại phải dò tìm điểm bắt đầu, đọc mệt. Căn trái
+   hợp với đoạn dài; căn giữa để dành cho câu ngắn kiểu khẩu hiệu. */
+.story-quote {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  color: var(--sage-deep);
+  font-style: italic;
+  line-height: 1.55;
+  max-width: 34ch;
+  margin-inline: auto;
+  padding-left: var(--space-6);
+  border-left: 3px solid var(--sage-light);
+}
+
 .commit-num { font-family: var(--font-display); font-size: var(--text-xl); color: var(--kraft); font-weight: 700; margin-bottom: var(--space-2); }
 .commit-card h3 { font-size: var(--text-xl); margin-bottom: var(--space-3); }
 .commit-card p { color: var(--ink-body); margin-bottom: 0; }
@@ -1828,7 +1865,6 @@ body.pg-lock { overflow: hidden; }
 body.gb-lock { overflow: hidden; }
 
 /* label/field hidden via the hidden attribute must actually hide */
-.gb-panel [hidden] { display: none; }
 
 /* ---------- ROWS ---------- */
 .gb-rows { list-style: none; display: flex; flex-direction: column; gap: var(--space-4); }
@@ -2455,3 +2491,67 @@ body.gb-lock { overflow: hidden; }
 .ws-other h2 { font-size: var(--text-xl); margin-bottom: var(--space-3); }
 .ws-other p { color: var(--ink-body); line-height: 1.7; margin-bottom: var(--space-6); }
 .ws-other-act { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+
+/* ======================================================
+   BẢN TIN — danh sách bài + đọc một bài
+   Logic: js/ban-tin.js · dữ liệu: js/gem-db.js
+   ====================================================== */
+
+.news-loading { color: var(--ink-soft); font-size: var(--text-base); }
+.news-error { text-align: center; padding: var(--space-8) 0; }
+.news-error p { color: var(--ink-body); margin-bottom: var(--space-4); }
+
+.news-empty { text-align: center; padding: var(--space-8) 0; }
+.news-empty-udon { width: 140px; height: auto; margin: 0 auto var(--space-4); display: block; }
+.news-empty-h { font-family: var(--font-display); font-weight: 700; font-size: var(--text-lg); color: var(--ink-dark); margin-bottom: var(--space-2); }
+.news-empty-p { font-size: var(--text-sm); color: var(--ink-body); max-width: 38ch; margin: 0 auto; line-height: 1.65; }
+
+/* ---------- danh sách ---------- */
+.news-list { list-style: none; display: grid; gap: var(--space-6); }
+@media (min-width: 720px) {
+  .news-list { grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr)); }
+}
+
+.news-card a {
+  display: flex; flex-direction: column; height: 100%;
+  background: var(--paper-white);
+  border: 1px solid rgba(135, 150, 90, 0.18);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-soft);
+  text-decoration: none;
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+.news-card a:hover { box-shadow: var(--shadow-paper); transform: translateY(-2px); }
+
+.news-cover { aspect-ratio: 3 / 2; overflow: hidden; background: var(--paper-cream); }
+.news-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Ảnh bìa trong bài: để nguyên tỷ lệ, không cắt cụt */
+.news-cover.big { aspect-ratio: auto; border-radius: var(--radius-lg); margin: var(--space-5) 0; }
+.news-cover.big img { height: auto; }
+
+.news-card-body { padding: var(--space-5) var(--space-6) var(--space-6); display: flex; flex-direction: column; gap: var(--space-2); flex: 1; }
+.news-meta { font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink-soft); }
+.news-card-body h2 { font-size: var(--text-lg); color: var(--ink-dark); line-height: 1.3; }
+.news-excerpt { font-size: var(--text-sm); color: var(--ink-body); line-height: 1.6; }
+.news-more { font-size: var(--text-sm); color: var(--sage-deep); font-weight: 600; margin-top: auto; padding-top: var(--space-2); }
+.news-more::after { content: " →"; }
+
+/* ---------- đọc một bài ---------- */
+.news-back {
+  background: none; border: 0; padding: 0; margin-bottom: var(--space-5);
+  font-family: var(--font-body); font-size: var(--text-sm);
+  color: var(--ink-soft); cursor: pointer; min-height: 44px;
+}
+.news-back::before { content: "‹ "; }
+.news-back:hover { color: var(--ink-dark); }
+
+.news-post-h { font-size: var(--text-2xl); color: var(--ink-dark); line-height: 1.2; margin-top: var(--space-1); }
+.news-body { margin-top: var(--space-5); }
+.news-body p {
+  font-size: var(--text-base); color: var(--ink-body);
+  line-height: 1.75; margin-bottom: var(--space-4); max-width: 62ch;
+}
+.news-gallery { display: grid; gap: var(--space-4); margin-top: var(--space-8); }
+@media (min-width: 640px) { .news-gallery { grid-template-columns: 1fr 1fr; } }
+.news-gallery img { width: 100%; height: auto; border-radius: var(--radius-md); display: block; }

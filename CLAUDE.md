@@ -22,6 +22,7 @@ Static website (5 trang) cho cửa hàng **Gem Chạm Sắc** — pop-up store s
 ├── ghe-tham.html             Ghé thăm (địa chỉ + map + email signup)
 ├── season-02.html            Câu chuyện Season 02 (A Space To Stay + link FB reel)
 ├── workshop.html             Đặt lịch workshop (đọc từ Supabase)
+├── ban-tin.html              Bản tin — bài viết đọc từ Supabase
 ├── admin.html                Trang quản trị cho Anna + nhân viên (noindex, không có link từ nav)
 ├── 404.html                  Fallback page (Udon lạc đường)
 ├── CNAME                     gemchamsac.com (cho GitHub Pages custom domain)
@@ -35,6 +36,7 @@ Static website (5 trang) cho cửa hàng **Gem Chạm Sắc** — pop-up store s
 ├── js/basket.js              Giỏ hàng + đặt đơn + chọn cách trả tiền
 ├── js/workshop.js            Danh sách buổi, form giữ chỗ, .ics
 ├── js/admin.js               Trang quản trị: Hôm nay / Đơn hàng / Đặt lịch / Sản phẩm
+├── js/ban-tin.js             Danh sách bài + đọc bài (?bai=<slug>)
 ├── js/vietqr.js              Sinh mã VietQR ngay trong trình duyệt (EMVCo + QR encoder)
 ├── images/
 │   ├── logo/                 Logo Gem variants
@@ -48,7 +50,8 @@ Static website (5 trang) cho cửa hàng **Gem Chạm Sắc** — pop-up store s
 
 **Backend (từ Sprint 3):** Supabase (project `dxdovvqsfjeizsoprrfn`, Singapore,
 Postgres 17). Bảng: `products`, `orders`, `order_items`, `sessions`, `bookings`,
-`workshop_types`, `staff`, `settings`. Chi tiết ở `docs/design.md`.
+`workshop_types`, `staff`, `settings`, `posts`. Kho ảnh: Storage bucket
+`gem-media` (đọc công khai, tải lên chỉ nhân sự). Chi tiết ở `docs/design.md`.
 
 > ⚠️ **Hai luật bảo mật, đọc trước khi đụng vào database:**
 >
@@ -61,6 +64,9 @@ Postgres 17). Bảng: `products`, `orders`, `order_items`, `sessions`, `bookings
 >    không vào được.** Đã dính lỗi này hai lần. Và khi kiểm tra thì phải kiểm
 >    **cả ba vai** (khách, đăng nhập nhưng không phải nhân sự, nhân sự): chỉ
 >    kiểm vai `anon` thì "thiếu GRANT" trông y hệt "bảo mật đang hoạt động".
+> 3. **KHÔNG đưa chữ người dùng nhập vào `innerHTML`.** Nội dung bài Bản tin,
+>    tên khách, ghi chú đơn — tất cả đều là chữ người khác gõ. Dùng
+>    `textContent`, hoặc `esc()` có sẵn trong từng file JS.
 
 **Naming conventions:**
 - Files: lowercase kebab-case (`cau-chuyen.html`, `vai-vun-tui-deo-cheo.jpg`)
@@ -315,28 +321,30 @@ the testing before bothering the user.
 
 ## Active tasks
 
-**Đã xong:**
-- ✅ Font tiếng Việt (Caveat → Dancing Script)
-- ✅ Mailerlite tích hợp thật (thay form demo)
-- ✅ Footer/social links (FB, IG, Threads, YouTube)
-- ✅ TOC trang Sản phẩm + "Dịch vụ đặc biệt" + CTA workshop
-- ✅ Carousel ảnh sản phẩm (click mở lightbox) + CTA "Mời qua cửa hàng"
-- ✅ Song ngữ VI/EN (toggle header, `js/i18n.js`)
+**Đã xong — Sprint 1 → 6, tất cả đã lên `main`:**
+- ✅ Font tiếng Việt, Mailerlite, footer/social, TOC, carousel, song ngữ VI/EN
+- ✅ Ảnh thật + giá thật (11/16 từ catalog, 5 món "Liên hệ")
+- ✅ "Về Gem" thành mục cha (Câu chuyện + Mô hình là trang con)
+- ✅ Supabase: đặt lịch workshop, sản phẩm, đơn hàng, thanh toán COD + QR, Bản tin
+- ✅ Trang quản trị: Hôm nay / Đơn hàng / Đặt lịch / Sản phẩm / Bản tin
+- ✅ UX đợt 2: bỏ lặp, căn trái đoạn dài, badge Season thành dải, vùng bấm 44px, lazy-load
 
-**Đã xong (tiếp):**
-- ✅ Ảnh thật + carousel cho tất cả sản phẩm (vải vụn, 2hand, gốm, set quà), tên thương hiệu mới
-- ✅ Category "Set quà tặng" (gift sets)
-- ✅ TOC active-highlight fix (selector `.product-toc-mobile/.product-toc-sidebar`)
-
-**Còn lại / ý tưởng:**
-- ✨ Flow điều hướng "Tiếp theo" giữa các pages
-- 🎨 Polish Câu chuyện + Mô hình page hấp dẫn hơn
+**Còn lại:**
+- 📸 **Buổi chụp ảnh** — việc chặn nhiều thứ nhất. 8/19 ảnh hiện tại là poster
+  Instagram có chữ in sẵn, nên hero và grid trang chủ phải chọn theo *ảnh nào
+  sạch* chứ không theo *sản phẩm nào đẹp*. Cũng chặn trang Câu chuyện (U6).
+- 📦 Nén ảnh sản phẩm (`gom-1.jpg` 3 MB) — nên làm cùng lúc với ảnh mới
+- ➕ Thêm sản phẩm mới qua trang quản trị (giờ chỉ sửa giá / ẩn hiện được)
 - 📝 Bản dịch EN là first-pass — Anna review & chỉnh trong `STRINGS` (`js/i18n.js`)
-- 📸 Cân nhắc nén ảnh full-size (nhiều ảnh ~1–4MB) để tải nhanh hơn
+- 🚚 Chọn đối tác giao hàng cho COD
+- 💳 Quyết định ngưỡng bắt buộc chuyển khoản (hiện đang tắt)
 
 ---
 
 ## Reference docs
 
+- **`docs/design.md`** — nguồn sự thật: mọi quyết định, từng sprint, cấu hình
+  (Supabase, tài khoản ngân hàng, owner), ghi chú bảo mật, và các lỗi đã gặp
+  kèm nguyên nhân. Đọc file này trước khi đụng vào backend.
 - `docs/prompts.md` — Ghi chú prompt
 - `README.md` — Deploy guide for Anna

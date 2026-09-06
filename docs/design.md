@@ -924,11 +924,62 @@ ngân hàng, thấy nội dung chuyển khoản trùng mã đơn, rồi bấm n�
 - [ ] Chuyển khoản thật một đơn nhỏ, xem mã QR quét có ra đúng số tiền + mã đơn
 - [ ] Quyết định có đặt ngưỡng bắt buộc chuyển khoản không, và bao nhiêu
 
-### Sprint 6 — UX đợt 2 + Bản tin động · ~2,5 ngày
+### Bản tin — **ĐÃ XONG**
 
-- **U6–U12**
-- Chuyển bài Bản tin sang Supabase + mục Bản tin trong admin
-- Cần từ bạn: ảnh cho trang Câu chuyện (U6)
+Bảng `posts` + kho ảnh `gem-media` trên Supabase Storage. Anna viết bài, tải
+ảnh, bấm đăng — không cần sửa code.
+
+`ban-tin.html` + `js/ban-tin.js`: danh sách bài và đọc một bài trên cùng một
+trang. Mở bài thì địa chỉ đổi thành `?bai=<slug>` nên **gửi link cho nhau
+được**, và nút Back của trình duyệt quay lại danh sách đúng như người dùng
+mong đợi. Slug giữ nguyên khi sửa bài, kẻo link đã gửi thành hỏng.
+
+**Chữ do người dùng gõ không bao giờ vào `innerHTML`.** Mỗi đoạn thành một
+`<p>` bằng `textContent`. Nội dung bài là chữ Anna nhập trong trang quản trị —
+ghép thẳng vào HTML là mở cửa cho mã lạ chạy trên trang.
+
+Kho ảnh `gem-media`: **đọc thì ai cũng được** (ảnh nằm trên trang công khai),
+**tải lên thì chỉ nhân sự**. Đã thử vai `anon`: bị chặn ở tầng RLS
+(`new row violates row-level security policy`). Thiếu policy đó là ai cũng
+tải file lên kho của bạn được — vừa tốn tiền vừa thành chỗ chứa rác.
+
+Mục **Bản tin** trong trang quản trị: viết/sửa/xoá bài, tải ảnh bìa và ảnh
+trong bài, bật tắt đăng. Bài chưa đăng hiện mờ + viền đứt.
+
+> ⚠️ **Đường tải ảnh lên chưa chạy thử thật.** Sandbox chặn `supabase.co` nên
+> mình chỉ kiểm được phần giao diện bằng dữ liệu giả. Việc đầu tiên cần thử:
+> tải một ảnh bìa lên xem có hiện ra không.
+
+### Sprint 6 — UX đợt 2 · **ĐÃ XONG (trừ phần chờ ảnh)**
+
+| | Việc | Kết quả |
+|---|---|---|
+| U6 | Ảnh thật cho trang Câu chuyện | **Chưa làm — chờ buổi chụp ảnh** |
+| U7 | Căn trái đoạn dài ở Câu chuyện | Câu trích dài chuyển sang căn trái có vạch bên trái. Căn giữa để dành cho câu ngắn kiểu khẩu hiệu — đoạn dài mà căn giữa thì mỗi lần xuống dòng mắt lại phải dò tìm điểm bắt đầu |
+| U8 | Bỏ lặp “Ba điều chúng mình giữ” | Bỏ khỏi Câu chuyện, giữ ở trang chủ |
+| U9 | Badge “Season 02” ở mobile | Xem ghi chú bên dưới |
+| U10 | Vùng bấm 44px | Icon mạng xã hội ở footer: 36px → 44px |
+| U11 | Bỏ số 01–04 ở phần cam kết | Bốn việc song song, không phải bốn bước — đánh số gợi ý sai thứ tự. MISSION/VISION giữ vì đó là nhãn thật |
+| U12 | `loading="lazy"` | Thêm cho 7 ảnh; ảnh hero giữ `eager` |
+
+**Badge “Season 02” — đổi cách làm giữa chừng.** Ý ban đầu là cho badge hiện
+inline ở mobile. Nhưng thêm mục “Bản tin” là nav có 6 mục, mà khung nav chốt ở
+`--container-max` nên màn rộng thêm cũng không có thêm chỗ: badge inline đẩy
+nút VI/EN xuống hàng ở **mọi** khổ desktop. Nên chuyển badge thành **dải mảnh
+dưới thanh nav ở mọi khổ màn hình** — dễ thấy hơn hẳn, nhất quán, và nav thêm
+mục nữa cũng không vỡ.
+
+Nhân tiện bắt được một lỗi của chính mình: dải badge đầu tiên dùng
+`width: 100%` cộng padding, rộng hơn hàng nên đẩy cả trang tràn ngang ở
+960–1100px. Đổi sang `flex: 1 0 100%`.
+
+### Chưa làm — cần biết
+
+- **Nén ảnh sản phẩm.** `loading="lazy"` đã thêm, nhưng ảnh gốc vẫn nặng
+  (`gom-1.jpg` 3 MB, vài ảnh 1,5–2,3 MB). Nén thật cần chạy công cụ trên ảnh
+  gốc — nên làm cùng lúc với ảnh mới từ buổi chụp.
+- **Thêm sản phẩm mới qua admin** (Sprint 4 để lại) — cần cả ảnh, thư viện
+  ảnh, vị trí trong danh mục.
 
 ---
 
