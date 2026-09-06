@@ -325,3 +325,51 @@
   background: var(--ink-dark); color: var(--paper-white);
   border: 0; cursor: pointer; font-size: 15px; line-height: 1;
 }
+
+/* ==========================================================
+   THÊM BUỔI · LOẠI WORKSHOP
+   ========================================================== */
+.ad-f-row { display: grid; gap: var(--space-3); }
+@media (min-width: 480px) { .ad-f-row { grid-template-columns: 1fr 1fr; } }
+.ad-f-row .ad-f { margin-bottom: 0; }
+
+.ad-f select, .ad-f input[type="time"], .ad-f input[type="number"] {
+  width: 100%; min-height: 44px; padding: 0 0.6em;
+  font-family: var(--font-body); font-size: var(--text-base); color: var(--ink-dark);
+  background: var(--paper-white); border: 1.5px solid var(--sage-light);
+  border-radius: var(--radius-md);
+}
+.ad-f select:focus, .ad-f input:focus { outline: none; border-color: var(--sage-deep); }
+
+.ad-newsess, .ad-wtypes {
+  background: var(--paper-white); border: 1px solid rgba(135, 150, 90, 0.18);
+  border-radius: var(--radius-md); margin-bottom: var(--space-5); overflow: hidden;
+}
+.ad-wtypes { margin-top: var(--space-8); margin-bottom: 0; }
+.ad-newsess > summary, .ad-wtypes > summary {
+  list-style: none; cursor: pointer; padding: var(--space-4);
+  display: flex; align-items: center; gap: var(--space-3); min-height: 44px;
+}
+.ad-newsess > summary::-webkit-details-marker,
+.ad-wtypes  > summary::-webkit-details-marker { display: none; }
+.ad-newsess > summary .ad-btn { pointer-events: none; }
+
+.ad-sess-form { padding: 0 var(--space-4) var(--space-4); }
+.ad-preview {
+  padding: var(--space-3); margin-bottom: var(--space-4);
+  background: var(--paper-cream); border-radius: var(--radius-sm);
+  border-left: 3px solid var(--kraft);
+}
+
+.ad-wt {
+  padding: var(--space-4); margin-bottom: var(--space-3);
+  background: var(--paper-cream); border-radius: var(--radius-md);
+}
+.ad-wt.is-hidden { opacity: 0.65; }
+.ad-wt .ad-f input, .ad-wt .ad-f textarea {
+  width: 100%; min-height: 44px; padding: 0.5em 0.7em;
+  font-family: var(--font-body); font-size: var(--text-sm); color: var(--ink-dark);
+  background: var(--paper-white); border: 1.5px solid var(--sage-light);
+  border-radius: var(--radius-md);
+}
+.ad-wt .ad-f textarea { min-height: 0; line-height: 1.5; resize: vertical; }

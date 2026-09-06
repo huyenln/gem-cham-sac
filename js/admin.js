@@ -47,6 +47,8 @@
   var orders = [];
   var products = [];
   var posts = [];
+  var wtypes = [];
+  var editingProduct = null;
   var editingPost = null;   // null = xem danh sách, {} = bài mới, {…} = sửa bài
   var tab = 'today';
   var orderFilter = 'open';   // open | done | all
@@ -79,6 +81,16 @@
       .formatToParts(new Date()).forEach(function (x) { p[x.type] = x.value; });
     return p.year + '-' + p.month + '-' + p.day;
   }
+
+  // Cộng/trừ ngày trên chuỗi YYYY-MM-DD. Dựng Date ở 12:00Z cho chắc — nửa
+  // đêm dễ trượt sang ngày khác khi đổi múi giờ.
+  function addDaysYmd(ymd, n) {
+    var d = new Date(ymd + 'T12:00:00Z');
+    d.setUTCDate(d.getUTCDate() + n);
+    return d.toISOString().slice(0, 10);
+  }
+
+  function dm(ymd) { return ymd.slice(8, 10) + '/' + ymd.slice(5, 7); }
 
   // Số điện thoại là thao tác dùng nhiều nhất ở đây — luôn bấm được
   function phoneLinks(phone) {
@@ -155,6 +167,7 @@
       b.addEventListener('click', function () {
         tab = b.getAttribute('data-tab');
         editingPost = null;
+        editingProduct = null;
         paintTabs();
         el.main.innerHTML = '<p class="ad-loading">Đang tải...</p>';
         load();          // mỗi tab lấy dữ liệu riêng, không nạp sẵn tất cả
@@ -283,12 +296,198 @@
   }
 
   /* ---------- ĐẶT LỊCH ---------- */
+  /* ---------- loại workshop ----------
+     Nằm ngay dưới lịch trong cùng tab: chúng đi liền nhau (muốn thêm buổi thì
+     phải có loại), mà thêm một tab nữa thì thanh tab trên điện thoại đã chật. */
+  function wtypesHTML() {
+    return '<details class="ad-wtypes">' +
+      '<summary><b>Loại workshop</b> <span class="ad-count">' + wtypes.length + '</span></summary>' +
+      '<div class="ad-fold-body">' +
+        '<p class="ad-hint">Mỗi buổi trên lịch thuộc về một loại. Sửa ở đây là ' +
+        'đổi cho mọi buổi cùng loại. Để trống giá thì web hiện “Liên hệ”.</p>' +
+        wtypes.map(function (t) {
+          return '<div class="ad-wt' + (t.is_published === false ? ' is-hidden' : '') +
+                 '" data-id="' + esc(t.id) + '">' +
+            '<div class="ad-f-row">' +
+              '<label class="ad-f"><span>Tên (VI)</span><input class="wt-vi"></label>' +
+              '<label class="ad-f"><span>Tên (EN)</span><input class="wt-en"></label>' +
+            '</div>' +
+            '<label class="ad-f"><span>Mô tả ngắn (VI)</span><textarea class="wt-dvi" rows="2"></textarea></label>' +
+            '<div class="ad-f-row">' +
+              '<label class="ad-f"><span>Thời lượng (phút)</span>' +
+                '<input type="number" class="wt-dur" min="15" max="480" step="15"></label>' +
+              '<label class="ad-f"><span>Giá</span>' +
+                '<input type="number" class="wt-price" min="0" step="1000" placeholder="Liên hệ"></label>' +
+            '</div>' +
+            '<div class="ad-acts">' +
+              '<button type="button" class="ad-btn ad-primary wt-save">Lưu</button>' +
+              '<button type="button" class="ad-btn' + (t.is_published === false ? ' on' : '') +
+                '" data-wtpub="' + (t.is_published === false ? '1' : '0') + '">' +
+                (t.is_published === false ? 'Đang ẩn' : 'Đang hiện') + '</button>' +
+            '</div>' +
+          '</div>';
+        }).join('') +
+        '<button type="button" class="ad-btn wt-new">+ Loại mới</button>' +
+      '</div>' +
+    '</details>';
+  }
+
+  function wireWtypes() {
+    el.main.querySelectorAll('.ad-wt').forEach(function (d) {
+      var id = d.getAttribute('data-id');
+      var t = wtypes.filter(function (x) { return x.id === id; })[0] || {};
+      // Gán bằng .value: tên có dấu ngoặc kép sẽ phá vỡ thuộc tính HTML
+      d.querySelector('.wt-vi').value    = t.name_vi || '';
+      d.querySelector('.wt-en').value    = t.name_en || '';
+      d.querySelector('.wt-dvi').value   = t.desc_vi || '';
+      d.querySelector('.wt-dur').value   = t.duration_minutes == null ? '' : t.duration_minutes;
+      d.querySelector('.wt-price').value = t.price == null ? '' : t.price;
+
+      d.querySelector('.wt-save').addEventListener('click', function () {
+        var name = d.querySelector('.wt-vi').value.trim();
+        if (!name) return toast('Loại workshop cần có tên tiếng Việt', true);
+        var dur = parseInt(d.querySelector('.wt-dur').value, 10);
+        var pr  = d.querySelector('.wt-price').value.trim();
+        window.GemDB.saveWorkshopType(id, {
+          name_vi: name,
+          name_en: d.querySelector('.wt-en').value.trim() || null,
+          desc_vi: d.querySelector('.wt-dvi').value.trim() || null,
+          duration_minutes: dur > 0 ? dur : 90,
+          price: pr === '' ? null : parseInt(pr, 10)
+        }).then(function () { toast('Đã lưu'); return load(); })
+          .catch(function (e) { toast(e.message || 'Không lưu được', true); });
+      });
+
+      d.querySelector('[data-wtpub]').addEventListener('click', function (e) {
+        e.target.disabled = true;
+        window.GemDB.saveWorkshopType(id, { is_published: e.target.getAttribute('data-wtpub') === '1' })
+          .then(function () { toast('Đã cập nhật'); return load(); })
+          .catch(function () { e.target.disabled = false; toast('Không lưu được', true); });
+      });
+    });
+
+    var neu = el.main.querySelector('.wt-new');
+    if (neu) neu.addEventListener('click', function () {
+      var name = window.prompt('Tên loại workshop mới (tiếng Việt):');
+      if (!name || !name.trim()) return;
+      neu.disabled = true;
+      window.GemDB.saveWorkshopType(null, {
+        slug: slugify(name) + '-' + Math.random().toString(36).slice(2, 6),
+        name_vi: name.trim(),
+        duration_minutes: 90,
+        is_published: false,          // tạo ở dạng ẩn, điền xong mới cho hiện
+        sort_order: wtypes.length * 10
+      }).then(function () { toast('Đã tạo — điền nốt rồi bấm “Đang ẩn” để hiện'); return load(); })
+        .catch(function (e) { neu.disabled = false; toast(e.message || 'Không tạo được', true); });
+    });
+  }
+
+  /* ---------- thêm buổi ----------
+     Lịch chỉ mở trước vài tuần rồi hết. Nếu mỗi lần thêm phải nhập từng buổi
+     thì rất dễ quên, và trang Workshop sẽ lặng lẽ trống trơn. Nên form này
+     tạo được nhiều tuần một lúc: chọn thứ + giờ, rồi lặp lại N tuần. */
+  function sessionFormHTML() {
+    var types = wtypes.filter(function (t) { return t.is_published !== false; });
+    var today = todayVN();
+    return '<details class="ad-newsess">' +
+      '<summary><span class="ad-btn ad-primary">+ Thêm buổi</span></summary>' +
+      '<form class="ad-sess-form">' +
+        (types.length
+          ? '<label class="ad-f"><span>Loại workshop</span><select name="type">' +
+              types.map(function (t) {
+                return '<option value="' + esc(t.id) + '">' + esc(t.name_vi) + '</option>';
+              }).join('') +
+            '</select></label>'
+          : '<p class="ad-hint">Chưa có loại workshop nào. Tạo loại ở mục dưới trước.</p>') +
+        '<div class="ad-f-row">' +
+          '<label class="ad-f"><span>Ngày đầu</span>' +
+            '<input type="date" name="date" value="' + today + '" min="' + today + '"></label>' +
+          '<label class="ad-f"><span>Giờ</span>' +
+            '<input type="time" name="time" value="17:00" step="900"></label>' +
+        '</div>' +
+        '<div class="ad-f-row">' +
+          '<label class="ad-f"><span>Số chỗ</span>' +
+            '<input type="number" name="cap" min="1" max="100" value="8"></label>' +
+          '<label class="ad-f"><span>Lặp lại mỗi tuần</span>' +
+            '<select name="weeks">' +
+              [1, 2, 4, 6, 8, 12].map(function (n) {
+                return '<option value="' + n + '"' + (n === 4 ? ' selected' : '') + '>' +
+                       (n === 1 ? 'chỉ 1 buổi' : n + ' tuần') + '</option>';
+              }).join('') +
+            '</select></label>' +
+        '</div>' +
+        '<p class="ad-hint ad-preview"></p>' +
+        '<button type="submit" class="ad-btn ad-primary"' + (types.length ? '' : ' disabled') + '>Tạo buổi</button>' +
+        '<p class="ad-err" hidden></p>' +
+      '</form>' +
+    '</details>';
+  }
+
+  function wireSessionForm() {
+    var form = el.main.querySelector('.ad-sess-form');
+    if (!form) return;
+    var f = form.elements;
+
+    function preview() {
+      var n = parseInt(f['weeks'].value, 10) || 1;
+      var d = f['date'].value, tm = f['time'].value;
+      if (!d || !tm) return;
+      var first = DAYS[new Date(d + 'T12:00:00Z').getUTCDay()];
+      var last = addDaysYmd(d, (n - 1) * 7);
+      form.querySelector('.ad-preview').textContent = n === 1
+        ? 'Tạo 1 buổi: ' + first + ' ' + dm(d) + ' lúc ' + tm
+        : 'Tạo ' + n + ' buổi, ' + first + ' hằng tuần lúc ' + tm +
+          ', từ ' + dm(d) + ' đến ' + dm(last);
+    }
+    ['date', 'time', 'weeks'].forEach(function (k) {
+      if (f[k]) f[k].addEventListener('change', preview);
+    });
+    preview();
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var err = form.querySelector('.ad-err');
+      var d = f['date'].value, tm = f['time'].value;
+      if (!d || !tm) { err.textContent = 'Cần chọn ngày và giờ.'; err.hidden = false; return; }
+      err.hidden = true;
+
+      var n = parseInt(f['weeks'].value, 10) || 1;
+      var cap = parseInt(f['cap'].value, 10) || 8;
+      var rows = [];
+      for (var i = 0; i < n; i++) {
+        // Ghép kèm +07:00 để giờ nhập vào luôn là giờ Hà Nội, bất kể máy của
+        // người nhập đặt múi giờ nào. Việt Nam không đổi giờ mùa nên một mốc
+        // cố định là đủ, không cần thư viện múi giờ.
+        rows.push({
+          workshop_type_id: f['type'].value,
+          starts_at: addDaysYmd(d, i * 7) + 'T' + tm + ':00+07:00',
+          capacity: cap,
+          status: 'open'
+        });
+      }
+
+      var btn = form.querySelector('[type="submit"]');
+      btn.disabled = true; btn.textContent = 'Đang tạo…';
+      window.GemDB.createSession(rows)
+        .then(function () { toast('Đã tạo ' + rows.length + ' buổi'); return load(); })
+        .catch(function (e2) {
+          btn.disabled = false; btn.textContent = 'Tạo buổi';
+          err.textContent = e2.message || 'Không tạo được.';
+          err.hidden = false;
+        });
+    });
+  }
+
   function renderSessions() {
     if (!sessions.length) {
-      el.main.innerHTML = '<div class="ad-empty"><p>Chưa có buổi nào sắp tới.</p></div>';
+      el.main.innerHTML = sessionFormHTML() +
+        '<div class="ad-empty"><p>Chưa có buổi nào sắp tới.</p>' +
+        '<p class="ad-hint">Bấm “Thêm buổi” ở trên để mở lịch cho khách đặt.</p></div>' +
+        wtypesHTML();
+      wireSessionForm(); wireWtypes();
       return;
     }
-    el.main.innerHTML = sessions.map(function (s) {
+    el.main.innerHTML = sessionFormHTML() + sessions.map(function (s) {
       var t = vn(s.starts_at);
       var taken = seatsTaken(s);
       var all = s.bookings || [];
@@ -310,12 +509,34 @@
             (s.status === 'open'
               ? '<button type="button" class="ad-close danger">Đóng buổi</button>'
               : '<button type="button" class="ad-reopen">Mở lại</button>') +
+            // Chỉ hiện khi chưa ai đặt. Buổi đã có người thì đóng chứ không
+            // xoá — database cũng chặn, đây chỉ là để đỡ bấm nhầm.
+            (taken === 0 ? '<button type="button" class="ad-del-sess danger">Xoá buổi</button>' : '') +
           '</div>' +
         '</div>' +
       '</details>';
-    }).join('');
+    }).join('') + wtypesHTML();
 
     wireBookingActions(el.main);
+    wireSessionForm();
+    wireWtypes();
+
+    el.main.querySelectorAll('.ad-del-sess').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var d = b.closest('.ad-sess-fold');
+        var id = d.getAttribute('data-id');
+        var when = d.querySelector('.ad-when').textContent.replace(/\s+/g, ' ').trim();
+        if (!window.confirm('Xoá buổi ' + when + '?')) return;
+        b.disabled = true;
+        window.GemDB.deleteSession(id)
+          .then(function () { toast('Đã xoá buổi'); return load(); })
+          .catch(function (err) {
+            b.disabled = false;
+            // Database trả về câu giải thích rõ ràng — hiện thẳng cho người dùng
+            toast(err.message || 'Không xoá được', true);
+          });
+      });
+    });
 
     el.main.querySelectorAll('.ad-sess-fold').forEach(function (d) {
       var id = d.getAttribute('data-id');
@@ -464,7 +685,141 @@
 
   /* ================= SẢN PHẨM ================= */
 
+  /* ---------- soạn sản phẩm ---------- */
+  function renderProductForm() {
+    var p = editingProduct || {};
+    var isNew = !p.id;
+
+    el.main.innerHTML =
+      '<button type="button" class="ad-btn ad-cancel">‹ Về danh sách</button>' +
+      '<form class="ad-post-form">' +
+        '<h3>' + (isNew ? 'Sản phẩm mới' : 'Sửa sản phẩm') + '</h3>' +
+        '<label class="ad-f"><span>Tên (tiếng Việt)</span><input name="name_vi"></label>' +
+        '<label class="ad-f"><span>Tên (tiếng Anh)</span><input name="name_en"></label>' +
+        '<div class="ad-f-row">' +
+          '<label class="ad-f"><span>Danh mục</span><select name="category">' +
+            Object.keys(CATEGORIES).map(function (k) {
+              return '<option value="' + k + '">' + esc(CATEGORIES[k]) + '</option>';
+            }).join('') +
+          '</select></label>' +
+          '<label class="ad-f"><span>Mã hàng</span>' +
+            '<input name="sku"' + (isNew ? '' : ' readonly') + '></label>' +
+        '</div>' +
+        (isNew ? '' : '<p class="ad-hint">Mã hàng không sửa được: nó nối sản phẩm này ' +
+                      'với thẻ trên trang Sản phẩm và với các đơn đã đặt.</p>') +
+        '<label class="ad-f"><span>Mô tả ngắn (VI)</span><input name="desc_vi"></label>' +
+        '<label class="ad-f"><span>Mô tả ngắn (EN)</span><input name="desc_en"></label>' +
+        '<div class="ad-f-row">' +
+          '<label class="ad-f"><span>Giá</span>' +
+            '<input type="number" name="price" min="0" step="1000" placeholder="Liên hệ"></label>' +
+          '<label class="ad-f"><span>đến (nếu bán theo khoảng)</span>' +
+            '<input type="number" name="price_max" min="0" step="1000" placeholder="—"></label>' +
+        '</div>' +
+        '<div class="ad-f">' +
+          '<span>Ảnh</span>' +
+          '<div class="ad-img-row">' +
+            (p.image
+              ? '<img class="ad-cover-prev" src="' + esc(p.image) + '" alt="">'
+              : '<img class="ad-cover-prev" alt="" hidden>') +
+            '<label class="ad-btn ad-upload">Chọn ảnh<input type="file" accept="image/*" hidden data-target="cover"></label>' +
+          '</div>' +
+        '</div>' +
+        '<label class="ad-check"><input type="checkbox" name="in_stock"' +
+          (p.in_stock === false ? '' : ' checked') + '><span>Còn hàng</span></label>' +
+        '<label class="ad-check"><input type="checkbox" name="is_published"' +
+          (p.is_published === false ? '' : ' checked') + '><span>Đang bán trên web</span></label>' +
+        '<div class="ad-acts">' +
+          '<button type="submit" class="ad-btn ad-primary">Lưu</button>' +
+          (isNew ? '' : '<button type="button" class="ad-btn ad-danger ad-del">Xoá sản phẩm</button>') +
+        '</div>' +
+        '<p class="ad-err" hidden></p>' +
+      '</form>';
+
+    var form = el.main.querySelector('.ad-post-form');
+    ['name_vi','name_en','sku','desc_vi','desc_en'].forEach(function (k) {
+      form.elements[k].value = p[k] || '';
+    });
+    form.elements['price'].value     = p.price == null ? '' : p.price;
+    form.elements['price_max'].value = p.price_max == null ? '' : p.price_max;
+    if (p.category) form.elements['category'].value = p.category;
+
+    var image = p.image || null;
+    form.querySelector('input[type="file"]').addEventListener('change', function (e) {
+      var file = (e.target.files || [])[0];
+      if (!file) return;
+      var lbl = e.target.closest('.ad-upload');
+      var was = lbl.firstChild.nodeValue;
+      lbl.firstChild.nodeValue = 'Đang tải…';
+      window.GemDB.uploadImage(file).then(function (url) {
+        image = url;
+        var prev = form.querySelector('.ad-cover-prev');
+        prev.src = url; prev.hidden = false;
+        toast('Đã tải ảnh lên');
+      }).catch(function (err) { toast('Tải ảnh không được: ' + (err.message || ''), true); })
+        .then(function () { lbl.firstChild.nodeValue = was; e.target.value = ''; });
+    });
+
+    el.main.querySelector('.ad-cancel').addEventListener('click', function () {
+      editingProduct = null; renderProducts();
+    });
+
+    var del = form.querySelector('.ad-del');
+    if (del) del.addEventListener('click', function () {
+      if (!window.confirm('Xoá “' + p.name_vi + '”? Đơn hàng cũ vẫn giữ tên và giá đã chốt.')) return;
+      window.GemDB.deleteProduct(p.id)
+        .then(function () { toast('Đã xoá'); editingProduct = null; return load(); })
+        .catch(function (e) { toast(e.message || 'Không xoá được', true); });
+    });
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var err = form.querySelector('.ad-err');
+      var f = form.elements;
+      var name = f['name_vi'].value.trim();
+      var sku  = f['sku'].value.trim();
+
+      if (!name) { err.textContent = 'Sản phẩm cần có tên tiếng Việt.'; err.hidden = false; return; }
+      if (!sku)  { err.textContent = 'Sản phẩm cần có mã hàng.'; err.hidden = false; return; }
+      var minV = f['price'].value.trim(), maxV = f['price_max'].value.trim();
+      var min = minV === '' ? null : parseInt(minV, 10);
+      var max = maxV === '' ? null : parseInt(maxV, 10);
+      if (max != null && min == null) { err.textContent = 'Có giá “đến” thì phải có giá đầu.'; err.hidden = false; return; }
+      if (max != null && max < min)   { err.textContent = 'Giá “đến” phải lớn hơn giá đầu.'; err.hidden = false; return; }
+      err.hidden = true;
+
+      var row = {
+        sku: sku, category: f['category'].value,
+        name_vi: name,
+        name_en: f['name_en'].value.trim() || null,
+        desc_vi: f['desc_vi'].value.trim() || null,
+        desc_en: f['desc_en'].value.trim() || null,
+        price: min, price_max: max, image: image,
+        in_stock: f['in_stock'].checked,
+        is_published: f['is_published'].checked
+      };
+      if (!p.id) row.sort_order = products.length * 10;
+
+      var btn = form.querySelector('[type="submit"]');
+      btn.disabled = true; btn.textContent = 'Đang lưu…';
+      var job = p.id ? window.GemDB.updateProduct(p.id, row) : window.GemDB.createProduct(row);
+      job.then(function () {
+        toast('Đã lưu');
+        if (!p.id) toast('Món mới chưa có thẻ trên trang Sản phẩm — xem ghi chú ở danh sách');
+        editingProduct = null; return load();
+      }).catch(function (e2) {
+        btn.disabled = false; btn.textContent = 'Lưu';
+        // Mã hàng trùng là lỗi hay gặp nhất, nói thẳng thay vì để lộ câu của Postgres
+        err.textContent = /duplicate|unique/i.test(e2.message || '')
+          ? 'Mã hàng “' + sku + '” đã có rồi. Chọn mã khác.'
+          : ('Không lưu được. ' + (e2.message || ''));
+        err.hidden = false;
+      });
+    });
+  }
+
   function renderProducts() {
+    if (editingProduct !== null) return renderProductForm();
+
     var byCat = {}, order = [];
     products.forEach(function (p) {
       if (!byCat[p.category]) { byCat[p.category] = []; order.push(p.category); }
@@ -492,6 +847,7 @@
                 (p.in_stock ? 'Còn hàng' : 'Tạm hết') + '</button>' +
               '<button type="button" class="ad-btn' + (p.is_published ? '' : ' on') + '" data-t="pub">' +
                 (p.is_published ? 'Đang bán' : 'Đang ẩn') + '</button>' +
+              '<button type="button" class="ad-btn ad-edit-prod">Sửa</button>' +
             '</div>' +
           '</div>';
         }).join('') +
@@ -499,8 +855,16 @@
     }).join('');
 
     el.main.innerHTML =
+      '<div class="ad-filters"><button type="button" class="ad-filter active ad-new-prod">+ Thêm sản phẩm</button></div>' +
       '<p class="ad-hint">Để trống ô giá là web hiện “Liên hệ”. Ô “đến” chỉ ' +
-      'điền khi bán theo khoảng giá.</p>' + groups;
+      'điền khi bán theo khoảng giá.<br>' +
+      '<b>Lưu ý về món mới:</b> món thêm ở đây vào được giỏ hàng và đơn hàng, ' +
+      'nhưng <b>chưa có thẻ riêng trên trang Sản phẩm</b> — thẻ đó nằm trong ' +
+      'HTML cùng ảnh và thư viện ảnh. Nhắn mình khi cần thêm thẻ.</p>' + groups;
+
+    el.main.querySelector('.ad-new-prod').addEventListener('click', function () {
+      editingProduct = {}; renderProductForm();
+    });
 
     el.main.querySelectorAll('.ad-prod').forEach(function (d) {
       var id = d.getAttribute('data-id');
@@ -518,6 +882,10 @@
         window.GemDB.updateProduct(id, { price: min, price_max: max })
           .then(function () { toast('Đã lưu giá'); return load(); })
           .catch(function () { toast('Không lưu được', true); });
+      });
+
+      d.querySelector('.ad-edit-prod').addEventListener('click', function () {
+        editingProduct = p; renderProductForm();
       });
 
       d.querySelectorAll('[data-t]').forEach(function (b) {
@@ -766,8 +1134,10 @@
       // lấy từ đầu hôm nay theo giờ VN, để buổi sáng nay vẫn còn trong danh sách
       var from = new Date();
       from.setUTCHours(from.getUTCHours() - 24);
-      job = window.GemDB.adminSessions(from.toISOString())
-        .then(function (rows) { sessions = rows || []; });
+      job = Promise.all([
+        window.GemDB.adminSessions(from.toISOString()),
+        window.GemDB.workshopTypes()
+      ]).then(function (r) { sessions = r[0] || []; wtypes = r[1] || []; });
     }
 
     return job.then(render).catch(function (err) {

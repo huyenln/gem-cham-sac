@@ -973,6 +973,60 @@ Nhân tiện bắt được một lỗi của chính mình: dải badge đầu t
 `width: 100%` cộng padding, rộng hơn hàng nên đẩy cả trang tràn ngang ở
 960–1100px. Đổi sang `flex: 1 0 100%`.
 
+### Thêm / xoá / sửa buổi workshop và sản phẩm — **ĐÃ XONG**
+
+Sót lớn: `createSession`, `createProduct`, `workshopTypes` đã viết trong
+`gem-db.js` từ Sprint 3–4 nhưng **chưa hề được nối vào giao diện**. Tầng dữ
+liệu có, nút bấm thì không.
+
+**Hệ quả đáng lẽ phải thấy sớm:** database seed 12 buổi = 4 tuần. Hết 4 tuần
+là trang Workshop trống trơn và Anna không có cách nào thêm buổi.
+
+#### Buổi workshop
+
+Form “+ Thêm buổi” tạo **nhiều tuần một lúc**: chọn loại, ngày đầu, giờ, số
+chỗ, rồi lặp lại 1/2/4/6/8/12 tuần. Có dòng xem trước (“Tạo 4 buổi, Thứ Tư
+hằng tuần lúc 17:00, từ 16/09 đến 07/10”) để thấy sai trước khi bấm. Nếu mỗi
+lần thêm phải nhập từng buổi thì rất dễ quên, và trang Workshop sẽ lặng lẽ
+trống.
+
+Giờ nhập vào ghép kèm `+07:00`, nên luôn là giờ Hà Nội bất kể máy người nhập
+đặt múi giờ nào. Việt Nam không đổi giờ mùa nên một mốc cố định là đủ.
+
+**Xoá buổi được chặn hai lớp.** `bookings.session_id` là `ON DELETE CASCADE`:
+xoá một buổi là xoá luôn danh sách người đã đặt, không dấu vết. Nhân sự bấm
+nhầm một lần là mất sạch tên và số điện thoại khách.
+
+- Giao diện: nút “Xoá buổi” chỉ hiện khi chưa ai đặt
+- Database: trigger `sessions_guard_delete` từ chối kèm câu giải thích rõ
+  (“Buổi này đã có 2 người đặt chỗ. Đóng buổi thay vì xoá…”)
+
+Chặn ở database mới là thật — giao diện có thể bị sửa, bị bỏ qua, hoặc bị gọi
+thẳng qua API. Đã thử: đặt 2 chỗ rồi xoá → bị chặn, buổi và người đặt còn nguyên.
+
+#### Loại workshop
+
+Mục gấp mở ngay dưới lịch (cùng tab — chúng đi liền nhau, mà thêm tab nữa thì
+thanh tab trên điện thoại đã chật). Sửa tên VI/EN, mô tả, thời lượng, giá;
+bật/tắt hiện; tạo loại mới. Loại mới tạo ở **dạng ẩn** để Anna điền xong mới
+cho hiện.
+
+#### Sản phẩm
+
+Form đầy đủ: tên VI/EN, danh mục, mã hàng, mô tả, giá (kèm giá khoảng), ảnh
+tải lên Storage, còn hàng, đang bán. Thêm mới và xoá được.
+
+**Mã hàng khoá lại khi sửa** — nó nối sản phẩm với thẻ trên `san-pham.html` và
+với các đơn đã đặt. Mã trùng báo bằng tiếng người (“Mã hàng ‘x’ đã có rồi”)
+thay vì để lộ câu lỗi của Postgres.
+
+Xoá sản phẩm **không** làm hỏng đơn cũ: `order_items.product_id` là
+`ON DELETE SET NULL`, còn tên và giá thì đã chép sang `order_items` lúc đặt.
+
+> **Món mới thêm ở đây vào được giỏ hàng và đơn hàng, nhưng chưa có thẻ riêng
+> trên trang Sản phẩm** — thẻ đó nằm trong HTML cùng ảnh và thư viện ảnh. Ghi
+> chú này hiện ngay trên đầu danh sách trong trang quản trị.
+
 ### Chưa làm — cần biết
 
 - **Nén ảnh sản phẩm.** `loading="lazy"` đã thêm, nhưng ảnh gốc vẫn nặng

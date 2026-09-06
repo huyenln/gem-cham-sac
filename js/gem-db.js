@@ -178,16 +178,39 @@ window.GemDB = (function () {
       });
     },
 
-    createSession: function (row) {
+    // Nhận một dòng hoặc cả mảng — PostgREST chèn hàng loạt trong một lượt,
+    // nên tạo lịch bốn tuần chỉ tốn một lần gọi mạng.
+    createSession: function (rowOrRows) {
       return req('/rest/v1/sessions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
-        body: JSON.stringify(row)
+        body: JSON.stringify(rowOrRows)
       });
+    },
+
+    // Database chặn xoá buổi đã có người đặt (trigger sessions_guard_delete)
+    // và trả về câu giải thích — cứ để câu đó hiện thẳng cho người dùng.
+    deleteSession: function (id) {
+      return req('/rest/v1/sessions?id=eq.' + encodeURIComponent(id), { method: 'DELETE' });
     },
 
     workshopTypes: function () {
       return req('/rest/v1/workshop_types?select=*&order=sort_order.asc');
+    },
+
+    saveWorkshopType: function (id, row) {
+      if (id) {
+        return req('/rest/v1/workshop_types?id=eq.' + encodeURIComponent(id), {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+          body: JSON.stringify(row)
+        });
+      }
+      return req('/rest/v1/workshop_types', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+        body: JSON.stringify(row)
+      });
     },
 
     // Cả hàng đang ẩn, khác products() ở chỗ đó — RLS cho nhân sự thấy hết.
@@ -209,6 +232,12 @@ window.GemDB = (function () {
         headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
         body: JSON.stringify(row)
       });
+    },
+
+    // order_items giữ product_id với ON DELETE SET NULL, nên xoá sản phẩm
+    // không làm hỏng đơn cũ — đơn vẫn giữ tên và giá đã chốt lúc đặt.
+    deleteProduct: function (id) {
+      return req('/rest/v1/products?id=eq.' + encodeURIComponent(id), { method: 'DELETE' });
     },
 
     // Cả bài còn nháp, khác posts() ở chỗ đó.
