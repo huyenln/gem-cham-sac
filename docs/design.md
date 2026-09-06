@@ -616,7 +616,7 @@ listing ảnh kém). Đây cũng là thứ chặn U1 và U6 làm cho tới nơi 
 
 | Việc | Ghi chú |
 |---|---|
-| Nút “Xem lịch & đăng ký” trên thẻ Workshop | Tạm trỏ `ghe-tham.html`, Sprint 3 đổi sang `workshop.html` |
+| Nút “Xem lịch & đăng ký” trên thẻ Workshop | ~~Tạm trỏ `ghe-tham.html`~~ → đã trỏ `workshop.html` ở Sprint 3 |
 | U1 hero có sản phẩm | Ảnh túi đeo chéo + Udon nhỏ lại, nấp ở góc, giữ nguyên easter egg |
 | U2 grid thay slideshow | 6 ảnh sạch, bỏ ~55 dòng JS slideshow |
 | U3 section workshop ở trang chủ | Có ảnh + CTA |
@@ -624,6 +624,8 @@ listing ảnh kém). Đây cũng là thứ chặn U1 và U6 làm cho tới nơi 
 | U5 thanh gợi ý ngôn ngữ | Xem ghi chú ở §10 — đã đổi cách làm |
 | Giỏ hàng vào `san-pham.html` | 16 thẻ có `data-sku` + `.gb-slot`; xoá `gio-hang.html`; gộp `basket.css` vào `style.css` |
 | Giá | Tất cả `price: null` → hiện **“Liên hệ”**. Không có con số bịa nào lên web. |
+
+*(Giá thật đã vào sau đó — xem “Giá từ catalog” ngay dưới Sprint 3.)*
 
 **Lỗi phát hiện & sửa trong sprint:** `.gb-slot` ở chế độ hàng ngang làm
 `min-content` của thẻ sản phẩm không co lại được → vỡ grid ở 768–1100px (thêm
@@ -640,14 +642,89 @@ miễn phí → đổi thành “Liên hệ”.
 **Xong sprint này:** có nội dung SEO thật, và câu chuyện “bản tin + đăng ký email”
 trở nên liền mạch.
 
-### Sprint 3 — Supabase + Workshop · ~4 ngày
-
-- Dựng project, bảng, **RLS**, RPC `book_session`, Auth, Storage
-- `workshop.html`: danh sách buổi, số chỗ thật, form giữ chỗ, `.ics`
-- `admin.html` **phiên bản đầu**: đăng nhập + **Hôm nay** + **Đặt lịch**
-- Cần từ bạn: ai là `owner`/`staff` + email
+### Sprint 3 — Supabase + Workshop · ~4 ngày · **ĐÃ XONG**
 
 **Xong sprint này:** khách đặt lịch được, Anna quản lý được lịch từ điện thoại.
+
+#### Database
+
+Sáu migration trên project `gem-cham-sac` (§13b):
+
+| Migration | Nội dung |
+|---|---|
+| `gem_core_tables` | `staff`, `workshop_types`, `sessions`, `bookings` |
+| `gem_rls_policies` | Bật RLS mọi bảng; anon không đọc được bảng nào |
+| `gem_public_view_and_booking_rpc` | View `sessions_public` + hàm `book_session` |
+| `gem_grant_workshop_types_read` | `GRANT SELECT` cho `workshop_types` |
+| `gem_tighten_function_grants` | Thu hồi quyền gọi `gen_booking_code` của anon |
+| `gem_auto_assign_owners` | Trigger tự gán `owner` cho ba email ở §13b |
+
+Hai điểm đáng nhớ:
+
+- **`sessions_public` cố ý để `security_invoker = false`.** Nhờ vậy khách xem
+  được *còn mấy chỗ* mà không hề đọc được bảng `bookings` — view tự cộng hộ.
+- **`book_session` khoá dòng buổi học (`for update`) trước khi đếm chỗ.** Hai
+  người bấm giữ chỗ cùng lúc thì người sau bị từ chối, không có chuyện đặt quá.
+
+Đã seed 12 buổi (Thứ Tư 17:00, Thứ Bảy 10:00, Thứ Bảy 14:30 × 4 tuần, 8 chỗ)
+và 2 loại workshop, `price: null` → web hiện “Liên hệ”.
+
+#### Trang
+
+| File | Ghi chú |
+|---|---|
+| `js/gem-db.js` | Client Supabase tự viết bằng `fetch` — **không** dùng supabase-js. Không script bên thứ ba, không CDN, đúng nguyên tắc “không build step”. |
+| `js/workshop.js` | Danh sách buổi, form giữ chỗ, màn xác nhận, tải `.ics`. Giờ luôn hiện theo **giờ Hà Nội**, kể cả khách đang ở múi giờ khác. |
+| `workshop.html` | Trang khách xem |
+| `admin.html` + `js/admin.js` + `css/admin.css` | `noindex`, không có link từ nav. Mặc định mở tab **Hôm nay**. Mọi số điện thoại là link gọi + link Zalo. Token giữ ở `sessionStorage` → đóng tab là thoát. |
+
+#### Lỗi phát hiện & sửa trong sprint
+
+- **`workshop_types` anon đọc không được** dù policy RLS đã đúng — thiếu
+  `GRANT SELECT` ở mức bảng. RLS lọc *dòng*, GRANT mở *cửa*; thiếu cái nào
+  cũng chặn. Bài kiểm tra bảo mật phát hiện ra.
+- **Seed sai giờ** (ra Thứ Năm 07:00 thay vì Thứ Tư 17:00): `date_trunc('week', …)`
+  trả về **timestamptz**, nên `17:00` thành 17:00 UTC rồi `at time zone` cộng
+  thêm 7 tiếng nữa, vượt qua nửa đêm. Sửa bằng cách ghép `date + time` thành
+  timestamp *không* múi giờ rồi mới đổi đúng một lần.
+- **Vòng lặp vô hạn i18n** (lần thứ hai gặp): `translate()` → `setLang()` →
+  `gem:langchange` → vẽ lại → `translate()`. Sửa bằng cách so ngôn ngữ trước
+  khi vẽ lại.
+
+#### Đã kiểm tra
+
+Chạy thử với vai `anon` (đúng vai khách vào web):
+
+- `bookings`, `sessions`, `staff` — **chặn** ✓
+- `sessions_public`, `workshop_types` — đọc được, không lộ tên khách ✓
+- `gen_booking_code` — **chặn** ✓
+- `book_session` — đặt được; từ chối đúng khi buổi đầy / buổi đã qua / thiếu
+  số liên lạc / số chỗ vô lý ✓
+- Sức chứa: 8 chỗ → đặt 3 (còn 3) → từ chối 5 → đặt 3 (còn 0) → từ chối 1 ✓
+
+Giao diện admin kiểm ở 390px và 1100px: không tràn ngang, không lỗi console.
+
+> ⚠️ Sandbox của Claude chặn `supabase.co`, nên **đường mạng thật chưa chạy thử
+> từ trình duyệt được** — phần database kiểm qua kết nối Supabase trực tiếp,
+> phần giao diện kiểm bằng dữ liệu giả. Việc đầu tiên khi bạn mở
+> `workshop.html` thật: xem danh sách buổi có hiện lên không.
+
+#### Còn lại của Sprint 3 — việc của bạn
+
+1. Vào Supabase → **Authentication → Users → Add user**, tạo ba tài khoản
+   (§13b) kèm mật khẩu. Trigger tự gán vai `owner`, không phải làm gì thêm.
+2. Mở `admin.html`, đăng nhập thử.
+3. Merge nhánh vào `main` — chưa merge thì chưa có gì lên `gemchamsac.com`.
+
+### Giá từ catalog
+
+Đã lấy giá thật từ `Gem_Catalog.pdf` cho **11/16** sản phẩm. Năm món chưa có
+trong catalog vẫn `price: null` → “Liên hệ”: bìa sổ, dây đeo cổ tay, thảm (hàng
+đặt theo yêu cầu), gốm, set quà.
+
+Catalog có giá theo **khoảng** (“120.000–200.000đ”), nên `basket.js` thêm
+`priceMax`. Tổng giỏ khi có món giá khoảng hiện **“từ …đ”** thay vì một con số
+giả vờ chính xác.
 
 ### Sprint 4 — Sản phẩm & Đơn hàng · ~4 ngày
 
@@ -735,7 +812,8 @@ trang, ai xem source cũng thấy. Cái bảo vệ dữ liệu là RLS trong dat
 ⚠️ **Không bao giờ đưa `service_role` key vào repo hay vào trang web.** Key đó
 bỏ qua toàn bộ RLS.
 
-**Trạng thái:** đã kết nối được, database còn trống (chưa có bảng nào).
+**Trạng thái:** 4 bảng + 1 view + 1 hàm, RLS bật hết, đã seed 12 buổi workshop
+(Sprint 3). Client đọc/ghi qua `js/gem-db.js`.
 
 ### Chủ tài khoản quản trị
 
@@ -744,6 +822,11 @@ Cả ba là `owner`. Chưa có ai là `staff` — thêm khi tuyển người.
 - `gemchamsac@gmail.com`
 - `lgnhuyen@gmail.com`
 - `luongnguyenngocmai00@gmail.com`
+
+Trigger `gem_auto_assign_owners` tự gán vai `owner` khi một trong ba email này
+được tạo trong Authentication — **chưa tạo tài khoản thì chưa đăng nhập được**.
+Thêm người sau: tạo user trong Supabase rồi thêm một dòng vào bảng `staff` với
+`role = 'staff'`.
 
 ---
 
@@ -758,10 +841,14 @@ Cả ba là `owner`. Chưa có ai là `staff` — thêm khi tuyển người.
 
 - [x] **Ai là `owner`** — ba email, xem §13b ✓
 - [x] **Email chính thức của shop** — `gemchamsac@gmail.com` ✓
+- [ ] **Tạo ba tài khoản trong Supabase Authentication** — việc duy nhất còn
+      lại của Sprint 3, chỉ bạn làm được (§13)
 
 ### Chặn Sprint 4–5
 
-- [ ] Giá thật của 16 sản phẩm
+- [x] Giá 11/16 sản phẩm — từ catalog ✓
+- [ ] Giá 5 món còn lại (bìa sổ, dây đeo cổ tay, thảm, gốm, set quà) — không
+      chặn, để “Liên hệ” cũng chạy được
 - [x] Số tài khoản ngân hàng + tên chủ tài khoản — Techcombank 9607060038 ✓
 - [ ] Có đặt ngưỡng bắt buộc chuyển khoản thay COD không, và bao nhiêu
 - [ ] Dùng đối tác giao hàng nào cho COD (GHTK / GHN / Viettel Post / J&T)
