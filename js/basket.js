@@ -199,6 +199,9 @@
 
     'basket.done_h':        { vi: `Chúng mình nhận được rồi.`, en: `We've got it.` },
     'basket.done_p':        { vi: `Gem sẽ nhắn lại cho bạn trong hôm nay để xác nhận món và phí giao. Cảm ơn bạn đã chọn đồ của chúng mình.`, en: `Gem will message you back today to confirm the items and shipping. Thank you for choosing our pieces.` },
+    'basket.code_label':    { vi: `MÃ ĐƠN`, en: `ORDER CODE` },
+    'basket.out_of_stock':  { vi: `Tạm hết hàng`, en: `Out of stock` },
+    'basket.order_failed':  { vi: `Chưa gửi được đơn. Bạn nhắn Zalo cho chúng mình nhé.`, en: `We could not send the order. Please message us on Zalo.` },
     'basket.done_mail_p':   { vi: `Chúng mình vừa mở sẵn email cho bạn — bạn bấm Gửi trong app email là đơn về tới Gem nhé.`, en: `We've opened a pre-filled email for you — hit Send in your mail app and the order reaches Gem.` },
     'basket.done_btn':      { vi: `Xem tiếp sản phẩm`, en: `Keep browsing` },
 
@@ -234,6 +237,57 @@
       if (CATALOG[i].sku === sku) return CATALOG[i];
     }
     return null;
+  }
+
+  /* ---------- tên sản phẩm ----------
+     16 món có sẵn dùng khoá i18n (`p.name` trỏ sang js/i18n.js). Món do em
+     gái thêm qua trang quản trị thì không có khoá, chỉ có chữ thẳng trong
+     database — nên hai chỗ hiện tên phải chịu được cả hai kiểu. */
+  function isKey(p) { return !!(p.name && p.name.indexOf('.') > 0); }
+
+  function pName(p) {
+    if (isKey(p)) return t(p.name, p.sku);
+    var en = (window.GemI18n && window.GemI18n.getLang && window.GemI18n.getLang()) === 'en';
+    return (en && p.nameEn) || p.nameVi || p.sku;
+  }
+
+  // Thuộc tính đánh dấu cho i18n, rỗng nếu tên là chữ thẳng.
+  function nameAttr(p) {
+    return isKey(p) ? ' data-i18n="' + p.name + '"' : '';
+  }
+
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  /* ---------- giá từ Supabase ----------
+     CATALOG ở trên là bản dự phòng: nếu Supabase không trả lời (mất mạng,
+     dịch vụ trục trặc) thì trang sản phẩm vẫn chạy với giá đã biết, thay vì
+     trắng trơn. Khi database trả lời thì giá trong đó thắng — đó mới là chỗ
+     em gái sửa giá. */
+  function mergeFromDb(rows) {
+    if (!rows || !rows.length) return false;
+    var changed = false;
+    rows.forEach(function (r) {
+      var p = bySku(r.sku);
+      if (!p) {
+        // Món mới thêm qua trang quản trị: chưa có thẻ trên san-pham.html
+        // nên chưa hiện được, nhưng vẫn nạp vào để không vỡ giỏ nếu có link.
+        p = { sku: r.sku, name: null, sprite: r.sprite };
+        CATALOG.push(p);
+        changed = true;
+      }
+      p.price    = r.price;
+      p.priceMax = r.price_max;
+      p.nameVi   = r.name_vi;
+      p.nameEn   = r.name_en;
+      p.inStock  = r.in_stock !== false;
+      if (r.sprite) p.sprite = r.sprite;
+      changed = true;
+    });
+    return changed;
   }
 
   function load() {
@@ -352,6 +406,7 @@
   var widget, pile, badge, panel, panelBody, overlay, basketArt;
   var view = 'basket';   // basket | form | chat | done
   var doneMode = 'sent'; // sent | mailto
+  var orderCode = null;  // mã đơn database trả về, hiện ở màn cảm ơn
 
   function buildWidget() {
     widget = document.createElement('button');
@@ -549,7 +604,8 @@
       return '<li class="gb-row" data-sku="' + p.sku + '">' +
         '<span class="gb-row-sprite">' + (SPRITES[p.sprite] || '') + '</span>' +
         '<span class="gb-row-text">' +
-          '<span class="gb-row-name" data-i18n="' + p.name + '"></span>' +
+          '<span class="gb-row-name"' + nameAttr(p) + '>' +
+            (isKey(p) ? '' : esc(pName(p))) + '</span>' +
           // unit price only earns its line once there's more than one
           '<span class="gb-row-price">' +
             (it.qty > 1 ? priceLabel(p) + ' × ' + it.qty : '') +
@@ -720,6 +776,12 @@
       '<div class="gb-empty">' +
         '<img src="images/mascot/udon_sit_happy.png" alt="Udon" class="gb-empty-udon">' +
         '<p class="gb-empty-h" data-i18n="basket.done_h"></p>' +
+        // Mã đơn để khách nhắn Zalo hỏi cho nhanh — cùng cách dùng như mã
+        // giữ chỗ workshop. Chỉ có khi đơn vào được database.
+        (orderCode
+          ? '<p class="gb-code-label" data-i18n="basket.code_label"></p>' +
+            '<p class="gb-code">' + esc(orderCode) + '</p>'
+          : '') +
         '<p class="gb-empty-p" data-i18n="' +
           (doneMode === 'mailto' ? 'basket.done_mail_p' : 'basket.done_p') + '"></p>' +
         '<button type="button" class="btn btn-primary gb-done-btn" data-i18n="basket.done_btn"></button>' +
@@ -737,7 +799,7 @@
     lines.push('———');
     items.forEach(function (it, i) {
       var p = bySku(it.sku);
-      lines.push((i + 1) + '. ' + t(p.name, p.sku) + ' × ' + it.qty +
+      lines.push((i + 1) + '. ' + pName(p) + ' × ' + it.qty +
         ' — ' + priceLabel(p, it.qty));
     });
     lines.push('———');
@@ -805,34 +867,45 @@
       view = 'done'; renderPanel();
     }
 
-    if (!CONFIG.orderEndpoint) {
-      // No form service configured: hand the order to the customer's mail app.
-      window.location.href = 'mailto:' + CONFIG.shopEmail +
-        '?subject=' + encodeURIComponent(subject) +
-        '&body=' + encodeURIComponent(body);
-      finish('mailto');
-      return;
+    function fail(msg) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = t('basket.send', 'Gửi đơn cho Gem');
+      err.textContent = msg || t('common.ml_error',
+        'Có lỗi xảy ra. Bạn thử lại sau giúp chúng mình nhé.');
+      err.hidden = false;
     }
 
     submitBtn.disabled = true;
     submitBtn.textContent = t('basket.sending', 'Đang gửi...');
 
-    var data = new FormData();
-    data.append('_subject', subject);
-    data.append('name', customer.name);
-    data.append('phone', customer.phone);
-    data.append('address', customer.pickup ? t('basket.txt_pickup', '') : customer.address);
-    data.append('note', customer.note);
-    data.append('order', body);
-
-    fetch(CONFIG.orderEndpoint, { method: 'POST', body: data, mode: 'no-cors' })
-      .then(function () { finish('sent'); })
-      .catch(function () {
-        submitBtn.disabled = false;
-        submitBtn.textContent = t('basket.send', 'Gửi đơn cho Gem');
-        err.textContent = t('common.ml_error', 'Có lỗi xảy ra. Bạn thử lại sau giúp chúng mình nhé.');
-        err.hidden = false;
+    // Đơn vào thẳng database để em gái xem trong trang quản trị. Chỉ gửi sku
+    // và số lượng — giá do database tự tra, không gửi giá từ trình duyệt lên.
+    if (window.GemDB && window.GemDB.createOrder) {
+      window.GemDB.createOrder({
+        name: customer.name,
+        phone: customer.phone,
+        address: customer.pickup ? t('basket.txt_pickup', 'Nhận tại cửa hàng') : customer.address,
+        note: customer.note,
+        items: items.map(function (it) { return { sku: it.sku, qty: it.qty }; })
+      }).then(function (res) {
+        if (res && res.ok) { orderCode = res.code; finish('sent'); return; }
+        fail(t('basket.order_failed', 'Chưa gửi được đơn. Bạn nhắn Zalo cho chúng mình nhé.'));
+      }).catch(function () {
+        // Mất mạng giữa chừng: không nuốt đơn của khách, đưa sang app email
+        // để họ vẫn gửi được. Giỏ hàng giữ nguyên nếu họ đổi ý.
+        window.location.href = 'mailto:' + CONFIG.shopEmail +
+          '?subject=' + encodeURIComponent(subject) +
+          '&body=' + encodeURIComponent(body);
+        finish('mailto');
       });
+      return;
+    }
+
+    // Không nạp được gem-db.js: vẫn gửi được đơn qua app email.
+    window.location.href = 'mailto:' + CONFIG.shopEmail +
+      '?subject=' + encodeURIComponent(subject) +
+      '&body=' + encodeURIComponent(body);
+    finish('mailto');
   }
 
   /* ---------- helpers ---------- */
@@ -893,5 +966,50 @@
     // data-i18n attribute, so the shared i18n pass retranslates the panel in
     // place. Re-rendering from that event would loop, since render calls
     // translate() which fires the event again.
+
+    /* ---------- giá thật từ Supabase ----------
+       Vẽ ngay bằng CATALOG trước cho trang hiện tức thì, rồi cập nhật khi
+       database trả lời. Giá hiếm khi đổi nên thường không thấy nhấp nháy gì;
+       còn nếu Supabase không trả lời thì trang vẫn đủ dùng, không trắng. */
+    if (window.GemDB && window.GemDB.products) {
+      window.GemDB.products().then(function (rows) {
+        if (!mergeFromDb(rows)) return;
+
+        var live = {};
+        (rows || []).forEach(function (r) { live[r.sku] = r; });
+
+        cards.forEach(function (card) {
+          var sku = card.getAttribute('data-sku');
+          var p = bySku(sku);
+          var slot = card.querySelector('.gb-slot');
+          if (!p || !slot) return;
+
+          // Món bị gỡ khỏi bảng, hoặc bị ẩn đi: giấu luôn thẻ, đừng để khách
+          // đặt thứ cửa hàng không còn bán.
+          if (!live[sku]) { card.hidden = true; return; }
+
+          var priceEl = slot.querySelector('.gb-price');
+          if (priceEl) priceEl.textContent = priceLabel(p);
+
+          var addBtn = slot.querySelector('.gb-add');
+          if (addBtn) {
+            var out = p.inStock === false;
+            addBtn.disabled = out;
+            addBtn.classList.toggle('is-out', out);
+            if (out) {
+              addBtn.removeAttribute('data-i18n');
+              addBtn.textContent = t('basket.out_of_stock', 'Tạm hết hàng');
+            }
+          }
+        });
+
+        // Giỏ đang có món vừa bị gỡ/ẩn thì bỏ ra, kẻo đặt đơn sẽ lỗi sku.
+        var before = items.length;
+        items = items.filter(function (it) { return live[it.sku]; });
+        if (items.length !== before) { save(); }
+        renderWidget();
+        if (panel.classList.contains('open') && view === 'basket') renderBasketView();
+      }).catch(function () { /* giữ nguyên giá dự phòng */ });
+    }
   });
 })();

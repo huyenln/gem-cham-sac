@@ -59,6 +59,30 @@ window.GemDB = (function () {
       return req('/rest/v1/sessions_public?select=*&order=starts_at.asc');
     },
 
+    // Sản phẩm đang bán. RLS lọc sẵn hàng chưa đăng nên khách không thấy.
+    products: function () {
+      return req('/rest/v1/products?select=*&order=sort_order.asc');
+    },
+
+    // Đặt đơn. Trả { ok, code, subtotal, has_unpriced } hoặc { ok:false, error }.
+    // Chỉ gửi sku và số lượng — giá do database tự tra, không tin giá từ trình
+    // duyệt gửi lên (tin thì ai cũng đặt được đơn 0đ).
+    createOrder: function (o) {
+      return req('/rest/v1/rpc/create_order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          p_name: o.name,
+          p_phone: o.phone,
+          p_items: o.items,
+          p_email: o.email || null,
+          p_address: o.address || null,
+          p_note: o.note || null,
+          p_channel: o.channel || null
+        })
+      });
+    },
+
     // Giữ chỗ. Trả về { ok, code, seats_left } hoặc { ok:false, error }.
     book: function (payload) {
       return req('/rest/v1/rpc/book_session', {
@@ -151,6 +175,42 @@ window.GemDB = (function () {
 
     workshopTypes: function () {
       return req('/rest/v1/workshop_types?select=*&order=sort_order.asc');
+    },
+
+    // Cả hàng đang ẩn, khác products() ở chỗ đó — RLS cho nhân sự thấy hết.
+    adminProducts: function () {
+      return req('/rest/v1/products?select=*&order=category.asc,sort_order.asc');
+    },
+
+    updateProduct: function (id, patch) {
+      return req('/rest/v1/products?id=eq.' + encodeURIComponent(id), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+        body: JSON.stringify(patch)
+      });
+    },
+
+    createProduct: function (row) {
+      return req('/rest/v1/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+        body: JSON.stringify(row)
+      });
+    },
+
+    // Đơn kèm các dòng hàng, mới nhất lên trước.
+    adminOrders: function (status) {
+      var q = '/rest/v1/orders?select=*,order_items(*)&order=created_at.desc';
+      if (status) q += '&status=eq.' + encodeURIComponent(status);
+      return req(q);
+    },
+
+    updateOrder: function (id, patch) {
+      return req('/rest/v1/orders?id=eq.' + encodeURIComponent(id), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+        body: JSON.stringify(patch)
+      });
     }
   };
 })();

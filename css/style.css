@@ -1610,6 +1610,17 @@ body.pg-lock { overflow: hidden; }
   color: var(--paper-white);
 }
 
+/* Hết hàng: vẫn đọc được nhưng không bấm được, và không đổi màu khi rê chuột */
+.gb-add.is-out,
+.gb-add.is-out:hover,
+.gb-add.is-out:focus-visible {
+  background: transparent;
+  border-color: var(--paper-cream-warm);
+  border-style: dashed;
+  color: var(--ink-soft);
+  cursor: default;
+}
+
 .gb-add.is-added {
   background: var(--kraft);
   border-color: var(--kraft);
@@ -1994,6 +2005,22 @@ body.gb-lock { overflow: hidden; }
   max-width: 34ch;
   margin: 0 auto;
   line-height: 1.6;
+}
+
+/* Mã đơn ở màn cảm ơn — cùng cách trình bày với mã giữ chỗ workshop */
+.gb-code-label {
+  font-size: var(--text-xs);
+  letter-spacing: 0.12em;
+  color: var(--ink-soft);
+  margin: var(--space-4) 0 var(--space-1);
+}
+.gb-code {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-xl);
+  letter-spacing: 0.06em;
+  color: var(--sage-deep);
+  margin-bottom: var(--space-4);
 }
 
 .gb-empty .btn { margin-top: var(--space-6); }
