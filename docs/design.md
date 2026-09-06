@@ -1,10 +1,10 @@
 # Gem Chạm Sắc — Design Document
 
-> Bản thiết kế cho sprint hiện tại. Gom toàn bộ thay đổi đã làm, quyết định đã
-> chốt, và những gì còn phải chốt. Cập nhật lần cuối: 2026-08.
+> Bản thiết kế cho loạt sprint sắp tới. Gom toàn bộ thay đổi đã làm, quyết định
+> đã chốt, và những gì còn phải chốt. Cập nhật lần cuối: 2026-08.
 >
 > Tài liệu này thay thế 3 bản báo cáo rời trước đó và là nguồn duy nhất
-> (single source of truth) cho sprint này.
+> (single source of truth).
 
 ---
 
@@ -12,18 +12,20 @@
 
 1. [Trạng thái hiện tại](#1-trạng-thái-hiện-tại)
 2. [Quyết định đã chốt](#2-quyết-định-đã-chốt)
-3. [Ba quyết định mới trong sprint này](#3-ba-quyết-định-mới-trong-sprint-này)
-4. [Kiến trúc sau sprint](#4-kiến-trúc-sau-sprint)
-5. [Data model](#5-data-model)
-6. [Trang quản trị](#6-trang-quản-trị)
-7. [Đặt lịch workshop](#7-đặt-lịch-workshop)
-8. [Trang Hoạt động (blog)](#8-trang-hoạt-động-blog)
-9. [Rà soát UX](#9-rà-soát-ux)
-10. [Information architecture](#10-information-architecture)
-11. [Bảo mật](#11-bảo-mật)
-12. [Thứ tự làm](#12-thứ-tự-làm)
-13. [Còn phải chốt](#13-còn-phải-chốt)
-14. [Không làm trong sprint này](#14-không-làm-trong-sprint-này)
+3. [Ba quyết định lớn](#3-ba-quyết-định-lớn)
+4. [Thanh toán](#4-thanh-toán)
+5. [Kiến trúc](#5-kiến-trúc)
+6. [Data model](#6-data-model)
+7. [Trang quản trị](#7-trang-quản-trị)
+8. [Đặt lịch workshop](#8-đặt-lịch-workshop)
+9. [Trang Bản tin](#9-trang-bản-tin)
+10. [Rà soát UX](#10-rà-soát-ux)
+11. [Information architecture](#11-information-architecture)
+12. [Bảo mật](#12-bảo-mật)
+13. [Chia sprint](#13-chia-sprint)
+14. [Còn phải chốt](#14-còn-phải-chốt)
+15. [Không làm](#15-không-làm)
+16. [Cần cập nhật CLAUDE.md](#16-cần-cập-nhật-claudemd)
 
 ---
 
@@ -54,10 +56,10 @@ stacking context · animation chạy lại toàn bộ pile mỗi lần thêm · 
 
 | # | Quyết định | Ghi chú |
 |---|---|---|
-| D1 | **Giỏ hỏi hàng → tin nhắn + VietQR.** Không cổng thanh toán trong bản đầu, không giỏ e-commerce thật | Người xác nhận từng đơn |
+| D1 | **Giỏ hàng → đơn hàng thật**, người xác nhận từng đơn | Không phải e-commerce tự động |
 | D2 | **“Độc bản” là kiểu dáng, không phải số lượng** | Sản phẩm làm lại được → đặt giá theo loại là hợp lý |
 | D3 | **Hiện giá trên web** | Đảo lại quyết định “KHÔNG hiện giá” trong `CLAUDE.md` |
-| D4 | **Khách chọn kênh:** Zalo / Messenger / email | Zalo & Messenger không nhận prefilled text qua URL → nội dung giỏ tự copy vào clipboard |
+| D4 | **Khách chọn kênh liên hệ:** Zalo / Messenger / email | Zalo & Messenger không nhận prefilled text qua URL → nội dung giỏ tự copy vào clipboard |
 | D5 | **Một sprite cho mỗi sản phẩm**, không phải mỗi danh mục | 16 hình tạm đã có, chờ tranh vẽ tay thay vào |
 | D6 | **2hand chưa cho vào giỏ** | 23 món riêng biệt, cần dữ liệu từng món |
 | D7 | **KHÔNG tự động trừ tồn kho** | Vì bán cả tại cửa hàng → số online sẽ sai theo hướng tệ nhất. Đặt tay: còn hàng / sắp hết / hết |
@@ -73,26 +75,27 @@ stacking context · animation chạy lại toàn bộ pile mỗi lần thêm · 
 | D12 | **Số chỗ theo từng buổi, mặc định 8** | Thuê thêm người thì sửa số của buổi đó |
 | D13 | **Nhắc lịch bằng Zalo tay**, chưa làm email tự động | ~3 phút/buổi, hiệu quả hơn email ở VN |
 
-### Thanh toán
+### Thanh toán — xem chi tiết ở [§4](#4-thanh-toán)
 
 | # | Quyết định | Ghi chú |
 |---|---|---|
-| D14 | **Máy POS từ ngân hàng Việt** cho tại cửa hàng | Square / SumUp / Zettle **không hỗ trợ Việt Nam** — đừng mất thời gian |
-| D15 | **Cổng thanh toán Việt có thẻ quốc tế** cho online: VNPAY / OnePay / Payoo | Stripe không mở merchant ở VN; PayPal hạn chế với doanh nghiệp VN |
-| D16 | **Thiết kế sẵn các trường thanh toán ngay từ bản đầu**, dù chưa thu tiền online | Sau này gắn cổng là *thêm vào*, không phải *làm lại* |
-| D17 | Cân nhắc **đăng lên Klook / Airbnb Experiences** | Giải cả bài toán tìm khách, không chỉ thanh toán. Hoa hồng 20–30% = tiền marketing |
+| D14 | **Trên web: COD + chuyển khoản QR** | ⚠️ Đã đổi — trước đây là cổng thẻ quốc tế |
+| D15 | **Tại cửa hàng: tiền mặt + QR + thẻ qua máy POS** | Máy POS lo phần khách nước ngoài |
+| D16 | **Vẫn thiết kế sẵn các trường thanh toán** cho thẻ online sau này | Gắn cổng sau là *thêm vào*, không phải *làm lại* |
+| D17 | Cân nhắc **đăng lên Klook / Airbnb Experiences** | Giải cả bài toán tìm khách, không chỉ thanh toán |
 
-### Bị đảo lại trong sprint này
+### Đã bị đảo lại
 
 | # | Quyết định cũ | Trạng thái |
 |---|---|---|
 | ~~D18~~ | ~~Pages CMS để quản trị nội dung~~ | ❌ **BỎ** — xem [§3.3](#33-trang-quản-trị-riêng) |
-| ~~D19~~ | ~~Refactor `CATALOG` → `data/products.json`~~ | ❌ **BỎ** — sản phẩm vào Supabase thay vì file JSON |
-| D20 | Đặt miễn phí, trả tại buổi học | ⚠️ **GIỮ cho bản đầu**, nhưng xem [§3.2](#32-khách-nước-ngoài-có-trả-trước-không) |
+| ~~D19~~ | ~~Refactor `CATALOG` → `data/products.json`~~ | ❌ **BỎ** — sản phẩm vào Supabase |
+| ~~D20~~ | ~~Cổng thẻ quốc tế VNPAY/OnePay cho web~~ | ❌ **HOÃN** — thay bằng COD + QR ([§4](#4-thanh-toán)) |
+| D21 | ~~Trang “Hoạt động”~~ → **trang “Bản tin”** | ✅ đổi tên, xem [§9](#9-trang-bản-tin) |
 
 ---
 
-## 3. Ba quyết định mới trong sprint này
+## 3. Ba quyết định lớn
 
 ### 3.1 Trang riêng hay gộp vào Sản phẩm?
 
@@ -100,95 +103,108 @@ stacking context · animation chạy lại toàn bộ pile mỗi lần thêm · 
 
 Lý do từ góc độ UX:
 
-- **URL chia sẻ được.** Đây là lý do quyết định. Bạn cần dán được một link vào bio
+- **URL chia sẻ được.** Đây là lý do quyết định. Cần dán được một link vào bio
   Instagram, in QR lên poster ở studio, trả lời DM bằng một đường dẫn. Không thể
   gửi ai đó “phần đặt lịch ở cuối trang Sản phẩm”.
 - **Việc có mục đích khác việc dạo xem.** Đặt lịch là một *task*; xem sản phẩm là
-  *khám phá*. Trộn một luồng giao dịch vào trang dạo xem làm loãng cả hai.
-- **`san-pham.html` đã quá dài rồi:** 5.805px ở desktop, 7.425px ở mobile. Gắn
-  lịch đặt vào cuối là chôn nó — ai vào để đặt lịch phải cuộn qua toàn bộ catalog.
-- **SEO riêng.** “workshop tái chế Hà Nội” là một truy vấn khác “túi vải vụn”.
-  Một trang một mục tiêu.
+  *khám phá*. Trộn luồng giao dịch vào trang dạo xem làm loãng cả hai.
+- **`san-pham.html` đã quá dài rồi:** 5.805px desktop, 7.425px mobile. Gắn lịch
+  vào cuối là chôn nó.
+- **SEO riêng.** “workshop tái chế Hà Nội” là truy vấn khác “túi vải vụn”.
 
-**Tên file & nhãn nav:** `workshop.html`, nhãn nav **“Workshop”** — không phải
-“Đặt lịch”. Nav nên đặt tên *sự vật*, không phải *hành động*; người ta quét nav
-tìm danh từ. “Workshop” cũng là từ đã dùng nguyên bản trong copy hiện tại.
+**Nhãn nav “Workshop”**, không phải “Đặt lịch” — nav nên đặt tên *sự vật*, không
+phải *hành động*; người ta quét nav tìm danh từ.
 
-**Thẻ “Workshop trải nghiệm”** ở `san-pham.html#dich-vu` **giữ lại** làm cửa thứ
-hai, thêm nút dẫn sang `workshop.html`. Hai cửa, một đích.
-
-> Nếu workshop là một nguồn thu thật và là điểm hút khách du lịch, thì giấu cửa
-> vào bên trong trang Sản phẩm là sai. Khách đáp xuống trang chủ phải thấy ngay.
+Thẻ “Workshop trải nghiệm” ở `san-pham.html#dich-vu` **giữ lại** làm cửa thứ hai.
 
 ### 3.2 Khách nước ngoài có trả trước không?
 
-**Quyết định: đúng về lâu dài, nhưng KHÔNG làm trong bản đầu.**
+**Quyết định: không, ít nhất là chưa.** Xem [§4](#4-thanh-toán) — COD + QR đều là
+cơ chế nội địa, nên khoảng trống “khách nước ngoài trả trước online” tạm để mở.
+Bù lại, **máy POS ở cửa hàng lo được phần lớn** khách du lịch (họ đến studio để
+học/mua, trả bằng thẻ tại chỗ).
 
-Lý do từ góc độ UX — và nó ngược với trực giác thông thường:
-
-- **Khách du lịch *mong đợi* được trả trước.** Mọi trải nghiệm khác trong chuyến
-  đi của họ — Klook, GetYourGuide, Airbnb, một lớp học nấu ăn — đều thu tiền
-  trước. Một workshop nói “cứ đến rồi trả tiền mặt” với khách nước ngoài đọc ra
-  là *kém tin cậy hơn*, không phải tiện hơn. Nó tạo lo lắng: chỗ này có thật
-  không? buổi học có diễn ra không? mình có cần tiền mặt đúng số không? họ có
-  nhận thẻ không?
-- **Trải nghiệm tệ nhất không phải là form thanh toán** — mà là khách du lịch đến
-  studio rồi buổi học bị hoãn vì mấy người đặt miễn phí kia không xuất hiện.
-- **Với khách Việt thì ngược lại.** Trả tại chỗ là bình thường và thoải mái;
-  chuyển khoản trước cho một tiệm nhỏ mới là điều gây ngần ngại.
-
-→ **Khách Việt giữ chỗ miễn phí, trả tại buổi học. Khách nước ngoài trả trước
-bằng thẻ.** Cùng một buổi, hai đường thanh toán. Trường `require_prepay` trên
-`workshop_types` làm được việc này mà không cần code riêng.
-
-**Nhưng bản đầu chưa bật.** Không phải vì tiếc chi phí, mà vì mở merchant account
-với VNPAY/OnePay mất vài tuần giấy tờ và nằm ngoài tầm mình — chờ nó là chặn cả
-trang đặt lịch. Nên:
-
-| Giai đoạn | Làm gì |
-|---|---|
-| Bản đầu | Ai cũng giữ chỗ miễn phí. Các trường thanh toán có sẵn nhưng chỉ ghi `pay_on_site`. |
-| Ngay lập tức, miễn phí | **Ghi rõ trên trang là nhận hình thức gì** (“Trả tại studio — nhận tiền mặt và thẻ” khi đã có POS). Xoá được phần lớn lo lắng của khách du lịch mà không tốn gì. |
-| Khi có merchant account | Bật `require_prepay` cho những loại workshop cần. |
+Trường `require_prepay` và `card_online` vẫn giữ trong schema để bật sau.
 
 ### 3.3 Trang quản trị riêng
 
 **Quyết định: xây trang quản trị riêng `admin.html` trên Supabase.**
 
-Đây là quyết định lớn nhất của sprint. Nó **đảo lại hai quyết định cũ**:
+Nó **đảo lại hai quyết định cũ**:
 
-- ❌ **Pages CMS bỏ.** Pages CMS chỉ sửa được file trong repo — không thể hiện đơn
-  hàng hay lịch đặt. Muốn một chỗ xem cả đơn hàng, trạng thái, lịch đặt và sản
-  phẩm thì phải là trang tự xây, đọc từ Supabase.
-- ❌ **`data/products.json` bỏ.** Nếu em gái bạn sửa sản phẩm trong cùng trang
-  quản trị với đơn hàng thì sản phẩm phải nằm cùng database. Một hệ thống, không
-  phải hai.
+- ❌ **Pages CMS bỏ.** Chỉ sửa được file trong repo — không hiện được đơn hàng hay
+  lịch đặt. Muốn một chỗ xem cả đơn, trạng thái, lịch đặt và sản phẩm thì phải là
+  trang tự xây đọc từ Supabase.
+- ❌ **`data/products.json` bỏ.** Sửa sản phẩm cùng chỗ với đơn hàng ⇒ sản phẩm
+  phải cùng database. Một hệ thống, không phải hai.
 
 Và **thêm ba thứ mới**:
 
-- ➕ **Đơn hàng phải thành dòng dữ liệu, không còn là email.** Hiện `basket.js`
-  gửi mailto/endpoint — không có bản ghi nào. Muốn “xem đơn / đổi trạng thái” thì
-  phải có bảng `orders`. `basket.js` sẽ ghi vào Supabase, email chỉ còn là thông báo.
-- ➕ **Cần đăng nhập thật.** Em gái + nhân viên tương lai = nhiều tài khoản, và
-  phân quyền khác nhau. Supabase Auth + RLS theo role.
-- ➕ **Cần Supabase Storage** cho ảnh sản phẩm (thêm sản phẩm phải upload được ảnh).
+- ➕ **Đơn hàng thành dòng dữ liệu, không còn là email.** `basket.js` sẽ ghi vào
+  Supabase; email chỉ còn là thông báo.
+- ➕ **Đăng nhập thật** — Supabase Auth + RLS theo role (`owner` / `staff`).
+- ➕ **Supabase Storage** cho ảnh sản phẩm.
 
 **Đánh đổi phải nói rõ:** sản phẩm chuyển sang fetch lúc chạy → tên sản phẩm không
-còn nằm trong HTML → **SEO cho trang sản phẩm yếu đi một chút**. Ở quy mô này lưu
-lượng đến từ Instagram/Facebook nhiều hơn Google nên mình chấp nhận được. Nếu sau
-này SEO thành ưu tiên, có phương án lai: giữ tên/mô tả/ảnh trong HTML tĩnh, chỉ
-fetch giá và tình trạng còn hàng.
+còn trong HTML → **SEO trang sản phẩm yếu đi một chút.** Ở quy mô này lưu lượng
+đến từ Instagram/Facebook nhiều hơn Google nên chấp nhận được. Nếu sau này SEO
+thành ưu tiên: giữ tên/mô tả/ảnh trong HTML tĩnh, chỉ fetch giá và tình trạng.
 
-**Vẫn không cần đổi host.** Supabase Auth + RLS chạy được từ trang tĩnh trên
-GitHub Pages.
-
-> Đây chính là lúc **dấu hiệu số 3 và số 5** trong danh sách “khi nào nên chuyển”
-> phát tín hiệu: cần đăng nhập, và đang mất quá nhiều giờ làm tay. Khung đó đã
-> đúng — và giờ các bạn đã tới đó.
+**Vẫn không cần đổi host.**
 
 ---
 
-## 4. Kiến trúc sau sprint
+## 4. Thanh toán
+
+> ⚠️ **Mục này vừa thay đổi.** Trước đây kế hoạch là cổng thẻ quốc tế
+> (VNPAY / OnePay). Nay đổi thành **COD + chuyển khoản QR**.
+
+### Ba kênh, ba đối tượng
+
+| Nơi | Hình thức | Phục vụ ai |
+|---|---|---|
+| **Trên web** | COD · chuyển khoản QR | Khách Việt |
+| **Tại cửa hàng** | Tiền mặt · QR · **thẻ qua máy POS** | Tất cả, kể cả khách nước ngoài |
+| **Workshop** | Giữ chỗ miễn phí, trả tại studio | Tất cả |
+
+**Khoảng trống còn lại:** khách nước ngoài **trả trước online**. COD cần địa chỉ
+giao ở VN; QR cần app ngân hàng Việt — cả hai đều không dùng được từ nước ngoài.
+Chấp nhận tạm, vì khách du lịch dù sao cũng đến tận studio và trả bằng thẻ ở đó.
+**Máy POS vì thế là việc nên làm sớm, độc lập với web.**
+
+### COD — thanh toán khi nhận hàng
+
+Hình thức phổ biến nhất ở Việt Nam. Cần lưu ý:
+
+- **Cần đối tác giao hàng** thu hộ: GHTK, GHN, Viettel Post, J&T. Họ thu tiền rồi
+  chuyển lại, có phí mỗi đơn.
+- **Rủi ro:** khách từ chối nhận hàng → shop chịu phí chiều về. Rất phổ biến.
+- **Giảm rủi ro:** xác nhận qua Zalo trước khi gửi — việc này đang làm rồi, chỉ
+  cần giữ nguyên trong quy trình.
+- **Đề xuất:** đơn trên một mức nào đó thì yêu cầu chuyển khoản trước thay vì COD.
+  Ngưỡng cụ thể là **dữ liệu**, chỉnh trong admin, không cần sửa code.
+
+### QR — chuyển khoản VietQR
+
+- **Bắt buộc nhúng sẵn số tiền VÀ mã đơn** (`orders.code`) vào nội dung chuyển
+  khoản. Không có mã đơn thì không đối soát được — đây là yêu cầu kỹ thuật, không
+  phải tuỳ chọn.
+- **Web không tự biết tiền đã về.** Tiền vào tài khoản ngân hàng, không có gì báo
+  cho website. Anna mở app ngân hàng, thấy tiền, rồi bấm “đã nhận” trong admin.
+- **Tự động hoá sau này:** **Casso** hoặc **SePay** — dịch vụ Việt Nam theo dõi
+  tài khoản ngân hàng và bắn webhook khi có chuyển khoản khớp mã đơn. Rẻ, và là
+  cách nâng cấp tự nhiên khi số đơn tăng. **Chưa làm trong loạt sprint này.**
+
+### Trạng thái thanh toán
+
+`chưa trả` → `chờ chuyển khoản` → `đã trả` &nbsp;&nbsp;+ `đã hoàn`
+
+- COD: tạo đơn ở `chưa trả`, chuyển `đã trả` khi shipper báo đã thu
+- QR: tạo đơn ở `chờ chuyển khoản`, Anna xác nhận thành `đã trả`
+
+---
+
+## 5. Kiến trúc
 
 ```
                      gemchamsac.com  (GitHub Pages, CNAME, không build step)
@@ -202,25 +218,27 @@ index.html                 san-pham.html               ├ Hôm nay
 cau-chuyen.html              └ sản phẩm + giá          ├ Đơn hàng
 mo-hinh.html               workshop.html              ├ Đặt lịch
 ghe-tham.html                └ buổi + chỗ còn         ├ Sản phẩm
-season-02.html             hoat-dong.html             ├ Hoạt động
+season-02.html             ban-tin.html               ├ Bản tin
 404.html                     └ bài viết               └ Cài đặt (owner)
                                 │
                                 ▼
                     ┌───────────────────────┐
                     │  Supabase             │
                     │  Postgres + RLS       │
-                    │  Auth (staff)         │
+                    │  Auth (nhân sự)       │
                     │  Storage (ảnh)        │
                     │  RPC (book_session)   │
                     └───────────────────────┘
 ```
 
-Không có Vercel, không có Netlify, không có framework, không có build step.
-Chỉ thêm một backend.
+Không Vercel, không Netlify, không framework, không build step. Chỉ thêm backend.
+
+> `ban-tin.html` bắt đầu ở dạng **tĩnh** (Sprint 2) rồi mới chuyển sang đọc
+> Supabase (Sprint 6) — xem [§9](#9-trang-bản-tin).
 
 ---
 
-## 5. Data model
+## 6. Data model
 
 ### Sản phẩm
 
@@ -232,7 +250,7 @@ products
   availability         -- 'in_stock' | 'low' | 'out'   (đặt tay, xem D7)
   sprite_key           -- khớp với SPRITES trong basket.js
   images[]             -- Supabase Storage paths, ảnh đầu là thumbnail
-  is_published         -- ẩn/hiện mà không cần xoá
+  is_published
   created_at, updated_at
 ```
 
@@ -240,14 +258,17 @@ products
 
 ```sql
 orders
-  id, code                       -- mã ngắn đọc được, đọc qua điện thoại được
+  id, code                       -- mã ngắn, đọc qua điện thoại được, DÙNG TRONG NỘI DUNG CHUYỂN KHOẢN
   customer_name, phone, email
-  address, is_pickup             -- tự đến lấy thì không cần địa chỉ
+  address, is_pickup
   note
-  status                         -- xem bảng dưới
+  status
   subtotal                       -- chốt lúc đặt, KHÔNG đọc lại từ bảng giá
   channel                        -- 'web' | 'zalo' | 'messenger' | 'instore'
-  payment_status, payment_method, amount, currency, provider_ref, paid_at
+  payment_method                 -- 'cod' | 'qr' | 'cash' | 'card_onsite' | 'card_online' | 'marketplace'
+  payment_status                 -- 'chưa trả' | 'chờ chuyển khoản' | 'đã trả' | 'đã hoàn'
+  amount, currency, provider_ref, paid_at
+  shipping_partner, tracking_code   -- cho COD
   created_at, updated_at
 
 order_items
@@ -260,6 +281,9 @@ order_items
 `mới` → `đã xác nhận` → `đang chuẩn bị` → `đã gửi` \| `đã giao` → `xong`
 &nbsp;&nbsp;+ `đã huỷ` (từ bất kỳ trạng thái nào)
 
+> `payment_status` **tách riêng** khỏi `status`. Một đơn COD có thể ở
+> `đã gửi` + `chưa trả` — hai chiều khác nhau, không gộp làm một.
+
 ### Workshop
 
 ```sql
@@ -267,7 +291,7 @@ workshop_types
   id, slug, name_vi, name_en, desc_vi, desc_en
   duration_minutes     -- 1–3h tuỳ loại (D11)
   price
-  require_prepay       -- bật là buộc trả trước (§3.2)
+  require_prepay       -- để sẵn, chưa bật (§3.2)
   is_published
 
 sessions
@@ -280,27 +304,26 @@ sessions
 bookings
   id, session_id, code
   name, phone, email, seats, note
-  status               -- xem bảng dưới
-  payment_status, payment_method, amount, currency, provider_ref, paid_at
+  status
+  payment_method, payment_status, amount, currency, provider_ref, paid_at
   created_at
 ```
 
 **Trạng thái đặt lịch:**
 
-`giữ chỗ` → `đã xác nhận` → `đã đến` \| `không đến`
-&nbsp;&nbsp;+ `đã huỷ`
+`giữ chỗ` → `đã xác nhận` → `đã đến` \| `không đến` &nbsp;&nbsp;+ `đã huỷ`
 
-> `không đến` không phải để phán xét khách — nó là dữ liệu để sau này biết có cần
-> thu cọc hay không.
+> `không đến` không để phán xét khách — nó là dữ liệu để sau này biết có cần thu
+> cọc hay không.
 
-### Hoạt động
+### Bản tin
 
 ```sql
 posts
   id, slug
   title_vi, title_en, excerpt_vi, excerpt_en, body_vi, body_en
   cover_image, images[]
-  event_date           -- ngày diễn ra sự kiện, khác ngày đăng
+  event_date           -- ngày diễn ra, khác ngày đăng
   location             -- 'BUV', 'UN Youth Day'…
   external_url         -- link bài gốc trên Facebook/Instagram
   is_published
@@ -316,12 +339,13 @@ staff
   role                 -- 'owner' | 'staff'
 ```
 
-### Hai trường quan trọng nhất
+### Ba trường quan trọng nhất
 
 | Trường | Vì sao quan trọng |
 |---|---|
-| `amount` / `unit_price` | Lưu số tiền **tại thời điểm đặt**. Đổi bảng giá không làm sai đơn cũ. Đây là lỗi kinh điển của hệ thống bán hàng tự làm. |
-| `require_prepay` | Cho phép hai đường thanh toán (khách Việt / khách nước ngoài) mà không cần code riêng. |
+| `amount` / `unit_price` | Lưu số tiền **tại thời điểm đặt**. Đổi bảng giá không làm sai đơn cũ. Lỗi kinh điển của hệ thống tự làm. |
+| `orders.code` | Vừa là mã đọc cho khách qua điện thoại, **vừa là khoá đối soát chuyển khoản QR**. Phải ngắn, không nhầm lẫn (tránh O/0, I/1). |
+| `require_prepay` | Để sẵn cho ngày bật thẻ online, không phải sửa schema lúc đó. |
 
 ### Chống tranh chỗ cuối
 
@@ -338,53 +362,51 @@ END
 ```
 
 Tất cả trong **một transaction**. Đây là thứ khiến chỗ cuối cùng chỉ về một người.
-Hai cái browser không tự thoả thuận được với nhau.
 
 ---
 
-## 6. Trang quản trị
+## 7. Trang quản trị
 
-`admin.html` · `noindex` · **không** nằm trong nav công khai · đăng nhập Supabase Auth.
+`admin.html` · `noindex` · **không** trong nav công khai · Supabase Auth.
 
 ### Nguyên tắc thiết kế — quan trọng nhất
 
 **Thiết kế cho điện thoại trước, không phải máy tính.**
 
-Đây là điểm khác biệt lớn nhất so với admin thông thường. Em gái bạn đứng ở
-cửa hàng cả ngày — sẽ mở bằng điện thoại giữa lúc đang gói hàng, không phải ngồi
-trước laptop. Nên:
+Em gái bạn đứng ở cửa hàng cả ngày — sẽ mở bằng điện thoại giữa lúc đang gói hàng,
+không phải ngồi trước laptop. Nên:
 
 - Mobile-first thật sự, nút to, ít phải gõ chữ
 - Đổi trạng thái bằng **một lần bấm**, không phải mở form rồi Save
-- **Mọi số điện thoại đều là link bấm gọi / mở Zalo được.** Chị ấy liên lạc với
-  khách suốt ngày — đây là thao tác dùng nhiều nhất, không phải sửa sản phẩm.
-- Màn hình mặc định là **“Hôm nay”**, không phải dashboard số liệu chung
+- **Mọi số điện thoại là link bấm gọi / mở Zalo.** Đây là thao tác dùng nhiều
+  nhất, không phải sửa sản phẩm.
+- Màn hình mặc định là **“Hôm nay”**, không phải dashboard số liệu
 
 ### Các mục
 
 | Mục | Nội dung | Quyền |
 |---|---|---|
-| **Hôm nay** | Đơn mới cần xử lý · buổi học hôm nay + danh sách người đến kèm số điện thoại · việc cần nhắc | staff |
-| **Đơn hàng** | Danh sách, lọc theo trạng thái, chi tiết, đổi trạng thái | staff |
-| **Đặt lịch** | Buổi sắp tới + số chỗ · danh sách người đăng ký từng buổi · tạo/sửa/huỷ buổi | staff |
+| **Hôm nay** | Đơn mới cần xử lý · đơn QR chờ xác nhận tiền · buổi học hôm nay + danh sách người đến kèm SĐT | staff |
+| **Đơn hàng** | Danh sách, lọc theo trạng thái **và trạng thái thanh toán**, chi tiết, đổi trạng thái, đánh dấu “đã nhận tiền” | staff |
+| **Đặt lịch** | Buổi sắp tới + số chỗ · danh sách người đăng ký · tạo/sửa/huỷ buổi | staff |
 | **Sản phẩm** | Thêm/sửa/ẩn, upload ảnh, giá, tình trạng còn hàng, thứ tự | staff |
-| **Hoạt động** | Viết/sửa bài, upload ảnh | staff |
-| **Cài đặt** | Loại workshop, giá, `require_prepay`, quản lý tài khoản nhân viên | **owner** |
+| **Bản tin** | Viết/sửa bài, upload ảnh | staff |
+| **Cài đặt** | Loại workshop, giá, ngưỡng bắt buộc chuyển khoản, tài khoản nhân viên | **owner** |
 
 ### Việc của Anna mỗi tuần
 
 | Việc | Tần suất | Thời gian |
 |---|---|---|
-| Đăng buổi học (mở trước ~4 tuần) | ~1 lần/tháng | ~2 phút |
+| Xác nhận đơn mới + kiểm tra tiền QR về | hằng ngày | ~1 phút/đơn |
 | Nhắn Zalo nhắc trước buổi học | mỗi buổi | ~3 phút |
-| Xác nhận đơn hàng mới | khi có đơn | ~1 phút/đơn |
+| Đăng buổi học (mở trước ~4 tuần) | ~1 lần/tháng | ~2 phút |
 | Cập nhật giá / thêm sản phẩm | khi cần | — |
 
 ---
 
-## 7. Đặt lịch workshop
+## 8. Đặt lịch workshop
 
-Chi tiết mô hình đã chốt ở [§2](#2-quyết-định-đã-chốt) (D9–D13). Đề xuất lịch:
+Mô hình đã chốt ở D9–D13. Đề xuất lịch:
 
 | Thứ | Giờ | Nội dung |
 |---|---|---|
@@ -394,79 +416,78 @@ Chi tiết mô hình đã chốt ở [§2](#2-quyết-định-đã-chốt) (D9�
 | CN | — | Không lên lịch, chỉ qua tin nhắn |
 
 Lý do: thứ Tư chiều muộn hợp người đi làm/đi học; **hai buổi dồn vào thứ Bảy chỉ
-cần một lần chuẩn bị và dọn dẹp**, mà thứ Bảy khách cũng rảnh nhất. Các ngày còn
-lại để trống cho khách hẹn giờ riêng và cho việc studio.
+cần một lần chuẩn bị và dọn dẹp**, mà thứ Bảy khách cũng rảnh nhất.
 
 **Đây là dữ liệu, sửa lúc nào cũng được — không chặn việc code.**
 
 ### Luồng của khách
 
-1. **Danh sách buổi** — chủ đề, ngày & giờ, thời lượng, giá, `Còn 5/8 chỗ` (số thật).
-   Đủ chỗ thì hiện “Đã đủ chỗ”.
-2. **Chọn buổi** → form ngắn: tên, số điện thoại (bắt buộc), số người, email
-   (không bắt buộc), ghi chú. Không cần địa chỉ.
-3. **Xác nhận** — mã giữ chỗ trên màn hình + nút **tải file lịch `.ics`** (sinh
-   hoàn toàn phía browser, không cần server).
-4. **Nhắc trước** — Anna nhắn Zalo trước một ngày. Đây cũng là lúc chốt số vật
-   liệu cần chuẩn bị.
+1. **Danh sách buổi** — chủ đề, ngày & giờ, thời lượng, giá, `Còn 5/8 chỗ`.
+   Đủ chỗ thì “Đã đủ chỗ”.
+2. **Chọn buổi** → form ngắn: tên, SĐT (bắt buộc), số người, email, ghi chú.
+3. **Xác nhận** — mã giữ chỗ + nút **tải `.ics`** (sinh phía browser, không cần server).
+4. **Nhắc trước** — Anna nhắn Zalo trước một ngày, cũng là lúc chốt số vật liệu.
 
 ### Rủi ro: khách không đến
 
-Đặt miễn phí, không cọc là mô hình có tỉ lệ vắng cao nhất. **Không đề nghị thu
-cọc** — nó chặn đúng những người mới tò mò muốn thử. Thay vào đó:
+Đặt miễn phí, không cọc là mô hình có tỉ lệ vắng cao nhất. **Không đề nghị thu cọc**
+— nó chặn đúng những người mới tò mò muốn thử. Thay vào đó:
 
-- Bắt buộc số điện thoại (là kênh nhắc, không phải thông tin cho vui)
+- Bắt buộc SĐT (là kênh nhắc, không phải thông tin cho vui)
 - Anna nhắn Zalo trước một ngày từ danh sách trong admin
-- Dùng chữ **“giữ chỗ”**, không dùng “đã đặt” — đặt đúng kỳ vọng
+- Dùng chữ **“giữ chỗ”**, không dùng “đã đặt”
 - **Chỉ chuẩn bị vật liệu sau khi nhắn xác nhận**, không theo số đăng ký
 
-Theo dõi bằng trạng thái `không đến`. Nếu vắng quá nhiều thì lúc đó hãy tính cọc.
+Theo dõi bằng trạng thái `không đến`. Vắng nhiều thì lúc đó hãy tính cọc.
 
 ---
 
-## 8. Trang Hoạt động (blog)
+## 9. Trang Bản tin
 
-`hoat-dong.html` — bài viết về sự kiện đã qua: workshop ở BUV, hội chợ UN Youth Day…
+`ban-tin.html` · nhãn nav **“Bản tin”** — bài viết về sự kiện đã qua: workshop ở
+BUV, hội chợ UN Youth Day…
 
-### Tên trang
+### Vì sao “Bản tin” hợp hơn “Hoạt động”
 
-**Đề xuất: “Hoạt động”.** Chính xác cho nội dung (sự kiện, nơi đã tham gia) và
-dễ tìm hơn trên Google. Phương án ấm hơn, đúng giọng slow living hơn:
-**“Nhật ký”** — nhưng kém chính xác cho sự kiện. Chọn “Hoạt động”.
+- Rộng hơn: chứa được cả sự kiện đã qua, tin studio, thông báo season mới
+- **Nối liền với form đăng ký email đang có** (Mailerlite). Trang Bản tin là kho
+  lưu công khai, email là kênh gửi. Một câu chuyện: *“đọc bản tin cũ ở đây, đăng
+  ký để nhận số tiếp theo.”* Hai thứ đang rời rạc giờ đỡ cho nhau.
+- Đúng giọng “chúng mình” hơn một chữ mang tính phân loại
 
 ### KHÔNG nhúng feed mạng xã hội
 
 Đã cân nhắc và loại:
 
-- Script nhúng của Facebook/Instagram **rất nặng và có tracking** → trái với
-  nguyên tắc privacy-first trong `CLAUDE.md` (anti-pattern #2)
-- Embed feed Instagram cần token + app review, và hay hỏng
+- Script nhúng của Facebook/Instagram **nặng và có tracking** → trái anti-pattern
+  #2 trong `CLAUDE.md` (privacy-first)
+- Embed feed Instagram cần token + app review, hay hỏng
 - Giao diện embed không theo brand
 - **Bài gốc bị xoá là mất luôn nội dung trên web của mình**
-- Và quan trọng nhất: **một embed không giúp gì cho SEO.** “Workshop tái chế tại
-  BUV” là cụm người ta tìm; một bài Facebook nhúng thì Google không đọc như nội
-  dung của bạn.
+- **Embed không giúp gì cho SEO.** “Workshop tái chế tại BUV” là cụm người ta tìm;
+  Google không đọc bài Facebook nhúng như nội dung của bạn.
 
-### Làm thay vào đó
+### Làm thay vào đó — hai giai đoạn
 
-Bài viết tự viết, lưu trong Supabase, mỗi bài **có thể** kèm link sang bài gốc
-trên Facebook/Instagram (“Xem thêm trên Facebook”).
+| Giai đoạn | Cách làm | Vì sao |
+|---|---|---|
+| **Sprint 2** | HTML **tĩnh**, bài viết viết thẳng vào file | Chỉ có 2–3 bài (BUV, UN Youth Day). Xây CMS cho 3 bài là thừa. Bù lại **SEO hoàn hảo** vì nội dung nằm trong HTML. |
+| **Sprint 6** | Chuyển sang đọc Supabase + mục Bản tin trong admin | Khi Anna thật sự có nhịp đăng bài đều |
 
-Đã có tiền lệ trong repo: `season-02.html` chính là mô hình này — trang kể chuyện
-riêng, link ra FB reel.
+Mỗi bài: tiêu đề · ngày diễn ra · địa điểm · ảnh bìa · 2–3 đoạn giọng “chúng mình”
+· gallery ảnh · link bài gốc (không bắt buộc).
 
-Mỗi bài: tiêu đề · ngày diễn ra · địa điểm · ảnh bìa · 2–3 đoạn ngắn bằng giọng
-“chúng mình” · gallery ảnh · link bài gốc (không bắt buộc).
+Đã có tiền lệ trong repo: `season-02.html` chính là mô hình này.
 
 ### Hạn chế phải nói rõ
 
-Không có build step nên bài viết render phía browser từ `?slug=…`. Nghĩa là
-**Google index bài viết yếu hơn so với file HTML tĩnh.** Nếu sau này SEO cho blog
-thành ưu tiên thật thì cần thêm một generator nhỏ — chưa làm trong sprint này.
+Sau Sprint 6, bài render phía browser từ `?slug=…` → **Google index yếu hơn HTML
+tĩnh.** Đây là lý do Sprint 2 làm tĩnh trước: mấy bài đầu — những bài quan trọng
+nhất cho SEO — sẽ nằm trong HTML thật.
 
 ---
 
-## 9. Rà soát UX
+## 10. Rà soát UX
 
 Rà soát trên bản đang chạy, chụp ở 390px và 1440px. Số đo thật:
 
@@ -478,143 +499,200 @@ Rà soát trên bản đang chạy, chụp ở 390px và 1440px. Số đo thật
 | `san-pham` | 7.425px | 5.805px | 20 |
 | `ghe-tham` | 3.898px | 2.914px | 4 |
 
-**Điểm tốt:** không trang nào bị tràn ngang · mọi ảnh đều có `alt` · mỗi trang
-đúng một `<h1>`.
+**Điểm tốt:** không trang nào tràn ngang · mọi ảnh đều có `alt` · mỗi trang đúng
+một `<h1>`.
 
-### Ưu tiên cao
-
-| # | Vấn đề | Đề xuất |
-|---|---|---|
-| U1 | **Hero trang chủ không có sản phẩm nào.** Màn hình đầu chỉ có chữ + mascot. Một thương hiệu thủ công *trực quan* mà màn đầu không cho thấy mình làm ra cái gì. Tấm ảnh patchwork trong thẻ Season 02 đẹp và thuyết phục hơn Udon nhiều — mà nó nằm dưới màn đầu | Đưa ảnh sản phẩm / studio lên hero |
-| U2 | **Teaser sản phẩm ở trang chủ chỉ hiện 1 món một lúc** (carousel). Shop có 19 sản phẩm mà màn hình chỉ cho thấy một. Carousel có tỉ lệ xem qua slide 2 rất thấp | Đổi thành grid 3–4 món, thấy ngay độ đa dạng |
-| U3 | **Trang chủ không nhắc gì đến workshop** — trong khi nó đang thành nguồn thu và điểm hút khách du lịch | Thêm một section workshop ở trang chủ |
-| U4 | **Không có gì ở màn đầu nói đây là cái gì, ở đâu.** Câu hero rất hay nhưng người lạ không biết đây là studio thủ công ở Hà Nội có thể ghé | Thêm dòng “Hà Nội · mở 09:00–19:00 hàng ngày” gần đầu trang |
-| U5 | **Khách nước ngoài gặp một bức tường tiếng Việt.** Nút VI/EN là một pill nhỏ góc phải | Tự nhận `navigator.language` **ở lần truy cập đầu tiên**, vẫn cho đổi và vẫn nhớ lựa chọn |
-| U6 | **`cau-chuyen.html` gần 8.000px trên mobile và chỉ có 2 ảnh** (logo + logo footer). Trang kể chuyện của một brand thủ công mà không có ảnh studio, ảnh người làm, ảnh quá trình | Thêm ảnh thật, cắt bớt chữ |
-
-### Ưu tiên trung bình
+### Ưu tiên cao → Sprint 1
 
 | # | Vấn đề | Đề xuất |
 |---|---|---|
-| U7 | Chữ ở `cau-chuyen` **căn giữa** trong đoạn dài — khó đọc | Căn trái, giới hạn ~65 ký tự/dòng |
-| U8 | **“Ba điều chúng mình giữ” lặp nguyên văn** ở trang chủ và Câu chuyện | Bỏ một chỗ, hoặc làm khác nhau |
-| U9 | Badge “Season 02 đang diễn ra” **bị ẩn ở mobile** → khách mobile không biết đang mở cửa | Hiện ở mobile, dạng gọn |
-| U10 | **17–21 phần tử bấm nhỏ hơn 40px** (icon social ở footer, link nav) | Nâng vùng bấm lên 44px |
-| U11 | Số 01–04 ở phần cam kết **không phải một chuỗi tuần tự** — chúng là các việc song song, nên số ở đây chỉ để trang trí | Bỏ số, hoặc đổi thành cấu trúc khác |
-| U12 | Ảnh sản phẩm 1–4MB (đã có trong backlog `CLAUDE.md`) | Nén lại, thêm `loading="lazy"` cho ảnh dưới màn đầu |
+| U1 | **Hero trang chủ không có sản phẩm nào.** Màn đầu chỉ có chữ + mascot. Một thương hiệu thủ công *trực quan* mà màn đầu không cho thấy mình làm ra cái gì. Ảnh patchwork trong thẻ Season 02 đẹp và thuyết phục hơn Udon nhiều — mà nằm dưới màn đầu | Đưa ảnh sản phẩm / studio lên hero |
+| U2 | **Teaser sản phẩm trang chủ chỉ hiện 1 món** (carousel). Shop có 19 sản phẩm. Carousel có tỉ lệ xem qua slide 2 rất thấp | Đổi thành grid 3–4 món |
+| U3 | **Trang chủ không nhắc gì đến workshop** | Thêm section workshop |
+| U4 | **Không có gì ở màn đầu nói đây là cái gì, ở đâu** | Thêm “Hà Nội · mở 09:00–19:00 hàng ngày” gần đầu trang |
+| U5 | **Khách nước ngoài gặp bức tường tiếng Việt.** VI/EN là pill nhỏ góc phải | Tự nhận `navigator.language` **ở lần truy cập đầu**, vẫn cho đổi và vẫn nhớ |
+
+### Ưu tiên trung bình → Sprint 6
+
+| # | Vấn đề | Đề xuất |
+|---|---|---|
+| U6 | `cau-chuyen.html` gần **8.000px mobile và chỉ 2 ảnh** (đều là logo). Trang kể chuyện của brand thủ công mà không có ảnh studio, người làm, quá trình | Thêm ảnh thật, cắt bớt chữ |
+| U7 | Chữ ở `cau-chuyen` **căn giữa** trong đoạn dài | Căn trái, ~65 ký tự/dòng |
+| U8 | **“Ba điều chúng mình giữ” lặp nguyên văn** ở trang chủ và Câu chuyện | Bỏ một chỗ hoặc làm khác đi |
+| U9 | Badge “Season 02” **bị ẩn ở mobile** → khách mobile không biết đang mở cửa | Hiện ở mobile, dạng gọn |
+| U10 | **17–21 phần tử bấm nhỏ hơn 40px** (icon social footer, link nav) | Nâng vùng bấm lên 44px |
+| U11 | Số 01–04 ở phần cam kết **không phải chuỗi tuần tự** — các việc song song, số chỉ để trang trí | Bỏ số hoặc đổi cấu trúc |
+| U12 | Ảnh sản phẩm 1–4MB (đã có trong backlog `CLAUDE.md`) | Nén, thêm `loading="lazy"` |
 
 ---
 
-## 10. Information architecture
+## 11. Information architecture
 
-Nav hiện tại có 5 mục. Thêm Workshop + Hoạt động là **7** — quá chật, nhất là ở
-desktop khi nav nằm cùng hàng với badge season và nút VI/EN. Repo đã từng có lỗi
-tràn nav ở mobile (commit `3b7d818`).
+Nav hiện có 5 mục. Thêm Workshop + Bản tin là **7** — quá chật, nhất là desktop
+khi nav nằm cùng hàng với badge season và nút VI/EN. Repo đã từng có lỗi tràn nav
+ở mobile (commit `3b7d818`).
 
 **Đề xuất: gộp “Câu chuyện” + “Mô hình” thành “Về Gem”** → về lại 6 mục.
-Hai trang đó đều là nội dung giới thiệu, và “Mô hình” là mục ít khả năng được
-khách chọn làm điểm vào nhất.
 
 ```
-Trang chủ · Về Gem · Sản phẩm · Workshop · Hoạt động · Ghé thăm
+Trang chủ · Về Gem · Sản phẩm · Workshop · Bản tin · Ghé thăm
 ```
 
 Phương án khác: bỏ “Mô hình” khỏi nav, link từ trong “Câu chuyện”.
 
 ---
 
-## 11. Bảo mật
+## 12. Bảo mật
 
-**Đây là phần quan trọng nhất của cả sprint.** Làm sai là số điện thoại và địa chỉ
-của toàn bộ khách nằm công khai trên internet.
+**Phần quan trọng nhất của cả loạt sprint.** Làm sai là SĐT và địa chỉ của toàn bộ
+khách nằm công khai trên internet.
 
 | Nguyên tắc | Chi tiết |
 |---|---|
-| **RLS là biên bảo mật thật, không phải màn đăng nhập** | `admin.html` là file HTML công khai — ai cũng tải được. Cái bảo vệ dữ liệu là policy trong database, không phải trang login. |
-| Khách (anon) **chỉ** được đọc | `products` (đã publish) · `posts` (đã publish) · `workshop_types` · thông tin buổi học + **số chỗ còn lại** qua một view |
-| Khách **không bao giờ** đọc được | `bookings`, `orders`, `order_items`, `staff` |
-| Khách ghi dữ liệu **chỉ qua RPC** | `book_session()` và `create_order()` — không được `INSERT` trực tiếp |
-| Số chỗ còn lại đi qua **view**, không phải bảng | View chỉ trả về con số, không trả thông tin khách |
-| `staff` đọc/ghi đơn & lịch; **chỉ `owner`** sửa được loại workshop, giá, tài khoản | Phân hai role, không nhiều hơn |
-| Publishable key công khai là **bình thường** | Nó được thiết kế để lộ. Nhưng chỉ đúng khi RLS đúng. |
+| **RLS là biên bảo mật thật, không phải màn đăng nhập** | `admin.html` là file công khai — ai cũng tải được. Cái bảo vệ dữ liệu là policy trong database. |
+| Khách (anon) **chỉ** đọc | `products` (published) · `posts` (published) · `workshop_types` · thông tin buổi + **số chỗ còn lại** qua view |
+| Khách **không bao giờ** đọc | `bookings`, `orders`, `order_items`, `staff` |
+| Khách ghi **chỉ qua RPC** | `book_session()` và `create_order()` — không `INSERT` trực tiếp |
+| Số chỗ còn lại đi qua **view** | View chỉ trả con số, không trả thông tin khách |
+| `staff` đọc/ghi đơn & lịch; **chỉ `owner`** sửa loại workshop, giá, tài khoản | Hai role, không nhiều hơn |
+| Publishable key công khai là **bình thường** | Được thiết kế để lộ — nhưng chỉ đúng khi RLS đúng |
 
 Sẽ kiểm tra bằng cách thử đọc `bookings` bằng anon key và xác nhận bị chặn.
 
 ---
 
-## 12. Thứ tự làm
+## 13. Chia sprint
 
-Bạn muốn gom thành một lần thay đổi lớn. Thứ tự đề xuất — mỗi bước dùng được ngay,
-không phải chờ bước sau:
+Mỗi sprint **dùng được ngay**, không phải chờ sprint sau. Sprint 1 và 2 không cần
+Supabase, không chờ quyết định nào — làm được ngay hôm nay.
 
-| # | Việc | Phụ thuộc | Ước lượng |
-|---|---|---|---|
-| 1 | **Nút “Đăng ký workshop”** trên thẻ Workshop | không gì | ~1h |
-| 2 | **Sửa UX ưu tiên cao** (U1–U5) | không gì | ~1 ngày |
-| 3 | **Dựng Supabase**: bảng, RLS, RPC, Auth, Storage | — | ~1 ngày |
-| 4 | **Chuyển sản phẩm sang Supabase** + `san-pham.html` đọc từ đó | 3 | ~1 ngày |
-| 5 | **Gộp giỏ hàng vào `san-pham.html`**, đơn ghi vào `orders` | 3, 4 | ~1 ngày |
-| 6 | **`workshop.html`** + luồng đặt lịch + `.ics` | 3 | ~1,5 ngày |
-| 7 | **`admin.html`** — Hôm nay, Đơn hàng, Đặt lịch, Sản phẩm | 3–6 | ~3 ngày |
-| 8 | **`hoat-dong.html`** + mục Hoạt động trong admin | 3, 7 | ~1 ngày |
-| 9 | **Sửa nav / IA** (§10) | 6, 8 | ~0,5 ngày |
-| 10 | **Sửa UX ưu tiên trung bình** (U7–U12) | — | ~1 ngày |
-| 11 | **Cổng thanh toán** | có merchant account | sau |
+| Sprint | Nội dung | Cần Supabase | Ước lượng |
+|---|---|:---:|---|
+| **1** | UX ưu tiên cao + giỏ hàng lên thật | — | ~2 ngày |
+| **2** | Trang Bản tin (tĩnh) | — | ~1,5 ngày |
+| **3** | Nền Supabase + Workshop + admin (Hôm nay, Đặt lịch) | ✓ | ~4 ngày |
+| **4** | Sản phẩm & Đơn hàng vào Supabase + admin (Sản phẩm, Đơn hàng) | ✓ | ~4 ngày |
+| **5** | Thanh toán COD + QR | ✓ | ~2 ngày |
+| **6** | UX đợt 2 + Bản tin vào Supabase | ✓ | ~2,5 ngày |
 
-Tổng: khoảng **2 tuần** làm tập trung, chưa tính bước 11.
+Tổng ~16 ngày làm việc. Sau đó: thẻ quốc tế, Casso/SePay đối soát tự động.
+
+### Sprint 1 — UX + giỏ hàng lên thật · ~2 ngày
+
+Không chặn bởi quyết định nào.
+
+- Nút **“Đăng ký workshop”** trên thẻ Workshop ở `san-pham.html` (hiện chưa có
+  nút nào) — tạm link tới `ghe-tham.html`, đổi sang `workshop.html` ở Sprint 3
+- **U1** hero có sản phẩm · **U2** grid thay carousel · **U3** section workshop ·
+  **U4** dòng “Hà Nội · 09:00–19:00” · **U5** tự nhận ngôn ngữ
+- **Gộp giỏ hàng vào `san-pham.html`** (bỏ trang `gio-hang.html` thử nghiệm).
+  Đơn vẫn gửi qua email như hiện tại — đổi sang Supabase ở Sprint 4.
+
+**Xong sprint này:** website đẹp hơn rõ rệt và đã bán được hàng qua giỏ.
+
+### Sprint 2 — Trang Bản tin tĩnh · ~1,5 ngày
+
+- `ban-tin.html` + trang chi tiết cho 2–3 bài đầu, viết thẳng vào HTML
+- Thêm vào nav (cùng lúc gộp “Về Gem” — **U + §11**)
+- Nối với form đăng ký email đang có
+- Cần từ bạn: nội dung + ảnh cho bài BUV và UN Youth Day
+
+**Xong sprint này:** có nội dung SEO thật, và câu chuyện “bản tin + đăng ký email”
+trở nên liền mạch.
+
+### Sprint 3 — Supabase + Workshop · ~4 ngày
+
+- Dựng project, bảng, **RLS**, RPC `book_session`, Auth, Storage
+- `workshop.html`: danh sách buổi, số chỗ thật, form giữ chỗ, `.ics`
+- `admin.html` **phiên bản đầu**: đăng nhập + **Hôm nay** + **Đặt lịch**
+- Cần từ bạn: ai là `owner`/`staff` + email
+
+**Xong sprint này:** khách đặt lịch được, Anna quản lý được lịch từ điện thoại.
+
+### Sprint 4 — Sản phẩm & Đơn hàng · ~4 ngày
+
+- Chuyển 16 sản phẩm vào Supabase + Storage
+- `san-pham.html` đọc từ Supabase
+- `basket.js` ghi vào `orders` thay vì gửi email
+- `admin.html`: thêm **Sản phẩm** + **Đơn hàng**
+- Cần từ bạn: giá thật 16 sản phẩm
+
+**Xong sprint này:** em gái bạn tự sửa giá, thêm sản phẩm, xử lý đơn — không cần mình.
+
+### Sprint 5 — Thanh toán COD + QR · ~2 ngày
+
+- Chọn COD hoặc QR lúc đặt hàng
+- Sinh **VietQR có sẵn số tiền + mã đơn**
+- Admin: đánh dấu “đã nhận tiền”, lọc theo trạng thái thanh toán
+- Ngưỡng bắt buộc chuyển khoản (thay vì COD) — chỉnh trong Cài đặt
+- Cần từ bạn: số tài khoản ngân hàng + tên chủ tài khoản
+
+### Sprint 6 — UX đợt 2 + Bản tin động · ~2,5 ngày
+
+- **U6–U12**
+- Chuyển bài Bản tin sang Supabase + mục Bản tin trong admin
+- Cần từ bạn: ảnh cho trang Câu chuyện (U6)
 
 ---
 
-## 13. Còn phải chốt
+## 14. Còn phải chốt
 
-### Chặn việc code
+### Chặn Sprint 1–2
 
-- [ ] **Tên trang & nhãn nav** — đồng ý `workshop.html` + nhãn “Workshop”? Và
-      `hoat-dong.html` + nhãn “Hoạt động”?
-- [ ] **Gộp nav “Về Gem”** — đồng ý gộp Câu chuyện + Mô hình? (§10)
+- [ ] **Đồng ý gộp nav “Về Gem”?** (§11)
+- [ ] **Nội dung + ảnh** cho 2–3 bài Bản tin đầu (BUV, UN Youth Day)
+
+### Chặn Sprint 3
+
+- [ ] **Ai là `owner`, ai là `staff`** — kèm email để mở tài khoản
 - [ ] **Email chính thức của shop** — prototype đang tạm dùng `lgnhuyen@gmail.com`
-- [ ] **Ai là `owner`, ai là `staff`** — email để mở tài khoản
 
-### Cần thông tin (không chặn, điền sau được)
+### Chặn Sprint 4–5
 
-- [ ] Giá thật của 16 sản phẩm (đang là số tạm trong `CATALOG`)
+- [ ] Giá thật của 16 sản phẩm
+- [ ] Số tài khoản ngân hàng + tên chủ tài khoản (cho VietQR)
+- [ ] Có đặt ngưỡng bắt buộc chuyển khoản thay COD không, và bao nhiêu
+- [ ] Dùng đối tác giao hàng nào cho COD (GHTK / GHN / Viettel Post / J&T)
+
+### Không chặn, điền sau được
+
 - [ ] Ba giờ cố định mỗi tuần — giữ đề xuất hay đổi
-- [ ] Các loại workshop và thời lượng từng loại
-- [ ] Giá workshop
+- [ ] Các loại workshop, thời lượng, giá
 - [ ] Ảnh cho trang Câu chuyện (U6) và hero trang chủ (U1)
-- [ ] Nội dung bài đầu tiên cho trang Hoạt động (BUV, UN Youth Day)
 
 ### Việc ngoài web
 
-- [ ] Mở POS ở ngân hàng nào (làm dù có hay không có thanh toán online)
-- [ ] Mở merchant account VNPAY / OnePay / Payoo
+- [ ] **Mở máy POS ở ngân hàng** — nên làm sớm, đây là cách phục vụ khách nước ngoài
 - [ ] Có đăng lên Klook / Airbnb Experiences không
 - [ ] Tranh vẽ 16 sprite sản phẩm (không chặn gì — hình tạm vẫn chạy)
 
 ---
 
-## 14. Không làm trong sprint này
+## 15. Không làm
 
 Ghi ra để khỏi bàn lại:
 
-- Email xác nhận & nhắc lịch **tự động** — Anna nhắn Zalo trước đã (D13)
+- **Cổng thẻ quốc tế trên web** — hoãn (§4). Khách nước ngoài trả bằng thẻ **tại
+  studio qua máy POS**.
+- **Casso / SePay đối soát chuyển khoản tự động** — Anna kiểm tra tay trước (§4)
+- Email xác nhận & nhắc lịch **tự động** — Zalo tay trước (D13)
 - Khách tự huỷ đặt lịch trên web — nhắn Zalo là đủ ở lượng này
-- Danh sách chờ khi buổi đã đủ chỗ
+- Danh sách chờ khi buổi đủ chỗ
 - Tự động trừ tồn kho sản phẩm (D7)
 - Tài khoản cho **khách** (chỉ có tài khoản nhân sự)
 - Tự động sinh buổi học theo tuần (Anna đăng tay ~2 phút/tháng)
-- Generator để render bài blog thành HTML tĩnh (§8)
+- Generator render bài Bản tin thành HTML tĩnh (§9)
 - Đổi host sang Vercel / Netlify — **không cần** (§3.3)
 - Framework, build step, Tailwind, React — vẫn KHÔNG (`CLAUDE.md`)
 
 ---
 
-## 15. Cần cập nhật `CLAUDE.md` sau sprint
+## 16. Cần cập nhật `CLAUDE.md`
 
-Khi sprint xong, những chỗ này trong `CLAUDE.md` đã lỗi thời:
+Sau khi các sprint xong, những chỗ này trong `CLAUDE.md` đã lỗi thời:
 
 - “KHÔNG hiện giá sản phẩm trên web” → đã đảo (D3)
 - “KHÔNG có e-commerce, KHÔNG có cart” → đã có giỏ hàng
-- “5 trang chính + `season-02.html`” → thêm `workshop.html`, `hoat-dong.html`, `admin.html`
+- “5 trang chính + `season-02.html`” → thêm `workshop.html`, `ban-tin.html`, `admin.html`
 - Thêm Supabase vào phần Architecture & Tech
 - Cập nhật lại phần “Active tasks”
