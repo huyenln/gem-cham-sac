@@ -2145,3 +2145,148 @@ body.gb-lock { overflow: hidden; }
   .gb-pile-item.is-new { animation: none; }
   .gb-wiggle { animation: none; }
 }
+
+
+/* ======================================================
+   WORKSHOP — danh sách buổi, form giữ chỗ, màn xác nhận
+   Logic: js/workshop.js · dữ liệu: js/gem-db.js
+   ====================================================== */
+
+.ws-loading, .ws-empty { color: var(--ink-soft); font-size: var(--text-base); }
+
+.ws-error { text-align: center; padding: var(--space-8) 0; }
+.ws-error p { color: var(--ink-body); margin-bottom: var(--space-4); }
+
+/* ---------- danh sách buổi ---------- */
+.ws-list { list-style: none; display: flex; flex-direction: column; gap: var(--space-4); }
+
+.ws-card {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+  align-items: center;
+  background: var(--paper-white);
+  border: 1px solid rgba(135, 150, 90, 0.18);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-soft);
+}
+@media (min-width: 720px) {
+  .ws-card { grid-template-columns: 7rem 1fr auto; gap: var(--space-8); }
+}
+.ws-card.is-full { opacity: 0.72; }
+
+.ws-when {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  padding-bottom: var(--space-3);
+  border-bottom: 1px dashed var(--paper-cream-warm);
+}
+@media (min-width: 720px) {
+  .ws-when {
+    flex-direction: column;
+    gap: 2px;
+    padding-bottom: 0;
+    border-bottom: 0;
+    border-right: 1px dashed var(--paper-cream-warm);
+    padding-right: var(--space-6);
+    align-items: flex-start;
+  }
+}
+.ws-dow  { font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); }
+.ws-date { font-family: var(--font-display); font-weight: 700; font-size: var(--text-lg); color: var(--ink-dark); }
+.ws-time { font-family: var(--font-display); font-weight: 800; font-size: var(--text-xl); color: var(--sage-deep); }
+
+.ws-body h3 { font-size: var(--text-lg); margin-bottom: var(--space-2); }
+.ws-desc { font-size: var(--text-sm); color: var(--ink-body); margin-bottom: var(--space-3); line-height: 1.6; }
+.ws-meta { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); font-size: var(--text-sm); color: var(--ink-soft); }
+.ws-seats { font-weight: 600; color: var(--sage-deep); }
+.ws-seats.few  { color: var(--kraft); }
+.ws-seats.none { color: var(--ink-soft); }
+
+.ws-act .btn { width: 100%; justify-content: center; }
+@media (min-width: 720px) { .ws-act .btn { width: auto; } }
+
+/* ---------- form giữ chỗ ---------- */
+.ws-form-wrap {
+  max-width: 34rem;
+  background: var(--paper-white);
+  border: 1px solid rgba(135, 150, 90, 0.18);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+  box-shadow: var(--shadow-paper);
+}
+.ws-back {
+  background: none; border: 0; padding: 0;
+  font-family: var(--font-body); font-size: var(--text-sm);
+  color: var(--ink-soft); cursor: pointer; margin-bottom: var(--space-4);
+}
+.ws-back::before { content: "‹ "; }
+.ws-back:hover { color: var(--ink-dark); }
+
+.ws-chosen { padding-bottom: var(--space-4); margin-bottom: var(--space-6); border-bottom: 1px dashed var(--paper-cream-warm); }
+.ws-chosen h3 { font-size: var(--text-lg); margin-bottom: var(--space-1); }
+.ws-chosen p { font-size: var(--text-sm); color: var(--ink-body); }
+
+.ws-form { display: flex; flex-direction: column; gap: var(--space-4); }
+.ws-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.ws-field > span { font-size: var(--text-sm); font-weight: 500; color: var(--ink-body); }
+.ws-field small { font-size: var(--text-xs); color: var(--ink-soft); }
+.ws-field input, .ws-field select, .ws-field textarea {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--ink-dark);
+  background: var(--paper-cream);
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-md);
+  padding: 0.7em 0.9em;
+  width: 100%;
+  resize: vertical;
+}
+.ws-field input:focus, .ws-field select:focus, .ws-field textarea:focus {
+  outline: none; border-color: var(--sage-deep); background: var(--paper-white);
+}
+.ws-submit { margin-top: var(--space-2); }
+.ws-err { font-size: var(--text-sm); color: #A6503C; line-height: 1.5; }
+
+/* ---------- xác nhận ---------- */
+.ws-done {
+  max-width: 34rem;
+  text-align: center;
+  background: var(--paper-white);
+  border: 1px solid rgba(135, 150, 90, 0.18);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+  box-shadow: var(--shadow-paper);
+}
+.ws-done-udon { width: 120px; height: auto; margin: 0 auto var(--space-4); display: block; }
+.ws-done h3 { font-size: var(--text-xl); margin-bottom: var(--space-6); }
+.ws-code-label { font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-soft); }
+.ws-code {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-2xl);
+  letter-spacing: 0.08em;
+  color: var(--sage-deep);
+  margin-bottom: var(--space-4);
+}
+.ws-done-when { font-size: var(--text-base); color: var(--ink-dark); font-weight: 500; margin-bottom: var(--space-3); }
+.ws-done-p { font-size: var(--text-sm); color: var(--ink-body); line-height: 1.65; max-width: 34ch; margin: 0 auto; }
+.ws-done-act { display: flex; flex-wrap: wrap; gap: var(--space-3); justify-content: center; margin-top: var(--space-6); }
+
+/* ---------- hẹn giờ khác ---------- */
+.ws-other {
+  display: grid;
+  gap: var(--space-6);
+  align-items: center;
+  background: var(--paper-cream);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+}
+@media (min-width: 720px) { .ws-other { grid-template-columns: 150px 1fr; gap: var(--space-8); } }
+.ws-other-udon { width: 130px; height: auto; margin: 0 auto; display: block; }
+.ws-other h2 { font-size: var(--text-xl); margin-bottom: var(--space-3); }
+.ws-other p { color: var(--ink-body); line-height: 1.7; margin-bottom: var(--space-6); }
+.ws-other-act { display: flex; flex-wrap: wrap; gap: var(--space-3); }

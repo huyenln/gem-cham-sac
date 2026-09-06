@@ -22,6 +22,7 @@
     'nav.story':      { vi: `Câu chuyện`, en: `Our Story` },
     'nav.model':      { vi: `Mô hình`, en: `Our Model` },
     'nav.products':   { vi: `Sản phẩm`, en: `Products` },
+    'nav.workshop':   { vi: `Workshop`, en: `Workshops` },
     'nav.visit':      { vi: `Ghé thăm`, en: `Visit` },
     'nav.season':     { vi: `Season 02 đang diễn ra`, en: `Season 02 now on` },
     'nav.menu_aria':  { vi: `Mở menu`, en: `Open menu` },

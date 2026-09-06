@@ -3,13 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title data-i18n="title.s2">Season 02: A Space To Stay · Gem Chạm Sắc</title>
-  <meta name="description" content="Gem Chạm Sắc Season 02: A Space To Stay — studio tại 114 Lê Gia Đỉnh, Hà Nội. Một không gian để bạn ở lại lâu hơn, cùng Gem Chạm Sắc × Cool Vietnam × Âm Nhạc Vân Long.">
-
-  <meta property="og:title" content="Gem Chạm Sắc Season 02 · A Space To Stay">
-  <meta property="og:description" content="Một không gian để bạn ở lại lâu hơn, giữa lòng Hà Nội.">
-  <meta property="og:type" content="article">
-  <meta property="og:image" content="images/logo/gem_logo_full.png">
+  <title data-i18n="title.workshop">Workshop · Gem Chạm Sắc</title>
+  <meta name="description" content="Workshop thủ công tái chế tại Gem Chạm Sắc, Hà Nội — làm bìa sổ từ vải vụn, làm giấy tái chế. Nhóm nhỏ, đặt chỗ trực tuyến.">
 
   <link rel="icon" type="image/png" href="images/logo/gem_logo_icon_120.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -39,7 +34,7 @@
           </ul>
         </li>
         <li><a href="san-pham.html" data-i18n="nav.products">Sản phẩm</a></li>
-        <li><a href="workshop.html" data-i18n="nav.workshop">Workshop</a></li>
+        <li><a href="workshop.html" class="active" data-i18n="nav.workshop">Workshop</a></li>
         <li><a href="ghe-tham.html" data-i18n="nav.visit">Ghé thăm</a></li>
       </ul>
       <span class="nav-season"><span class="pulse"></span><span data-i18n="nav.season">Season 02 đang diễn ra</span></span>
@@ -63,79 +58,34 @@
   <!-- PAGE HERO -->
   <section class="page-hero">
     <div class="container">
-      <p class="eyebrow" data-i18n="s2.eyebrow">Season 02</p>
-      <h1>A Space To Stay</h1>
-      <p data-i18n="s2.hero_sub">Một không gian để bạn ở lại lâu hơn.</p>
+      <p class="eyebrow" data-i18n="ws.eyebrow">Workshop</p>
+      <h1 data-i18n="ws.hero_title">Tự tay làm một món đồ.</h1>
+      <p data-i18n="ws.hero_sub">Mỗi buổi chỉ nhận một nhóm nhỏ để ai cũng được chỉ tận tay. Chọn buổi bạn đi được, để lại tên và số điện thoại — chúng mình nhắn lại trước một ngày.</p>
     </div>
   </section>
 
-  <!-- STORY -->
-  <section class="section-sm">
-    <div class="prose">
-      <p class="lead" data-i18n="s2.lede">
-        Gem Chạm Sắc Studio tại Lê Gia Đỉnh — nơi những ý tưởng về thủ công,
-        tái chế và sáng tạo được nuôi dưỡng mỗi ngày.
-      </p>
-
-      <h2 data-i18n="s2.can_h">Nơi bạn có thể</h2>
-      <ul class="stay-list">
-        <li data-i18n="s2.can1">Xem quy trình tạo nên những sản phẩm handmade từ vật liệu tái chế.</li>
-        <li data-i18n="s2.can2">Thử một vài hoạt động thủ công nhỏ.</li>
-        <li data-i18n="s2.can3">Tìm hiểu về hành trình từ "cũ" sang "mới".</li>
-        <li data-i18n="s2.can4">Ngồi lại một chút, trò chuyện và tận hưởng một góc nhỏ sáng tạo giữa Hà Nội.</li>
-      </ul>
-
-      <p data-i18n="s2.stories_p">
-        Mỗi lần ghé, có thể bạn sẽ gặp một câu chuyện khác,
-        được kể bằng nhiều chất liệu khác nhau.
-      </p>
-
-      <blockquote data-i18n-html="s2.stories_lines">
-        Một buổi học đàn tranh.<br>
-        Một hoạt động về văn hóa Việt Nam.<br>
-        Hay một người đang tìm cách bắt đầu sống bền vững từ những điều rất nhỏ.
-      </blockquote>
-    </div>
-  </section>
-
-  <div class="divider">
-    <span class="divider-icon">❋</span>
-  </div>
-
-  <!-- CREDITS + INFO + FACEBOOK CTA -->
+  <!-- DANH SÁCH BUỔI + FORM GIỮ CHỖ (dựng bởi js/workshop.js) -->
   <section class="section">
-    <div class="container-narrow text-center">
-      <span class="hand" data-i18n="s2.made_by_label">Một không gian được kiến tạo bởi</span>
-      <p class="s2-credits">Gem Chạm Sắc × Cool Vietnam × Âm Nhạc Vân Long</p>
+    <div class="container">
+      <div id="ws-root" class="ws-root"></div>
+    </div>
+  </section>
 
-      <div class="s2-info">
-        <div class="s2-info-item">
-          <span class="label" data-i18n="s2.addr_label">Địa chỉ</span>
-          <span class="val" data-i18n-html="s2.addr_value">
-            Tầng 3, Trung tâm Văn hóa - Thông tin và Thể thao Phường Hai Bà Trưng<br>
-            114 Lê Gia Đỉnh, Hà Nội
-          </span>
-        </div>
-        <div class="s2-info-item">
-          <span class="label" data-i18n="s2.hours_label">Giờ mở cửa</span>
-          <span class="val" data-i18n="s2.hours_value">Open Studio: 09:00 – 19:00 · mở cửa hàng ngày</span>
+  <!-- HẸN GIỜ KHÁC -->
+  <section class="section-sm">
+    <div class="container">
+      <div class="ws-other">
+        <img src="images/mascot/udon_lying_smile.png" alt="Udon" class="ws-other-udon" loading="lazy">
+        <div>
+          <h2 data-i18n="ws.other_h">Muốn giờ khác?</h2>
+          <p data-i18n="ws.other_p">Em gái mình ở studio cả tuần, từ thứ Hai đến thứ Bảy — nhắn cho chúng mình là hẹn được một buổi riêng, kể cả chỉ một người. Chủ Nhật thì cần hẹn trước.</p>
+          <div class="ws-other-act">
+            <a href="https://zalo.me/84824964996" target="_blank" rel="noopener" class="btn btn-primary" data-i18n="ws.other_zalo">Nhắn Zalo</a>
+            <a href="https://m.me/gemchamsac" target="_blank" rel="noopener" class="btn btn-ghost">Messenger</a>
+            <a href="ghe-tham.html" class="btn btn-ghost" data-i18n="nav.visit">Ghé thăm</a>
+          </div>
         </div>
       </div>
-
-      <div class="hero-actions" style="justify-content: center;">
-        <a href="https://web.facebook.com/reel/1935073537146672" target="_blank" rel="noopener" class="btn btn-primary">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
-          <span data-i18n="s2.fb_btn">Xem video Season 02 trên Facebook</span>
-        </a>
-        <a href="ghe-tham.html" class="btn btn-ghost" data-i18n="s2.visit_btn">Địa chỉ & cách ghé thăm</a>
-      </div>
-
-      <p style="margin-top: var(--space-8);">
-        <a href="mo-hinh.html" class="btn btn-text">
-          <svg class="arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-          <span data-i18n="s2.back_model">Xem hành trình 4 season</span>
-        </a>
-      </p>
     </div>
   </section>
 
@@ -171,5 +121,7 @@
   </footer>
 
   <script src="js/main.js"></script>
+  <script src="js/gem-db.js" defer></script>
+  <script src="js/workshop.js" defer></script>
 </body>
 </html>
