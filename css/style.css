@@ -2007,6 +2007,66 @@ body.gb-lock { overflow: hidden; }
   line-height: 1.6;
 }
 
+/* ---------- chọn cách trả tiền ---------- */
+.gb-pay { border: 0; padding: 0; margin: 0; }
+.gb-pay legend {
+  font-size: var(--text-sm); font-weight: 500; color: var(--ink-body);
+  padding: 0; margin-bottom: var(--space-2);
+}
+.gb-pay-opt {
+  display: flex; align-items: flex-start; gap: var(--space-3);
+  padding: var(--space-3) var(--space-4); margin-bottom: var(--space-2);
+  background: var(--paper-cream); border: 1.5px solid transparent;
+  border-radius: var(--radius-md); cursor: pointer;
+}
+.gb-pay-opt:has(input:checked) { border-color: var(--sage-deep); background: var(--paper-white); }
+.gb-pay-opt input { margin-top: 0.25em; accent-color: var(--sage-deep); flex-shrink: 0; }
+.gb-pay-text { display: flex; flex-direction: column; gap: 2px; }
+.gb-pay-text b { font-size: var(--text-sm); color: var(--ink-dark); font-weight: 600; }
+.gb-pay-text small { font-size: var(--text-xs); color: var(--ink-soft); }
+/* Đơn vượt ngưỡng: COD mờ đi và không bấm được */
+.gb-pay-opt.is-off { opacity: 0.45; cursor: default; }
+
+/* ---------- màn chuyển khoản ---------- */
+.gb-qr-wrap { margin: var(--space-5) 0; text-align: left; }
+.gb-qr {
+  width: 100%; max-width: 15rem; margin: 0 auto var(--space-4);
+  background: #fff; padding: var(--space-2);
+  border-radius: var(--radius-md); border: 1px solid var(--paper-cream-warm);
+}
+.gb-qr svg { display: block; width: 100%; height: auto; }
+
+.gb-pay-rows { display: flex; flex-direction: column; gap: 2px; }
+.gb-pay-row {
+  /* Nhãn co theo chữ, giá trị mới là phần co giãn — để "Chủ tài khoản"
+     không bị bóp thành ba dòng khi tên tài khoản dài. */
+  display: grid; grid-template-columns: auto 1fr auto;
+  gap: var(--space-2) var(--space-3); align-items: center;
+  padding: var(--space-2) 0; border-bottom: 1px dashed var(--paper-cream-warm);
+}
+.gb-pay-k { font-size: var(--text-xs); color: var(--ink-soft); white-space: nowrap; }
+.gb-pay-v {
+  font-size: var(--text-sm); color: var(--ink-dark); font-weight: 500;
+  text-align: right; word-break: break-word;
+}
+.gb-pay-v.big {
+  font-family: var(--font-display); font-weight: 800; font-size: var(--text-base);
+  color: var(--sage-deep); letter-spacing: 0.03em;
+}
+.gb-copy {
+  min-height: 32px; padding: 0 0.7em;
+  background: var(--paper-white); border: 1px solid var(--sage-light);
+  border-radius: 999px; font-family: var(--font-body); font-size: var(--text-xs);
+  color: var(--ink-dark); cursor: pointer; white-space: nowrap;
+}
+.gb-copy:hover { border-color: var(--sage-deep); }
+.gb-copy.is-copied { background: var(--sage-deep); border-color: var(--sage-deep); color: var(--paper-white); }
+
+.gb-qr-hint {
+  font-size: var(--text-xs); color: var(--ink-soft); line-height: 1.55;
+  margin-top: var(--space-3); text-align: left;
+}
+
 /* Mã đơn ở màn cảm ơn — cùng cách trình bày với mã giữ chỗ workshop */
 .gb-code-label {
   font-size: var(--text-xs);

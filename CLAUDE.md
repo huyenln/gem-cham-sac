@@ -21,21 +21,46 @@ Static website (5 trang) cho cửa hàng **Gem Chạm Sắc** — pop-up store s
 ├── san-pham.html             Sản phẩm (4 categories + dịch vụ đặc biệt)
 ├── ghe-tham.html             Ghé thăm (địa chỉ + map + email signup)
 ├── season-02.html            Câu chuyện Season 02 (A Space To Stay + link FB reel)
+├── workshop.html             Đặt lịch workshop (đọc từ Supabase)
+├── admin.html                Trang quản trị cho Anna + nhân viên (noindex, không có link từ nav)
 ├── 404.html                  Fallback page (Udon lạc đường)
 ├── CNAME                     gemchamsac.com (cho GitHub Pages custom domain)
-├── css/style.css             Single CSS file (~1200 lines), design tokens ở đầu
+├── css/style.css             Single CSS file, design tokens ở đầu
+├── css/admin.css             Chỉ dùng cho admin.html
 ├── js/main.js                Mobile menu toggle, product TOC scroll, Udon popup
 ├── js/i18n.js                Song ngữ VI/EN: engine + STRINGS dictionary (data-i18n)
 ├── js/gallery.js             Carousel/lightbox ảnh sản phẩm (data-gallery)
 ├── js/mailerlite.js          Email subscribe handler (fetch no-cors → inline success)
+├── js/gem-db.js              Client Supabase tự viết bằng fetch (KHÔNG dùng supabase-js)
+├── js/basket.js              Giỏ hàng + đặt đơn + chọn cách trả tiền
+├── js/workshop.js            Danh sách buổi, form giữ chỗ, .ics
+├── js/admin.js               Trang quản trị: Hôm nay / Đơn hàng / Đặt lịch / Sản phẩm
+├── js/vietqr.js              Sinh mã VietQR ngay trong trình duyệt (EMVCo + QR encoder)
 ├── images/
 │   ├── logo/                 Logo Gem variants
 │   ├── mascot/               6 pose Udon (PNG transparent)
 │   └── products/             Product photos (full + thumb; -2/-3… cho ảnh thêm góc)
 ├── docs/
+│   ├── design.md             Nguồn sự thật: quyết định, sprint, cấu hình, bảo mật
 │   └── prompts.md            Ghi chú prompt
 └── README.md                 Deploy guide cho Anna
 ```
+
+**Backend (từ Sprint 3):** Supabase (project `dxdovvqsfjeizsoprrfn`, Singapore,
+Postgres 17). Bảng: `products`, `orders`, `order_items`, `sessions`, `bookings`,
+`workshop_types`, `staff`, `settings`. Chi tiết ở `docs/design.md`.
+
+> ⚠️ **Hai luật bảo mật, đọc trước khi đụng vào database:**
+>
+> 1. **KHÔNG BAO GIỜ** đưa `service_role` key vào repo hay vào trang web — key
+>    đó bỏ qua toàn bộ RLS. Publishable key thì công khai được, nó vốn nằm
+>    trong JavaScript của trang.
+> 2. Bảng mới trong `public` **không có sẵn quyền** select/insert/update/delete
+>    cho `anon` lẫn `authenticated` (default privileges của project đặt kiểu
+>    "cấm trước"). **Policy RLS lọc DÒNG, GRANT mở CỬA — thiếu cái nào cũng
+>    không vào được.** Đã dính lỗi này hai lần. Và khi kiểm tra thì phải kiểm
+>    **cả ba vai** (khách, đăng nhập nhưng không phải nhân sự, nhân sự): chỉ
+>    kiểm vai `anon` thì "thiếu GRANT" trông y hệt "bảo mật đang hoạt động".
 
 **Naming conventions:**
 - Files: lowercase kebab-case (`cau-chuyen.html`, `vai-vun-tui-deo-cheo.jpg`)

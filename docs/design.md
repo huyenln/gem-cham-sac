@@ -811,6 +811,8 @@ cần mình.
 | `gem_products_and_orders` | `products`, `orders`, `order_items` + `gen_order_code()` |
 | `gem_products_orders_rls` | RLS **và** GRANT cho cả `anon` lẫn `authenticated` |
 | `gem_create_order_rpc` | Hàm `create_order()` |
+| `gem_settings_and_payment` | Bảng `settings` (khoá `payment`) — Sprint 5 |
+| `gem_create_order_payment_method` | `create_order()` nhận thêm cách trả tiền + kiểm ngưỡng — Sprint 5 |
 
 Ba điểm đáng nhớ:
 
@@ -866,13 +868,61 @@ chối đúng và **không để lại đơn cụt nào**.
   dẫn tương đối. Cột này chịu được cả URL Storage nên sau này chuyển được mà
   không phải sửa bảng.
 
-### Sprint 5 — Thanh toán COD + QR · ~2 ngày
+### Sprint 5 — Thanh toán COD + QR · **ĐÃ XONG**
 
-- Chọn COD hoặc QR lúc đặt hàng
-- Sinh **VietQR có sẵn số tiền + mã đơn**
-- Admin: đánh dấu “đã nhận tiền”, lọc theo trạng thái thanh toán
-- Ngưỡng bắt buộc chuyển khoản (thay vì COD) — chỉnh trong Cài đặt
-- Cần từ bạn: số tài khoản ngân hàng + tên chủ tài khoản
+#### `js/vietqr.js` — tự sinh mã QR, không gọi ai
+
+Mã QR mang số tài khoản, số tiền và mã đơn. Gọi sang dịch vụ sinh QR bên ngoài
+là đưa dữ liệu thanh toán cho bên thứ ba, và thêm một chỗ có thể chết vào đúng
+lúc khách đang đứng chờ trả tiền. File này không gọi mạng, không phụ thuộc gì,
+chạy được cả khi mất mạng — đúng nguyên tắc “không build step, không script bên
+thứ ba” của dự án.
+
+**Đã kiểm tra kỹ vì đây là chỗ dính đến tiền:**
+
+- Bộ mã hoá QR so khớp **từng ô** với thư viện chuẩn (Python `qrcode`):
+  **536/536 trường hợp khớp tuyệt đối**, qua 20 phiên bản × 4 mức sửa lỗi ×
+  8 mặt nạ.
+- Lỗi bắt được nhờ phép so này: bảng vị trí ô căn chỉnh của phiên bản 18 ghi
+  80 thay vì 82. Một số sai, cả mã QR hỏng — mà mắt thường không thể thấy.
+- CRC-16/CCITT-FALSE khớp giá trị kiểm tra chuẩn (`"123456789"` → `29B1`).
+- Hai chuỗi VietQR (tĩnh và động) sinh ra **trùng khít** chuỗi đã ghi ở §13b.
+
+#### Luồng khách
+
+Chọn **Trả khi nhận hàng** hoặc **Chuyển khoản QR** ngay trong form đặt hàng.
+Chọn QR thì màn cảm ơn hiện mã QR có sẵn số tiền và mã đơn.
+
+**Một chi tiết dễ bỏ sót:** khách thường mở web trên chính điện thoại của mình,
+nên không quét được mã hiện trên màn hình đó. Vì vậy màn này luôn kèm ngân
+hàng / số tài khoản / chủ tài khoản / số tiền / nội dung ở dạng **bấm-là-chép**,
+và một dòng nhắc họ có thể chụp màn hình rồi quét từ ảnh. Số tiền hiện
+“185.000đ” cho dễ đọc nhưng chép ra `185000` — app ngân hàng không nhận dấu
+chấm và chữ đ.
+
+#### Ngưỡng bắt buộc chuyển khoản
+
+Bảng `settings`, khoá `payment`. **Mặc định đang tắt (`prepay_threshold = 0`)**
+— đơn nào cũng chọn COD được, vì bạn chưa chốt có đặt ngưỡng hay không (§14).
+Đặt số > 0 là đơn từ mức đó trở lên phải chuyển khoản trước.
+
+Kiểm ở **hai tầng**: trình duyệt khoá nút COD cho khách biết sớm, database từ
+chối là chỗ thật. Đơn to chọn COD thì **từ chối chứ không im lặng đổi hộ** sang
+QR — đổi hộ là khách tưởng trả khi nhận rồi đến lúc giao mới bị đòi trả trước.
+
+Đã thử với ngưỡng 500.000đ: đơn 66.000 COD qua ✓, đơn 1.080.000 COD bị từ chối
+✓, cùng đơn đó chọn QR thì qua ✓.
+
+#### Trang quản trị
+
+Thêm bộ lọc **“Chờ tiền”** (đơn chuyển khoản chưa thấy tiền về, có đếm số) và
+nút **“Đã nhận tiền”** trên từng đơn. Web không tự biết tiền đã về — mở app
+ngân hàng, thấy nội dung chuyển khoản trùng mã đơn, rồi bấm nút.
+
+#### Còn lại — việc của bạn
+
+- [ ] Chuyển khoản thật một đơn nhỏ, xem mã QR quét có ra đúng số tiền + mã đơn
+- [ ] Quyết định có đặt ngưỡng bắt buộc chuyển khoản không, và bao nhiêu
 
 ### Sprint 6 — UX đợt 2 + Bản tin động · ~2,5 ngày
 

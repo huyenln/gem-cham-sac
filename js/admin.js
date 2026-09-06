@@ -359,21 +359,32 @@
   }
 
   function renderOrders() {
+    // Đơn chuyển khoản chưa thấy tiền về — việc đối soát hằng ngày
+    function waitingMoney(o) {
+      return o.payment_method === 'qr' && o.payment_status !== 'paid' &&
+             o.status !== 'cancelled';
+    }
+
     var list = orders.filter(function (o) {
-      if (orderFilter === 'open') return OD_OPEN.indexOf(o.status) >= 0;
-      if (orderFilter === 'done') return o.status === 'done';
+      if (orderFilter === 'open')  return OD_OPEN.indexOf(o.status) >= 0;
+      if (orderFilter === 'money') return waitingMoney(o);
+      if (orderFilter === 'done')  return o.status === 'done';
       return true;
     });
 
-    var chips = [['open', 'Cần xử lý'], ['done', 'Xong'], ['all', 'Tất cả']]
-      .map(function (c) {
-        return '<button type="button" class="ad-filter' + (orderFilter === c[0] ? ' active' : '') +
-               '" data-filter="' + c[0] + '">' + c[1] +
-               (c[0] === 'open'
-                 ? ' <b>' + orders.filter(function (o) { return OD_OPEN.indexOf(o.status) >= 0; }).length + '</b>'
-                 : '') +
-               '</button>';
-      }).join('');
+    function count(fn) { return orders.filter(fn).length; }
+
+    var chips = [
+      ['open',  'Cần xử lý', function (o) { return OD_OPEN.indexOf(o.status) >= 0; }],
+      ['money', 'Chờ tiền',  waitingMoney],
+      ['done',  'Xong',      null],
+      ['all',   'Tất cả',    null]
+    ].map(function (c) {
+      var n = c[2] ? count(c[2]) : 0;
+      return '<button type="button" class="ad-filter' + (orderFilter === c[0] ? ' active' : '') +
+             '" data-filter="' + c[0] + '">' + c[1] +
+             (c[2] && n ? ' <b>' + n + '</b>' : '') + '</button>';
+    }).join('');
 
     var body = list.length ? list.map(function (o) {
       var st = OD_STATUS[o.status] || OD_STATUS['new'];
@@ -382,11 +393,18 @@
                '<span class="ad-od-price">' + esc(itemPrice(it)) + '</span></li>';
       }).join('');
 
+      var paid = o.payment_status === 'paid';
+      var pm = o.payment_method === 'qr' ? 'Chuyển khoản'
+             : o.payment_method === 'cod' ? 'Trả khi nhận' : null;
+
       return '<article class="ad-order" data-id="' + esc(o.id) + '">' +
         '<div class="ad-od-head">' +
           '<span class="ad-od-code">' + esc(o.code) + '</span>' +
           '<span class="ad-chip ' + st.cls + '">' + st.label + '</span>' +
         '</div>' +
+        (pm ? '<p class="ad-od-pay">' + pm +
+              ' · <span class="ad-paid' + (paid ? ' yes' : '') + '">' +
+              (paid ? 'đã nhận tiền' : 'chưa nhận tiền') + '</span></p>' : '') +
         '<p class="ad-od-when">' + esc(whenLabel(o.created_at)) + '</p>' +
         '<p class="ad-od-who"><b>' + esc(o.name) + '</b></p>' +
         phoneLinks(o.phone) +
@@ -396,6 +414,13 @@
         '<p class="ad-od-sum"><span>Tổng</span><b>' + esc(money(o.subtotal)) +
           (o.has_unpriced ? ' + món Liên hệ' : '') + '</b></p>' +
         '<div class="ad-acts">' +
+          // Web không tự biết tiền đã về. Anna mở app ngân hàng, thấy nội dung
+          // chuyển khoản trùng mã đơn, rồi bấm nút này.
+          (o.payment_method
+            ? '<button type="button" class="ad-btn' + (paid ? ' on' : '') + '" data-paid="' +
+              (paid ? 'unpaid' : 'paid') + '">' +
+              (paid ? 'Bỏ đánh dấu đã nhận' : 'Đã nhận tiền') + '</button>'
+            : '') +
           (st.next
             ? '<button type="button" class="ad-btn ad-primary" data-to="' + st.next + '">' +
               esc(st.nextLabel) + '</button>'
@@ -422,8 +447,11 @@
     el.main.querySelectorAll('.ad-order .ad-btn').forEach(function (b) {
       b.addEventListener('click', function () {
         var id = b.closest('.ad-order').getAttribute('data-id');
+        var patch = b.hasAttribute('data-paid')
+          ? { payment_status: b.getAttribute('data-paid') }
+          : { status: b.getAttribute('data-to') };
         b.disabled = true;
-        window.GemDB.updateOrder(id, { status: b.getAttribute('data-to') })
+        window.GemDB.updateOrder(id, patch)
           .then(function () { toast('Đã cập nhật'); return load(); })
           .catch(function () { b.disabled = false; toast('Không lưu được', true); });
       });

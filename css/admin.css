@@ -273,3 +273,8 @@
 .ad-btn.ad-danger  { color: #A6503C; border-color: #D9BBB0; }
 /* .on = đang ở trạng thái cần chú ý (tạm hết hàng / đang ẩn) */
 .ad-btn.on { background: var(--kraft-light); border-color: var(--kraft); color: var(--ink-dark); }
+
+/* ---------- THANH TOÁN ---------- */
+.ad-od-pay { font-size: var(--text-xs); color: var(--ink-soft); margin: var(--space-1) 0 0; }
+.ad-paid { color: #A6503C; font-weight: 600; }
+.ad-paid.yes { color: var(--sage-deep); }

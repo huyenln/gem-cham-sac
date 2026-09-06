@@ -64,6 +64,13 @@ window.GemDB = (function () {
       return req('/rest/v1/products?select=*&order=sort_order.asc');
     },
 
+    // Cấu hình thanh toán: ngân hàng, số tài khoản, ngưỡng bắt buộc chuyển
+    // khoản. Chỉ khoá 'payment' mở cho khách, các khoá khác RLS chặn.
+    paymentSettings: function () {
+      return req('/rest/v1/settings?select=value&key=eq.payment')
+        .then(function (rows) { return (rows && rows[0] && rows[0].value) || null; });
+    },
+
     // Đặt đơn. Trả { ok, code, subtotal, has_unpriced } hoặc { ok:false, error }.
     // Chỉ gửi sku và số lượng — giá do database tự tra, không tin giá từ trình
     // duyệt gửi lên (tin thì ai cũng đặt được đơn 0đ).
@@ -78,7 +85,8 @@ window.GemDB = (function () {
           p_email: o.email || null,
           p_address: o.address || null,
           p_note: o.note || null,
-          p_channel: o.channel || null
+          p_channel: o.channel || null,
+          p_payment: o.payment || null
         })
       });
     },

@@ -201,6 +201,22 @@
     'basket.done_p':        { vi: `Gem sẽ nhắn lại cho bạn trong hôm nay để xác nhận món và phí giao. Cảm ơn bạn đã chọn đồ của chúng mình.`, en: `Gem will message you back today to confirm the items and shipping. Thank you for choosing our pieces.` },
     'basket.code_label':    { vi: `MÃ ĐƠN`, en: `ORDER CODE` },
     'basket.out_of_stock':  { vi: `Tạm hết hàng`, en: `Out of stock` },
+
+    'basket.pay_h':         { vi: `Cách trả tiền`, en: `How you'll pay` },
+    'basket.pay_cod':       { vi: `Trả khi nhận hàng`, en: `Pay on delivery` },
+    'basket.pay_cod_p':     { vi: `Đưa tiền cho người giao.`, en: `Hand the cash to the courier.` },
+    'basket.pay_qr':        { vi: `Chuyển khoản QR`, en: `Bank transfer (QR)` },
+    'basket.pay_qr_p':      { vi: `Quét mã, số tiền và mã đơn điền sẵn.`, en: `Scan the code — amount and order code are filled in.` },
+    'basket.prepay_required': { vi: `Đơn này cần chuyển khoản trước. Bạn chọn “Chuyển khoản QR” giúp chúng mình nhé.`, en: `This order needs a transfer up front. Please choose “Bank transfer (QR)”.` },
+    'basket.copy':          { vi: `Chép`, en: `Copy` },
+    'basket.copied':        { vi: `Đã chép`, en: `Copied` },
+    'basket.qr_bank':       { vi: `Ngân hàng`, en: `Bank` },
+    'basket.qr_acc':        { vi: `Số tài khoản`, en: `Account number` },
+    'basket.qr_name':       { vi: `Chủ tài khoản`, en: `Account name` },
+    'basket.qr_amount':     { vi: `Số tiền`, en: `Amount` },
+    'basket.qr_ref':        { vi: `Nội dung`, en: `Transfer note` },
+    'basket.qr_hint':       { vi: `Đang xem trên chính điện thoại này? Chụp màn hình rồi mở app ngân hàng, chọn quét từ ảnh — hoặc bấm “Chép” rồi nhập tay.`, en: `Reading this on the same phone? Screenshot it, then open your banking app and scan from your photos — or tap “Copy” and type it in.` },
+    'basket.done_qr_p':     { vi: `Chuyển xong bạn không cần báo lại — chúng mình thấy tiền về là nhắn cho bạn ngay.`, en: `No need to tell us once you've sent it — we'll message you as soon as the transfer lands.` },
     'basket.order_failed':  { vi: `Chưa gửi được đơn. Bạn nhắn Zalo cho chúng mình nhé.`, en: `We could not send the order. Please message us on Zalo.` },
     'basket.done_mail_p':   { vi: `Chúng mình vừa mở sẵn email cho bạn — bạn bấm Gửi trong app email là đơn về tới Gem nhé.`, en: `We've opened a pre-filled email for you — hit Send in your mail app and the order reaches Gem.` },
     'basket.done_btn':      { vi: `Xem tiếp sản phẩm`, en: `Keep browsing` },
@@ -407,6 +423,37 @@
   var view = 'basket';   // basket | form | chat | done
   var doneMode = 'sent'; // sent | mailto
   var orderCode = null;  // mã đơn database trả về, hiện ở màn cảm ơn
+  var orderPay = null;   // 'cod' | 'qr' — quyết định màn cảm ơn hiện gì
+  var orderSum = 0;      // tổng đã chốt, để sinh QR đúng số tiền
+  var PAY = null;        // cấu hình thanh toán đọc từ Supabase
+
+  /* ---------- chọn cách trả tiền ----------
+     Chỉ hiện khi đọc được cấu hình. Không đọc được thì bỏ qua phần này và
+     đơn vẫn gửi được — em gái hỏi lại cách trả tiền qua Zalo như trước. */
+  function payChoiceHTML() {
+    if (!PAY) return '';
+    var cod = PAY.cod_enabled !== false;
+    var qr  = PAY.qr_enabled  !== false;
+    if (!cod && !qr) return '';
+
+    function opt(val, key, fallback, hintKey, hintFallback, checked) {
+      return '<label class="gb-pay-opt">' +
+        '<input type="radio" name="pay" value="' + val + '"' + (checked ? ' checked' : '') + '>' +
+        '<span class="gb-pay-text">' +
+          '<b data-i18n="' + key + '">' + fallback + '</b>' +
+          '<small data-i18n="' + hintKey + '">' + hintFallback + '</small>' +
+        '</span>' +
+      '</label>';
+    }
+
+    return '<fieldset class="gb-pay">' +
+      '<legend data-i18n="basket.pay_h">Cách trả tiền</legend>' +
+      (cod ? opt('cod', 'basket.pay_cod', 'Trả khi nhận hàng',
+                 'basket.pay_cod_p', 'Đưa tiền cho người giao.', qr ? true : true) : '') +
+      (qr  ? opt('qr', 'basket.pay_qr', 'Chuyển khoản QR',
+                 'basket.pay_qr_p', 'Quét mã, số tiền và mã đơn điền sẵn.', !cod) : '') +
+    '</fieldset>';
+  }
 
   function buildWidget() {
     widget = document.createElement('button');
@@ -694,6 +741,7 @@
           '<span data-i18n="basket.f_note">Ghi chú (không bắt buộc)</span>' +
           '<textarea name="note" rows="2" data-i18n-attr="placeholder:basket.f_note_ph"></textarea>' +
         '</label>' +
+        payChoiceHTML() +
         '<div class="gb-sum gb-sum-tight">' +
           '<span data-i18n="basket.subtotal">Tổng</span>' +
           '<strong>' + subtotalLabel() + '</strong>' +
@@ -709,6 +757,21 @@
     function syncAddr() { addrField.hidden = pickup.checked; }
     pickup.addEventListener('change', syncAddr);
     syncAddr();
+
+    // Đơn to thì khoá COD lại ngay trên giao diện, đừng để khách chọn xong
+    // rồi mới bị từ chối lúc gửi.
+    var codInput = form.querySelector('[name="pay"][value="cod"]');
+    if (codInput) {
+      var thresh = (PAY && PAY.prepay_threshold) || 0;
+      var over = thresh > 0 && subtotal() >= thresh;
+      codInput.disabled = over;
+      var codLabel = codInput.closest('.gb-pay-opt');
+      if (codLabel) codLabel.classList.toggle('is-off', over);
+      if (over) {
+        var qrInput = form.querySelector('[name="pay"][value="qr"]');
+        if (qrInput) qrInput.checked = true;
+      }
+    }
 
     panelBody.querySelector('.gb-back').addEventListener('click', function () {
       view = 'basket'; renderPanel();
@@ -771,6 +834,48 @@
     translate();
   }
 
+  /* ---------- màn chuyển khoản ----------
+     Khách thường mở web trên chính điện thoại của mình, nên không quét được
+     mã hiện trên màn hình đó. Vì vậy luôn kèm số tài khoản + số tiền + mã đơn
+     ở dạng bấm-là-chép, và nhắc họ có thể chụp màn hình rồi quét từ ảnh. */
+  // shown = chữ cho người đọc, copied = chữ chép vào app ngân hàng.
+  // Số tiền hiện "185.000đ" cho dễ đọc nhưng chép ra "185000" — app ngân hàng
+  // không nhận dấu chấm và chữ đ.
+  function copyRow(label, shown, copied, big) {
+    return '<div class="gb-pay-row">' +
+      '<span class="gb-pay-k">' + esc(label) + '</span>' +
+      '<span class="gb-pay-v' + (big ? ' big' : '') + '">' + esc(shown) + '</span>' +
+      '<button type="button" class="gb-copy" data-copy="' + esc(copied == null ? shown : copied) + '" ' +
+        'data-i18n="basket.copy">Chép</button>' +
+    '</div>';
+  }
+
+  function renderQrPay() {
+    var qrSvg = '';
+    try {
+      qrSvg = window.GemVietQR.svg(window.GemVietQR.payload({
+        bin: PAY.bank_bin,
+        account: PAY.account_no,
+        amount: orderSum > 0 ? orderSum : null,
+        ref: orderCode
+      }), { ecl: 'M' });
+    } catch (e) { qrSvg = ''; }
+
+    return '<div class="gb-qr-wrap">' +
+      (qrSvg ? '<div class="gb-qr">' + qrSvg + '</div>' : '') +
+      '<div class="gb-pay-rows">' +
+        copyRow(t('basket.qr_bank', 'Ngân hàng'), PAY.bank_name) +
+        copyRow(t('basket.qr_acc', 'Số tài khoản'), PAY.account_no) +
+        copyRow(t('basket.qr_name', 'Chủ tài khoản'), PAY.account_name) +
+        (orderSum > 0
+          ? copyRow(t('basket.qr_amount', 'Số tiền'), money(orderSum), String(orderSum), true)
+          : '') +
+        copyRow(t('basket.qr_ref', 'Nội dung'), orderCode, orderCode, true) +
+      '</div>' +
+      '<p class="gb-qr-hint" data-i18n="basket.qr_hint"></p>' +
+    '</div>';
+  }
+
   function renderDone() {
     panelBody.innerHTML =
       '<div class="gb-empty">' +
@@ -782,10 +887,38 @@
           ? '<p class="gb-code-label" data-i18n="basket.code_label"></p>' +
             '<p class="gb-code">' + esc(orderCode) + '</p>'
           : '') +
+        (orderPay === 'qr' && PAY && orderCode ? renderQrPay() : '') +
         '<p class="gb-empty-p" data-i18n="' +
-          (doneMode === 'mailto' ? 'basket.done_mail_p' : 'basket.done_p') + '"></p>' +
+          (doneMode === 'mailto' ? 'basket.done_mail_p'
+            : orderPay === 'qr' ? 'basket.done_qr_p' : 'basket.done_p') + '"></p>' +
         '<button type="button" class="btn btn-primary gb-done-btn" data-i18n="basket.done_btn"></button>' +
       '</div>';
+
+    panelBody.querySelectorAll('.gb-copy').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var v = b.getAttribute('data-copy');
+        var done = function () {
+          b.classList.add('is-copied');
+          b.textContent = t('basket.copied', 'Đã chép');
+          setTimeout(function () {
+            b.classList.remove('is-copied');
+            b.textContent = t('basket.copy', 'Chép');
+          }, 1400);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(v).then(done, function () { /* im lặng */ });
+        } else {
+          // Safari cũ và WebView trong app không có clipboard API
+          var ta = document.createElement('textarea');
+          ta.value = v; ta.setAttribute('readonly', '');
+          ta.style.position = 'absolute'; ta.style.left = '-9999px';
+          document.body.appendChild(ta); ta.select();
+          try { document.execCommand('copy'); done(); } catch (e) { /* im lặng */ }
+          document.body.removeChild(ta);
+        }
+      });
+    });
+
     panelBody.querySelector('.gb-done-btn').addEventListener('click', closePanel);
     translate();
   }
@@ -881,14 +1014,26 @@
     // Đơn vào thẳng database để em gái xem trong trang quản trị. Chỉ gửi sku
     // và số lượng — giá do database tự tra, không gửi giá từ trình duyệt lên.
     if (window.GemDB && window.GemDB.createOrder) {
+      var picked = form.querySelector('[name="pay"]:checked');
       window.GemDB.createOrder({
         name: customer.name,
         phone: customer.phone,
         address: customer.pickup ? t('basket.txt_pickup', 'Nhận tại cửa hàng') : customer.address,
         note: customer.note,
+        payment: picked ? picked.value : null,
         items: items.map(function (it) { return { sku: it.sku, qty: it.qty }; })
       }).then(function (res) {
-        if (res && res.ok) { orderCode = res.code; finish('sent'); return; }
+        if (res && res.ok) {
+          orderCode = res.code;
+          orderPay = res.payment_method;
+          orderSum = res.subtotal || 0;
+          finish('sent');
+          return;
+        }
+        if (res && res.error === 'prepay_required') {
+          return fail(t('basket.prepay_required',
+            'Đơn này cần chuyển khoản trước. Bạn chọn “Chuyển khoản QR” giúp chúng mình nhé.'));
+        }
         fail(t('basket.order_failed', 'Chưa gửi được đơn. Bạn nhắn Zalo cho chúng mình nhé.'));
       }).catch(function () {
         // Mất mạng giữa chừng: không nuốt đơn của khách, đưa sang app email
@@ -1010,6 +1155,15 @@
         renderWidget();
         if (panel.classList.contains('open') && view === 'basket') renderBasketView();
       }).catch(function () { /* giữ nguyên giá dự phòng */ });
+
+      // Cấu hình thanh toán. Không đọc được thì form bỏ phần chọn cách trả
+      // tiền, đơn vẫn gửi bình thường — em gái hỏi lại qua Zalo như trước.
+      if (window.GemDB.paymentSettings) {
+        window.GemDB.paymentSettings().then(function (cfg) {
+          PAY = cfg;
+          if (panel.classList.contains('open') && view === 'form') renderPanel();
+        }).catch(function () { /* không có thì thôi */ });
+      }
     }
   });
 })();
