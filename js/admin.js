@@ -22,10 +22,32 @@
     cancelled: { label: 'Đã huỷ',     cls: 'off' }
   };
 
+  // Vòng đời đơn hàng. Nút "tiếp theo" là bước hay bấm nhất ở mỗi trạng thái,
+  // để em gái đang gói hàng chỉ phải chạm một lần.
+  var OD_STATUS = {
+    'new':       { label: 'Mới',         cls: 'held', next: 'confirmed', nextLabel: 'Đã xác nhận' },
+    'confirmed': { label: 'Đã xác nhận', cls: 'ok',   next: 'packing',   nextLabel: 'Đang gói' },
+    'packing':   { label: 'Đang gói',    cls: 'ok',   next: 'shipped',   nextLabel: 'Đã gửi' },
+    'shipped':   { label: 'Đã gửi',      cls: 'ok',   next: 'done',      nextLabel: 'Xong' },
+    'done':      { label: 'Xong',        cls: 'off' },
+    'cancelled': { label: 'Đã huỷ',      cls: 'bad' }
+  };
+  var OD_OPEN = ['new', 'confirmed', 'packing', 'shipped'];
+
+  var CATEGORIES = {
+    'vai-vun': 'Phụ kiện vải vụn',
+    'vpp':     'Văn phòng phẩm',
+    'gom':     'Gốm sứ Nhật',
+    'set-qua': 'Set quà tặng'
+  };
+
   var el = {};
   var me = null;
   var sessions = [];
+  var orders = [];
+  var products = [];
   var tab = 'today';
+  var orderFilter = 'open';   // open | done | all
 
   /* ---------- tiện ích ---------- */
   function esc(s) {
@@ -114,7 +136,9 @@
         '</div>' +
         '<nav class="ad-tabs">' +
           '<button type="button" data-tab="today">Hôm nay</button>' +
+          '<button type="button" data-tab="orders">Đơn hàng</button>' +
           '<button type="button" data-tab="sessions">Đặt lịch</button>' +
+          '<button type="button" data-tab="products">Sản phẩm</button>' +
         '</nav>' +
       '</header>' +
       '<main class="ad-main"><p class="ad-loading">Đang tải...</p></main>';
@@ -125,7 +149,12 @@
       renderLogin();
     });
     el.root.querySelectorAll('.ad-tabs button').forEach(function (b) {
-      b.addEventListener('click', function () { tab = b.getAttribute('data-tab'); paintTabs(); render(); });
+      b.addEventListener('click', function () {
+        tab = b.getAttribute('data-tab');
+        paintTabs();
+        el.main.innerHTML = '<p class="ad-loading">Đang tải...</p>';
+        load();          // mỗi tab lấy dữ liệu riêng, không nạp sẵn tất cả
+      });
     });
     paintTabs();
   }
@@ -309,19 +338,193 @@
     });
   }
 
+  /* ================= ĐƠN HÀNG ================= */
+
+  function money(n) {
+    if (n == null) return 'Liên hệ';
+    return n.toLocaleString('vi-VN') + 'đ';
+  }
+
+  function itemPrice(it) {
+    if (it.price == null) return 'Liên hệ';
+    if (it.price_max != null) {
+      return (it.price * it.qty).toLocaleString('vi-VN') + '–' + money(it.price_max * it.qty);
+    }
+    return money(it.price * it.qty);
+  }
+
+  function whenLabel(iso) {
+    var v = vn(iso);
+    return v.ymd === todayVN() ? 'Hôm nay ' + v.time : v.dow + ' ' + v.date + ' · ' + v.time;
+  }
+
+  function renderOrders() {
+    var list = orders.filter(function (o) {
+      if (orderFilter === 'open') return OD_OPEN.indexOf(o.status) >= 0;
+      if (orderFilter === 'done') return o.status === 'done';
+      return true;
+    });
+
+    var chips = [['open', 'Cần xử lý'], ['done', 'Xong'], ['all', 'Tất cả']]
+      .map(function (c) {
+        return '<button type="button" class="ad-filter' + (orderFilter === c[0] ? ' active' : '') +
+               '" data-filter="' + c[0] + '">' + c[1] +
+               (c[0] === 'open'
+                 ? ' <b>' + orders.filter(function (o) { return OD_OPEN.indexOf(o.status) >= 0; }).length + '</b>'
+                 : '') +
+               '</button>';
+      }).join('');
+
+    var body = list.length ? list.map(function (o) {
+      var st = OD_STATUS[o.status] || OD_STATUS['new'];
+      var items = (o.order_items || []).map(function (it) {
+        return '<li><span>' + esc(it.name_vi) + ' × ' + it.qty + '</span>' +
+               '<span class="ad-od-price">' + esc(itemPrice(it)) + '</span></li>';
+      }).join('');
+
+      return '<article class="ad-order" data-id="' + esc(o.id) + '">' +
+        '<div class="ad-od-head">' +
+          '<span class="ad-od-code">' + esc(o.code) + '</span>' +
+          '<span class="ad-chip ' + st.cls + '">' + st.label + '</span>' +
+        '</div>' +
+        '<p class="ad-od-when">' + esc(whenLabel(o.created_at)) + '</p>' +
+        '<p class="ad-od-who"><b>' + esc(o.name) + '</b></p>' +
+        phoneLinks(o.phone) +
+        (o.address ? '<p class="ad-od-addr">' + esc(o.address) + '</p>' : '') +
+        (o.note ? '<p class="ad-od-note">“' + esc(o.note) + '”</p>' : '') +
+        '<ul class="ad-od-items">' + items + '</ul>' +
+        '<p class="ad-od-sum"><span>Tổng</span><b>' + esc(money(o.subtotal)) +
+          (o.has_unpriced ? ' + món Liên hệ' : '') + '</b></p>' +
+        '<div class="ad-acts">' +
+          (st.next
+            ? '<button type="button" class="ad-btn ad-primary" data-to="' + st.next + '">' +
+              esc(st.nextLabel) + '</button>'
+            : '') +
+          (o.status !== 'cancelled' && o.status !== 'done'
+            ? '<button type="button" class="ad-btn ad-danger" data-to="cancelled">Huỷ</button>'
+            : '') +
+          (o.status === 'done' || o.status === 'cancelled'
+            ? '<button type="button" class="ad-btn" data-to="new">Mở lại</button>'
+            : '') +
+        '</div>' +
+      '</article>';
+    }).join('') : '<div class="ad-empty"><p>Chưa có đơn nào ở mục này.</p></div>';
+
+    el.main.innerHTML = '<div class="ad-filters">' + chips + '</div>' + body;
+
+    el.main.querySelectorAll('.ad-filter').forEach(function (b) {
+      b.addEventListener('click', function () {
+        orderFilter = b.getAttribute('data-filter');
+        renderOrders();
+      });
+    });
+
+    el.main.querySelectorAll('.ad-order .ad-btn').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var id = b.closest('.ad-order').getAttribute('data-id');
+        b.disabled = true;
+        window.GemDB.updateOrder(id, { status: b.getAttribute('data-to') })
+          .then(function () { toast('Đã cập nhật'); return load(); })
+          .catch(function () { b.disabled = false; toast('Không lưu được', true); });
+      });
+    });
+  }
+
+  /* ================= SẢN PHẨM ================= */
+
+  function renderProducts() {
+    var byCat = {}, order = [];
+    products.forEach(function (p) {
+      if (!byCat[p.category]) { byCat[p.category] = []; order.push(p.category); }
+      byCat[p.category].push(p);
+    });
+
+    var groups = order.map(function (cat) {
+      return '<section class="ad-cat">' +
+        '<h3>' + esc(CATEGORIES[cat] || cat) + '</h3>' +
+        byCat[cat].map(function (p) {
+          return '<div class="ad-prod' + (p.is_published ? '' : ' is-hidden') + '" data-id="' + esc(p.id) + '">' +
+            '<div class="ad-prod-top">' +
+              '<b>' + esc(p.name_vi) + '</b>' +
+              '<span class="ad-sku">' + esc(p.sku) + '</span>' +
+            '</div>' +
+            '<div class="ad-prod-price">' +
+              '<label>Giá <input type="number" min="0" step="1000" class="ad-p-min" ' +
+                'value="' + (p.price == null ? '' : p.price) + '" placeholder="Liên hệ"></label>' +
+              '<label>đến <input type="number" min="0" step="1000" class="ad-p-max" ' +
+                'value="' + (p.price_max == null ? '' : p.price_max) + '" placeholder="—"></label>' +
+              '<button type="button" class="ad-btn ad-save">Lưu</button>' +
+            '</div>' +
+            '<div class="ad-acts">' +
+              '<button type="button" class="ad-btn' + (p.in_stock ? '' : ' on') + '" data-t="stock">' +
+                (p.in_stock ? 'Còn hàng' : 'Tạm hết') + '</button>' +
+              '<button type="button" class="ad-btn' + (p.is_published ? '' : ' on') + '" data-t="pub">' +
+                (p.is_published ? 'Đang bán' : 'Đang ẩn') + '</button>' +
+            '</div>' +
+          '</div>';
+        }).join('') +
+      '</section>';
+    }).join('');
+
+    el.main.innerHTML =
+      '<p class="ad-hint">Để trống ô giá là web hiện “Liên hệ”. Ô “đến” chỉ ' +
+      'điền khi bán theo khoảng giá.</p>' + groups;
+
+    el.main.querySelectorAll('.ad-prod').forEach(function (d) {
+      var id = d.getAttribute('data-id');
+      var p = products.filter(function (x) { return x.id === id; })[0];
+
+      d.querySelector('.ad-save').addEventListener('click', function () {
+        var minV = d.querySelector('.ad-p-min').value.trim();
+        var maxV = d.querySelector('.ad-p-max').value.trim();
+        var min = minV === '' ? null : parseInt(minV, 10);
+        var max = maxV === '' ? null : parseInt(maxV, 10);
+
+        if (max != null && min == null) return toast('Có giá “đến” thì phải có giá đầu', true);
+        if (max != null && max < min)   return toast('Giá “đến” phải lớn hơn giá đầu', true);
+
+        window.GemDB.updateProduct(id, { price: min, price_max: max })
+          .then(function () { toast('Đã lưu giá'); return load(); })
+          .catch(function () { toast('Không lưu được', true); });
+      });
+
+      d.querySelectorAll('[data-t]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var patch = b.getAttribute('data-t') === 'stock'
+            ? { in_stock: !p.in_stock }
+            : { is_published: !p.is_published };
+          b.disabled = true;
+          window.GemDB.updateProduct(id, patch)
+            .then(function () { toast('Đã cập nhật'); return load(); })
+            .catch(function () { b.disabled = false; toast('Không lưu được', true); });
+        });
+      });
+    });
+  }
+
   /* ---------- vòng đời ---------- */
   function render() {
-    if (tab === 'today') renderToday(); else renderSessions();
+    if (tab === 'today')    return renderToday();
+    if (tab === 'orders')   return renderOrders();
+    if (tab === 'products') return renderProducts();
+    renderSessions();
   }
 
   function load() {
-    // lấy từ đầu hôm nay theo giờ VN, để buổi sáng nay vẫn còn trong danh sách
-    var from = new Date();
-    from.setUTCHours(from.getUTCHours() - 24);
-    return window.GemDB.adminSessions(from.toISOString()).then(function (rows) {
-      sessions = rows || [];
-      render();
-    }).catch(function (err) {
+    var job;
+    if (tab === 'orders') {
+      job = window.GemDB.adminOrders().then(function (rows) { orders = rows || []; });
+    } else if (tab === 'products') {
+      job = window.GemDB.adminProducts().then(function (rows) { products = rows || []; });
+    } else {
+      // lấy từ đầu hôm nay theo giờ VN, để buổi sáng nay vẫn còn trong danh sách
+      var from = new Date();
+      from.setUTCHours(from.getUTCHours() - 24);
+      job = window.GemDB.adminSessions(from.toISOString())
+        .then(function (rows) { sessions = rows || []; });
+    }
+
+    return job.then(render).catch(function (err) {
       el.main.innerHTML = '<div class="ad-empty"><p>Không tải được dữ liệu.</p>' +
         '<p class="ad-hint">' + esc(err.message || '') + '</p></div>';
     });
