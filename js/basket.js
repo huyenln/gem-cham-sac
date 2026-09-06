@@ -1,4 +1,4 @@
-// Gem Chạm Sắc — giỏ hàng tương tác (PROTOTYPE)
+// Gem Chạm Sắc — giỏ hàng tương tác
 //
 // A floating basket in the corner. Clicking "thêm vào giỏ" on a product sends a
 // hand-drawn sprite of that product flying into the basket, where it stacks up
@@ -6,11 +6,12 @@
 // either sends the order to the shop email or hands it over to Zalo/Messenger.
 //
 // Self-contained: builds its own DOM, so a page only needs
-//   <link rel="stylesheet" href="css/basket.css">
 //   <script src="js/basket.js" defer></script>
-// plus data-sku="<id>" on each .product-card and a .gb-add button inside it.
+// plus data-sku="<id>" and an empty <div class="gb-slot"></div> inside each
+// .product-card. Styles live in css/style.css under "GIỎ HÀNG".
 //
-// No backend. State lives in localStorage['gem-basket'].
+// No backend yet — orders go out by email. Sprint 4 swaps that for Supabase.
+// State lives in localStorage['gem-basket'].
 
 (function () {
   'use strict';
@@ -37,30 +38,38 @@
 
   /* ======================================================================
      CATALOG
-     ⚠️  GIÁ DƯỚI ĐÂY LÀ SỐ TẠM — CHƯA PHẢI GIÁ THẬT.
-     Anna điền giá thật vào cột `price` (đơn vị: đồng, không dấu chấm).
+
+     `price: null` = chưa chốt giá → web hiện "Liên hệ".
+     Điền giá thật vào cột `price` (đơn vị: đồng, không dấu chấm, ví dụ 150000)
+     là con số hiện lên ngay, không phải sửa gì khác.
+
+     KHÔNG điền số phỏng đoán vào đây. Giá đã đăng là một lời hứa — sai giá thì
+     hoặc phải chịu, hoặc làm khách thất vọng ngay tại cửa hàng.
+
      `name`/`desc` trỏ sang key i18n có sẵn trong js/i18n.js nên tên sản phẩm
      tự động đúng theo ngôn ngữ đang chọn.
      Quần áo 2hand cố tình để ngoài — mỗi món là một cái riêng, cần dữ liệu
      từng món trước khi cho vào giỏ được.
+
+     Sprint 4: bảng này chuyển vào Supabase, em gái sửa giá trong trang quản trị.
      ====================================================================== */
   var CATALOG = [
-    { sku: 'origami',    name: 'products.origami_h',   desc: 'products.origami_p',   price: 150000, sprite: 'pouch' },
-    { sku: 'oxford',     name: 'products.oxford_h',    desc: 'products.oxford_p',    price: 180000, sprite: 'shirt' },
-    { sku: 'denim',      name: 'products.denim_h',     desc: 'products.denim_p',     price: 220000, sprite: 'denim' },
-    { sku: 'bloom',      name: 'products.bloom_h',     desc: 'products.bloom_p',     price: 45000,  sprite: 'bloom' },
-    { sku: 'tuibut',     name: 'products.tuibut_h',    desc: 'products.tuibut_p',    price: 85000,  sprite: 'pencase' },
-    { sku: 'bookmark',   name: 'products.bookmark_h',  desc: 'products.bookmark_p',  price: 25000,  sprite: 'bookmark' },
-    { sku: 'biaso',      name: 'products.biaso_h',     desc: 'products.biaso_p',     price: 120000, sprite: 'journal' },
-    { sku: 'daydeo',     name: 'products.daydeo_h',    desc: 'products.daydeo_p',    price: 35000,  sprite: 'strap' },
-    { sku: 'scrunchie',  name: 'products.scrunchie_h', desc: 'products.scrunchie_p', price: 30000,  sprite: 'scrunchie' },
-    { sku: 'lotcoc',     name: 'products.lotcoc_h',    desc: 'products.lotcoc_p',    price: 40000,  sprite: 'coaster' },
-    { sku: 'goi',        name: 'products.goi_h',       desc: 'products.goi_p',       price: 250000, sprite: 'pillow' },
-    { sku: 'tham',       name: 'products.tham_h',      desc: 'products.tham_p',      price: 320000, sprite: 'rug' },
-    { sku: 'so-kraft',   name: 'products.pv1_h',       desc: 'products.pv1_p',       price: 65000,  sprite: 'spiral' },
-    { sku: 'so-khau',    name: 'products.sokhau_h',    desc: 'products.sokhau_p',    price: 95000,  sprite: 'stitched' },
-    { sku: 'gom',        name: 'products.cgom_h',      desc: 'products.cgom_p',      price: 130000, sprite: 'ceramic' },
-    { sku: 'set-qua',    name: 'products.setqua_h',    desc: 'products.setqua_p',    price: 280000, sprite: 'gift' }
+    { sku: 'origami',    name: 'products.origami_h',   desc: 'products.origami_p',   price: null, sprite: 'pouch' },
+    { sku: 'oxford',     name: 'products.oxford_h',    desc: 'products.oxford_p',    price: null, sprite: 'shirt' },
+    { sku: 'denim',      name: 'products.denim_h',     desc: 'products.denim_p',     price: null, sprite: 'denim' },
+    { sku: 'bloom',      name: 'products.bloom_h',     desc: 'products.bloom_p',     price: null,  sprite: 'bloom' },
+    { sku: 'tuibut',     name: 'products.tuibut_h',    desc: 'products.tuibut_p',    price: null,  sprite: 'pencase' },
+    { sku: 'bookmark',   name: 'products.bookmark_h',  desc: 'products.bookmark_p',  price: null,  sprite: 'bookmark' },
+    { sku: 'biaso',      name: 'products.biaso_h',     desc: 'products.biaso_p',     price: null, sprite: 'journal' },
+    { sku: 'daydeo',     name: 'products.daydeo_h',    desc: 'products.daydeo_p',    price: null,  sprite: 'strap' },
+    { sku: 'scrunchie',  name: 'products.scrunchie_h', desc: 'products.scrunchie_p', price: null,  sprite: 'scrunchie' },
+    { sku: 'lotcoc',     name: 'products.lotcoc_h',    desc: 'products.lotcoc_p',    price: null,  sprite: 'coaster' },
+    { sku: 'goi',        name: 'products.goi_h',       desc: 'products.goi_p',       price: null, sprite: 'pillow' },
+    { sku: 'tham',       name: 'products.tham_h',      desc: 'products.tham_p',      price: null, sprite: 'rug' },
+    { sku: 'so-kraft',   name: 'products.pv1_h',       desc: 'products.pv1_p',       price: null,  sprite: 'spiral' },
+    { sku: 'so-khau',    name: 'products.sokhau_h',    desc: 'products.sokhau_p',    price: null,  sprite: 'stitched' },
+    { sku: 'gom',        name: 'products.cgom_h',      desc: 'products.cgom_p',      price: null, sprite: 'ceramic' },
+    { sku: 'set-qua',    name: 'products.setqua_h',    desc: 'products.setqua_p',    price: null, sprite: 'gift' }
   ];
 
   /* ======================================================================
@@ -161,6 +170,9 @@
     'basket.remove_aria':   { vi: `Bỏ khỏi giỏ`, en: `Remove from basket` },
     'basket.minus_aria':    { vi: `Giảm một`, en: `Decrease by one` },
     'basket.plus_aria':     { vi: `Thêm một`, en: `Increase by one` },
+    'basket.price_tbd':     { vi: `Liên hệ`, en: `Ask us` },
+    'basket.all_unpriced':  { vi: `Chúng mình sẽ báo giá cho bạn khi nhắn lại nhé.`, en: `We'll quote you when we reply.` },
+    'basket.some_unpriced': { vi: `Vài món chưa có giá trên web — chúng mình báo bạn khi nhắn lại nhé.`, en: `Some pieces aren't priced online yet — we'll let you know when we reply.` },
     'basket.subtotal':      { vi: `Tổng`, en: `Subtotal` },
     'basket.ship_note':     { vi: `Chưa gồm phí giao hàng — chúng mình báo bạn sau khi biết địa chỉ.`, en: `Shipping not included — we'll let you know once we have your address.` },
     'basket.order_btn':     { vi: `Đặt hàng`, en: `Place order` },
@@ -242,15 +254,43 @@
     return items.reduce(function (n, it) { return n + it.qty; }, 0);
   }
 
+  // Chỉ cộng những món đã có giá — món chưa chốt giá không được đoán thành 0đ
   function subtotal() {
     return items.reduce(function (sum, it) {
       var p = bySku(it.sku);
-      return sum + (p ? p.price * it.qty : 0);
+      return sum + (p && p.price != null ? p.price * it.qty : 0);
     }, 0);
+  }
+
+  function hasUnpriced() {
+    return items.some(function (it) {
+      var p = bySku(it.sku);
+      return p && p.price == null;
+    });
   }
 
   function money(n) {
     return n.toLocaleString('vi-VN') + 'đ';
+  }
+
+  // price == null nghĩa là chưa chốt giá → hiện "Liên hệ", không bịa ra con số.
+  // Một cái giá đã đăng là một lời hứa; sai giá là phải chịu hoặc làm khách thất vọng.
+  function priceLabel(p, qty) {
+    if (!p || p.price == null) return t('basket.price_tbd', 'Liên hệ');
+    return money(p.price * (qty || 1));
+  }
+
+  // Cả giỏ chưa có món nào biết giá thì đừng hiện "0đ" — nghe như miễn phí
+  function subtotalLabel() {
+    var sum = subtotal();
+    if (sum === 0 && hasUnpriced()) return t('basket.price_tbd', 'Liên hệ');
+    return money(sum);
+  }
+
+  // Chú thích dưới phần tổng, tuỳ theo còn món nào chưa có giá
+  function unpricedNoteKey() {
+    if (!hasUnpriced()) return null;
+    return subtotal() === 0 ? 'basket.all_unpriced' : 'basket.some_unpriced';
   }
 
   function addItem(sku) {
@@ -493,7 +533,7 @@
           '<span class="gb-row-name" data-i18n="' + p.name + '"></span>' +
           // unit price only earns its line once there's more than one
           '<span class="gb-row-price">' +
-            (it.qty > 1 ? money(p.price) + ' × ' + it.qty : '') +
+            (it.qty > 1 ? priceLabel(p) + ' × ' + it.qty : '') +
           '</span>' +
         '</span>' +
         '<span class="gb-stepper">' +
@@ -503,7 +543,7 @@
           '<button type="button" class="gb-step" data-act="plus" ' +
             'data-i18n-attr="aria-label:basket.plus_aria">+</button>' +
         '</span>' +
-        '<span class="gb-row-total">' + money(p.price * it.qty) + '</span>' +
+        '<span class="gb-row-total">' + priceLabel(p, it.qty) + '</span>' +
         '<button type="button" class="gb-row-remove" data-act="remove" ' +
           'data-i18n-attr="aria-label:basket.remove_aria">&times;</button>' +
       '</li>';
@@ -513,8 +553,11 @@
       '<ul class="gb-rows">' + rows + '</ul>' +
       '<div class="gb-sum">' +
         '<span data-i18n="basket.subtotal">Tổng</span>' +
-        '<strong>' + money(subtotal()) + '</strong>' +
+        '<strong>' + subtotalLabel() + '</strong>' +
       '</div>' +
+      (unpricedNoteKey()
+        ? '<p class="gb-fine" data-i18n="' + unpricedNoteKey() + '"></p>'
+        : '') +
       '<p class="gb-fine" data-i18n="basket.ship_note"></p>' +
       '<div class="gb-actions">' +
         '<button type="button" class="btn btn-primary gb-go-form" data-i18n="basket.order_btn">Đặt hàng</button>' +
@@ -578,7 +621,7 @@
         '</label>' +
         '<div class="gb-sum gb-sum-tight">' +
           '<span data-i18n="basket.subtotal">Tổng</span>' +
-          '<strong>' + money(subtotal()) + '</strong>' +
+          '<strong>' + subtotalLabel() + '</strong>' +
         '</div>' +
         '<button type="submit" class="btn btn-primary gb-submit" data-i18n="basket.send">Gửi đơn cho Gem</button>' +
         '<p class="gb-err" hidden></p>' +
@@ -676,10 +719,10 @@
     items.forEach(function (it, i) {
       var p = bySku(it.sku);
       lines.push((i + 1) + '. ' + t(p.name, p.sku) + ' × ' + it.qty +
-        ' — ' + money(p.price * it.qty));
+        ' — ' + priceLabel(p, it.qty));
     });
     lines.push('———');
-    lines.push(t('basket.txt_total', 'Tổng') + ': ' + money(subtotal()));
+    lines.push(t('basket.txt_total', 'Tổng') + ': ' + subtotalLabel());
 
     if (opts.customer) {
       var c = opts.customer;
@@ -801,7 +844,7 @@
       var slot = card.querySelector('.gb-slot');
       if (!slot) return;
       slot.innerHTML =
-        '<span class="gb-price">' + money(product.price) + '</span>' +
+        '<span class="gb-price">' + priceLabel(product) + '</span>' +
         '<button type="button" class="gb-add" data-i18n="basket.add">Thêm vào giỏ</button>';
 
       var btn = slot.querySelector('.gb-add');

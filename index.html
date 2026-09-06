@@ -80,6 +80,10 @@
             <span class="accent">tử tế và bền vững.</span>
           </h1>
 
+          <p class="hero-where" data-i18n="home.hero_where">
+            Hà Nội · Open Studio 09:00–19:00 mỗi ngày
+          </p>
+
           <p class="hero-desc" data-i18n="home.hero_desc">
             Gem Chạm Sắc bắt đầu từ những bước nhỏ,
             với mong muốn tạo ra một không gian sống chậm,
@@ -95,11 +99,22 @@
           </div>
         </div>
 
-        <div class="hero-mascot">
-          <button class="udon-trigger" data-i18n-attr="aria-label:home.udon_aria" aria-label="Xem câu chuyện về Udon" tabindex="0">
-            <img src="images/mascot/udon_sit_stare.png" data-i18n-attr="alt:home.udon_alt" alt="Udon - mascot của Gem Chạm Sắc" loading="eager">
-            <span class="hero-mascot-note top-right" data-i18n="home.udon_note">~ đây là Udon ~</span>
-          </button>
+        <!-- Product photo leads; Udon peeks in from the corner and keeps its easter egg.
+             TODO: swap hero-photo for a proper studio photo when Anna sends one —
+             this is a 600x600 thumbnail crop, the only clean photography we have. -->
+        <div class="hero-visual">
+          <div class="hero-photo">
+            <img src="images/products/vai-vun-tui-deo-cheo-thumb.jpg"
+                 data-i18n-attr="alt:home.hero_img_alt"
+                 alt="Túi đeo chéo vải ghép, đeo trên vai" width="600" height="600" loading="eager">
+          </div>
+
+          <div class="hero-mascot">
+            <button class="udon-trigger" data-i18n-attr="aria-label:home.udon_aria" aria-label="Xem câu chuyện về Udon" tabindex="0">
+              <img src="images/mascot/udon_sit_stare.png" data-i18n-attr="alt:home.udon_alt" alt="Udon - mascot của Gem Chạm Sắc" loading="eager">
+              <span class="hero-mascot-note top-right" data-i18n="home.udon_note">~ đây là Udon ~</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -189,48 +204,76 @@
         <p data-i18n="home.products_desc">Mỗi sản phẩm độc bản, không cái nào giống cái nào — bởi vải vụn và đồ secondhand đều có câu chuyện riêng.</p>
       </div>
 
-      <!-- Auto-rotating product slideshow (see slideshow logic in js/main.js) -->
-      <div class="home-slideshow" data-slideshow data-interval="3800" aria-roledescription="carousel" data-i18n-attr="aria-label:home.products_title" aria-label="Đa dạng các sắc màu từ Gem.">
-        <div class="hs-frame">
-          <div class="hs-slide">
-            <img src="images/products/vai-vun-tui-1-thumb.jpg" data-i18n-attr="alt:products.origami_h" alt="Origami Pouch" loading="eager">
-            <span class="hs-caption" data-i18n="products.origami_h">Origami Pouch</span>
-          </div>
-          <div class="hs-slide">
-            <img src="images/products/vai-vun-bloom-charm-thumb.jpg" data-i18n-attr="alt:products.bloom_h" alt="Bloom Charm" loading="lazy">
-            <span class="hs-caption" data-i18n="products.bloom_h">Bloom Charm</span>
-          </div>
-          <div class="hs-slide">
-            <img src="images/products/vai-vun-goi-patchwork-thumb.jpg" data-i18n-attr="alt:products.goi_h" alt="Gối Chắp Sắc" loading="lazy">
-            <span class="hs-caption" data-i18n="products.goi_h">Gối Chắp Sắc</span>
-          </div>
-          <div class="hs-slide">
-            <img src="images/products/vai-vun-tham-tron-thumb.jpg" data-i18n-attr="alt:products.tham_h" alt="Thảm Chắp Sắc" loading="lazy">
-            <span class="hs-caption" data-i18n="products.tham_h">Thảm Chắp Sắc</span>
-          </div>
-          <div class="hs-slide">
-            <img src="images/products/set-qua-tang-thumb.jpg" data-i18n-attr="alt:products.setqua_h" alt="Set quà tặng" loading="lazy">
-            <span class="hs-caption" data-i18n="products.setqua_h">Set quà tặng</span>
-          </div>
-          <div class="hs-slide">
-            <img src="images/products/gom-thumb.jpg" data-i18n-attr="alt:products.cgom_h" alt="Gốm sứ Nhật chọn lọc" loading="lazy">
-            <span class="hs-caption" data-i18n="products.cgom_h">Gốm sứ Nhật chọn lọc</span>
-          </div>
-          <div class="hs-slide">
-            <img src="images/products/vpp-so-kraft-thumb.jpg" data-i18n-attr="alt:products.pv1_h" alt="Sổ kraft spiral" loading="lazy">
-            <span class="hs-caption" data-i18n="products.pv1_h">Sổ kraft spiral</span>
-          </div>
-          <button type="button" class="hs-nav hs-prev" aria-label="Ảnh trước" data-i18n-attr="aria-label:products.modal_prev">&#8249;</button>
-          <button type="button" class="hs-nav hs-next" aria-label="Ảnh tiếp theo" data-i18n-attr="aria-label:products.modal_next">&#8250;</button>
-        </div>
-        <div class="hs-dots" role="tablist"></div>
-      </div>
+      <!-- Grid, not a carousel: the range is the point, and nobody waits out
+           seven auto-rotating slides to see it. -->
+      <ul class="home-products">
+        <li>
+          <a href="san-pham.html#phu-kien-vai-vun">
+            <img src="images/products/vai-vun-goi-patchwork-thumb.jpg" data-i18n-attr="alt:products.goi_h" alt="Gối Chắp Sắc" width="600" height="600" loading="lazy">
+            <span data-i18n="products.goi_h">Gối Chắp Sắc</span>
+          </a>
+        </li>
+        <li>
+          <a href="san-pham.html#phu-kien-vai-vun">
+            <img src="images/products/vai-vun-bookmark-vai-thumb.jpg" data-i18n-attr="alt:products.bookmark_h" alt="Bookmark" width="600" height="600" loading="lazy">
+            <span data-i18n="products.bookmark_h">Bookmark</span>
+          </a>
+        </li>
+        <li>
+          <a href="san-pham.html#phu-kien-vai-vun">
+            <img src="images/products/vai-vun-lot-ly-hoa-thumb.jpg" data-i18n-attr="alt:products.lotcoc_h" alt="Lót Cốc" width="600" height="600" loading="lazy">
+            <span data-i18n="products.lotcoc_h">Lót Cốc</span>
+          </a>
+        </li>
+        <li>
+          <a href="san-pham.html#phu-kien-vai-vun">
+            <img src="images/products/vai-vun-scrunchie-thumb.jpg" data-i18n-attr="alt:products.scrunchie_h" alt="Dây buộc tóc" width="600" height="600" loading="lazy">
+            <span data-i18n="products.scrunchie_h">Dây buộc tóc</span>
+          </a>
+        </li>
+        <li>
+          <a href="san-pham.html#gom-su-nhat">
+            <img src="images/products/gom-thumb.jpg" data-i18n-attr="alt:products.cgom_h" alt="Gốm sứ Nhật chọn lọc" width="600" height="600" loading="lazy">
+            <span data-i18n="products.cgom_h">Gốm sứ Nhật chọn lọc</span>
+          </a>
+        </li>
+        <li>
+          <a href="san-pham.html#van-phong-pham">
+            <img src="images/products/vpp-so-kraft-thumb.jpg" data-i18n-attr="alt:products.pv1_h" alt="Sổ kraft spiral" width="600" height="600" loading="lazy">
+            <span data-i18n="products.pv1_h">Sổ kraft spiral</span>
+          </a>
+        </li>
+      </ul>
 
       <div style="text-align: center; margin-top: var(--space-12);">
         <a href="san-pham.html" class="btn btn-ghost">
           <span data-i18n="home.products_more">Khám phá tất cả sản phẩm</span>
           <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- WORKSHOP TEASER
+       TODO Sprint 3: point the CTA at workshop.html once the booking page exists. -->
+  <section class="section">
+    <div class="container">
+      <div class="ws-teaser">
+        <div class="ws-teaser-img">
+          <img src="images/products/vai-vun-bia-so-thumb.jpg" data-i18n-attr="alt:home.ws_img_alt" alt="Bìa sổ vải ghép làm tại workshop" width="600" height="600" loading="lazy">
+        </div>
+        <div>
+          <span class="hand" data-i18n="home.ws_eyebrow">Workshop,</span>
+          <h2 data-i18n="home.ws_title">Tự tay làm một món đồ.</h2>
+          <p data-i18n="home.ws_desc">
+            Thử làm bìa sổ từ vải vụn, làm giấy tái chế — ngay tại studio, cùng chúng mình.
+            Mỗi buổi chỉ nhận một nhóm nhỏ để ai cũng được chỉ tận tay.
+          </p>
+          <a href="san-pham.html#dich-vu" class="btn btn-primary">
+            <span data-i18n="home.ws_cta">Xem lịch &amp; đăng ký</span>
+            <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+        </div>
       </div>
     </div>
   </section>

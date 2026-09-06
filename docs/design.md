@@ -510,7 +510,7 @@ một `<h1>`.
 | U2 | **Teaser sản phẩm trang chủ chỉ hiện 1 món** (carousel). Shop có 19 sản phẩm. Carousel có tỉ lệ xem qua slide 2 rất thấp | Đổi thành grid 3–4 món |
 | U3 | **Trang chủ không nhắc gì đến workshop** | Thêm section workshop |
 | U4 | **Không có gì ở màn đầu nói đây là cái gì, ở đâu** | Thêm “Hà Nội · mở 09:00–19:00 hàng ngày” gần đầu trang |
-| U5 | **Khách nước ngoài gặp bức tường tiếng Việt.** VI/EN là pill nhỏ góc phải | Tự nhận `navigator.language` **ở lần truy cập đầu**, vẫn cho đổi và vẫn nhớ |
+| U5 | **Khách nước ngoài gặp bức tường tiếng Việt.** VI/EN là pill nhỏ góc phải | ⚠️ **Đã đổi cách làm khi implement:** không tự động chuyển ngôn ngữ. Rất nhiều người Việt dùng điện thoại cài tiếng Anh — tự chuyển sẽ đẩy khách Việt (nhóm chính) sang bản tiếng Anh, tệ hơn vấn đề cần giải. Thay bằng **một thanh gợi ý nhỏ, tắt được**: “This site is also available in English.” Gợi ý, không phải quyết định thay khách. |
 
 ### Ưu tiên trung bình → Sprint 6
 
@@ -577,9 +577,9 @@ Supabase, không chờ quyết định nào — làm được ngay hôm nay.
 
 Tổng ~16 ngày làm việc. Sau đó: thẻ quốc tế, Casso/SePay đối soát tự động.
 
-### Sprint 1 — UX + giỏ hàng lên thật · ~2 ngày
+### Sprint 1 — UX + giỏ hàng lên thật · ✅ XONG
 
-Không chặn bởi quyết định nào.
+Đã làm xong, nằm trên nhánh, **chưa merge vào `main`**.
 
 - Nút **“Đăng ký workshop”** trên thẻ Workshop ở `san-pham.html` (hiện chưa có
   nút nào) — tạm link tới `ghe-tham.html`, đổi sang `workshop.html` ở Sprint 3
@@ -589,6 +589,45 @@ Không chặn bởi quyết định nào.
   Đơn vẫn gửi qua email như hiện tại — đổi sang Supabase ở Sprint 4.
 
 **Xong sprint này:** website đẹp hơn rõ rệt và đã bán được hàng qua giỏ.
+
+#### ⚠️ Phát hiện khi làm: ảnh sản phẩm phần lớn là poster, không phải ảnh chụp
+
+Kiểm tra cả 19 ảnh thumbnail: **8 ảnh có chữ in sẵn trong ảnh** (“ORIGAMI POUCH”,
+“BLOOM CHARM”, “SỔ KHÂU TAY TÁI CHẾ”, “Quà tốt nghiệp”, “100% từ vải vụn”…) —
+đây là ảnh thiết kế để đăng Instagram, không phải ảnh sản phẩm.
+Ảnh full-size còn nặng hơn: có logo Gem và địa chỉ web in chồng lên.
+
+Hệ quả thực tế:
+
+- Chỉ **11/19 ảnh dùng được** cho những chỗ có chữ đi kèm (hero, grid trang chủ) —
+  vì nếu không thì tên sản phẩm hiện hai lần, một lần trong ảnh một lần dưới ảnh.
+- Grid trang chủ vì thế phải chọn theo *ảnh nào sạch*, không phải theo *sản phẩm
+  nào đẹp nhất*. Gối, thảm, túi đeo chéo may là sạch; Origami Pouch, Bloom Charm,
+  Oxford Shirt thì không.
+- Ảnh sạch nhất cũng chỉ 600×600, nên hero không phóng to quá ~440px được.
+
+→ **Một buổi chụp ảnh tử tế sẽ cải thiện website nhiều hơn bất kỳ việc code nào.**
+Chụp: không gian studio, bàn tay đang làm, sản phẩm trên nền trơn, người làm.
+Dùng lại được cho cả Instagram và cho listing Klook/Airbnb (hai sàn này từ chối
+listing ảnh kém). Đây cũng là thứ chặn U1 và U6 làm cho tới nơi tới chốn.
+
+#### Đã làm trong Sprint 1
+
+| Việc | Ghi chú |
+|---|---|
+| Nút “Xem lịch & đăng ký” trên thẻ Workshop | Tạm trỏ `ghe-tham.html`, Sprint 3 đổi sang `workshop.html` |
+| U1 hero có sản phẩm | Ảnh túi đeo chéo + Udon nhỏ lại, nấp ở góc, giữ nguyên easter egg |
+| U2 grid thay slideshow | 6 ảnh sạch, bỏ ~55 dòng JS slideshow |
+| U3 section workshop ở trang chủ | Có ảnh + CTA |
+| U4 dòng “Hà Nội · 09:00–19:00” | Trong hero, ngay dưới h1 |
+| U5 thanh gợi ý ngôn ngữ | Xem ghi chú ở §10 — đã đổi cách làm |
+| Giỏ hàng vào `san-pham.html` | 16 thẻ có `data-sku` + `.gb-slot`; xoá `gio-hang.html`; gộp `basket.css` vào `style.css` |
+| Giá | Tất cả `price: null` → hiện **“Liên hệ”**. Không có con số bịa nào lên web. |
+
+**Lỗi phát hiện & sửa trong sprint:** `.gb-slot` ở chế độ hàng ngang làm
+`min-content` của thẻ sản phẩm không co lại được → vỡ grid ở 768–1100px (thêm
+`flex-wrap: wrap`); và tổng giỏ hiện “0đ” khi chưa món nào có giá — nghe như
+miễn phí → đổi thành “Liên hệ”.
 
 ### Sprint 2 — Trang Bản tin tĩnh · ~1,5 ngày
 

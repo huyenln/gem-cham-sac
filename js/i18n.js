@@ -73,6 +73,16 @@
     'home.season_cta':     { vi: `Xem chi tiết & ghé thăm`, en: `See details & visit` },
     'home.values_eyebrow': { vi: `Điều chúng mình giữ,`, en: `What we hold on to,` },
     'home.values_title':   { vi: `Ba điều làm nên Gem.`, en: `Three things that make Gem.` },
+    'home.hero_where':     { vi: `Hà Nội · Open Studio 09:00–19:00 mỗi ngày`, en: `Hanoi · Open Studio 09:00–19:00 daily` },
+    'home.hero_img_alt':   { vi: `Túi đeo chéo vải ghép, đeo trên vai`, en: `A patchwork crossbody bag, worn over the shoulder` },
+
+    /* HOME: workshop teaser */
+    'home.ws_eyebrow': { vi: `Workshop,`, en: `Workshops,` },
+    'home.ws_title':   { vi: `Tự tay làm một món đồ.`, en: `Make something with your own hands.` },
+    'home.ws_desc':    { vi: `Thử làm bìa sổ từ vải vụn, làm giấy tái chế — ngay tại studio, cùng chúng mình. Mỗi buổi chỉ nhận một nhóm nhỏ để ai cũng được chỉ tận tay.`, en: `Try making a notebook cover from fabric scraps, or recycled paper — right here at the studio, with us. Each session takes a small group so everyone gets shown hands-on.` },
+    'home.ws_cta':     { vi: `Xem lịch & đăng ký`, en: `See dates & sign up` },
+    'home.ws_img_alt': { vi: `Bìa sổ vải ghép làm tại workshop`, en: `A patchwork notebook cover made at a workshop` },
+
     'home.products_eyebrow': { vi: `Sản phẩm,`, en: `Products,` },
     'home.products_title':   { vi: `Đa dạng các sắc màu từ Gem.`, en: `A spectrum of colors from Gem.` },
     'home.products_desc':    { vi: `Mỗi sản phẩm độc bản, không cái nào giống cái nào — bởi vải vụn và đồ secondhand đều có câu chuyện riêng.`, en: `Every product is one-of-a-kind — because every fabric scrap and secondhand piece has its own story.` },
@@ -214,6 +224,7 @@
     'products.serv_title':   { vi: `Khi bạn cần thêm một chút.`, en: `When you need a little more.` },
     'products.serv1_h':  { vi: `Workshop trải nghiệm`, en: `Experience workshops` },
     'products.serv1_p':  { vi: `Thử làm các phụ kiện như bìa sổ từ vải vụn/quần áo 2hand, làm giấy tái chế... Đăng ký và chọn workshop bạn muốn trải nghiệm trước qua liên hệ trực tiếp, để mọi niềm vui được trọn vẹn.`, en: `Try making accessories like notebook covers from fabric scraps or 2hand clothes, making recycled paper... Register and choose the workshop you'd like to try by contacting us in advance, so the whole experience feels complete.` },
+    'products.serv1_cta':{ vi: `Xem lịch & đăng ký`, en: `See dates & sign up` },
     'products.serv2_h':  { vi: `Dịch vụ làm mới ký ức`, en: `Memory-renewal service` },
     'products.serv2_p':  { vi: `Nhận đặt hàng tái chế quần áo cũ của bạn thành những món đồ mới, giúp bạn lưu giữ mãi những kỷ niệm.`, en: `We take orders to recycle your old clothes into new items, helping you keep your memories forever.` },
     'products.serv2_li1':{ vi: `Chuẩn bị món đồ bạn cần sửa/làm mới`, en: `Prepare the item you want to repair or renew` },
@@ -383,11 +394,53 @@
     apply(lang);
   }
 
+  // Offer English to visitors whose browser isn't Vietnamese — a hint, never an
+  // automatic switch. Plenty of Vietnamese people run English-language phones,
+  // and silently serving them English would be worse than the problem it solves.
+  // Text is English on purpose: it is only ever shown to non-Vietnamese browsers.
+  var HINT_KEY = 'gem-lang-hint';
+
+  function maybeOfferEnglish() {
+    var saved = null;
+    try {
+      saved = localStorage.getItem(STORAGE_KEY);
+      if (localStorage.getItem(HINT_KEY) === 'dismissed') return;
+    } catch (e) { return; }
+
+    if (saved) return;                       // already chose a language
+    if (getLang() !== DEFAULT) return;       // already viewing English
+
+    var nav = (navigator.languages && navigator.languages[0]) || navigator.language || '';
+    if (!nav || nav.toLowerCase().indexOf('vi') === 0) return;
+
+    var bar = document.createElement('div');
+    bar.className = 'lang-hint';
+    bar.setAttribute('role', 'region');
+    bar.setAttribute('aria-label', 'Language');
+    bar.innerHTML =
+      '<span>This site is also available in English.</span>' +
+      '<button type="button" class="lang-hint-go">View in English</button>' +
+      '<button type="button" class="lang-hint-x" aria-label="Dismiss">&times;</button>';
+    document.body.appendChild(bar);
+
+    function dismiss() {
+      try { localStorage.setItem(HINT_KEY, 'dismissed'); } catch (e) { /* ignore */ }
+      if (bar.parentNode) bar.parentNode.removeChild(bar);
+    }
+
+    bar.querySelector('.lang-hint-go').addEventListener('click', function () {
+      setLang('en');
+      dismiss();
+    });
+    bar.querySelector('.lang-hint-x').addEventListener('click', dismiss);
+  }
+
   function init() {
     apply(getLang());
     document.querySelectorAll('.lang-btn').forEach(function (b) {
       b.addEventListener('click', function () { setLang(b.getAttribute('data-lang')); });
     });
+    maybeOfferEnglish();
   }
 
   if (document.readyState === 'loading') {
