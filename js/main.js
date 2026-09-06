@@ -8,6 +8,40 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
+  // "Về Gem" dropdown (desktop). The mobile drawer lists the sub-pages
+  // indented instead, so this only has to handle the pointer/keyboard case.
+  const subParent = document.querySelector('.nav-menu .has-sub');
+  if (subParent) {
+    const subBtn = subParent.querySelector('.nav-sub-toggle');
+    const subList = subParent.querySelector('.nav-sub');
+
+    // Hands keyboard control to the button; see the .has-js note in style.css
+    document.documentElement.classList.add('has-js');
+
+    function setSub(open) {
+      subBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      subList.classList.toggle('open', open);
+    }
+
+    subBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      setSub(!subList.classList.contains('open'));
+    });
+
+    document.addEventListener('click', function (e) {
+      if (!subParent.contains(e.target)) setSub(false);
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && subList.classList.contains('open')) {
+        setSub(false);
+        subBtn.focus();
+      }
+    });
+    subParent.addEventListener('focusout', function (e) {
+      if (!subParent.contains(e.relatedTarget)) setSub(false);
+    });
+  }
+
   // Product TOC: Smooth scroll and active state
   const tocItems = document.querySelectorAll('.product-toc-mobile .toc-item, .product-toc-sidebar .toc-item');
   if (tocItems.length > 0) {

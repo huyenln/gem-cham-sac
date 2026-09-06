@@ -200,6 +200,74 @@ p:last-child { margin-bottom: 0; }
 @media (min-width: 960px) { .nav-toggle { display: none; } }
 .nav-toggle span { display: block; width: 24px; height: 2px; background: var(--ink-dark); transition: 0.3s ease; }
 
+/* "Về Gem" — a parent holding Câu chuyện + Mô hình as sub-pages.
+   Desktop: a dropdown. Mobile: the drawer just indents them, no toggle needed. */
+.nav-menu .has-sub { position: relative; }
+
+.nav-sub-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--ink-body);
+  background: transparent;
+  border: 0;
+  padding: var(--space-2) 0;
+  cursor: pointer;
+  position: relative;
+}
+.nav-sub-toggle:hover,
+.nav-sub-toggle[aria-expanded="true"],
+.has-sub.active > .nav-sub-toggle { color: var(--ink-dark); }
+
+.has-sub.active > .nav-sub-toggle::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0; right: 0;
+  height: 2px;
+  background: var(--sage-deep);
+  border-radius: 2px;
+}
+
+.nav-sub-toggle svg { width: 11px; height: 11px; transition: transform 0.2s ease; }
+.nav-sub-toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
+
+/* Hidden by default, opened by hover / keyboard focus with NO JavaScript —
+   so the sub-pages stay reachable even if main.js never runs. The .open
+   class is JS enhancement for an explicit click. */
+.nav-sub {
+  position: absolute;
+  top: calc(100% + var(--space-3));
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 170px;
+  list-style: none;
+  display: none;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  background: var(--paper-white);
+  border: 1px solid rgba(135, 150, 90, 0.2);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-paper);
+  z-index: 120;
+}
+/* focus-within is the keyboard route ONLY when JS never ran. With JS the
+   button owns open/closed via .open — otherwise focus-within would hold the
+   menu open against Escape, since focus stays on the button. */
+:root:not(.has-js) .has-sub:focus-within > .nav-sub,
+.nav-sub.open { display: flex; }
+@media (hover: hover) {
+  .has-sub:hover > .nav-sub { display: flex; }
+}
+.nav-sub a { display: block; padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); white-space: nowrap; }
+.nav-sub a:hover, .nav-sub a:focus-visible { background: var(--paper-cream); color: var(--ink-dark); }
+.nav-sub a.active { color: var(--sage-deep); font-weight: 600; }
+.nav-sub a.active::after { content: none; }
+
 .nav-mobile {
   display: none;
   flex-direction: column;
@@ -210,6 +278,52 @@ p:last-child { margin-bottom: 0; }
 }
 .nav-mobile.open { display: flex; }
 .nav-mobile a { font-size: var(--text-base); color: var(--ink-body); font-weight: 500; padding: var(--space-2) 0; }
+
+.nav-mobile-group {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-soft);
+  padding-top: var(--space-2);
+}
+.nav-mobile a.nav-mobile-sub { padding-left: var(--space-4); }
+
+/* SUB-NAV on the two "Về Gem" pages, so you know which one you're on */
+.subnav {
+  border-bottom: 1px solid rgba(135, 150, 90, 0.18);
+  background: var(--paper-cream);
+}
+.subnav-inner {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  overflow-x: auto;
+  padding: var(--space-3) 0;
+  -webkit-overflow-scrolling: touch;
+}
+.subnav-label {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  margin-right: var(--space-2);
+}
+.subnav a {
+  font-size: var(--text-sm);
+  color: var(--ink-body);
+  padding: var(--space-2) var(--space-4);
+  border-radius: 999px;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+.subnav a:hover { color: var(--ink-dark); background: var(--paper-white); }
+.subnav a.active {
+  background: var(--paper-white);
+  border-color: var(--sage-light);
+  color: var(--ink-dark);
+  font-weight: 600;
+}
 
 /* Narrow screens: keep brand, lang switch AND the menu toggle on screen.
    The toggle must never be pushed off-screen (was overflowing before). */

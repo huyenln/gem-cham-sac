@@ -17,6 +17,8 @@
     /* ---------- SHARED: NAV ---------- */
     'nav.aria':       { vi: `Điều hướng chính`, en: `Main navigation` },
     'nav.home':       { vi: `Trang chủ`, en: `Home` },
+    'nav.about':      { vi: `Về Gem`, en: `About Gem` },
+    'nav.about_aria': { vi: `Mở mục Về Gem`, en: `Open the About Gem menu` },
     'nav.story':      { vi: `Câu chuyện`, en: `Our Story` },
     'nav.model':      { vi: `Mô hình`, en: `Our Model` },
     'nav.products':   { vi: `Sản phẩm`, en: `Products` },

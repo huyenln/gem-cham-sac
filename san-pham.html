@@ -23,8 +23,16 @@
       </a>
       <ul class="nav-menu">
         <li><a href="index.html" data-i18n="nav.home">Trang chủ</a></li>
-        <li><a href="cau-chuyen.html" data-i18n="nav.story">Câu chuyện</a></li>
-        <li><a href="mo-hinh.html" data-i18n="nav.model">Mô hình</a></li>
+        <li class="has-sub">
+          <button type="button" class="nav-sub-toggle" aria-expanded="false"
+                  aria-controls="nav-sub-about" data-i18n-attr="aria-label:nav.about_aria">
+            <span data-i18n="nav.about">Về Gem</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <ul class="nav-sub" id="nav-sub-about">
+            <li><a href="cau-chuyen.html" data-i18n="nav.story">Câu chuyện</a></li>
+            <li><a href="mo-hinh.html" data-i18n="nav.model">Mô hình</a></li>
+          </ul>
+        </li>
         <li><a href="san-pham.html" class="active" data-i18n="nav.products">Sản phẩm</a></li>
         <li><a href="ghe-tham.html" data-i18n="nav.visit">Ghé thăm</a></li>
       </ul>
@@ -37,8 +45,9 @@
     </nav>
     <div class="nav-mobile">
       <a href="index.html" data-i18n="nav.home">Trang chủ</a>
-      <a href="cau-chuyen.html" data-i18n="nav.story">Câu chuyện</a>
-      <a href="mo-hinh.html" data-i18n="nav.model">Mô hình</a>
+      <span class="nav-mobile-group" data-i18n="nav.about">Về Gem</span>
+      <a href="cau-chuyen.html" class="nav-mobile-sub" data-i18n="nav.story">Câu chuyện</a>
+      <a href="mo-hinh.html" class="nav-mobile-sub" data-i18n="nav.model">Mô hình</a>
       <a href="san-pham.html" data-i18n="nav.products">Sản phẩm</a>
       <a href="ghe-tham.html" data-i18n="nav.visit">Ghé thăm</a>
     </div>
