@@ -799,15 +799,72 @@ Catalog có giá theo **khoảng** (“120.000–200.000đ”), nên `basket.js`
 `priceMax`. Tổng giỏ khi có món giá khoảng hiện **“từ …đ”** thay vì một con số
 giả vờ chính xác.
 
-### Sprint 4 — Sản phẩm & Đơn hàng · ~4 ngày
+### Sprint 4 — Sản phẩm & Đơn hàng · **ĐÃ XONG**
 
-- Chuyển 16 sản phẩm vào Supabase + Storage
-- `san-pham.html` đọc từ Supabase
-- `basket.js` ghi vào `orders` thay vì gửi email
-- `admin.html`: thêm **Sản phẩm** + **Đơn hàng**
-- Cần từ bạn: giá thật 16 sản phẩm
+**Xong sprint này:** em gái bạn tự sửa giá, bật/tắt hàng, xử lý đơn — không
+cần mình.
 
-**Xong sprint này:** em gái bạn tự sửa giá, thêm sản phẩm, xử lý đơn — không cần mình.
+#### Database
+
+| Migration | Nội dung |
+|---|---|
+| `gem_products_and_orders` | `products`, `orders`, `order_items` + `gen_order_code()` |
+| `gem_products_orders_rls` | RLS **và** GRANT cho cả `anon` lẫn `authenticated` |
+| `gem_create_order_rpc` | Hàm `create_order()` |
+
+Ba điểm đáng nhớ:
+
+- **`order_items` chép lại giá tại thời điểm đặt.** Đã thử: đổi Origami Pouch
+  từ 66.000 lên 99.000 → đơn cũ vẫn 66.000. Đổi bảng giá không bao giờ làm sai
+  đơn đã đặt.
+- **`create_order()` luôn tra giá từ bảng, không nhận giá từ trình duyệt.**
+  Trình duyệt chỉ gửi `sku` và số lượng. Tin giá client gửi lên thì ai cũng đặt
+  được đơn 0đ — đây là lỗ hổng kinh điển của giỏ hàng.
+- **Cố ý không `grant insert` trên `orders`.** Đơn chỉ sinh qua `create_order()`,
+  nơi có kiểm tra đầu vào và tra giá.
+
+**Khách không đọc được đơn hàng, kể cả đơn của chính mình.** Không có tài khoản
+khách nên không có cách nào chứng minh “đơn của tôi” — hễ tra được đơn người
+khác là lộ tên, số điện thoại, địa chỉ của cả cửa hàng. Khách tra đơn thì nhắn
+Zalo kèm mã đơn, đúng cách đang làm với giữ chỗ workshop.
+
+#### Trang Sản phẩm
+
+`basket.js` đọc giá thật từ Supabase; `CATALOG` trong file thành **bản dự
+phòng** — mất mạng hay Supabase trục trặc thì trang vẫn chạy với giá đã biết
+thay vì trắng trơn. Trang vẽ ngay bằng bản dự phòng rồi cập nhật khi database
+trả lời, nên không phải chờ mạng mới thấy gì.
+
+- Hàng `in_stock = false` → nút mờ đi, không bấm được
+- Hàng bị ẩn hoặc gỡ khỏi bảng → giấu luôn thẻ, và bỏ khỏi giỏ nếu đang có
+- Đặt xong hiện **mã đơn** (`GD` + 5 ký tự) để khách nhắn Zalo hỏi cho nhanh
+- Mất mạng giữa lúc gửi → rơi về mở app email, không nuốt đơn của khách
+
+#### Trang quản trị
+
+**Đơn hàng:** lọc Cần xử lý / Xong / Tất cả; mỗi đơn có số điện thoại bấm gọi +
+Zalo, từng món kèm giá đã chốt, và **một nút cho bước tiếp theo** (Mới → Đã xác
+nhận → Đang gói → Đã gửi → Xong).
+
+**Sản phẩm:** gom theo danh mục; sửa giá tại chỗ (ô “Giá” và ô “đến” cho hàng
+bán theo khoảng, để trống = “Liên hệ”); bật/tắt còn hàng và đang bán bằng một
+chạm. Hàng đang ẩn hiện mờ + viền đứt.
+
+#### Đã kiểm tra
+
+Vai `anon`: đọc được `products`, đặt được đơn, **không** đọc được `orders` /
+`order_items` (chặn ngay ở cửa bảng). Sáu lần đặt đơn hỏng — thiếu tên, thiếu
+số điện thoại, giỏ rỗng, sku bịa đặt, số lượng âm, số lượng 9999 — đều bị từ
+chối đúng và **không để lại đơn cụt nào**.
+
+#### Chưa làm, cần biết
+
+- **Thêm sản phẩm mới qua admin chưa có.** Sửa giá, ẩn/hiện, còn/hết thì được.
+  Thêm món mới cần cả ảnh, thư viện ảnh, vị trí trong danh mục — nên vẫn phải
+  sửa `san-pham.html`. Việc này để Sprint 6.
+- **Storage cho ảnh chưa dựng.** Ảnh vẫn nằm trong repo, cột `image` giữ đường
+  dẫn tương đối. Cột này chịu được cả URL Storage nên sau này chuyển được mà
+  không phải sửa bảng.
 
 ### Sprint 5 — Thanh toán COD + QR · ~2 ngày
 
