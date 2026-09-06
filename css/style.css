@@ -28,7 +28,8 @@
   --text-4xl: clamp(2.5rem, 1.8rem + 2.5vw, 4.5rem);
 
   --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem; --space-4: 1rem;
-  --space-6: 1.5rem; --space-8: 2rem; --space-12: 3rem; --space-16: 4rem;
+  --space-5: 1.25rem; --space-6: 1.5rem; --space-8: 2rem; --space-10: 2.5rem;
+  --space-12: 3rem; --space-16: 4rem;
   --space-20: 5rem; --space-24: 6rem; --space-32: 8rem;
 
   --container-max: 1200px;
@@ -2157,61 +2158,137 @@ body.gb-lock { overflow: hidden; }
 .ws-error { text-align: center; padding: var(--space-8) 0; }
 .ws-error p { color: var(--ink-body); margin-bottom: var(--space-4); }
 
-/* ---------- danh sách buổi ---------- */
-.ws-list { list-style: none; display: flex; flex-direction: column; gap: var(--space-4); }
+/* ---------- mã màu theo loại workshop ----------
+   Năm màu, đều nằm trong bảng màu vintage của Gem. JS gán data-c theo slug
+   loại workshop, nên cùng một loại luôn giữ đúng một màu qua các tuần. */
+.ws-sched [data-c="1"] { --ws-c: #87965A; }   /* sage */
+.ws-sched [data-c="2"] { --ws-c: #B89968; }   /* kraft */
+.ws-sched [data-c="3"] { --ws-c: #A6704F; }   /* đất nung */
+.ws-sched [data-c="4"] { --ws-c: #6E7F8D; }   /* xanh xám */
+.ws-sched [data-c="5"] { --ws-c: #8A6478; }   /* mận chín */
 
-.ws-card {
+/* ---------- loại workshop (nói một lần, không lặp dưới từng buổi) ---------- */
+.ws-types {
+  list-style: none;
   display: grid;
-  grid-template-columns: 1fr;
   gap: var(--space-4);
-  align-items: center;
+  margin-bottom: var(--space-10);
+}
+@media (min-width: 720px) {
+  .ws-types { grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); }
+}
+.ws-type {
   background: var(--paper-white);
   border: 1px solid rgba(135, 150, 90, 0.18);
-  border-radius: var(--radius-lg);
-  padding: var(--space-6);
+  border-left: 4px solid var(--ws-c);
+  border-radius: var(--radius-md);
+  padding: var(--space-5) var(--space-6);
   box-shadow: var(--shadow-soft);
 }
-@media (min-width: 720px) {
-  .ws-card { grid-template-columns: 7rem 1fr auto; gap: var(--space-8); }
+.ws-type h3 { font-size: var(--text-base); margin-bottom: var(--space-2); }
+.ws-type h3::before {
+  content: "";
+  display: inline-block;
+  width: 0.55em; height: 0.55em;
+  border-radius: 50%;
+  background: var(--ws-c);
+  margin-right: 0.5em;
+  vertical-align: 0.08em;
 }
-.ws-card.is-full { opacity: 0.72; }
+.ws-type p { font-size: var(--text-sm); color: var(--ink-body); line-height: 1.6; }
+.ws-type-meta { color: var(--ink-soft); margin-top: var(--space-2); }
 
-.ws-when {
+/* ---------- lịch, gom theo tuần rồi theo ngày ---------- */
+.ws-week { margin-bottom: var(--space-10); }
+.ws-week:last-child { margin-bottom: 0; }
+
+.ws-week-h {
   display: flex;
   align-items: baseline;
-  gap: var(--space-2);
+  gap: var(--space-3);
   flex-wrap: wrap;
-  padding-bottom: var(--space-3);
-  border-bottom: 1px dashed var(--paper-cream-warm);
+  font-size: var(--text-base);
+  color: var(--ink-dark);
+  padding-bottom: var(--space-2);
+  margin-bottom: var(--space-5);
+  border-bottom: 1px solid rgba(135, 150, 90, 0.22);
 }
+.ws-week-h span {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+
+.ws-day { display: grid; gap: var(--space-3); margin-bottom: var(--space-6); }
+.ws-day:last-child { margin-bottom: 0; }
 @media (min-width: 720px) {
-  .ws-when {
-    flex-direction: column;
-    gap: 2px;
-    padding-bottom: 0;
-    border-bottom: 0;
-    border-right: 1px dashed var(--paper-cream-warm);
-    padding-right: var(--space-6);
-    align-items: flex-start;
-  }
+  .ws-day { grid-template-columns: 8rem 1fr; gap: var(--space-6); align-items: start; }
+}
+
+.ws-day-h { display: flex; align-items: baseline; gap: var(--space-2); }
+@media (min-width: 720px) {
+  .ws-day-h { flex-direction: column; gap: 2px; padding-top: var(--space-4); }
 }
 .ws-dow  { font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); }
 .ws-date { font-family: var(--font-display); font-weight: 700; font-size: var(--text-lg); color: var(--ink-dark); }
-.ws-time { font-family: var(--font-display); font-weight: 800; font-size: var(--text-xl); color: var(--sage-deep); }
 
-.ws-body h3 { font-size: var(--text-lg); margin-bottom: var(--space-2); }
-.ws-desc { font-size: var(--text-sm); color: var(--ink-body); margin-bottom: var(--space-3); line-height: 1.6; }
-.ws-meta { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); font-size: var(--text-sm); color: var(--ink-soft); }
+.ws-slots { list-style: none; display: flex; flex-direction: column; gap: var(--space-3); }
+
+.ws-slot {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-2) var(--space-3);
+  align-items: center;
+  background: var(--paper-white);
+  border: 1px solid rgba(135, 150, 90, 0.18);
+  border-left: 4px solid var(--ws-c);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-soft);
+}
+/* Từ 360px trở lên xếp được giờ · tên · nút trên một hàng. Dưới ngưỡng đó
+   nút xuống dòng riêng. Lý do gộp: 12 buổi mà mỗi buổi có một nút xanh chạy
+   hết chiều ngang thì cả trang thành một dãy khối xanh giống hệt nhau —
+   đúng cái cảm giác khó theo dõi cần bỏ. */
+@media (min-width: 360px) {
+  .ws-slot { grid-template-columns: auto 1fr auto; }
+}
+@media (min-width: 720px) {
+  .ws-slot { gap: var(--space-4); padding: var(--space-4) var(--space-5); }
+}
+.ws-slot.is-full { opacity: 0.6; }
+
+.ws-time {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-lg);
+  color: var(--ws-c);
+  font-variant-numeric: tabular-nums;
+}
+@media (min-width: 720px) { .ws-time { font-size: var(--text-xl); } }
+.ws-slot-body h4 { font-size: var(--text-base); margin-bottom: 2px; }
+.ws-meta { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-3); font-size: var(--text-sm); color: var(--ink-soft); }
 .ws-seats { font-weight: 600; color: var(--sage-deep); }
 .ws-seats.few  { color: var(--kraft); }
 .ws-seats.none { color: var(--ink-soft); }
 
-.ws-act .btn { width: 100%; justify-content: center; }
-@media (min-width: 720px) { .ws-act .btn { width: auto; } }
+.ws-act { grid-column: 1 / -1; }
+.ws-act .btn { width: 100%; justify-content: center; white-space: nowrap; }
+@media (min-width: 360px) {
+  .ws-act { grid-column: auto; }
+  /* Nút gọn lại trên điện thoại để giờ và tên buổi còn đủ chỗ đứng cùng hàng.
+     Vẫn cao 44px nên ngón tay bấm không trượt. */
+  .ws-act .btn { width: auto; padding: var(--space-3) var(--space-4); }
+}
+@media (min-width: 720px) {
+  .ws-act .btn { padding: var(--space-3) var(--space-6); }
+}
 
 /* ---------- form giữ chỗ ---------- */
 .ws-form-wrap {
   max-width: 34rem;
+  margin-inline: auto;      /* thiếu dòng này thì thẻ nằm sát trái khung */
   background: var(--paper-white);
   border: 1px solid rgba(135, 150, 90, 0.18);
   border-radius: var(--radius-lg);
@@ -2254,6 +2331,7 @@ body.gb-lock { overflow: hidden; }
 /* ---------- xác nhận ---------- */
 .ws-done {
   max-width: 34rem;
+  margin-inline: auto;      /* thiếu dòng này thì thẻ nằm sát trái khung */
   text-align: center;
   background: var(--paper-white);
   border: 1px solid rgba(135, 150, 90, 0.18);

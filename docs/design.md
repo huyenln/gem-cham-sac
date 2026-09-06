@@ -748,6 +748,40 @@ Giao diện admin kiểm ở 390px và 1100px: không tràn ngang, không lỗi 
 > phần giao diện kiểm bằng dữ liệu giả. Việc đầu tiên khi bạn mở
 > `workshop.html` thật: xem danh sách buổi có hiện lên không.
 
+#### Sửa sau khi Anna dùng thử
+
+**Thẻ “Đã giữ chỗ” lệch sang trái.** `.ws-done` và `.ws-form-wrap` có
+`max-width` nhưng thiếu `margin-inline: auto` — khung ngoài căn giữa, còn thẻ
+bên trong thì nằm sát trái. Giờ lệch 0px ở 320 / 390 / 1280px.
+
+**Lịch dàn thành 12 thẻ giống hệt nhau.** Đây là câu hỏi thiết kế, không phải
+lỗi. Ba việc đã làm:
+
+1. **Tách “loại workshop” khỏi “lịch”.** Mô tả, thời lượng và giá giờ nằm ở
+   phần loại trên đầu — nói một lần cho mỗi loại. Trước đây mỗi thẻ buổi đều
+   chép lại nguyên đoạn mô tả, nên 12 buổi của 2 loại trông như 12 bản sao.
+   Mỗi dòng lịch giờ chỉ còn: giờ · tên · còn mấy chỗ · nút.
+2. **Gom theo tuần rồi theo ngày.** Tiêu đề “Tuần này” / “Tuần sau”, sau đó là
+   khoảng ngày. Thứ Bảy có hai buổi thì hai buổi nằm chung dưới một ngày, thay
+   vì lặp lại ngày hai lần.
+3. **Mã màu theo loại** — viền trái và số giờ đổi màu, năm màu trong bảng màu
+   vintage của Gem, gán theo `slug` nên một loại luôn giữ đúng một màu qua các
+   tuần.
+
+Kết quả: mỗi buổi cao **84px** thay vì 138px trên điện thoại 390px.
+
+**Vì sao không làm lịch dạng tháng** (dù bạn có hỏi): mỗi tuần chỉ có 3 buổi,
+nên lưới 7 cột trên màn 375px cho ra ô ~50px mà gần hết là ô trống — rất nhiều
+khung viền cho rất ít thông tin. Câu hỏi của khách là “buổi nào mình đi được?”,
+danh sách gom nhóm trả lời thẳng, còn lưới bắt họ đi tìm. Lưới tháng cũng cần
+nút qua lại giữa các tháng trong khi lịch chỉ mở trước ~4 tuần. Nếu sau này một
+tuần có 6–8 buổi thì tính lại — lúc đó lưới bắt đầu có lý.
+
+**Token khoảng cách thiếu.** `--space-5` và `--space-10` chưa từng được định
+nghĩa; dùng tới là cả dòng CSS bị bỏ, mất luôn khoảng cách. Đã bổ sung vào
+`:root` cho đủ thang đo (1.25rem và 2.5rem, đúng nhịp 0.25rem sẵn có). Hai chỗ
+cũ dùng `var(--space-5, 1.25rem)` có fallback nên giá trị không đổi.
+
 #### Còn lại của Sprint 3 — việc của bạn
 
 1. Vào Supabase → **Authentication → Users → Add user**, tạo ba tài khoản

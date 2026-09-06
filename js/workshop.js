@@ -24,6 +24,9 @@
     'ws.price_tbd':     { vi: `Liên hệ`, en: `Ask us` },
     'ws.book':          { vi: `Giữ chỗ`, en: `Reserve a seat` },
 
+    'ws.week_this':     { vi: `Tuần này`, en: `This week` },
+    'ws.week_next':     { vi: `Tuần sau`, en: `Next week` },
+
     'ws.form_title':    { vi: `Giữ chỗ buổi này`, en: `Reserve this session` },
     'ws.f_name':        { vi: `Tên của bạn`, en: `Your name` },
     'ws.f_phone':       { vi: `Số điện thoại`, en: `Phone number` },
@@ -100,6 +103,68 @@
     return DAYS_VI[dow];
   }
 
+  /* ---------- gom theo tuần ----------
+     Mọi phép tính ngày ở đây chạy trên chuỗi YYYY-MM-DD của giờ Hà Nội, và
+     dựng Date ở 12:00Z cho chắc — nửa đêm dễ trượt sang ngày khác khi đổi
+     múi giờ. Việt Nam không đổi giờ mùa nên không phải lo thêm gì. */
+
+  function addDays(ymd, n) {
+    var d = new Date(ymd + 'T12:00:00Z');
+    d.setUTCDate(d.getUTCDate() + n);
+    return d.toISOString().slice(0, 10);
+  }
+
+  // Thứ Hai của tuần chứa ngày này.
+  function weekStart(ymd) {
+    var dow = new Date(ymd + 'T12:00:00Z').getUTCDay();   // 0 = Chủ Nhật
+    return addDays(ymd, -((dow + 6) % 7));
+  }
+
+  function dm(ymd) { return ymd.slice(8, 10) + '/' + ymd.slice(5, 7); }
+
+  // Tên tuần, hoặc null nếu tuần đó không phải tuần này / tuần sau —
+  // lúc đó khoảng ngày đứng làm tiêu đề luôn, không lặp lại hai lần.
+  function weekHead(ws) {
+    var now = weekStart(vnParts(new Date().toISOString()).full);
+    if (ws === now) return t('ws.week_this', 'Tuần này');
+    if (ws === addDays(now, 7)) return t('ws.week_next', 'Tuần sau');
+    return null;
+  }
+
+  function weekRange(ws) { return dm(ws) + ' – ' + dm(addDays(ws, 6)); }
+
+  // [{ start, days: [{ p, items: [session] }] }] — sessions đã sắp theo giờ
+  // từ database nên tuần và ngày cũng ra đúng thứ tự.
+  function byWeek(list) {
+    var weeks = [], wMap = {};
+    list.forEach(function (s) {
+      var p = vnParts(s.starts_at);
+      var w = weekStart(p.full);
+      if (!wMap[w]) { wMap[w] = { start: w, days: [], dMap: {} }; weeks.push(wMap[w]); }
+      var wk = wMap[w];
+      if (!wk.dMap[p.full]) { wk.dMap[p.full] = { p: p, items: [] }; wk.days.push(wk.dMap[p.full]); }
+      wk.dMap[p.full].items.push(s);
+    });
+    return weeks;
+  }
+
+  /* ---------- mã màu theo loại workshop ----------
+     Xếp theo slug rồi mới gán màu, để một loại luôn giữ đúng màu đó dù tuần
+     này có buổi hay không. CSS định nghĩa 5 màu, nhiều loại hơn thì quay vòng. */
+  function colorMap(list) {
+    var keys = [];
+    list.forEach(function (s) {
+      var k = s.slug || s.name_vi || '?';
+      if (keys.indexOf(k) < 0) keys.push(k);
+    });
+    keys.sort();
+    var map = {};
+    keys.forEach(function (k, i) { map[k] = (i % 5) + 1; });
+    return map;
+  }
+
+  function typeKey(s) { return s.slug || s.name_vi || '?'; }
+
   function money(n) {
     if (n == null) return t('ws.price_tbd', 'Liên hệ');
     return n.toLocaleString('vi-VN') + 'đ';
@@ -151,38 +216,78 @@
       return;
     }
 
-    root.innerHTML = '<ul class="ws-list">' + sessions.map(function (s) {
-      var p = vnParts(s.starts_at);
-      var full = s.seats_left <= 0;
-      var few = !full && s.seats_left <= 3;
+    var color = colorMap(sessions);
+
+    // Mô tả loại workshop tách hẳn ra trên đầu: nói một lần cho mỗi loại,
+    // thay vì lặp lại y hệt dưới từng buổi — đó là thứ làm cả trang trông
+    // như một đống thẻ giống nhau.
+    var types = [], tSeen = {};
+    sessions.forEach(function (s) {
+      var k = typeKey(s);
+      if (tSeen[k]) return;
+      tSeen[k] = 1;
+      types.push(s);
+    });
+
+    var legend = '<ul class="ws-types">' + types.map(function (s) {
       var name = lang() === 'en' && s.name_en ? s.name_en : s.name_vi;
       var desc = lang() === 'en' && s.desc_en ? s.desc_en : s.desc_vi;
-      var seatTxt = full
-        ? t('ws.full', 'Đã đủ chỗ')
-        : fill(t(few ? 'ws.seats_few' : 'ws.seats_left', ''), { n: s.seats_left, cap: s.capacity });
-
-      return '<li class="ws-card' + (full ? ' is-full' : '') + '">' +
-        '<div class="ws-when">' +
-          '<span class="ws-dow">' + esc(dayLabel(p.dow)) + '</span>' +
-          '<span class="ws-date">' + esc(p.date) + '</span>' +
-          '<span class="ws-time">' + esc(p.time) + '</span>' +
-        '</div>' +
-        '<div class="ws-body">' +
-          '<h3>' + esc(name) + '</h3>' +
-          (desc ? '<p class="ws-desc">' + esc(desc) + '</p>' : '') +
-          '<p class="ws-meta">' +
-            '<span>' + fill(t('ws.duration', '{n} phút'), { n: s.duration_minutes }) + '</span>' +
-            '<span>' + esc(money(s.price)) + '</span>' +
-            '<span class="ws-seats' + (few ? ' few' : '') + (full ? ' none' : '') + '">' + esc(seatTxt) + '</span>' +
-          '</p>' +
-        '</div>' +
-        '<div class="ws-act">' +
-          (full ? '' :
-            '<button type="button" class="btn btn-primary ws-pick" data-id="' + esc(s.id) + '">' +
-              t('ws.book', 'Giữ chỗ') + '</button>') +
-        '</div>' +
+      return '<li class="ws-type" data-c="' + color[typeKey(s)] + '">' +
+        '<h3>' + esc(name) + '</h3>' +
+        (desc ? '<p>' + esc(desc) + '</p>' : '') +
+        '<p class="ws-type-meta">' +
+          fill(t('ws.duration', '{n} phút'), { n: s.duration_minutes }) +
+          ' · ' + esc(money(s.price)) +
+        '</p>' +
       '</li>';
     }).join('') + '</ul>';
+
+    var sched = byWeek(sessions).map(function (wk) {
+      var head = weekHead(wk.start);
+      var range = weekRange(wk.start);
+      return '<section class="ws-week">' +
+        '<h3 class="ws-week-h">' + esc(head || range) +
+          (head ? '<span>' + esc(range) + '</span>' : '') +
+        '</h3>' +
+        wk.days.map(function (d) {
+          return '<div class="ws-day">' +
+            '<div class="ws-day-h">' +
+              '<span class="ws-dow">' + esc(dayLabel(d.p.dow)) + '</span>' +
+              '<span class="ws-date">' + esc(d.p.date) + '</span>' +
+            '</div>' +
+            '<ul class="ws-slots">' + d.items.map(function (s) {
+              var full = s.seats_left <= 0;
+              var few = !full && s.seats_left <= 3;
+              var name = lang() === 'en' && s.name_en ? s.name_en : s.name_vi;
+              var seatTxt = full
+                ? t('ws.full', 'Đã đủ chỗ')
+                : fill(t(few ? 'ws.seats_few' : 'ws.seats_left', ''), { n: s.seats_left, cap: s.capacity });
+
+              return '<li class="ws-slot' + (full ? ' is-full' : '') + '"' +
+                       ' data-c="' + color[typeKey(s)] + '">' +
+                '<span class="ws-time">' + esc(vnParts(s.starts_at).time) + '</span>' +
+                '<div class="ws-slot-body">' +
+                  '<h4>' + esc(name) + '</h4>' +
+                  // Thời lượng và giá đã nói ở phần mô tả loại phía trên —
+                  // lặp lại dưới từng buổi chỉ làm hàng nào cũng giống hàng nào.
+                  '<p class="ws-meta">' +
+                    '<span class="ws-seats' + (few ? ' few' : '') + (full ? ' none' : '') + '">' +
+                      esc(seatTxt) + '</span>' +
+                  '</p>' +
+                '</div>' +
+                '<div class="ws-act">' +
+                  (full ? '' :
+                    '<button type="button" class="btn btn-primary ws-pick" data-id="' + esc(s.id) + '">' +
+                      t('ws.book', 'Giữ chỗ') + '</button>') +
+                '</div>' +
+              '</li>';
+            }).join('') + '</ul>' +
+          '</div>';
+        }).join('') +
+      '</section>';
+    }).join('');
+
+    root.innerHTML = '<div class="ws-sched">' + legend + sched + '</div>';
 
     root.querySelectorAll('.ws-pick').forEach(function (b) {
       b.addEventListener('click', function () { openForm(b.getAttribute('data-id')); });
@@ -330,7 +435,7 @@
       var l = (e.detail && e.detail.lang) || lang();
       if (l === lastLang) return;
       lastLang = l;
-      if (root.querySelector('.ws-list')) renderList();
+      if (root.querySelector('.ws-sched')) renderList();
     });
 
     load();
