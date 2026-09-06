@@ -658,6 +658,8 @@ Sáu migration trên project `gem-cham-sac` (§13b):
 | `gem_grant_workshop_types_read` | `GRANT SELECT` cho `workshop_types` |
 | `gem_tighten_function_grants` | Thu hồi quyền gọi `gen_booking_code` của anon |
 | `gem_auto_assign_owners` | Trigger tự gán `owner` cho ba email ở §13b |
+| `gem_grant_staff_table_access` | `GRANT` cho `authenticated` trên `staff`/`sessions`/`bookings` |
+| `gem_me_function` | Hàm `me()` — trả đúng dòng nhân sự của người đang đăng nhập |
 
 Hai điểm đáng nhớ:
 
@@ -690,6 +692,43 @@ và 2 loại workshop, `price: null` → web hiện “Liên hệ”.
 - **Vòng lặp vô hạn i18n** (lần thứ hai gặp): `translate()` → `setLang()` →
   `gem:langchange` → vẽ lại → `translate()`. Sửa bằng cách so ngôn ngữ trước
   khi vẽ lại.
+
+#### Hai lỗi phát hiện sau, khi đăng nhập thật
+
+**1. Đăng nhập báo “tài khoản chưa được cấp quyền quản trị”.**
+Đúng lỗi `workshop_types` hôm trước, nhưng rộng hơn. Project này để **default
+privileges kiểu “cấm trước”**: bảng mới trong `public` chỉ có `Dxtm`
+(TRUNCATE/REFERENCES/TRIGGER), không có `select/insert/update/delete` cho cả
+`anon` lẫn `authenticated`. Nên `staff`, `sessions`, `bookings` tuy policy đúng
+nhưng cửa vẫn đóng — nhân sự đăng nhập xong không đọc nổi dòng của chính mình.
+
+*Vì sao không phát hiện sớm:* bài kiểm tra bảo mật chỉ chạy vai `anon`, mà ở vai
+đó **“bị chặn” chính là kết quả đúng** — thiếu GRANT trông y hệt như bảo mật
+đang hoạt động. Kiểm tra chỉ vai bị-từ-chối không phân biệt được “chặn đúng”
+với “chặn tất cả”. Từ Sprint 4 trở đi, mỗi bảng mới phải kiểm **cả hai vai**.
+
+Migration `gem_grant_staff_table_access`. Cố ý **không** grant `insert` trên
+`bookings`: giữ `book_session()` là đường duy nhất tạo giữ chỗ, vì đó là chỗ có
+khoá dòng và đếm chỗ.
+
+**2. `whoAmI()` có thể trả về nhầm người.** Policy `staff_read` là `is_staff()`
+— nhân sự nào cũng đọc được *toàn bộ* bảng `staff`, nên `rows[0]` là dòng
+Postgres trả trước, không chắc là dòng của người đang đăng nhập. Hiện chưa gây
+hại vì cả hai tài khoản đều là `owner`, nhưng khi thêm nhân viên `staff` thì
+người đó có thể nhận nhầm vai `owner` và tên người khác trên giao diện. (RLS
+vẫn chặn thao tác owner thật ở tầng database — sai ở giao diện, không phải lộ
+dữ liệu.) Sửa bằng hàm `me()` trả đúng một dòng của người gọi; `gem-db.js` gọi
+`rpc/me` thay vì đọc thẳng bảng.
+
+Kiểm lại sau khi sửa, **ba vai**:
+
+| | `staff` | `sessions` | `bookings` | `sessions_public` |
+|---|---|---|---|---|
+| `anon` | chặn ✓ | chặn ✓ | chặn ✓ | 12 buổi ✓ |
+| đăng nhập, **không** phải nhân sự | 0 dòng ✓ | 0 dòng ✓ | 0 dòng ✓ | đọc được |
+| đăng nhập, là nhân sự | đọc được ✓ | 12 ✓ | đọc được ✓ | đọc được |
+
+`me()` trả đúng 1 dòng (`lgnhuyen / owner`), không phải 2.
 
 #### Đã kiểm tra
 
@@ -841,8 +880,9 @@ Thêm người sau: tạo user trong Supabase rồi thêm một dòng vào bản
 
 - [x] **Ai là `owner`** — ba email, xem §13b ✓
 - [x] **Email chính thức của shop** — `gemchamsac@gmail.com` ✓
-- [ ] **Tạo ba tài khoản trong Supabase Authentication** — việc duy nhất còn
-      lại của Sprint 3, chỉ bạn làm được (§13)
+- [x] Tạo tài khoản trong Supabase Authentication — đã tạo
+      `gemchamsac@gmail.com` và `lgnhuyen@gmail.com`, cả hai đã có vai `owner` ✓
+- [ ] Tài khoản thứ ba `luongnguyenngocmai00@gmail.com` — **chưa tạo**
 
 ### Chặn Sprint 4–5
 

@@ -99,10 +99,16 @@ window.GemDB = (function () {
 
     isSignedIn: function () { return !!token; },
 
-    // Có phải nhân sự không. Trả false nếu token hết hạn hoặc chưa đăng nhập.
+    // Có phải nhân sự không. Trả null nếu token hết hạn hoặc chưa đăng nhập.
+    // Gọi hàm me() chứ không đọc thẳng bảng staff: nhân sự nào cũng đọc được
+    // cả bảng, nên lấy dòng đầu tiên là lấy nhầm người khác.
     whoAmI: function () {
       if (!token) return Promise.resolve(null);
-      return req('/rest/v1/staff?select=user_id,display_name,role')
+      return req('/rest/v1/rpc/me', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: '{}'
+      })
         .then(function (rows) { return (rows && rows[0]) || null; })
         .catch(function () { return null; });
     },
