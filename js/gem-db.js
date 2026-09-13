@@ -213,6 +213,13 @@ window.GemDB = (function () {
       });
     },
 
+    // Database chặn xoá loại còn buổi trên lịch (trigger
+    // workshop_types_guard_delete) và trả về câu giải thích — cứ để câu đó
+    // hiện thẳng cho người dùng, giống deleteSession.
+    deleteWorkshopType: function (id) {
+      return req('/rest/v1/workshop_types?id=eq.' + encodeURIComponent(id), { method: 'DELETE' });
+    },
+
     // Cả hàng đang ẩn, khác products() ở chỗ đó — RLS cho nhân sự thấy hết.
     adminProducts: function () {
       return req('/rest/v1/products?select=*&order=category.asc,sort_order.asc');

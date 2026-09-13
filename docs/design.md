@@ -1069,6 +1069,68 @@ Chữ do người viết gõ dựng bằng `textContent`, không ghép vào `inn
 > dung tạm)”. Sửa trong **Quản trị → Đặt lịch → Loại workshop**. Chưa có ảnh
 > bìa và ảnh trong bài, tải lên ở cùng chỗ đó.
 
+### Lưu loại workshop báo "permission denied" — **ĐÃ SỬA**
+
+Bấm **Lưu** trong Quản trị → Đặt lịch → Loại workshop trả về
+`permission denied for table workshop_types`. **Lần thứ ba dính đúng cái bẫy
+GRANT.** Policy `wt_write_owner` (`ALL`, `is_owner()`) đã đúng từ đầu, nhưng
+bảng chỉ được `GRANT SELECT` ở Sprint 3 — lúc đó chỉ cần khách *đọc*. Commit
+thêm giao diện sửa loại workshop kèm policy ghi, nhưng không kèm migration
+GRANT. Policy lọc **dòng**, GRANT mở **cửa**.
+
+Chữ trong lỗi phân biệt được hai tầng — đáng nhớ để lần sau đọc là biết ngay:
+
+| Câu lỗi | Tầng chặn |
+|---|---|
+| `permission denied for table X` | thiếu **GRANT** |
+| `new row violates row-level security policy` | **RLS** chặn (INSERT) |
+| không lỗi, sửa 0 dòng | **RLS** chặn (UPDATE/DELETE) |
+
+Migration `gem_grant_workshop_types_write`: `grant insert, update, delete`, kèm
+trigger `workshop_types_guard_delete`. Khoá ngoại `sessions.workshop_type_id`
+là `ON DELETE RESTRICT` nên xoá loại còn buổi sẽ phun tên constraint bằng tiếng
+Anh; trigger chặn sớm và trả câu tiếng Việt, y như `sessions_guard_delete`.
+
+`workshop_types` **cố ý** để `is_owner()` chứ không `is_staff()` như
+`products`/`posts` — chỉ chủ mới sửa được loại workshop.
+
+#### Câu kiểm để không dính lần thứ tư
+
+Chạy sau **mỗi** migration. Nó liệt kê mọi bảng có policy cho phép một lệnh mà
+GRANT lại không cho — nhanh hơn kiểm ba vai bằng tay, và bắt đúng lỗi này:
+
+```sql
+select distinct r.grantee, p.tablename, c.priv
+from pg_policies p
+cross join lateral unnest(
+  case p.cmd when 'ALL' then array['SELECT','INSERT','UPDATE','DELETE']
+             else array[p.cmd] end) as c(priv)
+cross join lateral unnest(p.roles) as r(grantee)
+where p.schemaname='public'
+  and r.grantee in ('anon','authenticated')
+  and not has_table_privilege(r.grantee, 'public.'||p.tablename, c.priv);
+```
+
+Hiện còn đúng hai dòng, **cả hai đều cố ý**: `orders`/`order_items` không có
+`INSERT` vì `create_order()` (SECURITY DEFINER) là đường duy nhất tạo đơn —
+giống `bookings` với `book_session()`. Muốn câu kiểm về 0 dòng cho dễ đọc thì
+tách `or_staff_all`/`oi_staff_all` từ `ALL` thành ba policy
+`SELECT`/`UPDATE`/`DELETE`, đúng kiểu `bookings` đang làm. Chưa làm.
+
+#### Đã kiểm — ba vai
+
+| vai | ghi `workshop_types` |
+|---|---|
+| `anon` | `permission denied` — chặn ở GRANT ✓ |
+| đăng nhập, không phải owner | `violates row-level security policy` — chặn ở RLS ✓ |
+| owner | insert + update + delete đều chạy ✓ |
+| owner xoá loại còn 8 buổi | trả câu tiếng Việt ✓ |
+
+Giao diện kiểm ở 375 / 768 / 1440px: không tràn ngang, nút Xoá cao 44px. Ba
+nhánh của nút: huỷ confirm (không gọi database), xoá được (toast thường, tải
+lại danh sách), database chặn (toast đỏ đúng câu của database, nút bấm lại
+được).
+
 ### Chưa làm — cần biết
 
 - **Nén ảnh sản phẩm.** `loading="lazy"` đã thêm, nhưng ảnh gốc vẫn nặng

@@ -61,9 +61,12 @@ Postgres 17). Bảng: `products`, `orders`, `order_items`, `sessions`, `bookings
 > 2. Bảng mới trong `public` **không có sẵn quyền** select/insert/update/delete
 >    cho `anon` lẫn `authenticated` (default privileges của project đặt kiểu
 >    "cấm trước"). **Policy RLS lọc DÒNG, GRANT mở CỬA — thiếu cái nào cũng
->    không vào được.** Đã dính lỗi này hai lần. Và khi kiểm tra thì phải kiểm
+>    không vào được.** Đã dính lỗi này **ba lần**. Và khi kiểm tra thì phải kiểm
 >    **cả ba vai** (khách, đăng nhập nhưng không phải nhân sự, nhân sự): chỉ
 >    kiểm vai `anon` thì "thiếu GRANT" trông y hệt "bảo mật đang hoạt động".
+>    Sau mỗi migration, chạy **câu kiểm GRANT-vs-policy** trong `docs/design.md`
+>    (mục "Lưu loại workshop báo permission denied") — nó bắt đúng lỗi này
+>    trong một lượt.
 > 3. **KHÔNG đưa chữ người dùng nhập vào `innerHTML`.** Nội dung bài Bản tin,
 >    tên khách, ghi chú đơn — tất cả đều là chữ người khác gõ. Dùng
 >    `textContent`, hoặc `esc()` có sẵn trong từng file JS.
