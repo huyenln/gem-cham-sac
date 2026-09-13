@@ -339,6 +339,7 @@
               '<button type="button" class="ad-btn' + (t.is_published === false ? ' on' : '') +
                 '" data-wtpub="' + (t.is_published === false ? '1' : '0') + '">' +
                 (t.is_published === false ? 'Đang ẩn' : 'Đang hiện') + '</button>' +
+              '<button type="button" class="ad-btn ad-danger wt-del">Xoá</button>' +
             '</div>' +
           '</div>';
         }).join('') +
@@ -401,6 +402,19 @@
         window.GemDB.saveWorkshopType(id, { is_published: e.target.getAttribute('data-wtpub') === '1' })
           .then(function () { toast('Đã cập nhật'); return load(); })
           .catch(function () { e.target.disabled = false; toast('Không lưu được', true); });
+      });
+
+      d.querySelector('.wt-del').addEventListener('click', function (e) {
+        if (!window.confirm((t.name_vi ? 'Xoá loại “' + t.name_vi + '”?' : 'Xoá loại này?') +
+                            ' Không lấy lại được.')) return;
+        e.target.disabled = true;
+        window.GemDB.deleteWorkshopType(id)
+          .then(function () { toast('Đã xoá loại workshop'); return load(); })
+          .catch(function (err) {
+            e.target.disabled = false;
+            // Loại còn buổi trên lịch thì database trả câu giải thích rõ ràng
+            toast(err.message || 'Không xoá được', true);
+          });
       });
     });
 
