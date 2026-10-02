@@ -5,6 +5,7 @@ Not a build step: run it by hand whenever new art arrives, then commit the
 WebP files it writes. Source PNGs stay in Drive (D-assets), not in the repo.
 
     python3 tools/studio-assets.py <source-folder>
+    python3 tools/studio-assets.py --cast <folder with ch-pN-*.png>
 
 Expects in <source-folder> (names from the "Bộ tài sản D" doc):
     bg-z1.png … bg-z5.png        five studio zones, 1536 x 1024
@@ -95,7 +96,7 @@ def build_strip(src):
     }))
 
 
-def cut_out(rgb, tol=26):
+def cut_out(rgb, tol=26, enclosed=0):
     """Transparent background for art painted on cream paper.
 
     Flood-fills from the image border through paper-coloured pixels only, so
@@ -119,6 +120,29 @@ def cut_out(rgb, tol=26):
         if y < h - 1: stack.append((y + 1, x))
         if x > 0: stack.append((y, x - 1))
         if x < w - 1: stack.append((y, x + 1))
+
+    # Paper trapped inside the figure (between a leg and the cart handle)
+    # isn't reached from the border: drop enclosed blobs that are almost
+    # exactly the paper colour. Cream shirts are darker than this, and tiny
+    # highlights are skipped by the size limit.
+    if enclosed:
+        tight = (np.abs(a - paper).max(axis=2) <= 8) & ~bg
+        seen = np.zeros_like(tight)
+        for y0, x0 in zip(*np.nonzero(tight)):
+            if seen[y0, x0]:
+                continue
+            blob, todo = [], [(y0, x0)]
+            seen[y0, x0] = True
+            while todo:
+                y, x = todo.pop()
+                blob.append((y, x))
+                for yy, xx in ((y - 1, x), (y + 1, x), (y, x - 1), (y, x + 1)):
+                    if 0 <= yy < h and 0 <= xx < w and tight[yy, xx] and not seen[yy, xx]:
+                        seen[yy, xx] = True
+                        todo.append((yy, xx))
+            if len(blob) >= enclosed:
+                ys, xs = zip(*blob)
+                bg[list(ys), list(xs)] = True
 
     alpha = np.where(bg, 0, 255).astype(np.uint8)
     # Soften the one-pixel edge so watercolour rims don't look clipped.
@@ -187,7 +211,71 @@ def copy_rest(src):
         save_webp(im, OUT / sub / (p.stem + '.webp'))
 
 
+# ---------------------------------------------------------------------------
+# Cast: four characters, three sheets each (1536 x 1024, light paper ground)
+#   ch-pN-dung.png    standing: front, side, three-quarter
+#   ch-pN-di.png      walking: 4 frames, facing right
+#   ch-pN-day-xe.png  pushing the cart: 3 frames, facing right
+# → char/pN-{front,side,q,walk1..4,cart1..3}.webp, every figure scaled to the
+#   same height with the feet on the bottom edge, so frames and characters
+#   swap without jumping. Prints each frame's anchor (where the body's centre
+#   sits across the frame) for CAST in js/studio.js.
+# ---------------------------------------------------------------------------
+SHEETS = {'dung': ['front', 'side', 'q'], 'di': ['walk1', 'walk2', 'walk3', 'walk4'],
+          'day-xe': ['cart1', 'cart2', 'cart3']}
+FIG_H = 720   # px, head to feet, in every output frame
+
+
+def frame_boxes(cut, want):
+    """Frames as column ranges; widen the gap until the count is right."""
+    for gap in (12, 20, 30, 45, 8, 5):
+        boxes = split_frames(cut, min_gap=gap)
+        if len(boxes) == want:
+            return boxes
+    # Frames touch (a cart nose against the next figure): cut at the
+    # emptiest column near each even split instead.
+    alpha = np.asarray(cut)[:, :, 3] > 40
+    cols = alpha.sum(axis=0)
+    on = np.where(cols > 3)[0]
+    x0, x1 = int(on.min()), int(on.max()) + 1
+    step = (x1 - x0) / want
+    cuts = [x0]
+    for i in range(1, want):
+        c = x0 + step * i
+        lo, hi = int(c - step * 0.3), int(c + step * 0.3)
+        cuts.append(lo + int(np.argmin(cols[lo:hi])))
+    cuts.append(x1)
+    print(f'  (split {want} frames at the emptiest columns: {cuts[1:-1]})')
+    return [(cuts[i], cuts[i + 1]) for i in range(want)]
+
+
+def build_cast(src):
+    anchors = {}
+    for n in range(1, 10):
+        if not (src / f'ch-p{n}-dung.png').exists():
+            continue
+        for sheet, names in SHEETS.items():
+            cut = cut_out(Image.open(src / f'ch-p{n}-{sheet}.png').convert('RGB'), enclosed=400)
+            a = np.asarray(cut)[:, :, 3]
+            for name, (x0, x1) in zip(names, frame_boxes(cut, len(names))):
+                col = a[:, x0:x1] > 40
+                rows = np.where(col.sum(axis=1) > 2)[0]
+                top, bot = int(rows.min()), int(rows.max()) + 1
+                fr = cut.crop((x0, top, x1, bot))
+                k = FIG_H / fr.height
+                fr = fr.resize((max(1, round(fr.width * k)), FIG_H), Image.LANCZOS)
+                # body centre = middle of the head (top quarter of the figure)
+                head = np.asarray(fr)[: FIG_H // 4, :, 3] > 40
+                xs = np.where(head.any(axis=0))[0]
+                anchors[f'p{n}-{name}'] = round(float((xs.min() + xs.max()) / 2 / fr.width), 3)
+                save_webp(fr, OUT / 'char' / f'p{n}-{name}.webp', quality=84)
+    print('  CAST anchors =', json.dumps(anchors))
+
+
 if __name__ == '__main__':
+    if len(sys.argv) == 3 and sys.argv[1] == '--cast':
+        print('cast:'); build_cast(Path(sys.argv[2]))
+        sys.exit()
     if len(sys.argv) != 2:
         sys.exit(__doc__)
     src = Path(sys.argv[1])
