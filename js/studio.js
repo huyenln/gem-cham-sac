@@ -144,8 +144,23 @@
     'studio.sofa_news':    { vi: `Bản tin — chuyện ở studio`, en: `Newsletter — studio notes` },
 
     'studio.sewing_h':     { vi: `Bàn chắp vải`, en: `Patchwork table` },
-    'studio.sewing_p':     { vi: `Bàn đang được may. Sắp tới bạn sẽ tự chọn mảnh vải vụn thật để ghép gối, lót cốc của riêng mình.`, en: `Still being stitched. Soon you'll pick real fabric scraps to piece together your own cushion or coaster.` },
-    'studio.sewing_cta':   { vi: `Xem gối & lót cốc có sẵn`, en: `See ready-made cushions & coasters` },
+    'studio.sewing_p':     { vi: `Chạm vào một ô, chọn chất vải rồi chọn màu. Ô tiếp theo tự sáng lên.`, en: `Tap a patch, pick a fabric, then a colour. The next patch lights up by itself.` },
+    'studio.pt_cell':      { vi: `Ô`, en: `Patch` },
+    'studio.pt_empty':     { vi: `chưa chọn vải`, en: `no fabric yet` },
+    'studio.pt_done':      { vi: `Xong rồi! Cho vào giỏ hoặc lưu lại để khoe nhé.`, en: `All done! Add it to your cart or save it to show off.` },
+    'studio.pt_random':    { vi: `Để Gem chọn giúp`, en: `Let Gem pick` },
+    'studio.pt_undo':      { vi: `Hoàn tác`, en: `Undo` },
+    'studio.pt_reset':     { vi: `Làm lại`, en: `Start over` },
+    'studio.pt_add':       { vi: `Cho vào giỏ`, en: `Add to cart` },
+    'studio.pt_save':      { vi: `Lưu ảnh`, en: `Save image` },
+    'studio.pt_link':      { vi: `Chép link`, en: `Copy link` },
+    'studio.pt_copied':    { vi: `Đã chép`, en: `Copied` },
+    'studio.pt_fill_all':  { vi: `Chọn vải cho đủ các ô để cho vào giỏ.`, en: `Fill every patch to add it to your cart.` },
+    'studio.pt_note':      { vi: `Vải là vải vụn thật nên màu và hoa văn sẽ gần giống, không giống hệt hình. Gem nhắn ảnh vải cho bạn duyệt trước khi may.`, en: `These are real fabric scraps, so colours and prints will be close, not identical. Gem sends you a photo of the fabrics before sewing.` },
+    'studio.pt_mat':       { vi: `Chất vải`, en: `Fabric` },
+    'studio.pt_way':       { vi: `Màu`, en: `Colour` },
+    'studio.pt_products':  { vi: `Chọn món`, en: `Choose a piece` },
+    'studio.pt_caption':   { vi: `Thiết kế riêng · Gem Chạm Sắc`, en: `My own design · Gem Chạm Sắc` },
 
     'studio.wall_h':       { vi: `Tường sưu tầm`, en: `Collectors' wall` },
     'studio.wall_p':       { vi: `Thiết kế của khách sẽ được treo ở đây. Mỗi tháng Gem may thật một thiết kế.`, en: `Visitors' designs will hang here. Each month Gem sews one of them for real.` }
@@ -449,13 +464,209 @@
     );
   }
 
-  function sewingSheet() {
+  /* ---------- Bàn chắp vải (designer) ----------
+     Colour + material only, no real-fabric inventory: Gem matches the
+     closest scraps by hand and sends a photo before sewing. Data and
+     drawing live in js/patch.js. */
+  var P = window.GemPatch;
+  var D = { product: 'goi', cells: {}, sel: 0, mat: 'tr', undo: [] };
+
+  function cellsNow() {
+    if (!D.cells[D.product]) {
+      D.cells[D.product] = [];
+      for (var i = 0; i < P.cellsOf(D.product); i++) D.cells[D.product].push(null);
+    }
+    return D.cells[D.product];
+  }
+
+  function specNow() { return P.encode(D.product, cellsNow()); }
+
+  function lng() {
+    return (window.GemI18n && window.GemI18n.getLang && window.GemI18n.getLang()) === 'en' ? 'en' : 'vi';
+  }
+
+  function designerSheet() {
+    if (!P) return;
     openSheet(
       head('studio.sewing_h', 'studio.sewing_p') +
-      '<img class="st-preview" src="images/studio/ui/ui-ban-chap-demo-1.webp" alt="" loading="lazy">' +
-      '<p class="st-foot"><button type="button" class="st-btn" data-goto="cabinet" data-i18n="studio.sewing_cta">' +
-        esc(t('studio.sewing_cta')) + '</button></p>'
+      '<div class="pt">' +
+        '<div class="pt-tabs" role="group" data-i18n-attr="aria-label:studio.pt_products" aria-label="' + esc(t('studio.pt_products')) + '"></div>' +
+        '<div class="pt-board"></div>' +
+        '<div class="pt-side">' +
+          '<p class="pt-status" aria-live="polite"></p>' +
+          tr('p', 'studio.pt_mat', ' class="pt-label"') +
+          '<div class="pt-mats"></div>' +
+          tr('p', 'studio.pt_way', ' class="pt-label"') +
+          '<div class="pt-ways"></div>' +
+          '<div class="pt-tools">' +
+            '<button type="button" class="pt-tool" data-pt="random" data-i18n="studio.pt_random">' + esc(t('studio.pt_random')) + '</button>' +
+            '<button type="button" class="pt-tool" data-pt="undo" data-i18n="studio.pt_undo">' + esc(t('studio.pt_undo')) + '</button>' +
+            '<button type="button" class="pt-tool" data-pt="reset" data-i18n="studio.pt_reset">' + esc(t('studio.pt_reset')) + '</button>' +
+          '</div>' +
+          '<div class="pt-actions">' +
+            '<span class="pt-price"></span>' +
+            '<button type="button" class="st-btn" data-pt="add" data-i18n="studio.pt_add">' + esc(t('studio.pt_add')) + '</button>' +
+            '<button type="button" class="pt-tool" data-pt="save" data-i18n="studio.pt_save">' + esc(t('studio.pt_save')) + '</button>' +
+            '<button type="button" class="pt-tool" data-pt="link" data-i18n="studio.pt_link">' + esc(t('studio.pt_link')) + '</button>' +
+          '</div>' +
+          tr('p', 'studio.pt_note', ' class="pt-note"') +
+        '</div>' +
+      '</div>'
     );
+    renderDesigner();
+  }
+
+  function renderDesigner() {
+    var root = sheetBody.querySelector('.pt');
+    if (!root) return;
+    var l = lng();
+    var cells = cellsNow();
+
+    root.querySelector('.pt-tabs').innerHTML = P.PRODUCT_ORDER.map(function (id) {
+      return '<button type="button" class="pt-tab' + (id === D.product ? ' is-on' : '') +
+        '" data-product="' + id + '" aria-pressed="' + (id === D.product) + '">' + esc(P.PRODUCTS[id][l]) + '</button>';
+    }).join('');
+
+    root.querySelector('.pt-board').innerHTML =
+      P.svg({ product: D.product, cells: cells }, { cellAttrs: true, sel: D.sel });
+
+    var cur = cells[D.sel];
+    var n = cells.length;
+    var filled = cells.filter(Boolean).length;
+    root.querySelector('.pt-status').textContent = filled === n
+      ? t('studio.pt_done')
+      : (n > 1 ? t('studio.pt_cell') + ' ' + (D.sel + 1) + '/' + n + ' · ' : '') +
+        (cur ? P.cellName(cur, l) : t('studio.pt_empty'));
+
+    root.querySelector('.pt-mats').innerHTML = P.MAT_ORDER.map(function (m) {
+      return '<button type="button" class="pt-mat' + (m === D.mat ? ' is-on' : '') + '" data-mat="' + m +
+        '" aria-pressed="' + (m === D.mat) + '">' + P.swatch(m + '0', 22) + '<span>' + esc(P.MATERIALS[m][l]) + '</span></button>';
+    }).join('');
+
+    root.querySelector('.pt-ways').innerHTML = P.MATERIALS[D.mat].ways.map(function (w, i) {
+      var code = D.mat + i;
+      return '<button type="button" class="pt-way' + (code === cur ? ' is-on' : '') + '" data-way="' + code +
+        '" aria-label="' + esc(P.cellName(code, l)) + '" title="' + esc(w[l]) + '">' + P.swatch(code, 40) + '</button>';
+    }).join('');
+
+    var info = window.GemBasket ? window.GemBasket.info(P.PRODUCTS[D.product].sku) : null;
+    root.querySelector('.pt-price').textContent = info ? info.price : '';
+    var add = root.querySelector('[data-pt="add"]');
+    add.disabled = filled !== n || (info && !info.inStock);
+    add.title = filled !== n ? t('studio.pt_fill_all') : '';
+    root.querySelector('[data-pt="undo"]').disabled = !D.undo.length;
+  }
+
+  function remember() {
+    D.undo.push({ product: D.product, cells: cellsNow().slice(), sel: D.sel });
+    if (D.undo.length > 30) D.undo.shift();
+  }
+
+  function pickWay(code) {
+    var cells = cellsNow();
+    remember();
+    cells[D.sel] = code;
+    // jump to the next empty patch, so filling a cushion is nine quick taps
+    for (var k2 = 1; k2 <= cells.length; k2++) {
+      var j = (D.sel + k2) % cells.length;
+      if (!cells[j]) { D.sel = j; break; }
+    }
+    renderDesigner();
+  }
+
+  function flash(btn, key, back) {
+    btn.textContent = t(key);
+    btn.classList.add('is-added');
+    setTimeout(function () { btn.textContent = t(back); btn.classList.remove('is-added'); }, 1300);
+  }
+
+  function saveImage(btn) {
+    var spec = specNow();
+    var svgText = P.svg(spec, { size: 900 });
+    var img = new Image();
+    img.onload = function () {
+      var c = document.createElement('canvas');
+      c.width = 1080; c.height = 1350;
+      var g = c.getContext('2d');
+      g.fillStyle = '#F0E1D2'; g.fillRect(0, 0, c.width, c.height);
+      g.drawImage(img, 90, 120, 900, 900);
+      g.fillStyle = '#3D4A2E'; g.textAlign = 'center';
+      g.font = '800 54px Nunito, sans-serif';
+      g.fillText(P.PRODUCTS[D.product][lng()], 540, 1120);
+      g.font = '500 34px "Be Vietnam Pro", sans-serif';
+      g.fillStyle = '#87965A';
+      g.fillText(t('studio.pt_caption'), 540, 1180);
+      c.toBlob(function (blob) {
+        if (!blob) return;
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'gem-thiet-ke-' + D.product + '.png';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+      }, 'image/png');
+    };
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgText);
+    flash(btn, 'studio.pt_save', 'studio.pt_save');
+  }
+
+  function copyLink(btn) {
+    var url = P.url(specNow());
+    var done = function () { flash(btn, 'studio.pt_copied', 'studio.pt_link'); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(done, function () { window.prompt('', url); });
+    } else {
+      window.prompt('', url);
+    }
+  }
+
+  function designerClick(e) {
+    var el;
+    if ((el = e.target.closest('[data-product]'))) {
+      D.product = el.getAttribute('data-product');
+      D.sel = 0;
+      renderDesigner();
+    } else if ((el = e.target.closest('[data-cell]'))) {
+      D.sel = +el.getAttribute('data-cell');
+      var cur = cellsNow()[D.sel];
+      if (cur) D.mat = cur.slice(0, 2);
+      renderDesigner();
+    } else if ((el = e.target.closest('[data-mat]'))) {
+      D.mat = el.getAttribute('data-mat');
+      renderDesigner();
+    } else if ((el = e.target.closest('[data-way]'))) {
+      pickWay(el.getAttribute('data-way'));
+    } else if ((el = e.target.closest('[data-pt]'))) {
+      var act = el.getAttribute('data-pt');
+      if (act === 'random') {
+        remember();
+        D.cells[D.product] = P.randomFill(D.product);
+        D.sel = 0;
+      } else if (act === 'undo') {
+        var last = D.undo.pop();
+        if (last) { D.product = last.product; D.cells[last.product] = last.cells; D.sel = last.sel; }
+      } else if (act === 'reset') {
+        remember();
+        D.cells[D.product] = null;
+        D.sel = 0;
+      } else if (act === 'add') {
+        var spec = specNow();
+        var board = sheetBody.querySelector('.pt-board svg');
+        if (window.GemBasket && window.GemBasket.add(P.PRODUCTS[D.product].sku, board, spec)) {
+          flash(el, 'studio.added', 'studio.pt_add');
+        }
+        return;
+      } else if (act === 'save') {
+        saveImage(el);
+        return;
+      } else if (act === 'link') {
+        copyLink(el);
+        return;
+      }
+      renderDesigner();
+    } else {
+      return false;
+    }
+    return true;
   }
 
   function wallSheet() {
@@ -481,7 +692,7 @@
     fitting: fittingSheet,
     pegboard: function () { shelfSheet('pegboard'); },
     cabinet: function () { shelfSheet('cabinet'); },
-    sewing: sewingSheet,
+    sewing: designerSheet,
     wall: wallSheet,
     counter: counter
   };
@@ -525,6 +736,7 @@
         closeSheet();
         return;
       }
+      if (sheetBody.querySelector('.pt') && designerClick(e)) return;
       var add = e.target.closest('[data-add]');
       if (add && window.GemBasket) {
         var card = add.closest('.st-prod');
@@ -559,6 +771,8 @@
       if (hot && !player.moving) walkTo(standX(hotById(hot.getAttribute('data-hot'))));
     });
 
+    document.addEventListener('gem:langchange', function () { renderDesigner(); });
+
     document.addEventListener('gem:basket', function (e) {
       cartCount = (e.detail && e.detail.count) || 0;
       render();
@@ -585,6 +799,19 @@
     bind();
     cartCount = window.GemBasket ? window.GemBasket.count() : 0;
     layout();
+
+    // A shared design link (studio.html?d=…): walk to the table and open it.
+    var shared = null;
+    try { shared = P && P.parse(new URLSearchParams(location.search).get('d') || ''); } catch (e) { /* old browser */ }
+    if (shared) {
+      D.product = shared.product;
+      D.cells[shared.product] = shared.cells;
+      D.sel = 0;
+      if (shared.cells[0]) D.mat = shared.cells[0].slice(0, 2);
+      try { localStorage.setItem('gem-studio-intro', '1'); } catch (e) { /* ignore */ }
+      setTimeout(function () { visit('sewing'); }, 400);
+      return;
+    }
 
     var seen = false;
     try { seen = localStorage.getItem('gem-studio-intro') === '1'; } catch (e) { /* private mode */ }

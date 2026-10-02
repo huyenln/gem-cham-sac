@@ -491,3 +491,116 @@
 
 /* The site-wide "View in English" pill sits on the bottom nav otherwise. */
 .studio-page .lang-hint { bottom: calc(76px + env(safe-area-inset-bottom)); }
+
+/* ---------- BÀN CHẮP VẢI (designer) ---------- */
+.pt { display: grid; gap: var(--space-4); }
+.pt-side { display: grid; gap: var(--space-3); }
+
+.pt-tabs { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+.pt-tab,
+.pt-tool {
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  border: 1.5px solid var(--sage-light);
+  border-radius: 999px;
+  background: var(--paper-cream);
+  color: var(--ink-dark);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.pt-tab.is-on { background: var(--sage-deep); border-color: var(--sage-deep); color: var(--paper-white); }
+.pt-tool:hover { border-color: var(--sage-deep); }
+.pt-tool:disabled { opacity: 0.45; cursor: default; }
+.pt-tool.is-added { background: var(--kraft); border-color: var(--kraft); color: var(--paper-white); }
+
+.pt-board {
+  width: 100%;
+  max-width: 360px;
+  justify-self: center;
+}
+
+.pt-board svg { display: block; width: 100%; height: auto; }
+.pt-cell { cursor: pointer; }
+.pt-cell:hover rect { filter: brightness(1.06); }
+
+.pt-status {
+  margin: 0;
+  min-height: 1.5em;
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--ink-dark);
+}
+
+.pt-label {
+  margin: 0;
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.pt-mats {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+}
+
+.pt-mat {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 var(--space-3) 0 6px;
+  border: 1.5px solid var(--sage-light);
+  border-radius: 999px;
+  background: var(--paper-white);
+  color: var(--ink-dark);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.pt-mat.is-on { border-color: var(--sage-deep); box-shadow: 0 0 0 2px var(--sage-deep) inset; }
+
+.pt-ways { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+.pt-way {
+  width: 48px;
+  height: 48px;
+  padding: 2px;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+
+.pt-way svg { display: block; width: 100%; height: 100%; }
+.pt-way:hover { border-color: var(--sage-light); }
+.pt-way.is-on { border-color: var(--sage-deep); }
+
+.pt-tools,
+.pt-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+
+.pt-price { font-weight: 600; color: var(--kraft); margin-right: auto; }
+
+.pt-note { margin: 0; font-size: var(--text-xs); color: var(--ink-soft); line-height: 1.5; }
+
+@media (min-width: 768px) {
+  .pt { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+  .pt-tabs { grid-column: 1 / -1; }
+  .pt-board { align-self: start; }
+  .pt-side { display: grid; gap: var(--space-3); }
+}
+
+/* An open sheet owns the screen: the language pill waits behind it. */
+.studio-page.st-lock .lang-hint { display: none; }
+
+@media (min-width: 768px) {
+  .pt-mats { flex-wrap: wrap; overflow: visible; }
+}

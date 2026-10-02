@@ -198,6 +198,10 @@
     'basket.copied':        { vi: `Đã copy nội dung giỏ hàng.`, en: `Basket contents copied.` },
 
     'basket.done_h':        { vi: `Chúng mình nhận được rồi.`, en: `We've got it.` },
+    'basket.custom':        { vi: `Thiết kế riêng`, en: `Your own design` },
+    'basket.custom_view':   { vi: `xem`, en: `view` },
+    'basket.custom_pay':    { vi: `Đơn có món thiết kế riêng: Gem chọn vải vụn gần nhất với màu bạn chọn, nhắn ảnh vải để bạn duyệt, rồi mới gửi cách trả tiền.`, en: `Your order has a custom piece: Gem picks the closest fabric scraps, sends you a photo to approve, then tells you how to pay.` },
+    'basket.done_custom_p': { vi: `Gem sẽ nhắn ảnh vải cho bạn duyệt trước khi may, rồi mới báo cách trả tiền. Cảm ơn bạn đã tự tay chắp một món.`, en: `Gem will send you a photo of the fabrics to approve before sewing, then tell you how to pay. Thank you for piecing one together yourself.` },
     'basket.done_p':        { vi: `Gem sẽ nhắn lại cho bạn trong hôm nay để xác nhận món và phí giao. Cảm ơn bạn đã chọn đồ của chúng mình.`, en: `Gem will message you back today to confirm the items and shipping. Thank you for choosing our pieces.` },
     'basket.code_label':    { vi: `MÃ ĐƠN`, en: `ORDER CODE` },
     'basket.out_of_stock':  { vi: `Tạm hết hàng`, en: `Out of stock` },
@@ -249,7 +253,18 @@
      STATE
      ====================================================================== */
   var STORAGE_KEY = 'gem-basket';
-  var items = [];   // [{ sku, qty }]
+  var items = [];   // [{ sku, qty, spec? }]  spec = design code from js/patch.js
+
+  // A custom design is its own line even when the product is the same.
+  function keyOf(it) { return it.sku + (it.spec ? '|' + it.spec : ''); }
+
+  function validSpec(spec) {
+    return !!(spec && window.GemPatch && window.GemPatch.isComplete(window.GemPatch.parse(spec)));
+  }
+
+  function hasCustom() {
+    return items.some(function (it) { return !!it.spec; });
+  }
 
   function bySku(sku) {
     for (var i = 0; i < CATALOG.length; i++) {
@@ -313,9 +328,13 @@
     try {
       var raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
       items = raw.filter(function (it) {
-        return it && bySku(it.sku) && it.qty > 0;
+        // A design that no longer parses (or patch.js missing) is dropped,
+        // never sent as a plain product the customer didn't choose.
+        return it && bySku(it.sku) && it.qty > 0 && (!it.spec || validSpec(it.spec));
       }).map(function (it) {
-        return { sku: it.sku, qty: Math.min(99, Math.round(it.qty)) };
+        var out = { sku: it.sku, qty: Math.min(99, Math.round(it.qty)) };
+        if (it.spec) out.spec = it.spec;
+        return out;
       });
     } catch (e) { items = []; }
   }
@@ -389,21 +408,24 @@
     return null;
   }
 
-  function addItem(sku) {
+  function addItem(sku, spec) {
+    var key = keyOf({ sku: sku, spec: spec });
     for (var i = 0; i < items.length; i++) {
-      if (items[i].sku === sku) {
+      if (keyOf(items[i]) === key) {
         items[i].qty = Math.min(99, items[i].qty + 1);
         save();
         return;
       }
     }
-    items.push({ sku: sku, qty: 1 });
+    var it = { sku: sku, qty: 1 };
+    if (spec) it.spec = spec;
+    items.push(it);
     save();
   }
 
-  function setQty(sku, qty) {
+  function setQty(key, qty) {
     items = items.filter(function (it) {
-      if (it.sku !== sku) return true;
+      if (keyOf(it) !== key) return true;
       it.qty = qty;
       return qty > 0;
     });
@@ -432,12 +454,16 @@
   var orderCode = null;  // mã đơn database trả về, hiện ở màn cảm ơn
   var orderPay = null;   // 'cod' | 'qr' — quyết định màn cảm ơn hiện gì
   var orderSum = 0;      // tổng đã chốt, để sinh QR đúng số tiền
+  var orderCustom = false; // đơn có món thiết kế riêng: chưa thu tiền, chờ duyệt ảnh vải
   var PAY = null;        // cấu hình thanh toán đọc từ Supabase
 
   /* ---------- chọn cách trả tiền ----------
      Chỉ hiện khi đọc được cấu hình. Không đọc được thì bỏ qua phần này và
      đơn vẫn gửi được — em gái hỏi lại cách trả tiền qua Zalo như trước. */
   function payChoiceHTML() {
+    // Custom pieces are confirmed by photo first, so nobody pays up front for
+    // fabric they haven't seen. The order goes in with no payment method.
+    if (hasCustom()) return '<p class="gb-fine" data-i18n="basket.custom_pay"></p>';
     if (!PAY) return '';
     var cod = PAY.cod_enabled !== false;
     var qr  = PAY.qr_enabled  !== false;
@@ -655,11 +681,17 @@
 
     var rows = items.map(function (it) {
       var p = bySku(it.sku);
-      return '<li class="gb-row" data-sku="' + p.sku + '">' +
-        '<span class="gb-row-sprite">' + (SPRITES[p.sprite] || '') + '</span>' +
+      var custom = it.spec && window.GemPatch;
+      return '<li class="gb-row" data-key="' + esc(keyOf(it)) + '">' +
+        '<span class="gb-row-sprite">' +
+          (custom ? window.GemPatch.svg(it.spec, { size: 44 }) : (SPRITES[p.sprite] || '')) + '</span>' +
         '<span class="gb-row-text">' +
           '<span class="gb-row-name"' + nameAttr(p) + '>' +
             (isKey(p) ? '' : esc(pName(p))) + '</span>' +
+          (custom
+            ? '<span class="gb-row-price"><span data-i18n="basket.custom">Thiết kế riêng</span> · ' +
+                '<a href="' + esc(window.GemPatch.url(it.spec)) + '" data-i18n="basket.custom_view">xem</a></span>'
+            : '') +
           // unit price only earns its line once there's more than one
           '<span class="gb-row-price">' +
             (it.qty > 1 ? priceLabel(p) + ' × ' + it.qty : '') +
@@ -695,16 +727,16 @@
       '<button type="button" class="gb-clear" data-i18n="basket.clear">Xoá hết</button>';
 
     panelBody.querySelectorAll('.gb-row').forEach(function (row) {
-      var sku = row.getAttribute('data-sku');
+      var key = row.getAttribute('data-key');
       row.addEventListener('click', function (e) {
         var btn = e.target.closest('[data-act]');
         if (!btn) return;
         var act = btn.getAttribute('data-act');
         var cur = 0;
-        items.forEach(function (it) { if (it.sku === sku) cur = it.qty; });
-        if (act === 'plus') setQty(sku, Math.min(99, cur + 1));
-        else if (act === 'minus') setQty(sku, cur - 1);
-        else if (act === 'remove') setQty(sku, 0);
+        items.forEach(function (it) { if (keyOf(it) === key) cur = it.qty; });
+        if (act === 'plus') setQty(key, Math.min(99, cur + 1));
+        else if (act === 'minus') setQty(key, cur - 1);
+        else if (act === 'remove') setQty(key, 0);
         renderWidget();
         renderBasketView();
       });
@@ -899,6 +931,7 @@
         (orderPay === 'qr' && PAY && orderCode ? renderQrPay() : '') +
         '<p class="gb-empty-p" data-i18n="' +
           (doneMode === 'mailto' ? 'basket.done_mail_p'
+            : orderCustom ? 'basket.done_custom_p'
             : orderPay === 'qr' ? 'basket.done_qr_p' : 'basket.done_p') + '"></p>' +
         '<button type="button" class="btn btn-primary gb-done-btn" data-i18n="basket.done_btn"></button>' +
       '</div>';
@@ -984,6 +1017,10 @@
       var p = bySku(it.sku);
       lines.push((i + 1) + '. ' + pName(p) + ' × ' + it.qty +
         ' — ' + priceLabel(p, it.qty));
+      if (it.spec && window.GemPatch) {
+        lines.push('   ' + window.GemPatch.describe(it.spec, 'vi'));
+        lines.push('   ' + window.GemPatch.url(it.spec));
+      }
     });
     lines.push('———');
     lines.push(t('basket.txt_total', 'Tổng') + ': ' + subtotalLabel());
@@ -1044,8 +1081,11 @@
       ' — ' + count() + ' món';
     var submitBtn = form.querySelector('.gb-submit');
 
+    var custom = hasCustom();
+
     function finish(mode) {
       doneMode = mode;
+      orderCustom = custom;
       items = []; save(); renderWidget();
       view = 'done'; renderPanel();
     }
@@ -1064,12 +1104,22 @@
     // Đơn vào thẳng database để em gái xem trong trang quản trị. Chỉ gửi sku
     // và số lượng — giá do database tự tra, không gửi giá từ trình duyệt lên.
     if (window.GemDB && window.GemDB.createOrder) {
-      var picked = form.querySelector('[name="pay"]:checked');
+      var picked = custom ? null : form.querySelector('[name="pay"]:checked');
+      // Designs ride in the order note (Anna sees it in admin): what each
+      // patch is, plus a link that redraws the design. The price still comes
+      // from the product's sku in the database.
+      var designs = [];
+      items.forEach(function (it) {
+        if (!it.spec || !window.GemPatch) return;
+        designs.push(t('basket.custom', 'Thiết kế riêng') + ' × ' + it.qty + ' — ' +
+          window.GemPatch.describe(it.spec, 'vi') + '\n' + window.GemPatch.url(it.spec));
+      });
+      var note = [customer.note].concat(designs).filter(Boolean).join('\n\n');
       window.GemDB.createOrder({
         name: customer.name,
         phone: customer.phone,
         address: customer.pickup ? t('basket.txt_pickup', 'Nhận tại cửa hàng') : customer.address,
-        note: customer.note,
+        note: note,
         payment: picked ? picked.value : null,
         items: items.map(function (it) { return { sku: it.sku, qty: it.qty }; })
       }).then(function (res) {
@@ -1167,11 +1217,12 @@
         if (!p) return null;
         return { sku: sku, name: pName(p), price: priceLabel(p), inStock: p.inStock !== false };
       },
-      add: function (sku, sourceEl) {
+      add: function (sku, sourceEl, spec) {
         var p = bySku(sku);
         if (!p || p.inStock === false) return false;
+        if (spec && !validSpec(spec)) return false;
         fly(sourceEl, p.sprite, function () {
-          addItem(sku);
+          addItem(sku, spec);
           renderWidget();
           wiggle();
           if (panel.classList.contains('open') && view === 'basket') renderBasketView();
