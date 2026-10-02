@@ -19,23 +19,27 @@
   /* ======================================================================
      SCENE — numbers come from tools/studio-assets.py (the STRIP line)
      ====================================================================== */
+  // Strip = five painted scenes joined by tools/studio-assets.py --strip2
+  // (it prints these numbers). Zone 3 is only the pegboard; zone 5 starts
+  // at the full cabinet. Hotspot y values below are in strip pixels (the
+  // tool nudges each scene up/down to line up the skirting).
   var SCENE = {
-    width: 4821,
+    width: 5590,
     height: 1024,
     // x = where the zone starts in the strip, cropL = first source pixel kept
     zones: [
       { x: 0,    cropL: 0 },
-      { x: 1472, cropL: 668 },
-      { x: 2276, cropL: 755 },
-      { x: 2993, cropL: 740 },
-      { x: 3725, cropL: 440 }
+      { x: 1472, cropL: 480 },
+      { x: 2464, cropL: 485 },
+      { x: 2777, cropL: 0 },
+      { x: 4249, cropL: 195 }
     ],
     feetY: 965,          // where the character's feet touch the floor
     playerH: 410,        // character height, strip pixels
-    startX: 330,          // just inside the door
+    startX: 640,         // just inside the door
     speed: 900,          // strip pixels per second
-    // Udon on the walnut counter (placeholder: marker-style mascot)
-    udon: { x: 4518, y: 338, w: 160, h: 150 }
+    // Udon sitting on the walnut counter, left of the bell
+    udon: { x: 5100, y: 468, w: 128, h: 120 }
   };
 
   // box = [x0, y0, x1, y1] in the zone's source image (1536 x 1024)
@@ -44,16 +48,16 @@
   // the character stops (zone source px), when the middle of the box would
   // put them in front of its label.
   var HOTSPOTS = [
-    { id: 'door',     zone: 1, box: [60, 110, 480, 600],    label: 'studio.hot_door' },
-    { id: 'sofa',     zone: 1, box: [950, 630, 1210, 790],  label: 'studio.hot_sofa', stand: 820 },   // tea table and up
-    { id: 'rail',     zone: 2, box: [700, 300, 1180, 690],  label: 'studio.hot_rail' },
-    { id: 'fitting',  zone: 2, box: [1190, 290, 1440, 700], label: 'studio.hot_fitting' },
-    { id: 'pegboard', zone: 3, box: [760, 290, 985, 690],   label: 'studio.hot_pegboard' },
-    { id: 'cabinet',  zone: 3, box: [985, 335, 1510, 630],  label: 'studio.hot_cabinet' },               // open shelves only
-    { id: 'sewing',   zone: 4, box: [800, 520, 1250, 640],  label: 'studio.hot_sewing', stand: 1300 }, // table top only
-    { id: 'tu',       zone: 4, box: [1130, 415, 1400, 555], label: 'studio.hot_tu' },
-    { id: 'counter',  zone: 5, box: [450, 440, 800, 640],   label: 'studio.hot_counter' },
-    { id: 'memo',     zone: 5, box: [965, 160, 1387, 348],  label: 'studio.hot_memo' }
+    { id: 'door',     zone: 1, box: [40, 85, 560, 585],     label: 'studio.hot_door' },
+    { id: 'sofa',     zone: 1, box: [960, 615, 1220, 775],  label: 'studio.hot_sofa', stand: 860 },   // tea table and up
+    { id: 'rail',     zone: 2, box: [520, 360, 1065, 720],  label: 'studio.hot_rail' },               // shelf + clothes rail
+    { id: 'fitting',  zone: 2, box: [1095, 340, 1500, 740], label: 'studio.hot_fitting' },
+    { id: 'pegboard', zone: 3, box: [495, 280, 855, 720],   label: 'studio.hot_pegboard' },
+    { id: 'sewing',   zone: 4, box: [45, 450, 790, 590],    label: 'studio.hot_sewing', stand: 860 },  // table top only
+    { id: 'tu',       zone: 4, box: [820, 385, 1180, 510],  label: 'studio.hot_tu' },                 // frames + CHẠM SẮC
+    { id: 'cabinet',  zone: 5, box: [200, 260, 895, 600],   label: 'studio.hot_cabinet' },            // open shelves only
+    { id: 'counter',  zone: 5, box: [1045, 570, 1425, 720], label: 'studio.hot_counter', stand: 990 },  // stop by the cart, not on the label
+    { id: 'memo',     zone: 5, box: [1065, 205, 1420, 415], label: 'studio.hot_memo' }
   ];
 
   // The cast (images/studio/char/pN-*.webp, cut by tools/studio-assets.py
@@ -62,7 +66,7 @@
   // frame (from the tool's output), so frames of different widths don't jump.
   var CAST = ['p1', 'p2', 'p3', 'p4'];
   var FRAME_NAMES = ['front', 'side', 'q', 'walk1', 'walk2', 'walk3', 'walk4', 'cart1', 'cart2', 'cart3'];
-  var ANCHOR = {"p1-front": 0.516, "p1-side": 0.513, "p1-q": 0.467, "p1-walk1": 0.53, "p1-walk2": 0.538, "p1-walk3": 0.534, "p1-walk4": 0.485, "p1-cart1": 0.358, "p1-cart2": 0.242, "p1-cart3": 0.272, "p2-front": 0.509, "p2-side": 0.497, "p2-q": 0.531, "p2-walk1": 0.588, "p2-walk2": 0.497, "p2-walk3": 0.548, "p2-walk4": 0.506, "p2-cart1": 0.433, "p2-cart2": 0.311, "p2-cart3": 0.364, "p3-front": 0.546, "p3-side": 0.477, "p3-q": 0.516, "p3-walk1": 0.557, "p3-walk2": 0.514, "p3-walk3": 0.55, "p3-walk4": 0.506, "p3-cart1": 0.344, "p3-cart2": 0.295, "p3-cart3": 0.273, "p4-front": 0.519, "p4-side": 0.547, "p4-q": 0.553, "p4-walk1": 0.47, "p4-walk2": 0.475, "p4-walk3": 0.498, "p4-walk4": 0.463, "p4-cart1": 0.344, "p4-cart2": 0.333, "p4-cart3": 0.325};
+  var ANCHOR = {"p1-front": 0.516, "p1-side": 0.515, "p1-q": 0.475, "p1-walk1": 0.487, "p1-walk2": 0.538, "p1-walk3": 0.501, "p1-walk4": 0.431, "p1-cart1": 0.378, "p1-cart2": 0.242, "p1-cart3": 0.303, "p2-front": 0.509, "p2-side": 0.486, "p2-q": 0.498, "p2-walk1": 0.554, "p2-walk2": 0.555, "p2-walk3": 0.522, "p2-walk4": 0.52, "p2-cart1": 0.451, "p2-cart2": 0.333, "p2-cart3": 0.392, "p3-front": 0.541, "p3-side": 0.472, "p3-q": 0.51, "p3-walk1": 0.469, "p3-walk2": 0.512, "p3-walk3": 0.472, "p3-walk4": 0.502, "p3-cart1": 0.344, "p3-cart2": 0.295, "p3-cart3": 0.268, "p4-front": 0.519, "p4-side": 0.547, "p4-q": 0.504, "p4-walk1": 0.488, "p4-walk2": 0.475, "p4-walk3": 0.465, "p4-walk4": 0.426, "p4-cart1": 0.377, "p4-cart2": 0.333, "p4-cart3": 0.348};
   var STEP_MS = 150;   // one walk / push frame
 
   function charSrc(who, name) { return 'images/studio/char/' + who + '-' + name + '.webp'; }
@@ -1276,8 +1280,7 @@
       b.addEventListener('click', function () {
         var go = b.getAttribute('data-go');
         if (go === 'shelves') {
-          var a = boxOf(hotById('pegboard')), c = boxOf(hotById('cabinet'));
-          walkTo((a.x0 + c.x1) / 2);
+          visit('cabinet', false);
         } else {
           // The places people come for open straight away.
           visit(go, go === 'sewing' || go === 'counter' || go === 'tu');
