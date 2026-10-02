@@ -107,6 +107,21 @@ window.GemDB = (function () {
       });
     },
 
+    // Tường lời nhắn: chỉ lời đã duyệt (RLS lọc), mới nhất trước.
+    notes: function () {
+      return req('/rest/v1/notes?select=id,body,name,created_at&status=eq.approved&order=created_at.desc&limit=60');
+    },
+
+    // Gửi lời nhắn. Trả { ok } hoặc { ok:false, error: bad_input | busy }.
+    // Vào trạng thái chờ duyệt, chưa ai thấy cho tới khi nhân sự duyệt.
+    postNote: function (body, name) {
+      return req('/rest/v1/rpc/post_note', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_body: body, p_name: name || null })
+      });
+    },
+
     // Giữ chỗ. Trả về { ok, code, seats_left } hoặc { ok:false, error }.
     book: function (payload) {
       return req('/rest/v1/rpc/book_session', {
@@ -259,6 +274,22 @@ window.GemDB = (function () {
     },
 
     // Cả bài còn nháp, khác posts() ở chỗ đó.
+    adminNotes: function () {
+      return req('/rest/v1/notes?select=*&order=created_at.desc&limit=200');
+    },
+
+    setNoteStatus: function (id, status) {
+      return req('/rest/v1/notes?id=eq.' + encodeURIComponent(id), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: status })
+      });
+    },
+
+    deleteNote: function (id) {
+      return req('/rest/v1/notes?id=eq.' + encodeURIComponent(id), { method: 'DELETE' });
+    },
+
     adminPosts: function () {
       return req('/rest/v1/posts?select=*&order=happened_on.desc,created_at.desc');
     },

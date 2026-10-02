@@ -1221,6 +1221,21 @@ chú đơn `[nguồn: studio | san-pham | link-chia-se | web]` (lấy từ
 Chưa thành cột riêng vì phải thay hàm `create_order` đang chạy — làm khi số
 liệu cho thấy đáng.
 
+**Bảng lời nhắn** (migration `gem_notes_wall`): bảng `notes` (body ≤ 280,
+name ≤ 40, status `pending | approved | hidden`). Khách gửi **chỉ qua**
+`post_note()` (security definer; không grant insert). Khách đọc được lời
+`approved` (RLS). Nhân sự (`is_staff()`) đọc tất cả, đổi `status`, xoá — tab
+"Lời nhắn" trong `admin.html`. Chặn xả rác: ô bẫy cho bot, 60 giây/lần trên
+mỗi máy, và hàm từ chối khi có ≥ 30 lời chờ duyệt trong 10 phút. Hiển thị chỉ
+bằng `textContent` / `esc()`.
+Đã kiểm ba vai (trong transaction, rollback): `anon` gửi được qua hàm, insert
+thẳng / update → `permission denied`, không thấy lời chờ duyệt; đăng nhập
+không phải nhân sự → không thấy lời chờ, update 0 dòng; nhân sự → thấy hết,
+duyệt được, sau đó `anon` thấy lời đã duyệt.
+Câu kiểm GRANT-vs-policy giờ báo thêm `authenticated / notes / UPDATE` —
+**cố ý**: GRANT update chỉ mở cột `status` (column-level), câu kiểm chỉ nhìn
+quyền cả bảng.
+
 ### Chủ tài khoản quản trị
 
 Cả ba là `owner`. Chưa có ai là `staff` — thêm khi tuyển người.

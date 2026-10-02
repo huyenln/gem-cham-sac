@@ -45,10 +45,10 @@
     { id: 'rail',     zone: 2, box: [680, 200, 1185, 790],  label: 'studio.hot_rail' },
     { id: 'fitting',  zone: 2, box: [1185, 280, 1500, 800], label: 'studio.hot_fitting' },
     { id: 'pegboard', zone: 3, box: [760, 280, 985, 760],   label: 'studio.hot_pegboard' },
-    { id: 'cabinet',  zone: 3, box: [985, 240, 1510, 810],  label: 'studio.hot_cabinet' },
+    { id: 'cabinet',  zone: 3, box: [985, 335, 1510, 810],  label: 'studio.hot_cabinet' },
     { id: 'sewing',   zone: 4, box: [745, 320, 1255, 840],  label: 'studio.hot_sewing' },
-    { id: 'wall',     zone: 4, box: [1240, 380, 1480, 560], label: 'studio.hot_wall' },
-    { id: 'counter',  zone: 5, box: [445, 470, 1400, 740],  label: 'studio.hot_counter' }
+    { id: 'counter',  zone: 5, box: [445, 470, 1400, 740], label: 'studio.hot_counter' },
+    { id: 'memo',     zone: 5, box: [965, 160, 1387, 348], label: 'studio.hot_memo' }
   ];
 
   // Character frames (images/studio/char). anchor = where the body's centre
@@ -57,7 +57,10 @@
     front: { src: 'images/studio/char/p1-front.webp', anchor: 0.5 },
     side:  { src: 'images/studio/char/p1-side.webp',  anchor: 0.5 },
     walk:  { src: 'images/studio/char/p1-walk.webp',  anchor: 0.5 },
-    cart:  { src: 'images/studio/char/p1-cart.webp',  anchor: 0.3 }
+    cart:  { src: 'images/studio/char/p1-cart.webp',  anchor: 0.3 },
+    // Udon riding in the cart, for the Udon joke only (a different sheet, so
+    // the hair differs a little; it shows for a couple of seconds)
+    cartUdon: { src: 'images/studio/char/p1-cart-udon.webp', anchor: 0.33 }
   };
 
   var SHELVES = {
@@ -116,7 +119,7 @@
     'studio.go_door':      { vi: `Cửa vào`, en: `Entrance` },
     'studio.go_fitting':   { vi: `Thử đồ`, en: `Fitting` },
     'studio.go_shelves':   { vi: `Kệ hàng`, en: `Shelves` },
-    'studio.go_sewing':    { vi: `Bàn chắp vải`, en: `Patchwork table` },
+    'studio.go_sewing':    { vi: `Bàn thiết kế`, en: `Design table` },
     'studio.go_counter':   { vi: `Quầy`, en: `Counter` },
     'studio.go_tu':        { vi: `Tủ của bạn`, en: `Your cabinet` },
     'studio.sr_help':      { vi: `Chạm vào đồ vật trong studio để xem hàng. Bấm Tab để đi qua từng điểm.`, en: `Tap things in the studio to look around. Press Tab to move between them.` },
@@ -128,11 +131,11 @@
     'studio.hot_fitting':  { vi: `Góc thử đồ`, en: `Fitting corner` },
     'studio.hot_pegboard': { vi: `Phụ kiện & sổ`, en: `Accessories & notebooks` },
     'studio.hot_cabinet':  { vi: `Gối, thảm & quà`, en: `Cushions, rugs & gifts` },
-    'studio.hot_sewing':   { vi: `Bàn chắp vải`, en: `Patchwork table` },
-    'studio.hot_wall':     { vi: `Tủ sưu tầm`, en: `Your cabinet` },
+    'studio.hot_sewing':   { vi: `Bàn thiết kế`, en: `Design table` },
+    'studio.hot_memo':     { vi: `Bảng lời nhắn`, en: `Message board` },
     'studio.hot_counter':  { vi: `Quầy thu ngân`, en: `Counter` },
 
-    'studio.intro':        { vi: `Chào bạn! Chạm vào kệ để xem đồ nhé. Bàn chắp vải ở cuối phòng đó.`, en: `Hi! Tap a shelf to look around. The patchwork table is at the far end.` },
+    'studio.intro':        { vi: `Chào bạn! Chạm vào kệ để xem đồ nhé. Bàn thiết kế ở gần cuối phòng đó.`, en: `Hi! Tap a shelf to look around. The design table is near the far end.` },
     'studio.cart_empty':   { vi: `Xe còn trống nè, dạo thêm chút nhé.`, en: `Your cart is still empty — have another look around.` },
 
     'studio.add':          { vi: `Thêm vào giỏ`, en: `Add to cart` },
@@ -164,7 +167,7 @@
     'studio.sofa_ws':      { vi: `Workshop — tự tay làm một món`, en: `Workshops — make something yourself` },
     'studio.sofa_news':    { vi: `Bản tin — chuyện ở studio`, en: `Newsletter — studio notes` },
 
-    'studio.sewing_h':     { vi: `Bàn chắp vải`, en: `Patchwork table` },
+    'studio.sewing_h':     { vi: `Bàn thiết kế`, en: `Design table` },
     'studio.sewing_p':     { vi: `Bạn phác ý tưởng, Gem may thật. Chạm vào một ô, chọn chất vải rồi chọn màu.`, en: `You sketch the idea, Gem sews it for real. Tap a patch, pick a fabric, then a colour.` },
     'studio.pt_cell':      { vi: `Ô`, en: `Patch` },
     'studio.pt_empty':     { vi: `chưa chọn vải`, en: `no fabric yet` },
@@ -190,10 +193,27 @@
 
     'studio.tu_h':         { vi: `Tủ sưu tầm`, en: `Your cabinet` },
     'studio.tu_p':         { vi: `Những gì bạn đã tạo và đã mua ở Gem. Tủ nằm ngay trên máy này, không cần tài khoản.`, en: `What you've made and bought at Gem. It lives on this device — no account needed.` },
-    'studio.tu_set':       { vi: `Bộ vải vụn`, en: `Fabric-scrap set` },
+    'studio.tu_set':       { vi: `Bộ sưu tập vải vụn`, en: `Fabric-scrap collection` },
+    'studio.tu_set_n':     { vi: `Bạn đã có {n}/{t} món vải vụn của Gem`, en: `You have {n} of Gem's {t} fabric-scrap pieces` },
+    'studio.tu_set_0':     { vi: `Gem có {t} món may từ vải vụn. Mua món nào, món đó vào tủ của bạn và được đánh dấu ở đây.`, en: `Gem makes {t} pieces from fabric scraps. Whatever you buy lands in your cabinet and is ticked off here.` },
+    'studio.udon_no':      { vi: `Udon không bán đâu nha! Udon chỉ trông quầy thôi.`, en: `Udon's not for sale! Udon just minds the counter.` },
+    'studio.udon_aria':    { vi: `Udon`, en: `Udon` },
+    'studio.memo_h':       { vi: `Bảng lời nhắn`, en: `Message board` },
+    'studio.memo_p':       { vi: `Để lại vài dòng cho Gem và cho người ghé sau. Gem đọc từng lời rồi mới ghim lên bảng.`, en: `Leave a few lines for Gem and for whoever comes by next. Gem reads each one before pinning it up.` },
+    'studio.memo_empty':   { vi: `Bảng còn trống. Bạn ghim lời đầu tiên nhé?`, en: `The board is empty. Pin the first note?` },
+    'studio.memo_write':   { vi: `Lời nhắn của bạn`, en: `Your note` },
+    'studio.memo_name':    { vi: `Tên (không bắt buộc)`, en: `Name (optional)` },
+    'studio.memo_send':    { vi: `Gửi cho Gem`, en: `Send to Gem` },
+    'studio.memo_sending': { vi: `Đang gửi...`, en: `Sending...` },
+    'studio.memo_ok':      { vi: `Gem nhận được rồi. Lời nhắn sẽ lên bảng sau khi Gem đọc nhé.`, en: `Gem got it. Your note goes up once Gem has read it.` },
+    'studio.memo_wait':    { vi: `Bạn vừa gửi rồi, đợi chút rồi viết tiếp nhé.`, en: `You just sent one — give it a minute.` },
+    'studio.memo_bad':     { vi: `Viết vài chữ (tối đa 280) rồi gửi nhé.`, en: `Write a few words (280 max) and send.` },
+    'studio.memo_busy':    { vi: `Bảng đang nhiều lời chờ đọc quá. Bạn thử lại sau ít phút nhé.`, en: `Lots of notes waiting to be read. Try again in a few minutes.` },
+    'studio.memo_fail':    { vi: `Chưa gửi được. Bạn thử lại sau chút nhé.`, en: `Couldn't send. Please try again in a bit.` },
+    'studio.memo_anon':    { vi: `Một người ghé qua`, en: `A visitor` },
     'studio.tu_designs':   { vi: `Đã thiết kế`, en: `Designed` },
     'studio.tu_designs_0': { vi: `Chưa có thiết kế nào. Ghé bàn chắp vải thử một tấm nhé.`, en: `No designs yet. Try one at the patchwork table.` },
-    'studio.tu_to_table':  { vi: `Tới bàn chắp vải`, en: `Go to the table` },
+    'studio.tu_to_table':  { vi: `Tới bàn thiết kế`, en: `Go to the table` },
     'studio.tu_open':      { vi: `Mở`, en: `Open` },
     'studio.tu_remove':    { vi: `Bỏ`, en: `Remove` },
     'studio.tu_owned':     { vi: `Đã sưu tầm`, en: `Collected` },
@@ -264,6 +284,7 @@
   /* ======================================================================
      STATE + DOM
      ====================================================================== */
+  var udonEl, memoPins, notesCache = null;
   var stage, world, playerEl, bobEl, frameEls = {}, bubble, bubbleText, modal, sheetBody;
   var k = 1;           // screen px per strip px
   var cam = 0;
@@ -292,14 +313,26 @@
 
     // Udon on the counter
     var u = SCENE.udon;
-    var udon = document.createElement('img');
-    udon.className = 'st-udon';
-    udon.src = 'images/mascot/udon_sit_happy.png';
-    udon.alt = '';
-    udon.style.left = pct(u.x, SCENE.width);
-    udon.style.top = pct(u.y, SCENE.height);
-    udon.style.width = pct(u.w, SCENE.width);
-    world.appendChild(udon);
+    udonEl = document.createElement('button');
+    udonEl.type = 'button';
+    udonEl.className = 'st-udon';
+    udonEl.setAttribute('data-i18n-attr', 'aria-label:studio.udon_aria');
+    udonEl.setAttribute('aria-label', t('studio.udon_aria'));
+    udonEl.innerHTML = '<img src="images/mascot/udon_sit_happy.png" alt="" draggable="false">';
+    udonEl.style.left = pct(u.x, SCENE.width);
+    udonEl.style.top = pct(u.y, SCENE.height);
+    udonEl.style.width = pct(u.w, SCENE.width);
+    world.appendChild(udonEl);
+
+    // Paper notes pinned on the memo board (filled once notes load)
+    var mb = boxOf(hotById('memo'));
+    memoPins = document.createElement('div');
+    memoPins.className = 'st-pins';
+    memoPins.style.left = pct(mb.x0, SCENE.width);
+    memoPins.style.top = pct(mb.y0, SCENE.height);
+    memoPins.style.width = pct(mb.x1 - mb.x0, SCENE.width);
+    memoPins.style.height = pct(mb.y1 - mb.y0, SCENE.height);
+    world.insertBefore(memoPins, world.querySelector('.st-hot'));
 
     // Character: one <img> per frame, toggled — swapping src would flicker.
     playerEl = document.createElement('div');
@@ -334,6 +367,7 @@
   }
 
   function pickFrame(now) {
+    if (player.udon) return 'cartUdon';
     if (cartCount > 0) return 'cart';
     if (player.moving) return Math.floor(now / 170) % 2 ? 'walk' : 'side';
     return player.moved ? 'side' : 'front';
@@ -795,10 +829,13 @@
     if (!root || !window.GemTu) return;
     var l = lng();
     var have = window.GemTu.countOf(SET_VAI_VUN);
-    root.querySelector('.tu-set').innerHTML =
-      '<p><b>' + esc(t('studio.tu_set')) + '</b> <span>' + have + '/' + SET_VAI_VUN.length + '</span></p>' +
-      '<div class="tu-bar" role="progressbar" aria-valuemin="0" aria-valuemax="' + SET_VAI_VUN.length +
-        '" aria-valuenow="' + have + '"><span style="width:' + (have / SET_VAI_VUN.length * 100).toFixed(1) + '%"></span></div>';
+    var total = SET_VAI_VUN.length;
+    var fill = function (key) { return t(key).replace('{n}', have).replace('{t}', total); };
+    root.querySelector('.tu-set').innerHTML = '<p><b>' + esc(t('studio.tu_set')) + '</b></p>' + (have
+      ? '<p class="tu-small">' + esc(fill('studio.tu_set_n')) + '</p>' +
+        '<div class="tu-bar" role="progressbar" aria-valuemin="0" aria-valuemax="' + total +
+          '" aria-valuenow="' + have + '"><span style="width:' + (have / total * 100).toFixed(1) + '%"></span></div>'
+      : '<p class="tu-small">' + esc(fill('studio.tu_set_0')) + '</p>');
 
     var designs = window.GemTu.designs();
     root.querySelector('.tu-designs').innerHTML = designs.length
@@ -882,6 +919,149 @@
     window.GemBasket.open();
   }
 
+  /* ---------- Udon: hops into your cart, rides along, hops back ---------- */
+  var udonBusy = false;
+  function udonJoke() {
+    if (udonBusy) return;
+    udonBusy = true;
+    var done = function () { udonBusy = false; };
+    say('studio.udon_no', 3600);
+    var target = frameEls[pickFrame(0)];
+    if (reduceMotion || !udonEl.animate || !target) {
+      player.udon = true; render();
+      setTimeout(function () { player.udon = false; render(); done(); }, 2600);
+      return;
+    }
+    var a = udonEl.getBoundingClientRect(), b = target.getBoundingClientRect();
+    var ghost = udonEl.querySelector('img').cloneNode();
+    ghost.className = 'st-udon-ghost';
+    ghost.style.left = a.left + 'px';
+    ghost.style.top = a.top + 'px';
+    ghost.style.width = a.width + 'px';
+    document.body.appendChild(ghost);
+    udonEl.style.visibility = 'hidden';
+    // Land where the cart is: in front of the character, at hip height.
+    var dx = b.left + b.width * (player.facing > 0 ? 0.75 : 0.25) - (a.left + a.width / 2);
+    var dy = b.top + b.height * 0.55 - (a.top + a.height / 2);
+    var mid = 'translate(' + dx * 0.5 + 'px,' + (Math.min(dy, 0) - 90) + 'px) scale(0.85)';
+    var end = 'translate(' + dx + 'px,' + dy + 'px) scale(0.6)';
+    var hop = function (frames, then) {
+      ghost.animate(frames, { duration: 600, easing: 'ease-in-out', fill: 'forwards' }).onfinish = then;
+    };
+    hop([{ transform: 'translate(0,0) scale(1)' }, { transform: mid, offset: 0.45 }, { transform: end }], function () {
+      ghost.style.visibility = 'hidden';
+      player.udon = true; render();
+      setTimeout(function () {
+        player.udon = false; render();
+        ghost.style.visibility = '';
+        hop([{ transform: end }, { transform: mid, offset: 0.55 }, { transform: 'translate(0,0) scale(1)' }], function () {
+          ghost.remove();
+          udonEl.style.visibility = '';
+          done();
+        });
+      }, 2400);
+    });
+  }
+
+  /* ---------- Bảng lời nhắn ----------
+     Visitors write, Gem approves in admin.html, then it shows here. Notes
+     are other people's words: textContent only, never innerHTML. */
+  var NOTE_COOLDOWN = 60 * 1000;
+
+  function loadNotes() {
+    if (!window.GemDB || !window.GemDB.notes) return Promise.resolve([]);
+    return window.GemDB.notes().then(function (rows) {
+      notesCache = Array.isArray(rows) ? rows : [];
+      paintPins();
+      return notesCache;
+    }, function () { notesCache = notesCache || []; return notesCache; });
+  }
+
+  function paintPins() {
+    if (!memoPins) return;
+    memoPins.textContent = '';
+    (notesCache || []).slice(0, 5).forEach(function (n, i) {
+      var pin = document.createElement('span');
+      pin.className = 'st-pin st-pin-' + i;
+      memoPins.appendChild(pin);
+    });
+  }
+
+  function noteCard(n) {
+    var li = document.createElement('li');
+    li.className = 'mb-note';
+    var p = document.createElement('p');
+    p.textContent = n.body;
+    var who = document.createElement('span');
+    who.className = 'mb-who';
+    who.textContent = n.name || t('studio.memo_anon');
+    li.appendChild(p);
+    li.appendChild(who);
+    return li;
+  }
+
+  function memoSheet() {
+    openSheet(
+      head('studio.memo_h', 'studio.memo_p') +
+      '<div class="mb">' +
+        '<form class="mb-form" novalidate>' +
+          '<label>' + tr('span', 'studio.memo_write') +
+            '<textarea name="body" maxlength="280" rows="3" required></textarea></label>' +
+          '<span class="mb-count" aria-hidden="true">0/280</span>' +
+          '<label>' + tr('span', 'studio.memo_name') +
+            '<input name="name" maxlength="40" autocomplete="nickname"></label>' +
+          // Honeypot: people never see it, form-filling bots do.
+          '<input name="website" class="mb-hp" tabindex="-1" autocomplete="off" aria-hidden="true">' +
+          '<button type="submit" class="st-btn" data-i18n="studio.memo_send">' + esc(t('studio.memo_send')) + '</button>' +
+          '<p class="mb-msg" role="status" aria-live="polite"></p>' +
+        '</form>' +
+        '<ul class="mb-list"></ul>' +
+      '</div>'
+    );
+    var list = sheetBody.querySelector('.mb-list');
+    var paint = function (rows) {
+      if (!sheetBody.contains(list)) return;
+      list.textContent = '';
+      if (!rows.length) {
+        var e = document.createElement('li');
+        e.className = 'mb-empty';
+        e.textContent = t('studio.memo_empty');
+        list.appendChild(e);
+        return;
+      }
+      rows.forEach(function (n) { list.appendChild(noteCard(n)); });
+    };
+    if (notesCache) paint(notesCache);
+    loadNotes().then(paint);
+  }
+
+  function memoSubmit(form) {
+    var msg = form.querySelector('.mb-msg');
+    var btn = form.querySelector('button[type="submit"]');
+    var body = form.elements['body'].value.trim();
+    if (form.elements['website'].value) { msg.textContent = t('studio.memo_ok'); return; }
+    if (!body || body.length > 280) { msg.textContent = t('studio.memo_bad'); return; }
+    var last = 0;
+    try { last = +localStorage.getItem('gem-note-at') || 0; } catch (e) { /* private mode */ }
+    if (Date.now() - last < NOTE_COOLDOWN) { msg.textContent = t('studio.memo_wait'); return; }
+    if (!window.GemDB || !window.GemDB.postNote) { msg.textContent = t('studio.memo_fail'); return; }
+    var reset = function () { btn.disabled = false; btn.textContent = t('studio.memo_send'); };
+    btn.disabled = true;
+    btn.textContent = t('studio.memo_sending');
+    window.GemDB.postNote(body, form.elements['name'].value.trim()).then(function (res) {
+      reset();
+      if (res && res.ok) {
+        try { localStorage.setItem('gem-note-at', String(Date.now())); } catch (e) { /* ignore */ }
+        form.elements['body'].value = '';
+        form.querySelector('.mb-count').textContent = '0/280';
+        msg.textContent = t('studio.memo_ok');
+      } else {
+        msg.textContent = t(res && res.error === 'busy' ? 'studio.memo_busy'
+          : res && res.error === 'bad_input' ? 'studio.memo_bad' : 'studio.memo_fail');
+      }
+    }, function () { reset(); msg.textContent = t('studio.memo_fail'); });
+  }
+
   var ACTIONS = {
     door: doorSheet,
     sofa: sofaSheet,
@@ -890,7 +1070,7 @@
     pegboard: function () { shelfSheet('pegboard'); },
     cabinet: function () { shelfSheet('cabinet'); },
     sewing: designerSheet,
-    wall: tuSheet,
+    memo: memoSheet,
     counter: counter
   };
 
@@ -914,6 +1094,7 @@
      ====================================================================== */
   function bind() {
     world.addEventListener('click', function (e) {
+      if (e.target.closest('.st-udon')) { udonJoke(); return; }
       var hot = e.target.closest('.st-hot');
       // Label tapped, or Enter/Space on a focused spot (detail 0): open it.
       if (hot && (e.detail === 0 || e.target.closest('.st-hot-label'))) {
@@ -930,12 +1111,14 @@
     document.querySelectorAll('[data-go]').forEach(function (b) {
       b.addEventListener('click', function () {
         var go = b.getAttribute('data-go');
-        if (go === 'shelves') {
+        if (go === 'tu') {
+          tuSheet();   // your own things, not a place in the room
+        } else if (go === 'shelves') {
           var a = boxOf(hotById('pegboard')), c = boxOf(hotById('cabinet'));
           walkTo((a.x0 + c.x1) / 2);
         } else {
           // The places people come for open straight away.
-          visit(go, go === 'sewing' || go === 'counter' || go === 'wall');
+          visit(go, go === 'sewing' || go === 'counter');
         }
       });
     });
@@ -975,8 +1158,13 @@
       if (e.key === 'ArrowLeft')  { e.preventDefault(); walkTo(player.x - 300); }
     });
 
-    // Keyboard focus on a hotspot brings it into view (not a tap's focus).
+    // Keyboard focus on a hotspot (or Udon) brings it into view (not a tap's focus).
     world.addEventListener('focusin', function (e) {
+      if (e.target.closest('.st-udon') && !player.moving) {
+        var u = SCENE.udon;
+        walkTo(u.x - 120);
+        return;
+      }
       var hot = e.target.closest('.st-hot');
       var keyboard = true;
       try { keyboard = hot && hot.matches(':focus-visible'); } catch (x) { /* old browser */ }
@@ -984,10 +1172,15 @@
     });
 
     modal.addEventListener('submit', function (e) {
-      var form = e.target.closest('.tu-form');
+      var form = e.target.closest('.tu-form, .mb-form');
       if (!form) return;
       e.preventDefault();
-      tuSubmit(form);
+      if (form.classList.contains('mb-form')) memoSubmit(form);
+      else tuSubmit(form);
+    });
+    modal.addEventListener('input', function (e) {
+      if (e.target.name !== 'body' || !e.target.closest('.mb-form')) return;
+      e.target.closest('.mb-form').querySelector('.mb-count').textContent = e.target.value.length + '/280';
     });
 
     document.addEventListener('gem:langchange', function () { renderDesigner(); renderTu(); });
@@ -1004,6 +1197,12 @@
     bubble.addEventListener('click', function () { bubble.hidden = true; });
 
     window.addEventListener('resize', layout);
+
+    // Focusing something off-screen (Tab, find-in-page) makes the browser
+    // scroll the stage itself; the camera does the moving, so undo that.
+    stage.addEventListener('scroll', function () {
+      if (stage.scrollLeft || stage.scrollTop) { stage.scrollLeft = 0; stage.scrollTop = 0; }
+    });
   }
 
   /* ======================================================================
@@ -1022,6 +1221,7 @@
     bind();
     cartCount = window.GemBasket ? window.GemBasket.count() : 0;
     layout();
+    loadNotes();   // pins on the memo board
 
     // A shared design link (studio.html?d=…): walk to the table and open it.
     var shared = null;

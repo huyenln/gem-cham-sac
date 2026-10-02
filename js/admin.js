@@ -47,6 +47,8 @@
   var orders = [];
   var products = [];
   var posts = [];
+  var notes = [];
+  var noteFilter = 'pending';   // pending | approved | hidden
   var wtypes = [];
   var editingProduct = null;
   var editingPost = null;   // null = xem danh sách, {} = bài mới, {…} = sửa bài
@@ -154,6 +156,7 @@
           '<button type="button" data-tab="sessions">Đặt lịch</button>' +
           '<button type="button" data-tab="products">Sản phẩm</button>' +
           '<button type="button" data-tab="posts">Bản tin</button>' +
+          '<button type="button" data-tab="notes">Lời nhắn</button>' +
         '</nav>' +
       '</header>' +
       '<main class="ad-main"><p class="ad-loading">Đang tải...</p></main>';
@@ -1165,12 +1168,66 @@
     });
   }
 
+  /* ---------- LỜI NHẮN (bảng ở Studio Gem) ----------
+     Chữ khách gõ: chỉ qua esc(), không bao giờ đưa thẳng vào innerHTML. */
+  var NOTE_STATUS = {
+    pending:  { label: 'Chờ duyệt', cls: 'held' },
+    approved: { label: 'Đang hiện', cls: 'ok' },
+    hidden:   { label: 'Đã ẩn',     cls: 'off' }
+  };
+
+  function renderNotes() {
+    var chips = Object.keys(NOTE_STATUS).map(function (k) {
+      var n = notes.filter(function (x) { return x.status === k; }).length;
+      return '<button type="button" class="ad-filter' + (noteFilter === k ? ' active' : '') +
+        '" data-filter="' + k + '">' + NOTE_STATUS[k].label + (n ? ' <b>' + n + '</b>' : '') + '</button>';
+    }).join('');
+
+    var rows = notes.filter(function (x) { return x.status === noteFilter; });
+    var body = rows.length ? rows.map(function (x) {
+      var st = NOTE_STATUS[x.status] || NOTE_STATUS.pending;
+      return '<div class="ad-post ad-note" data-id="' + esc(x.id) + '">' +
+        '<div class="ad-post-body">' +
+          '<p class="ad-note-text">' + esc(x.body) + '</p>' +
+          '<p class="ad-post-meta">' + esc(x.name || 'Không ghi tên') + ' · ' +
+            esc(new Date(x.created_at).toLocaleString('vi-VN', { timeZone: VN_TZ })) +
+            ' · <span class="ad-chip ' + st.cls + '">' + st.label + '</span></p>' +
+        '</div>' +
+        '<div class="ad-acts">' +
+          (x.status !== 'approved' ? '<button type="button" class="ad-btn on" data-note="approved">Duyệt</button>' : '') +
+          (x.status !== 'hidden' ? '<button type="button" class="ad-btn" data-note="hidden">Ẩn</button>' : '') +
+          '<button type="button" class="ad-btn danger" data-note="delete">Xoá</button>' +
+        '</div>' +
+      '</div>';
+    }).join('') : '<div class="ad-empty"><p>Không có lời nhắn nào ở mục này.</p></div>';
+
+    el.main.innerHTML = '<div class="ad-filters">' + chips + '</div>' + body;
+
+    el.main.querySelectorAll('.ad-filter').forEach(function (b) {
+      b.addEventListener('click', function () { noteFilter = b.getAttribute('data-filter'); renderNotes(); });
+    });
+    el.main.querySelectorAll('.ad-note').forEach(function (d) {
+      var id = d.getAttribute('data-id');
+      d.querySelectorAll('[data-note]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var act = btn.getAttribute('data-note');
+          if (act === 'delete' && !window.confirm('Xoá hẳn lời nhắn này?')) return;
+          btn.disabled = true;
+          var job = act === 'delete' ? window.GemDB.deleteNote(id) : window.GemDB.setNoteStatus(id, act);
+          job.then(function () { toast(act === 'approved' ? 'Đã duyệt, lời nhắn lên bảng' : 'Đã cập nhật'); return load(); })
+            .catch(function () { btn.disabled = false; toast('Không lưu được', true); });
+        });
+      });
+    });
+  }
+
   /* ---------- vòng đời ---------- */
   function render() {
     if (tab === 'today')    return renderToday();
     if (tab === 'orders')   return renderOrders();
     if (tab === 'products') return renderProducts();
     if (tab === 'posts')    return renderPosts();
+    if (tab === 'notes')    return renderNotes();
     renderSessions();
   }
 
@@ -1180,6 +1237,8 @@
       job = window.GemDB.adminOrders().then(function (rows) { orders = rows || []; });
     } else if (tab === 'products') {
       job = window.GemDB.adminProducts().then(function (rows) { products = rows || []; });
+    } else if (tab === 'notes') {
+      job = window.GemDB.adminNotes().then(function (rows) { notes = rows || []; });
     } else if (tab === 'posts') {
       job = window.GemDB.adminPosts().then(function (rows) { posts = rows || []; });
     } else {

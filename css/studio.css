@@ -139,13 +139,47 @@
 }
 
 /* ---------- UDON + PLAYER ---------- */
+/* Udon is a button: tap and Udon hops into the basket, then back out. */
 .st-udon {
   position: absolute;
-  height: auto;
-  pointer-events: none;
+  z-index: 2;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
   transform-origin: 50% 100%;
   animation: st-udon 6s ease-in-out infinite;
 }
+.st-udon img { display: block; width: 100%; height: auto; pointer-events: none; }
+.st-udon:focus-visible { outline: 3px solid var(--sage-deep); outline-offset: 4px; border-radius: 12px; }
+.st-udon-ghost { position: fixed; z-index: 950; height: auto; pointer-events: none; }
+
+/* Paper notes on the memo board: a hint that people have written. */
+.st-pins { position: absolute; pointer-events: none; }
+.st-pin {
+  position: absolute;
+  width: 15%;
+  aspect-ratio: 1;
+  background: #FBF6EE;
+  box-shadow: 0 2px 4px rgba(61, 74, 46, 0.18);
+  background-image: repeating-linear-gradient(transparent 0 22%, rgba(61, 74, 46, 0.14) 22% 25%);
+}
+.st-pin::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 6%;
+  width: 12%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--kraft);
+  transform: translateX(-50%);
+}
+.st-pin-0 { left: 12%; top: 22%; transform: rotate(-5deg); }
+.st-pin-1 { left: 32%; top: 30%; transform: rotate(4deg); background-color: #F3E3D3; }
+.st-pin-2 { left: 52%; top: 20%; transform: rotate(-2deg); }
+.st-pin-3 { left: 70%; top: 34%; transform: rotate(6deg); background-color: #E8EBD9; }
+.st-pin-4 { left: 22%; top: 55%; transform: rotate(3deg); background-color: #F3E3D3; }
 
 @keyframes st-udon {
   0%, 86%, 100% { transform: translateY(0); }
@@ -492,6 +526,7 @@
 
 /* ---------- REDUCED MOTION ---------- */
 @media (prefers-reduced-motion: reduce) {
+  .st-udon { animation: none; }
   .st-hot.is-hint .st-hot-label { animation: none; background: var(--sage-deep); color: var(--paper-white); }
   .st-udon,
   .st-player.is-moving .st-bob,
@@ -744,4 +779,52 @@
 
 @media (min-width: 768px) {
   .studio-page .gb-widget { width: 80px; height: 74px; bottom: 84px; }
+}
+
+/* BẢNG LỜI NHẮN */
+.mb { display: grid; gap: var(--space-4); }
+.mb-form { display: grid; gap: var(--space-2); }
+.mb-form label { display: grid; gap: var(--space-1); font-size: var(--text-sm); }
+.mb-form textarea,
+.mb-form input {
+  min-height: 44px;
+  padding: var(--space-2) var(--space-3);
+  border: 1.5px solid var(--sage-light);
+  border-radius: 8px;
+  background: var(--paper-white);
+  font: inherit;
+}
+.mb-form textarea { resize: vertical; }
+.mb-form textarea:focus,
+.mb-form input:focus { outline: none; border-color: var(--sage-deep); }
+.mb-count { justify-self: end; margin-top: calc(-1 * var(--space-1)); font-size: var(--text-xs); color: var(--ink-soft); }
+.mb-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.mb-form .st-btn { justify-self: start; }
+.mb-msg { margin: 0; min-height: 1.4em; font-size: var(--text-sm); }
+
+.mb-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+.mb-note {
+  padding: var(--space-3);
+  background: #FBF6EE;
+  border: 1px solid var(--paper-cream-warm);
+  box-shadow: 0 2px 6px rgba(61, 74, 46, 0.12);
+  font-size: var(--text-sm);
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+.mb-note:nth-child(3n+1) { transform: rotate(-1deg); }
+.mb-note:nth-child(3n+2) { transform: rotate(0.8deg); background: #F3E3D3; }
+.mb-note p { margin: 0 0 var(--space-2); white-space: pre-line; }
+.mb-who { font-family: var(--font-hand, 'Dancing Script', cursive); font-size: 1.05rem; color: var(--kraft); }
+.mb-empty { grid-column: 1 / -1; color: var(--ink-soft); font-size: var(--text-sm); }
+
+@media (min-width: 768px) {
+  .mb-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }

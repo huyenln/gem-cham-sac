@@ -190,13 +190,18 @@
           '<rect width="6" height="6" fill="' + base + '"/>' +
           '<path d="M-1 1l2-2M0 6l6-6M5 7l2-2" stroke="' + shade(base, 0.22) + '" stroke-width="1.1"/>' };
       case 're':
+        // Openwork: a fine diamond net, a small eyelet flower, a scalloped
+        // edge. (The old ring-and-dots read as a virus, not as lace.)
+        var th = c[1];
         return { size: 24, body:
-          '<rect width="24" height="24" fill="' + c[1] + '"/>' +
-          '<rect width="24" height="24" fill="' + base + '" opacity="0.9"/>' +
-          '<circle cx="12" cy="12" r="5" fill="' + c[1] + '"/>' +
-          '<circle cx="12" cy="12" r="7.5" fill="none" stroke="' + c[1] + '" stroke-width="1" stroke-dasharray="2 2"/>' +
-          '<circle cx="0" cy="0" r="2.4" fill="' + c[1] + '"/><circle cx="24" cy="0" r="2.4" fill="' + c[1] + '"/>' +
-          '<circle cx="0" cy="24" r="2.4" fill="' + c[1] + '"/><circle cx="24" cy="24" r="2.4" fill="' + c[1] + '"/>' };
+          '<rect width="24" height="24" fill="' + base + '"/>' +
+          '<path d="M0 0L24 24M24 0L0 24M12 0L24 12L12 24L0 12Z" stroke="' + th + '" stroke-width="0.45" opacity="0.35" fill="none"/>' +
+          '<g fill="none" stroke="' + th + '" stroke-width="0.8" opacity="0.75">' +
+            '<ellipse cx="12" cy="7.6" rx="1.6" ry="2.6"/><ellipse cx="12" cy="16.4" rx="1.6" ry="2.6"/>' +
+            '<ellipse cx="7.6" cy="12" rx="2.6" ry="1.6"/><ellipse cx="16.4" cy="12" rx="2.6" ry="1.6"/>' +
+          '</g>' +
+          '<circle cx="12" cy="12" r="1.1" fill="' + th + '" opacity="0.55"/>' +
+          '<path d="M0 23q3-3.5 6 0t6 0t6 0t6 0" stroke="' + th + '" stroke-width="0.8" fill="none" opacity="0.6"/>' };
       case 'ca':
         return { size: 16, body:
           '<rect width="16" height="16" fill="' + base + '"/>' +
