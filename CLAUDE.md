@@ -24,10 +24,12 @@ Static website (5 trang) cho cửa hàng **Gem Chạm Sắc** — pop-up store s
 ├── workshop.html             Đặt lịch workshop (đọc từ Supabase)
 ├── ban-tin.html              Bản tin — bài viết đọc từ Supabase
 ├── admin.html                Trang quản trị cho Anna + nhân viên (noindex, không có link từ nav)
+├── studio.html               Studio Gem 2D — bản thử, tranh tạm từ ChatGPT (noindex, chưa có trên nav)
 ├── 404.html                  Fallback page (Udon lạc đường)
 ├── CNAME                     gemchamsac.com (cho GitHub Pages custom domain)
 ├── css/style.css             Single CSS file, design tokens ở đầu
 ├── css/admin.css             Chỉ dùng cho admin.html
+├── css/studio.css            Chỉ dùng cho studio.html
 ├── js/main.js                Mobile menu toggle, product TOC scroll, Udon popup
 ├── js/i18n.js                Song ngữ VI/EN: engine + STRINGS dictionary (data-i18n)
 ├── js/gallery.js             Carousel/lightbox ảnh sản phẩm (data-gallery)
@@ -38,6 +40,8 @@ Static website (5 trang) cho cửa hàng **Gem Chạm Sắc** — pop-up store s
 ├── js/admin.js               Trang quản trị: Hôm nay / Đơn hàng / Đặt lịch / Sản phẩm
 ├── js/ban-tin.js             Danh sách bài + đọc bài (?bai=<slug>)
 ├── js/vietqr.js              Sinh mã VietQR ngay trong trình duyệt (EMVCo + QR encoder)
+├── js/studio.js              Studio 2D: cảnh, nhân vật, điểm bấm; mua qua window.GemBasket
+├── tools/studio-assets.py    Chạy tay khi có tranh mới: ghép dải studio, tách nền nhân vật → images/studio/
 ├── images/
 │   ├── logo/                 Logo Gem variants
 │   ├── mascot/               6 pose Udon (PNG transparent)

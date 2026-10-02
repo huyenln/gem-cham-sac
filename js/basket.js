@@ -322,6 +322,10 @@
 
   function save() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); } catch (e) { /* ignore */ }
+    // Studio 2D listens for this to fill the character's cart.
+    try {
+      document.dispatchEvent(new CustomEvent('gem:basket', { detail: { count: count() } }));
+    } catch (e) { /* old browsers: no live update, nothing breaks */ }
   }
 
   function count() {
@@ -1111,7 +1115,9 @@
      ====================================================================== */
   document.addEventListener('DOMContentLoaded', function () {
     var cards = Array.prototype.slice.call(document.querySelectorAll('[data-sku]'));
-    if (!cards.length) return;
+    // <body data-basket>: a page with no product cards that still sells
+    // (studio.html adds items through window.GemBasket below).
+    if (!cards.length && !document.body.hasAttribute('data-basket')) return;
 
     load();
     buildWidget();
@@ -1151,6 +1157,29 @@
         }, 1100);
       });
     });
+
+    /* ---------- for other scripts (studio.js) ----------
+       Same basket, same checkout: the studio never keeps a cart of its own. */
+    window.GemBasket = {
+      count: count,
+      info: function (sku) {
+        var p = bySku(sku);
+        if (!p) return null;
+        return { sku: sku, name: pName(p), price: priceLabel(p), inStock: p.inStock !== false };
+      },
+      add: function (sku, sourceEl) {
+        var p = bySku(sku);
+        if (!p || p.inStock === false) return false;
+        fly(sourceEl, p.sprite, function () {
+          addItem(sku);
+          renderWidget();
+          wiggle();
+          if (panel.classList.contains('open') && view === 'basket') renderBasketView();
+        });
+        return true;
+      },
+      open: openPanel
+    };
 
     translate();
     // No gem:langchange listener here on purpose: every injected string carries a
