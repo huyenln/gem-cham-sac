@@ -1263,6 +1263,14 @@ in ra `ANCHOR` để dán vào `js/studio.js`. Khung chạm nhau (mũi xe sát n
 bên cạnh) thì tool tự cắt ở cột thưa nét nhất; giấy trắng kẹt giữa chân và
 tay xe cũng được xoá.
 
+**Bộ tranh 2 (10/2026):** `--strip2 <thư mục z1..z5.png>` ghép 5 cảnh mới
+thành `bg/strip.webp` (5590px; khu 3 chỉ lấy bảng treo, tủ đầy lấy ở khu 5).
+`--pieces` (đồ mặc, Udon, giấy UI — tên trong `PIECES`) và `--batch`
+(`sheet-` tờ sticker → tách từng món, `pr-` một món đồ, `set-` nhiều món,
+`full-` giữ nguyên) cho phần còn lại. Thư viện chưa dùng hết: `cay/`,
+`cay2/`, `deco/`, `vn/`, `props/`, `ui/`, `wear/`, `bg/nen-*` (tường trống
+để sau này đặt đồ tách lớp).
+
 **File gốc nặng không cần lên GitHub.** Trang chỉ dùng bản WebP (~55 KB/khung).
 Giữ gốc ở Drive, chỉ commit bản đã xử lý.
 
