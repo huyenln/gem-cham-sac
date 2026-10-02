@@ -39,17 +39,21 @@
   };
 
   // box = [x0, y0, x1, y1] in the zone's source image (1536 x 1024)
+  // Tight boxes on the objects themselves, above the floor: the floor and
+  // the band the character walks in stay free for walking. stand = where
+  // the character stops (zone source px), when the middle of the box would
+  // put them in front of its label.
   var HOTSPOTS = [
-    { id: 'door',     zone: 1, box: [50, 100, 480, 800],    label: 'studio.hot_door' },
-    { id: 'sofa',     zone: 1, box: [600, 600, 1370, 850],  label: 'studio.hot_sofa' },
-    { id: 'rail',     zone: 2, box: [680, 200, 1185, 790],  label: 'studio.hot_rail' },
-    { id: 'fitting',  zone: 2, box: [1185, 280, 1500, 800], label: 'studio.hot_fitting' },
-    { id: 'pegboard', zone: 3, box: [760, 280, 985, 760],   label: 'studio.hot_pegboard' },
-    { id: 'cabinet',  zone: 3, box: [985, 335, 1510, 810],  label: 'studio.hot_cabinet' },
-    { id: 'sewing',   zone: 4, box: [745, 320, 1255, 840],  label: 'studio.hot_sewing' },
-    { id: 'counter',  zone: 5, box: [445, 470, 1400, 740], label: 'studio.hot_counter' },
-    { id: 'memo',     zone: 5, box: [965, 160, 1387, 348], label: 'studio.hot_memo' },
-    { id: 'tu',       zone: 4, box: [1120, 400, 1400, 560], label: 'studio.hot_tu' }
+    { id: 'door',     zone: 1, box: [60, 110, 480, 600],    label: 'studio.hot_door' },
+    { id: 'sofa',     zone: 1, box: [950, 630, 1210, 790],  label: 'studio.hot_sofa', stand: 820 },   // tea table and up
+    { id: 'rail',     zone: 2, box: [700, 300, 1180, 690],  label: 'studio.hot_rail' },
+    { id: 'fitting',  zone: 2, box: [1190, 290, 1440, 700], label: 'studio.hot_fitting' },
+    { id: 'pegboard', zone: 3, box: [760, 290, 985, 690],   label: 'studio.hot_pegboard' },
+    { id: 'cabinet',  zone: 3, box: [985, 335, 1510, 630],  label: 'studio.hot_cabinet' },               // open shelves only
+    { id: 'sewing',   zone: 4, box: [800, 520, 1250, 640],  label: 'studio.hot_sewing', stand: 1300 }, // table top only
+    { id: 'tu',       zone: 4, box: [1130, 415, 1400, 555], label: 'studio.hot_tu' },
+    { id: 'counter',  zone: 5, box: [450, 440, 800, 640],   label: 'studio.hot_counter' },
+    { id: 'memo',     zone: 5, box: [965, 160, 1387, 348],  label: 'studio.hot_memo' }
   ];
 
   // Character frames (images/studio/char). anchor = where the body's centre
@@ -285,6 +289,7 @@
   }
 
   function standX(h) {
+    if (h.stand != null) return zoneX(h.zone, h.stand);
     var b = boxOf(h);
     return (b.x0 + b.x1) / 2;
   }
