@@ -49,7 +49,7 @@
     { id: 'sewing',   zone: 4, box: [745, 320, 1255, 840],  label: 'studio.hot_sewing' },
     { id: 'counter',  zone: 5, box: [445, 470, 1400, 740], label: 'studio.hot_counter' },
     { id: 'memo',     zone: 5, box: [965, 160, 1387, 348], label: 'studio.hot_memo' },
-    { id: 'tu',       zone: 4, box: [1287, 590, 1527, 720], label: 'studio.hot_tu' }
+    { id: 'tu',       zone: 4, box: [1120, 400, 1400, 560], label: 'studio.hot_tu' }
   ];
 
   // Character frames (images/studio/char). anchor = where the body's centre
