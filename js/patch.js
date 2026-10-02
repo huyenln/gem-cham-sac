@@ -362,7 +362,38 @@
     return out.sort(function () { return Math.random() - 0.5; });
   }
 
+  /* ======================================================================
+     TONES — rough colour families, to suggest ready-made pieces that sit
+     close to a design. Neutrals (cream, white, black, oat) only count when
+     a patch has nothing else in it.
+     ====================================================================== */
+  var TONE = {};
+  [['xanh', [C.sage, C.reu]], ['lam', [C.navy, C.boDam, C.boNhat]],
+   ['hong', [C.hong, C.gach, C.dodo, C.hoaDo]], ['nau', [C.kraft, C.nau, C.mutat]],
+   ['trung', [C.kem, C.trang, C.den, C.be]]].forEach(function (g) {
+    g[1].forEach(function (hex) { TONE[hex] = g[0]; });
+  });
+  var MAT_TAG = { bo: 'bo', re: 'ren', ca: 'caro', cb: 'cham', hn: 'hoa' };
+
+  // → { xanh: 2, hong: 1, …, caro: 1 } counted per patch
+  function tones(spec) {
+    var d = typeof spec === 'string' ? parse(spec) : spec;
+    var out = {};
+    if (!d) return out;
+    d.cells.forEach(function (code) {
+      if (!code) return;
+      var way = MATERIALS[code.slice(0, 2)].ways[+code.slice(2)];
+      var fam = way.c.map(function (hex) { return TONE[hex]; });
+      var tone = fam.filter(function (f) { return f !== 'trung'; })[0] || 'trung';
+      out[tone] = (out[tone] || 0) + 1;
+      var tag = MAT_TAG[code.slice(0, 2)];
+      if (tag) out[tag] = (out[tag] || 0) + 1;
+    });
+    return out;
+  }
+
   window.GemPatch = {
+    tones: tones,
     MATERIALS: MATERIALS,
     MAT_ORDER: MAT_ORDER,
     PRODUCTS: PRODUCTS,

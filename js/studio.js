@@ -69,6 +69,21 @@
   var SET_VAI_VUN = ['scrunchie', 'bookmark', 'tuibut', 'origami', 'bloom', 'daydeo',
     'biaso', 'goi', 'tham', 'lotcoc', 'oxford', 'denim'];
 
+  // Rough colour families + prints of each ready-made piece, read off the
+  // product photos. Used to suggest "có sẵn tông gần giống" under the
+  // designer. Tags match GemPatch.tones(): xanh lam hong nau trung + bo ren
+  // caro cham hoa.
+  var READY_TONES = {
+    origami: ['xanh', 'caro'], oxford: ['xanh', 'caro'], denim: ['lam', 'bo'],
+    bloom: ['lam', 'hong'], tuibut: ['hong', 'lam', 'hoa'], bookmark: ['trung', 'nau', 'hoa'],
+    biaso: ['hong', 'nau', 'caro'], daydeo: ['hong', 'hoa'], scrunchie: ['trung', 'nau', 'ren'],
+    lotcoc: ['trung', 'nau', 'hoa'], goi: ['nau', 'hong', 'hoa'], tham: ['lam', 'hong', 'hoa']
+  };
+
+  // Real sewn patchwork, shown next to the sketch so expectations are set
+  // by a photo, not by the drawing.
+  var REAL = ['goi', 'tham', 'lotcoc', 'scrunchie'];
+
   // Things the character can wear later — bought first, then unlocked.
   var WEARABLES = ['denim', 'scrunchie', 'daydeo', 'bloom'];
 
@@ -150,21 +165,24 @@
     'studio.sofa_news':    { vi: `Bản tin — chuyện ở studio`, en: `Newsletter — studio notes` },
 
     'studio.sewing_h':     { vi: `Bàn chắp vải`, en: `Patchwork table` },
-    'studio.sewing_p':     { vi: `Chạm vào một ô, chọn chất vải rồi chọn màu. Ô tiếp theo tự sáng lên.`, en: `Tap a patch, pick a fabric, then a colour. The next patch lights up by itself.` },
+    'studio.sewing_p':     { vi: `Bạn phác ý tưởng, Gem may thật. Chạm vào một ô, chọn chất vải rồi chọn màu.`, en: `You sketch the idea, Gem sews it for real. Tap a patch, pick a fabric, then a colour.` },
     'studio.pt_cell':      { vi: `Ô`, en: `Patch` },
     'studio.pt_empty':     { vi: `chưa chọn vải`, en: `no fabric yet` },
-    'studio.pt_done':      { vi: `Xong rồi! Cho vào giỏ hoặc lưu lại để khoe nhé.`, en: `All done! Add it to your cart or save it to show off.` },
+    'studio.pt_done':      { vi: `Bản phác xong rồi! Đặt Gem may, hoặc lưu lại để khoe nhé.`, en: `Sketch done! Ask Gem to sew it, or save it to show off.` },
     'studio.pt_random':    { vi: `Để Gem chọn giúp`, en: `Let Gem pick` },
     'studio.pt_undo':      { vi: `Hoàn tác`, en: `Undo` },
     'studio.pt_reset':     { vi: `Làm lại`, en: `Start over` },
-    'studio.pt_add':       { vi: `Cho vào giỏ`, en: `Add to cart` },
+    'studio.pt_add':       { vi: `Đặt Gem may`, en: `Ask Gem to sew it` },
     'studio.pt_save':      { vi: `Lưu ảnh`, en: `Save image` },
     'studio.pt_keep':      { vi: `Lưu vào tủ`, en: `Keep in cabinet` },
     'studio.pt_kept':      { vi: `Đã lưu`, en: `Kept` },
     'studio.pt_link':      { vi: `Chép link`, en: `Copy link` },
     'studio.pt_copied':    { vi: `Đã chép`, en: `Copied` },
     'studio.pt_fill_all':  { vi: `Chọn vải cho đủ các ô để cho vào giỏ.`, en: `Fill every patch to add it to your cart.` },
-    'studio.pt_note':      { vi: `Vải là vải vụn thật nên màu và hoa văn sẽ gần giống, không giống hệt hình. Gem nhắn ảnh vải cho bạn duyệt trước khi may.`, en: `These are real fabric scraps, so colours and prints will be close, not identical. Gem sends you a photo of the fabrics before sewing.` },
+    'studio.pt_note':      { vi: `Đây là bản phác. Thợ sẽ chọn vải vụn gần nhất với bản phác, nên màu và hoa văn sẽ gần giống chứ không giống hệt. Gem nhắn ảnh vải cho bạn duyệt trước khi may.`, en: `This is a sketch. Gem picks the scraps closest to it, so colours and prints will be close, not identical. Gem sends you a photo of the fabrics before sewing.` },
+    'studio.pt_real':      { vi: `Đồ thật Gem đã may`, en: `Pieces Gem has sewn` },
+    'studio.pt_similar':   { vi: `Có sẵn, tông gần giống — mua được ngay`, en: `Ready now, in a similar palette` },
+    'studio.tap_label':    { vi: `Chạm vào nhãn để xem đồ ở đây nhé.`, en: `Tap the label to see what's here.` },
     'studio.pt_mat':       { vi: `Chất vải`, en: `Fabric` },
     'studio.pt_way':       { vi: `Màu`, en: `Colour` },
     'studio.pt_products':  { vi: `Chọn món`, en: `Choose a piece` },
@@ -544,6 +562,11 @@
           '</div>' +
           tr('p', 'studio.pt_note', ' class="pt-note"') +
         '</div>' +
+        '<div class="pt-more">' +
+          tr('h3', 'studio.pt_real') +
+          '<ul class="pt-real"></ul>' +
+          '<div class="pt-similar"></div>' +
+        '</div>' +
       '</div>'
     );
     renderDesigner();
@@ -590,6 +613,35 @@
     root.querySelector('[data-pt="undo"]').disabled = !D.undo.length;
     var keep = root.querySelector('[data-pt="keep"]');
     if (keep) keep.disabled = filled !== n;
+
+    var sku = P.PRODUCTS[D.product].sku;
+    root.querySelector('.pt-real').innerHTML = [sku].concat(REAL.filter(function (s) { return s !== sku; }))
+      .map(function (s) {
+        var i = window.GemBasket ? window.GemBasket.info(s) : null;
+        if (!i || !THUMB[s]) return '';
+        return '<li' + (s === sku ? ' class="is-this"' : '') + '><img src="images/products/' + THUMB[s] +
+          '" alt="" loading="lazy" width="112" height="112">' + esc(i.name) + '</li>';
+      }).join('');
+
+    var similar = filled === n ? similarTo(specNow()) : [];
+    root.querySelector('.pt-similar').innerHTML = similar.length
+      ? tr('h3', 'studio.pt_similar') + '<ul class="st-grid">' + similar.map(productCard).join('') + '</ul>'
+      : '';
+  }
+
+  // Ready-made pieces that share the design's colour families and prints,
+  // best first. Only in-stock ones; nothing shown when nothing fits.
+  function similarTo(spec) {
+    var tally = P.tones ? P.tones(spec) : {};
+    return Object.keys(READY_TONES).map(function (s) {
+      var score = 0;
+      READY_TONES[s].forEach(function (tag) { score += tally[tag] || 0; });
+      return { sku: s, score: score };
+    }).filter(function (r) {
+      var i = window.GemBasket ? window.GemBasket.info(r.sku) : null;
+      return r.score > 0 && i && i.inStock;
+    }).sort(function (a, b) { return b.score - a.score; })
+      .slice(0, 3).map(function (r) { return r.sku; });
   }
 
   function remember() {
@@ -842,6 +894,15 @@
     counter: counter
   };
 
+  var hinted = false;
+  function hint(hot) {
+    hot.classList.remove('is-hint');
+    void hot.offsetWidth; // restart the nod
+    hot.classList.add('is-hint');
+    setTimeout(function () { hot.classList.remove('is-hint'); }, 1300);
+    if (!hinted) { hinted = true; say('studio.tap_label', 3000); }
+  }
+
   function visit(id, open) {
     var h = hotById(id);
     if (!h) return;
@@ -854,13 +915,16 @@
   function bind() {
     world.addEventListener('click', function (e) {
       var hot = e.target.closest('.st-hot');
-      if (hot) {
+      // Label tapped, or Enter/Space on a focused spot (detail 0): open it.
+      if (hot && (e.detail === 0 || e.target.closest('.st-hot-label'))) {
         visit(hot.getAttribute('data-hot'));
         return;
       }
-      // Tap on empty floor or wall: just walk there.
+      // Anywhere else — floor, wall, or the object itself — just walk there.
+      // Opening on any tap meant a tap beside the character opened a sheet.
       var rect = stage.getBoundingClientRect();
       walkTo((e.clientX - rect.left + cam) / k);
+      if (hot) hint(hot);
     });
 
     document.querySelectorAll('[data-go]').forEach(function (b) {
@@ -911,10 +975,12 @@
       if (e.key === 'ArrowLeft')  { e.preventDefault(); walkTo(player.x - 300); }
     });
 
-    // Keyboard focus on a hotspot brings it into view.
+    // Keyboard focus on a hotspot brings it into view (not a tap's focus).
     world.addEventListener('focusin', function (e) {
       var hot = e.target.closest('.st-hot');
-      if (hot && !player.moving) walkTo(standX(hotById(hot.getAttribute('data-hot'))));
+      var keyboard = true;
+      try { keyboard = hot && hot.matches(':focus-visible'); } catch (x) { /* old browser */ }
+      if (hot && keyboard && !player.moving) walkTo(standX(hotById(hot.getAttribute('data-hot'))));
     });
 
     modal.addEventListener('submit', function (e) {
@@ -961,6 +1027,7 @@
     var shared = null;
     try { shared = P && P.parse(new URLSearchParams(location.search).get('d') || ''); } catch (e) { /* old browser */ }
     if (shared) {
+      try { sessionStorage.setItem('gem-src', 'link-chia-se'); } catch (e) { /* private mode */ }
       D.product = shared.product;
       D.cells[shared.product] = shared.cells;
       D.sel = 0;

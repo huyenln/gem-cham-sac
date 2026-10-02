@@ -1114,7 +1114,13 @@
         designs.push(t('basket.custom', 'Thiết kế riêng') + ' × ' + it.qty + ' — ' +
           window.GemPatch.describe(it.spec, 'vi') + '\n' + window.GemPatch.url(it.spec));
       });
-      var note = [customer.note].concat(designs).filter(Boolean).join('\n\n');
+      // Where the order came from, so Gem can tell whether the Studio sells
+      // (no analytics: just one tag in the note Anna already reads).
+      var src = null;
+      try { src = sessionStorage.getItem('gem-src'); } catch (e) { /* private mode */ }
+      src = src || document.body.getAttribute('data-order-source') || 'web';
+      var note = [customer.note].concat(designs).filter(Boolean)
+        .concat(['[nguồn: ' + src + ']']).join('\n\n');
       window.GemDB.createOrder({
         name: customer.name,
         phone: customer.phone,

@@ -1214,6 +1214,13 @@ sai SĐT → `not_found`, đúng → danh sách sku (thử trong transaction r�
 Rủi ro còn lại: đoán được mã đơn + SĐT của người khác thì thấy họ mua món gì —
 chấp nhận được cho bản thử; nếu lên menu chính thì cân nhắc giới hạn số lần thử.
 
+**Nguồn đơn** (không dùng analytics): `js/basket.js` thêm dòng cuối vào ghi
+chú đơn `[nguồn: studio | san-pham | link-chia-se | web]` (lấy từ
+`<body data-order-source>`, link chia sẻ `studio.html?d=` ghi đè trong phiên).
+Đếm bằng `select count(*) from orders where note like '%[nguồn: studio]%'`.
+Chưa thành cột riêng vì phải thay hàm `create_order` đang chạy — làm khi số
+liệu cho thấy đáng.
+
 ### Chủ tài khoản quản trị
 
 Cả ba là `owner`. Chưa có ai là `staff` — thêm khi tuyển người.
