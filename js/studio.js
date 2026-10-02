@@ -65,6 +65,10 @@
     cabinet:  ['goi', 'tham', 'lotcoc', 'oxford', 'denim', 'set-qua']
   };
 
+  // The "bộ sưu tập" counted in the Tủ: every fabric-scrap piece.
+  var SET_VAI_VUN = ['scrunchie', 'bookmark', 'tuibut', 'origami', 'bloom', 'daydeo',
+    'biaso', 'goi', 'tham', 'lotcoc', 'oxford', 'denim'];
+
   // Things the character can wear later — bought first, then unlocked.
   var WEARABLES = ['denim', 'scrunchie', 'daydeo', 'bloom'];
 
@@ -99,6 +103,7 @@
     'studio.go_shelves':   { vi: `Kệ hàng`, en: `Shelves` },
     'studio.go_sewing':    { vi: `Bàn chắp vải`, en: `Patchwork table` },
     'studio.go_counter':   { vi: `Quầy`, en: `Counter` },
+    'studio.go_tu':        { vi: `Tủ của bạn`, en: `Your cabinet` },
     'studio.sr_help':      { vi: `Chạm vào đồ vật trong studio để xem hàng. Bấm Tab để đi qua từng điểm.`, en: `Tap things in the studio to look around. Press Tab to move between them.` },
     'studio.close':        { vi: `Đóng`, en: `Close` },
 
@@ -109,7 +114,7 @@
     'studio.hot_pegboard': { vi: `Phụ kiện & sổ`, en: `Accessories & notebooks` },
     'studio.hot_cabinet':  { vi: `Gối, thảm & quà`, en: `Cushions, rugs & gifts` },
     'studio.hot_sewing':   { vi: `Bàn chắp vải`, en: `Patchwork table` },
-    'studio.hot_wall':     { vi: `Tường sưu tầm`, en: `Collectors' wall` },
+    'studio.hot_wall':     { vi: `Tủ sưu tầm`, en: `Your cabinet` },
     'studio.hot_counter':  { vi: `Quầy thu ngân`, en: `Counter` },
 
     'studio.intro':        { vi: `Chào bạn! Chạm vào kệ để xem đồ nhé. Bàn chắp vải ở cuối phòng đó.`, en: `Hi! Tap a shelf to look around. The patchwork table is at the far end.` },
@@ -137,6 +142,7 @@
     'studio.fitting_h':    { vi: `Góc thử đồ`, en: `Fitting corner` },
     'studio.fitting_p':    { vi: `Mua món nào của Gem thì mặc được món đó cho nhân vật.`, en: `Buy a Gem piece and your character can wear it too.` },
     'studio.fitting_lock': { vi: `Mua để mặc`, en: `Buy to wear` },
+    'studio.fitting_have': { vi: `Đã có`, en: `Yours` },
 
     'studio.sofa_h':       { vi: `Góc nghỉ chân`, en: `Sofa corner` },
     'studio.sofa_p':       { vi: `Ngồi chút, xem studio dạo này có gì.`, en: `Sit down for a bit and see what's on.` },
@@ -153,6 +159,8 @@
     'studio.pt_reset':     { vi: `Làm lại`, en: `Start over` },
     'studio.pt_add':       { vi: `Cho vào giỏ`, en: `Add to cart` },
     'studio.pt_save':      { vi: `Lưu ảnh`, en: `Save image` },
+    'studio.pt_keep':      { vi: `Lưu vào tủ`, en: `Keep in cabinet` },
+    'studio.pt_kept':      { vi: `Đã lưu`, en: `Kept` },
     'studio.pt_link':      { vi: `Chép link`, en: `Copy link` },
     'studio.pt_copied':    { vi: `Đã chép`, en: `Copied` },
     'studio.pt_fill_all':  { vi: `Chọn vải cho đủ các ô để cho vào giỏ.`, en: `Fill every patch to add it to your cart.` },
@@ -162,8 +170,29 @@
     'studio.pt_products':  { vi: `Chọn món`, en: `Choose a piece` },
     'studio.pt_caption':   { vi: `Thiết kế riêng · Gem Chạm Sắc`, en: `My own design · Gem Chạm Sắc` },
 
-    'studio.wall_h':       { vi: `Tường sưu tầm`, en: `Collectors' wall` },
-    'studio.wall_p':       { vi: `Thiết kế của khách sẽ được treo ở đây. Mỗi tháng Gem may thật một thiết kế.`, en: `Visitors' designs will hang here. Each month Gem sews one of them for real.` }
+    'studio.tu_h':         { vi: `Tủ sưu tầm`, en: `Your cabinet` },
+    'studio.tu_p':         { vi: `Những gì bạn đã tạo và đã mua ở Gem. Tủ nằm ngay trên máy này, không cần tài khoản.`, en: `What you've made and bought at Gem. It lives on this device — no account needed.` },
+    'studio.tu_set':       { vi: `Bộ vải vụn`, en: `Fabric-scrap set` },
+    'studio.tu_designs':   { vi: `Đã thiết kế`, en: `Designed` },
+    'studio.tu_designs_0': { vi: `Chưa có thiết kế nào. Ghé bàn chắp vải thử một tấm nhé.`, en: `No designs yet. Try one at the patchwork table.` },
+    'studio.tu_to_table':  { vi: `Tới bàn chắp vải`, en: `Go to the table` },
+    'studio.tu_open':      { vi: `Mở`, en: `Open` },
+    'studio.tu_remove':    { vi: `Bỏ`, en: `Remove` },
+    'studio.tu_owned':     { vi: `Đã sưu tầm`, en: `Collected` },
+    'studio.tu_owned_0':   { vi: `Món nào bạn mua ở Gem sẽ nằm ở đây.`, en: `Whatever you buy from Gem will sit here.` },
+    'studio.tu_pending':   { vi: `Đang chuẩn bị`, en: `On its way` },
+    'studio.tu_received':  { vi: `Đã nhận`, en: `Received` },
+    'studio.tu_custom':    { vi: `Thiết kế riêng`, en: `My design` },
+    'studio.tu_claim_h':   { vi: `Mua rồi mà tủ chưa có? Lấy lại bằng mã đơn`, en: `Bought something that isn't here? Add it with your order code` },
+    'studio.tu_claim_p':   { vi: `Mua tại studio hay trên máy khác đều được. Gem chỉ dùng số điện thoại để khớp đơn, không lưu lại trên máy.`, en: `Bought at the studio or on another device? Gem only uses your phone number to match the order — it isn't kept on this device.` },
+    'studio.tu_code':      { vi: `Mã đơn`, en: `Order code` },
+    'studio.tu_phone':     { vi: `Số điện thoại đặt đơn`, en: `Phone number on the order` },
+    'studio.tu_claim':     { vi: `Lấy lại`, en: `Add to cabinet` },
+    'studio.tu_checking':  { vi: `Đang tìm...`, en: `Looking...` },
+    'studio.tu_ok':        { vi: `Đã thêm vào tủ.`, en: `Added to your cabinet.` },
+    'studio.tu_ok_same':   { vi: `Đơn này đã có trong tủ rồi.`, en: `That order is already in your cabinet.` },
+    'studio.tu_bad':       { vi: `Mã đơn hoặc số điện thoại chưa đúng. Bạn kiểm tra lại giúp Gem nhé.`, en: `That order code or phone number doesn't match. Could you check them again?` },
+    'studio.tu_offline':   { vi: `Chưa kết nối được. Bạn thử lại sau chút nhé.`, en: `Couldn't connect. Please try again in a bit.` }
   };
   if (window.GemI18n && window.GemI18n.add) window.GemI18n.add(STRINGS);
 
@@ -438,11 +467,14 @@
     var items = WEARABLES.map(function (sku) {
       var info = window.GemBasket ? window.GemBasket.info(sku) : null;
       if (!info) return '';
-      return '<li class="st-prod is-locked">' +
+      var have = window.GemTu && window.GemTu.owns(sku);
+      return '<li class="st-prod' + (have ? ' is-owned' : ' is-locked') + '">' +
         '<img src="images/products/' + THUMB[sku] + '" alt="" loading="lazy" width="300" height="300">' +
         '<b>' + esc(info.name) + '</b>' +
-        tr('span', 'studio.fitting_lock', ' class="st-lock-tag"') +
-        (info.inStock
+        (have
+          ? tr('span', 'studio.fitting_have', ' class="st-lock-tag is-have"')
+          : tr('span', 'studio.fitting_lock', ' class="st-lock-tag"')) +
+        (!have && info.inStock
           ? '<button type="button" class="st-btn" data-add="' + esc(sku) + '" data-i18n="studio.add">' + esc(t('studio.add')) + '</button>'
           : '') +
       '</li>';
@@ -506,6 +538,7 @@
           '<div class="pt-actions">' +
             '<span class="pt-price"></span>' +
             '<button type="button" class="st-btn" data-pt="add" data-i18n="studio.pt_add">' + esc(t('studio.pt_add')) + '</button>' +
+            (window.GemTu ? '<button type="button" class="pt-tool" data-pt="keep" data-i18n="studio.pt_keep">' + esc(t('studio.pt_keep')) + '</button>' : '') +
             '<button type="button" class="pt-tool" data-pt="save" data-i18n="studio.pt_save">' + esc(t('studio.pt_save')) + '</button>' +
             '<button type="button" class="pt-tool" data-pt="link" data-i18n="studio.pt_link">' + esc(t('studio.pt_link')) + '</button>' +
           '</div>' +
@@ -555,6 +588,8 @@
     add.disabled = filled !== n || (info && !info.inStock);
     add.title = filled !== n ? t('studio.pt_fill_all') : '';
     root.querySelector('[data-pt="undo"]').disabled = !D.undo.length;
+    var keep = root.querySelector('[data-pt="keep"]');
+    if (keep) keep.disabled = filled !== n;
   }
 
   function remember() {
@@ -653,7 +688,11 @@
         var board = sheetBody.querySelector('.pt-board svg');
         if (window.GemBasket && window.GemBasket.add(P.PRODUCTS[D.product].sku, board, spec)) {
           flash(el, 'studio.added', 'studio.pt_add');
+          if (window.GemTu) window.GemTu.saveDesign(spec);
         }
+        return;
+      } else if (act === 'keep') {
+        if (window.GemTu && window.GemTu.saveDesign(specNow())) flash(el, 'studio.pt_kept', 'studio.pt_keep');
         return;
       } else if (act === 'save') {
         saveImage(el);
@@ -669,11 +708,117 @@
     return true;
   }
 
-  function wallSheet() {
+  /* ---------- Tủ sưu tầm ----------
+     Data in js/collection.js (this browser only). Every name/spec shown
+     here goes through esc() or GemPatch (whitelisted codes only). */
+  function tuSheet() {
+    if (!window.GemTu) return;
     openSheet(
-      head('studio.wall_h', 'studio.wall_p') +
-      '<img class="st-preview" src="images/studio/ui/sh-story-2.webp" alt="" loading="lazy">'
+      head('studio.tu_h', 'studio.tu_p') +
+      '<div class="tu">' +
+        '<div class="tu-set"></div>' +
+        tr('h3', 'studio.tu_designs', ' class="tu-h"') +
+        '<div class="tu-designs"></div>' +
+        tr('h3', 'studio.tu_owned', ' class="tu-h"') +
+        '<div class="tu-owned"></div>' +
+        '<details class="tu-claim">' +
+          tr('summary', 'studio.tu_claim_h') +
+          tr('p', 'studio.tu_claim_p', ' class="tu-small"') +
+          '<form class="tu-form" novalidate>' +
+            '<label>' + tr('span', 'studio.tu_code') +
+              '<input name="code" autocomplete="off" autocapitalize="characters" maxlength="12" required></label>' +
+            '<label>' + tr('span', 'studio.tu_phone') +
+              '<input name="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" required></label>' +
+            '<button type="submit" class="st-btn" data-i18n="studio.tu_claim">' + esc(t('studio.tu_claim')) + '</button>' +
+            '<p class="tu-msg" role="status" aria-live="polite"></p>' +
+          '</form>' +
+        '</details>' +
+      '</div>'
     );
+    renderTu();
+  }
+
+  function renderTu() {
+    var root = sheetBody.querySelector('.tu');
+    if (!root || !window.GemTu) return;
+    var l = lng();
+    var have = window.GemTu.countOf(SET_VAI_VUN);
+    root.querySelector('.tu-set').innerHTML =
+      '<p><b>' + esc(t('studio.tu_set')) + '</b> <span>' + have + '/' + SET_VAI_VUN.length + '</span></p>' +
+      '<div class="tu-bar" role="progressbar" aria-valuemin="0" aria-valuemax="' + SET_VAI_VUN.length +
+        '" aria-valuenow="' + have + '"><span style="width:' + (have / SET_VAI_VUN.length * 100).toFixed(1) + '%"></span></div>';
+
+    var designs = window.GemTu.designs();
+    root.querySelector('.tu-designs').innerHTML = designs.length
+      ? '<ul class="tu-grid">' + designs.map(function (d) {
+          var spec = P.parse(d.spec);
+          if (!spec) return '';
+          return '<li class="tu-item">' + P.svg(spec, { size: 160 }) +
+            '<b>' + esc(P.PRODUCTS[spec.product][l]) + '</b>' +
+            '<span class="tu-row">' +
+              '<button type="button" class="pt-tool" data-tu-open="' + esc(d.spec) + '">' + esc(t('studio.tu_open')) + '</button>' +
+              '<button type="button" class="pt-tool" data-tu-remove="' + esc(d.spec) + '">' + esc(t('studio.tu_remove')) + '</button>' +
+            '</span></li>';
+        }).join('') + '</ul>'
+      : '<p class="tu-empty">' + esc(t('studio.tu_designs_0')) + ' ' +
+        '<button type="button" class="pt-tool" data-goto="sewing">' + esc(t('studio.tu_to_table')) + '</button></p>';
+
+    var owned = window.GemTu.owned().slice().reverse();
+    var cards = owned.map(function (o) {
+      var info = window.GemBasket ? window.GemBasket.info(o.sku) : null;
+      if (!info) return '';
+      var spec = o.spec && P ? P.parse(o.spec) : null;
+      var pic = spec ? P.svg(spec, { size: 160 })
+        : THUMB[o.sku] ? '<img src="images/products/' + THUMB[o.sku] + '" alt="" loading="lazy" width="160" height="160">'
+        : '<span class="tu-noimg"></span>';
+      return '<li class="tu-item">' + pic +
+        '<b>' + esc(info.name) + '</b>' +
+        (spec ? '<span class="tu-small">' + esc(t('studio.tu_custom')) + '</span>' : '') +
+        '<span class="st-lock-tag' + (o.received ? ' is-have' : '') + '">' +
+          esc(t(o.received ? 'studio.tu_received' : 'studio.tu_pending')) + '</span>' +
+      '</li>';
+    }).join('');
+    root.querySelector('.tu-owned').innerHTML = cards
+      ? '<ul class="tu-grid">' + cards + '</ul>'
+      : '<p class="tu-empty">' + esc(t('studio.tu_owned_0')) + '</p>';
+  }
+
+  function tuClick(e) {
+    var el;
+    if ((el = e.target.closest('[data-tu-open]'))) {
+      var spec = P && P.parse(el.getAttribute('data-tu-open'));
+      if (!spec) return true;
+      D.product = spec.product;
+      D.cells[spec.product] = spec.cells;
+      D.sel = 0;
+      if (spec.cells[0]) D.mat = spec.cells[0].slice(0, 2);
+      closeSheet();
+      visit('sewing');
+      return true;
+    }
+    if ((el = e.target.closest('[data-tu-remove]'))) {
+      window.GemTu.removeDesign(el.getAttribute('data-tu-remove'));
+      renderTu();
+      return true;
+    }
+    return false;
+  }
+
+  function tuSubmit(form) {
+    var msg = form.querySelector('.tu-msg');
+    var btn = form.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    msg.textContent = t('studio.tu_checking');
+    window.GemTu.claim(form.elements['code'].value, form.elements['phone'].value).then(function (res) {
+      btn.disabled = false;
+      if (res.ok) {
+        form.elements['phone'].value = '';
+        renderTu();
+        msg.textContent = t(res.added ? 'studio.tu_ok' : 'studio.tu_ok_same');
+      } else {
+        msg.textContent = t(res.error === 'offline' ? 'studio.tu_offline' : 'studio.tu_bad');
+      }
+    });
   }
 
   function counter() {
@@ -693,7 +838,7 @@
     pegboard: function () { shelfSheet('pegboard'); },
     cabinet: function () { shelfSheet('cabinet'); },
     sewing: designerSheet,
-    wall: wallSheet,
+    wall: tuSheet,
     counter: counter
   };
 
@@ -725,8 +870,8 @@
           var a = boxOf(hotById('pegboard')), c = boxOf(hotById('cabinet'));
           walkTo((a.x0 + c.x1) / 2);
         } else {
-          // The two places people come for open straight away.
-          visit(go, go === 'sewing' || go === 'counter');
+          // The places people come for open straight away.
+          visit(go, go === 'sewing' || go === 'counter' || go === 'wall');
         }
       });
     });
@@ -737,6 +882,7 @@
         return;
       }
       if (sheetBody.querySelector('.pt') && designerClick(e)) return;
+      if (sheetBody.querySelector('.tu') && tuClick(e)) return;
       var add = e.target.closest('[data-add]');
       if (add && window.GemBasket) {
         var card = add.closest('.st-prod');
@@ -771,7 +917,18 @@
       if (hot && !player.moving) walkTo(standX(hotById(hot.getAttribute('data-hot'))));
     });
 
-    document.addEventListener('gem:langchange', function () { renderDesigner(); });
+    modal.addEventListener('submit', function (e) {
+      var form = e.target.closest('.tu-form');
+      if (!form) return;
+      e.preventDefault();
+      tuSubmit(form);
+    });
+
+    document.addEventListener('gem:langchange', function () { renderDesigner(); renderTu(); });
+    document.addEventListener('gem:tu', function () {
+      // Another tab, or an order just went through: refresh what's open.
+      if (sheetBody.querySelector('.tu')) renderTu();
+    });
 
     document.addEventListener('gem:basket', function (e) {
       cartCount = (e.detail && e.detail.count) || 0;

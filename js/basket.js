@@ -1124,6 +1124,14 @@
         items: items.map(function (it) { return { sku: it.sku, qty: it.qty }; })
       }).then(function (res) {
         if (res && res.ok) {
+          // Tủ sưu tầm (js/collection.js) listens: what was bought, before the
+          // basket is emptied. Only the order code + items, never the phone.
+          try {
+            document.dispatchEvent(new CustomEvent('gem:ordered', { detail: {
+              code: res.code,
+              items: items.map(function (it) { return { sku: it.sku, spec: it.spec || null }; })
+            } }));
+          } catch (e) { /* old browsers: the cabinet just misses this order */ }
           orderCode = res.code;
           orderPay = res.payment_method;
           orderSum = res.subtotal || 0;

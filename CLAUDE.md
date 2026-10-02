@@ -42,6 +42,7 @@ Static website (5 trang) cho cửa hàng **Gem Chạm Sắc** — pop-up store s
 ├── js/vietqr.js              Sinh mã VietQR ngay trong trình duyệt (EMVCo + QR encoder)
 ├── js/studio.js              Studio 2D: cảnh, nhân vật, điểm bấm, bàn chắp vải; mua qua window.GemBasket
 ├── js/patch.js               Bàn chắp vải: chất liệu + màu + sản phẩm, mã thiết kế, vẽ SVG (dùng chung với giỏ)
+├── js/collection.js         Tủ sưu tầm: thiết kế đã lưu + món đã mua (localStorage gem-tu, rpc claim_collection)
 ├── tools/studio-assets.py    Chạy tay khi có tranh mới: ghép dải studio, tách nền nhân vật → images/studio/
 ├── images/
 │   ├── logo/                 Logo Gem variants

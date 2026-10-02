@@ -604,3 +604,87 @@
 @media (min-width: 768px) {
   .pt-mats { flex-wrap: wrap; overflow: visible; }
 }
+
+/* TỦ SƯU TẦM */
+.st-prod.is-owned img { filter: none; }
+.st-lock-tag.is-have { border-style: solid; border-color: var(--sage-deep); color: var(--sage-deep); }
+
+.tu { display: grid; gap: var(--space-3); }
+.tu-h {
+  margin: var(--space-4) 0 0;
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  color: var(--ink-dark);
+}
+.tu-set p { margin: 0 0 var(--space-2); display: flex; justify-content: space-between; }
+.tu-bar {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--paper-cream);
+  border: 1px solid var(--sage-light);
+  overflow: hidden;
+}
+.tu-bar span { display: block; height: 100%; background: var(--sage-deep); }
+
+.tu-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+.tu-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+}
+.tu-item svg,
+.tu-item img,
+.tu-noimg {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: var(--radius-md, 10px);
+  background: var(--paper-cream);
+}
+.tu-row { display: flex; gap: var(--space-2); }
+.tu-row .pt-tool { flex: 1; }
+.tu-small { margin: 0; font-size: var(--text-xs); color: var(--ink-soft); line-height: 1.5; }
+.tu-empty { margin: 0; color: var(--ink-soft); font-size: var(--text-sm); }
+.tu-empty .pt-tool { margin-top: var(--space-2); }
+
+.tu-claim {
+  margin-top: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: 1px dashed var(--kraft);
+  border-radius: var(--radius-md, 10px);
+}
+.tu-claim summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 600;
+}
+.tu-form { display: grid; gap: var(--space-3); margin-top: var(--space-3); }
+.tu-form label { display: grid; gap: var(--space-1); font-size: var(--text-sm); }
+.tu-form input {
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border: 1.5px solid var(--sage-light);
+  border-radius: 8px;
+  background: var(--paper-white);
+  font: inherit;
+}
+.tu-form input:focus { outline: none; border-color: var(--sage-deep); }
+.tu-msg { margin: 0; font-size: var(--text-sm); min-height: 1.4em; }
+
+@media (min-width: 768px) {
+  .tu-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .tu-form { grid-template-columns: 1fr 1fr auto; align-items: end; }
+  .tu-msg { grid-column: 1 / -1; }
+}

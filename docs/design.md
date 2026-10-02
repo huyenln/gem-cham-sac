@@ -1204,6 +1204,16 @@ bỏ qua toàn bộ RLS.
 **Trạng thái:** 4 bảng + 1 view + 1 hàm, RLS bật hết, đã seed 12 buổi workshop
 (Sprint 3). Client đọc/ghi qua `js/gem-db.js`.
 
+**Studio Gem 2D — Tủ sưu tầm** (migration `gem_claim_collection_rpc`): hàm
+`claim_collection(p_code, p_phone)`, `security definer`, chỉ `execute` cho
+`anon` + `authenticated`. Cần **đúng mã đơn VÀ khớp 9 số cuối SĐT** mới trả
+về, và chỉ trả `{ ok, code, received, items:[sku] }` — không tên, không địa
+chỉ, không giá. Đơn `cancelled` không lấy được. Tủ lưu ở `localStorage['gem-tu']`
+trên máy khách, không lưu SĐT. Đã kiểm vai `anon`: sai định dạng → `bad_input`,
+sai SĐT → `not_found`, đúng → danh sách sku (thử trong transaction rồi rollback).
+Rủi ro còn lại: đoán được mã đơn + SĐT của người khác thì thấy họ mua món gì —
+chấp nhận được cho bản thử; nếu lên menu chính thì cân nhắc giới hạn số lần thử.
+
 ### Chủ tài khoản quản trị
 
 Cả ba là `owner`. Chưa có ai là `staff` — thêm khi tuyển người.
