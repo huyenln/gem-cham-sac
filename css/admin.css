@@ -52,6 +52,11 @@
   color: var(--ink-body); cursor: pointer;
 }
 .ad-tabs button.active { background: var(--sage-deep); color: var(--paper-white); font-weight: 600; }
+.ad-tab-count {
+  display: inline-block; min-width: 1.4em; margin-left: 4px; padding: 0 5px;
+  border-radius: 999px; background: #A6503C; color: #fff;
+  font-size: 0.72rem; font-weight: 700; line-height: 1.4em; text-align: center;
+}
 
 .ad-main { padding: var(--space-4); max-width: 46rem; margin: 0 auto; }
 .ad-loading, .ad-hint { color: var(--ink-soft); font-size: var(--text-sm); }

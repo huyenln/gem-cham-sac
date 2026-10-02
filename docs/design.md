@@ -1236,6 +1236,46 @@ Câu kiểm GRANT-vs-policy giờ báo thêm `authenticated / notes / UPDATE` �
 **cố ý**: GRANT update chỉ mở cột `status` (column-level), câu kiểm chỉ nhìn
 quyền cả bảng.
 
+### Báo mail cho nhân sự (đơn mới / đặt workshop / lời nhắn)
+
+Migration `gem_notify_mail` + `gem_notify_payload`, Edge Function `notify`
+(mã nguồn: `supabase/functions/notify/index.ts`).
+
+- Trigger `notify_new()` sau mỗi insert vào `orders`, `bookings`, `notes` gọi
+  Edge Function qua `pg_net` — **không đợi, không chặn**: gửi mail hỏng thì
+  đơn / chỗ / lời nhắn vẫn lưu bình thường (lỗi chỉ thành `warning` trong log).
+- Bảo vệ hàm (deploy với `verify_jwt = false`): header `x-notify-secret` phải
+  khớp mã ngẫu nhiên cất trong **Vault** (`notify_secret`), không ai phải dán
+  mã này ở đâu. Hàm đọc dữ liệu **chỉ** qua `notify_payload()` (service_role
+  mới gọi được) — không grant bảng nào cho service_role. Mỗi bản ghi báo đúng
+  một lần (`notify_log`), bản ghi cũ hơn 1 giờ thì bỏ qua.
+- Người nhận: email đăng nhập của **mọi** tài khoản trong `staff` (hiện 3
+  người). Muốn gửi danh sách khác thì đặt secret `NOTIFY_TO` (cách nhau bằng
+  dấu phẩy). Lời nhắn: báo từng lời (chưa gom).
+- Chữ khách gõ trong mail đều qua `esc()`.
+- Đã kiểm: gọi sai mã → 403; đúng mã, chưa cấu hình Gmail → `not configured`;
+  `notify_payload` lần hai cho cùng bản ghi → `dup`; `anon`/`authenticated`
+  không gọi được `notify_secret` / `notify_payload` / `notify_unclaim`, không
+  đọc được `notify_log`.
+
+**Bật gửi mail thật (làm một lần, cần người giữ tài khoản Gmail):**
+
+1. Chọn Gmail dùng để gửi — nên là Gmail riêng của Gem, không dùng Gmail cá
+   nhân. Bật **Xác minh 2 bước** cho tài khoản đó.
+2. Vào <https://myaccount.google.com/apppasswords>, tạo mật khẩu ứng dụng tên
+   "Gem notify", chép 16 chữ cái (bỏ dấu cách).
+3. Supabase → project `gem-cham-sac` → **Edge Functions → Secrets** → thêm:
+   `GMAIL_USER` = địa chỉ Gmail, `GMAIL_APP_PASSWORD` = 16 chữ vừa chép.
+4. Thử: gửi một lời nhắn ở `studio.html` → vài giây sau cả 3 người nhận mail.
+   Không thấy thì xem **Edge Functions → notify → Logs**.
+
+Mật khẩu ứng dụng chỉ nằm trong Secrets của Supabase — **không** dán vào chat,
+repo hay trang web. Lộ thì vào trang ở bước 2 thu hồi và tạo cái mới.
+Gmail giới hạn ~500 mail/ngày, dư cho lượng đơn hiện tại.
+
+Trang quản trị cũng hiện **số việc tồn** trên tab: đơn `new`, giữ chỗ `held`,
+lời nhắn `pending`.
+
 ### Chủ tài khoản quản trị
 
 Cả ba là `owner`. Chưa có ai là `staff` — thêm khi tuyển người.

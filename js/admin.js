@@ -185,6 +185,24 @@
     });
   }
 
+  // Việc tồn hiện ngay trên tab, để mở trang là thấy, không phải bấm từng tab.
+  function paintCounts() {
+    if (!window.GemDB.adminCounts) return;
+    window.GemDB.adminCounts().then(function (c) {
+      el.root.querySelectorAll('.ad-tabs button').forEach(function (b) {
+        var n = c[b.getAttribute('data-tab')] || 0;
+        var badge = b.querySelector('.ad-tab-count');
+        if (!n) { if (badge) badge.remove(); return; }
+        if (!badge) {
+          badge = document.createElement('span');
+          badge.className = 'ad-tab-count';
+          b.appendChild(badge);
+        }
+        badge.textContent = n > 99 ? '99+' : String(n);
+      });
+    });
+  }
+
   /* ---------- thẻ một người đã đặt ---------- */
   function bookingRow(b) {
     var st = BK_STATUS[b.status] || BK_STATUS.held;
@@ -1251,6 +1269,7 @@
       ]).then(function (r) { sessions = r[0] || []; wtypes = r[1] || []; });
     }
 
+    paintCounts();
     return job.then(render).catch(function (err) {
       el.main.innerHTML = '<div class="ad-empty"><p>Không tải được dữ liệu.</p>' +
         '<p class="ad-hint">' + esc(err.message || '') + '</p></div>';

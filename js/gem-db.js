@@ -274,6 +274,18 @@ window.GemDB = (function () {
     },
 
     // Cả bài còn nháp, khác posts() ở chỗ đó.
+    // Số việc còn tồn cho các tab: đơn mới, giữ chỗ chưa xác nhận, lời chờ duyệt.
+    adminCounts: function () {
+      var n = function (path) {
+        return req(path).then(function (rows) { return (rows || []).length; }, function () { return 0; });
+      };
+      return Promise.all([
+        n('/rest/v1/orders?select=id&status=eq.new'),
+        n('/rest/v1/bookings?select=id&status=eq.held'),
+        n('/rest/v1/notes?select=id&status=eq.pending')
+      ]).then(function (r) { return { orders: r[0], sessions: r[1], notes: r[2] }; });
+    },
+
     adminNotes: function () {
       return req('/rest/v1/notes?select=*&order=created_at.desc&limit=200');
     },
