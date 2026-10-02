@@ -1236,6 +1236,23 @@ Câu kiểm GRANT-vs-policy giờ báo thêm `authenticated / notes / UPDATE` �
 **cố ý**: GRANT update chỉ mở cột `status` (column-level), câu kiểm chỉ nhìn
 quyền cả bảng.
 
+### Bàn thiết kế v2 (góp ý đợt 1 — đợt B)
+
+Bỏ kiểu "tô từng ô" (v1). Thiết kế giờ là **bản yêu cầu cho thợ**: món, kiểu
+ghép (Ô vuông / Nhà gỗ / Ngôi sao / Chong chóng; dây buộc tóc: Một tấm / Ghép
+hai vải; "Theo hình mình vẽ"), tông màu (tối đa 2), họa tiết (chọn nhiều), chất
+vải (chọn nhiều + ô "Khác"), hình tự vẽ (lưới 64×64, 4 màu bút, tối đa 700
+điểm) và ghi chú (≤ 200 chữ). Mục nào cũng có "Để Gem chọn", nên đặt được ngay
+— chỉ kiểu "Theo hình mình vẽ" mới cần vẽ vài nét.
+
+Mã thiết kế (trong link `studio.html?d=`, giỏ hàng, ghi chú đơn):
+`2~món~kiểu~tông~họa tiết~chất vải~khác~hình vẽ~ghi chú`. Mọi phần trừ "khác"
+và "ghi chú" đều so với bảng trong `js/patch.js`; hai phần chữ tự do được
+mã hoá phần trăm, giới hạn độ dài, và chỉ hiển thị qua `textContent` / `esc()`.
+Mã v1 cũ không đọc được nữa — giỏ và tủ tự bỏ (đã chốt: không chuyển đổi).
+
+Bốn kiểu ghép hiện là **tạm**, chờ ảnh mẫu ghép vải của mẹ Mai để thay.
+
 ### Báo mail cho nhân sự (đơn mới / đặt workshop / lời nhắn)
 
 Migration `gem_notify_mail` + `gem_notify_payload`, Edge Function `notify`
