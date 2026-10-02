@@ -48,7 +48,8 @@
     { id: 'cabinet',  zone: 3, box: [985, 335, 1510, 810],  label: 'studio.hot_cabinet' },
     { id: 'sewing',   zone: 4, box: [745, 320, 1255, 840],  label: 'studio.hot_sewing' },
     { id: 'counter',  zone: 5, box: [445, 470, 1400, 740], label: 'studio.hot_counter' },
-    { id: 'memo',     zone: 5, box: [965, 160, 1387, 348], label: 'studio.hot_memo' }
+    { id: 'memo',     zone: 5, box: [965, 160, 1387, 348], label: 'studio.hot_memo' },
+    { id: 'tu',       zone: 4, box: [1120, 400, 1400, 560], label: 'studio.hot_tu' }
   ];
 
   // Character frames (images/studio/char). anchor = where the body's centre
@@ -133,6 +134,7 @@
     'studio.hot_cabinet':  { vi: `Gối, thảm & quà`, en: `Cushions, rugs & gifts` },
     'studio.hot_sewing':   { vi: `Bàn thiết kế`, en: `Design table` },
     'studio.hot_memo':     { vi: `Bảng lời nhắn`, en: `Message board` },
+    'studio.hot_tu':       { vi: `Tủ sưu tầm`, en: `Your cabinet` },
     'studio.hot_counter':  { vi: `Quầy thu ngân`, en: `Counter` },
 
     'studio.intro':        { vi: `Chào bạn! Chạm vào kệ để xem đồ nhé. Bàn thiết kế ở gần cuối phòng đó.`, en: `Hi! Tap a shelf to look around. The design table is near the far end.` },
@@ -1037,12 +1039,15 @@
       return;
     }
     var a = udonEl.getBoundingClientRect(), b = target.getBoundingClientRect();
+    var sr = stage.getBoundingClientRect();
     var ghost = udonEl.querySelector('img').cloneNode();
     ghost.className = 'st-udon-ghost';
-    ghost.style.left = a.left + 'px';
-    ghost.style.top = a.top + 'px';
+    // Inside the stage (overflow: hidden), not on <body>: a fixed element
+    // past the screen edge made Chrome on Android zoom the whole page out.
+    ghost.style.left = (a.left - sr.left) + 'px';
+    ghost.style.top = (a.top - sr.top) + 'px';
     ghost.style.width = a.width + 'px';
-    document.body.appendChild(ghost);
+    stage.appendChild(ghost);
     udonEl.style.visibility = 'hidden';
     // Land where the cart is: in front of the character, at hip height.
     var dx = b.left + b.width * (player.facing > 0 ? 0.75 : 0.25) - (a.left + a.width / 2);
@@ -1175,6 +1180,7 @@
     cabinet: function () { shelfSheet('cabinet'); },
     sewing: designerSheet,
     memo: memoSheet,
+    tu: tuSheet,
     counter: counter
   };
 
@@ -1217,14 +1223,12 @@
     document.querySelectorAll('[data-go]').forEach(function (b) {
       b.addEventListener('click', function () {
         var go = b.getAttribute('data-go');
-        if (go === 'tu') {
-          tuSheet();   // your own things, not a place in the room
-        } else if (go === 'shelves') {
+        if (go === 'shelves') {
           var a = boxOf(hotById('pegboard')), c = boxOf(hotById('cabinet'));
           walkTo((a.x0 + c.x1) / 2);
         } else {
           // The places people come for open straight away.
-          visit(go, go === 'sewing' || go === 'counter');
+          visit(go, go === 'sewing' || go === 'counter' || go === 'tu');
         }
       });
     });
