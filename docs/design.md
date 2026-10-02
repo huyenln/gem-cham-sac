@@ -1253,6 +1253,19 @@ Mã v1 cũ không đọc được nữa — giỏ và tủ tự bỏ (đã chố
 
 Bốn kiểu ghép hiện là **tạm**, chờ ảnh mẫu ghép vải của mẹ Mai để thay.
 
+### Tranh nhân vật (4 bạn) — cách đưa tranh mới vào
+
+Nguồn: `ch-pN-dung.png` (đứng: trước / nghiêng / ¾), `ch-pN-di.png` (đi, 4
+khung), `ch-pN-day-xe.png` (đẩy xe, 3 khung), 1536×1024, nền giấy trắng.
+Chạy `python3 tools/studio-assets.py --cast <thư mục>` → 10 khung WebP mỗi bạn
+trong `images/studio/char/` (cùng chiều cao 720px, chân sát đáy, nền trong) và
+in ra `ANCHOR` để dán vào `js/studio.js`. Khung chạm nhau (mũi xe sát người
+bên cạnh) thì tool tự cắt ở cột thưa nét nhất; giấy trắng kẹt giữa chân và
+tay xe cũng được xoá.
+
+**File gốc nặng không cần lên GitHub.** Trang chỉ dùng bản WebP (~55 KB/khung).
+Giữ gốc ở Drive, chỉ commit bản đã xử lý.
+
 ### Báo mail cho nhân sự (đơn mới / đặt workshop / lời nhắn)
 
 Migration `gem_notify_mail` + `gem_notify_payload`, Edge Function `notify`

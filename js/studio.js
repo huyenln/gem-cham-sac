@@ -56,17 +56,19 @@
     { id: 'memo',     zone: 5, box: [965, 160, 1387, 348],  label: 'studio.hot_memo' }
   ];
 
-  // Character frames (images/studio/char). anchor = where the body's centre
-  // sits across the frame, so frames of different widths don't jump.
-  var FRAMES = {
-    front: { src: 'images/studio/char/p1-front.webp', anchor: 0.5 },
-    side:  { src: 'images/studio/char/p1-side.webp',  anchor: 0.5 },
-    walk:  { src: 'images/studio/char/p1-walk.webp',  anchor: 0.5 },
-    cart:  { src: 'images/studio/char/p1-cart.webp',  anchor: 0.3 },
-    // Udon riding in the cart, for the Udon joke only (a different sheet, so
-    // the hair differs a little; it shows for a couple of seconds)
-    cartUdon: { src: 'images/studio/char/p1-cart-udon.webp', anchor: 0.33 }
-  };
+  // The cast (images/studio/char/pN-*.webp, cut by tools/studio-assets.py
+  // --cast). Each has standing (front / side / three-quarter), a 4-frame
+  // walk and a 3-frame cart push. ANCHOR = where the head sits across each
+  // frame (from the tool's output), so frames of different widths don't jump.
+  var CAST = ['p1', 'p2', 'p3', 'p4'];
+  var FRAME_NAMES = ['front', 'side', 'q', 'walk1', 'walk2', 'walk3', 'walk4', 'cart1', 'cart2', 'cart3'];
+  var ANCHOR = {"p1-front": 0.516, "p1-side": 0.513, "p1-q": 0.467, "p1-walk1": 0.53, "p1-walk2": 0.538, "p1-walk3": 0.534, "p1-walk4": 0.485, "p1-cart1": 0.358, "p1-cart2": 0.242, "p1-cart3": 0.272, "p2-front": 0.509, "p2-side": 0.497, "p2-q": 0.531, "p2-walk1": 0.588, "p2-walk2": 0.497, "p2-walk3": 0.548, "p2-walk4": 0.506, "p2-cart1": 0.433, "p2-cart2": 0.311, "p2-cart3": 0.364, "p3-front": 0.546, "p3-side": 0.477, "p3-q": 0.516, "p3-walk1": 0.557, "p3-walk2": 0.514, "p3-walk3": 0.55, "p3-walk4": 0.506, "p3-cart1": 0.344, "p3-cart2": 0.295, "p3-cart3": 0.273, "p4-front": 0.519, "p4-side": 0.547, "p4-q": 0.553, "p4-walk1": 0.47, "p4-walk2": 0.475, "p4-walk3": 0.498, "p4-walk4": 0.463, "p4-cart1": 0.344, "p4-cart2": 0.333, "p4-cart3": 0.325};
+  var STEP_MS = 150;   // one walk / push frame
+
+  function charSrc(who, name) { return 'images/studio/char/' + who + '-' + name + '.webp'; }
+
+  var who = 'p1';
+  try { if (CAST.indexOf(localStorage.getItem('gem-char')) >= 0) who = localStorage.getItem('gem-char'); } catch (e) { /* private mode */ }
 
   var SHELVES = {
     pegboard: ['scrunchie', 'bookmark', 'tuibut', 'origami', 'bloom', 'daydeo', 'biaso', 'so-kraft', 'so-khau'],
@@ -159,9 +161,12 @@
     'studio.rail_cta':     { vi: `Đường tới studio`, en: `How to find us` },
 
     'studio.door_h':       { vi: `Chọn nhân vật`, en: `Choose your character` },
-    'studio.door_p':       { vi: `Thêm bạn mới sắp vào studio.`, en: `More characters are on their way.` },
+    'studio.door_p':       { vi: `Chọn một bạn để dạo studio. Đổi lúc nào cũng được, ở ngay cửa này.`, en: `Pick someone to walk the studio with. You can swap any time, right here at the door.` },
+    'studio.char_p1':      { vi: `Bạn tóc ngắn đeo túi chắp vải`, en: `Bob hair, patchwork bag` },
+    'studio.char_p2':      { vi: `Bạn đeo kính, áo kẻ caro`, en: `Glasses, check shirt` },
+    'studio.char_p3':      { vi: `Bạn váy yếm, túi hoa`, en: `Pinafore dress, floral tote` },
+    'studio.char_p4':      { vi: `Bạn áo len hồng, túi bò`, en: `Pink jumper, denim tote` },
     'studio.door_go':      { vi: `Vào studio`, en: `Step inside` },
-    'studio.soon':         { vi: `Sắp có`, en: `Soon` },
 
     'studio.fitting_h':    { vi: `Góc thử đồ`, en: `Fitting corner` },
     'studio.fitting_p':    { vi: `Mua món nào của Gem thì mặc được món đó cho nhân vật.`, en: `Buy a Gem piece and your character can wear it too.` },
@@ -356,18 +361,34 @@
     playerEl.style.bottom = pct(SCENE.height - SCENE.feetY, SCENE.height);
     bobEl = document.createElement('div');
     bobEl.className = 'st-bob';
-    Object.keys(FRAMES).forEach(function (name) {
+    playerEl.appendChild(bobEl);
+    world.appendChild(playerEl);
+    dress();
+  }
+
+  // (Re)build the frames for the chosen character.
+  function dress() {
+    bobEl.textContent = '';
+    frameEls = {};
+    FRAME_NAMES.forEach(function (name) {
       var img = document.createElement('img');
-      img.src = FRAMES[name].src;
+      img.src = charSrc(who, name);
       img.alt = '';
       img.draggable = false;
-      img.style.transform = 'translateX(' + (-FRAMES[name].anchor * 100) + '%)';
+      img.style.transform = 'translateX(' + (-(ANCHOR[who + '-' + name] || 0.5) * 100) + '%)';
       img.hidden = true;
       frameEls[name] = img;
       bobEl.appendChild(img);
     });
-    playerEl.appendChild(bobEl);
-    world.appendChild(playerEl);
+    player.frame = null;
+  }
+
+  function pickChar(id) {
+    if (CAST.indexOf(id) < 0 || id === who) return;
+    who = id;
+    try { localStorage.setItem('gem-char', id); } catch (e) { /* private mode */ }
+    dress();
+    render();
   }
 
   /* ======================================================================
@@ -382,15 +403,15 @@
   }
 
   function pickFrame(now) {
-    if (player.udon) return 'cartUdon';
-    if (cartCount > 0) return 'cart';
-    if (player.moving) return Math.floor(now / 170) % 2 ? 'walk' : 'side';
+    var step = Math.floor(now / STEP_MS);
+    if (cartCount > 0 || player.udon) return player.moving ? 'cart' + (step % 3 + 1) : 'cart1';
+    if (player.moving) return 'walk' + (step % 4 + 1);
     return player.moved ? 'side' : 'front';
   }
 
   function render(now) {
     var frame = pickFrame(now || performance.now());
-    if (frame !== player.frame || frameEls[frame].hidden) {
+    if (frame !== player.frame || !frameEls[frame] || frameEls[frame].hidden) {
       Object.keys(frameEls).forEach(function (n) { frameEls[n].hidden = n !== frame; });
       player.frame = frame;
     }
@@ -516,15 +537,13 @@
   }
 
   function doorSheet() {
-    var soon = '';
-    for (var i = 0; i < 3; i++) {
-      soon += '<li class="st-char is-locked"><span class="st-char-shadow"></span>' + tr('span', 'studio.soon') + '</li>';
-    }
     openSheet(
       head('studio.door_h', 'studio.door_p') +
-      '<ul class="st-chars">' +
-        '<li class="st-char is-picked"><img src="images/studio/char/p1-front.webp" alt=""></li>' + soon +
-      '</ul>' +
+      '<ul class="st-chars">' + CAST.map(function (id) {
+        return '<li><button type="button" class="st-char' + (id === who ? ' is-picked' : '') + '" data-char="' + id +
+          '" aria-pressed="' + (id === who) + '" aria-label="' + esc(t('studio.char_' + id)) + '">' +
+          '<img src="' + charSrc(id, 'front') + '" alt="" loading="lazy"></button></li>';
+      }).join('') + '</ul>' +
       '<p class="st-foot"><button type="button" class="st-btn" data-close data-i18n="studio.door_go">' +
         esc(t('studio.door_go')) + '</button></p>'
     );
@@ -548,7 +567,7 @@
     }).join('');
     openSheet(
       head('studio.fitting_h', 'studio.fitting_p') +
-      '<div class="st-fitting"><img src="images/studio/char/p1-front.webp" alt=""></div>' +
+      '<div class="st-fitting"><img src="' + charSrc(who, 'front') + '" alt=""></div>' +
       '<ul class="st-grid">' + items + '</ul>'
     );
   }
@@ -1031,15 +1050,35 @@
   }
 
   /* ---------- Udon: hops into your cart, rides along, hops back ---------- */
+  // Move a stage-level element into `host`, keeping it where it is on screen.
+  // host may be mirrored (character facing left), so measure, then place.
+  function pinTo(el, host) {
+    var r = el.getBoundingClientRect();
+    el.getAnimations().forEach(function (an) { an.cancel(); });
+    el.style.transform = 'none';
+    host.appendChild(el);
+    el.style.width = r.width + 'px';
+    // Screen position is linear in left/top (slope +1, or -1 when mirrored):
+    // measure twice and solve, rather than special-casing the flip.
+    var at = function (L, T) { el.style.left = L + 'px'; el.style.top = T + 'px'; return el.getBoundingClientRect(); };
+    var a0 = at(0, 0), a1 = at(100, 100);
+    var sx = (a1.left - a0.left) / 100 || 1, sy = (a1.top - a0.top) / 100 || 1;
+    at((r.left - a0.left) / sx, (r.top - a0.top) / sy);
+    return { undo: function () { stage.appendChild(el); } };
+  }
+
   var udonBusy = false;
   function udonJoke() {
     if (udonBusy) return;
     udonBusy = true;
     var done = function () { udonBusy = false; };
     say('studio.udon_no', 3600);
-    var target = frameEls[pickFrame(0)];
+    // Stop where you are (Udon aims for the cart as it is now), out comes
+    // the cart, then Udon hops in.
+    walkTo(player.x);
+    player.udon = true; render();
+    var target = frameEls[player.frame];
     if (reduceMotion || !udonEl.animate || !target) {
-      player.udon = true; render();
       setTimeout(function () { player.udon = false; render(); done(); }, 2600);
       return;
     }
@@ -1054,23 +1093,31 @@
     ghost.style.width = a.width + 'px';
     stage.appendChild(ghost);
     udonEl.style.visibility = 'hidden';
-    // Land where the cart is: in front of the character, at hip height.
-    var dx = b.left + b.width * (player.facing > 0 ? 0.75 : 0.25) - (a.left + a.width / 2);
-    var dy = b.top + b.height * 0.55 - (a.top + a.height / 2);
-    var mid = 'translate(' + dx * 0.5 + 'px,' + (Math.min(dy, 0) - 90) + 'px) scale(0.85)';
-    var end = 'translate(' + dx + 'px,' + dy + 'px) scale(0.6)';
+    // Land in the cart basket: front of the frame, just above half height.
+    var sc = Math.min(1, (b.height * 0.3) / a.height);
+    var dx = b.left + b.width * (player.facing > 0 ? 0.8 : 0.2) - (a.left + a.width / 2);
+    var dy = b.top + b.height * 0.6 - (a.top + a.height / 2) - a.height * sc * 0.25;
+    var mid = 'translate(' + dx * 0.5 + 'px,' + (Math.min(dy, 0) - 90) + 'px) scale(' + ((1 + sc) / 2).toFixed(2) + ')';
+    var end = 'translate(' + dx + 'px,' + dy + 'px) scale(' + sc.toFixed(2) + ')';
     var hop = function (frames, then) {
       ghost.animate(frames, { duration: 600, easing: 'ease-in-out', fill: 'forwards' }).onfinish = then;
     };
     hop([{ transform: 'translate(0,0) scale(1)' }, { transform: mid, offset: 0.45 }, { transform: end }], function () {
-      ghost.style.visibility = 'hidden';
-      player.udon = true; render();
+      // In the cart: ride along with the character, even if they walk on.
+      var pin = pinTo(ghost, bobEl);
       setTimeout(function () {
-        player.udon = false; render();
-        ghost.style.visibility = '';
-        hop([{ transform: end }, { transform: mid, offset: 0.55 }, { transform: 'translate(0,0) scale(1)' }], function () {
+        // Back on the stage, from wherever the cart is now, home to the counter.
+        var r = ghost.getBoundingClientRect(), s2 = stage.getBoundingClientRect(), h = udonEl.getBoundingClientRect();
+        pin.undo();
+        ghost.style.left = (h.left - s2.left) + 'px';
+        ghost.style.top = (h.top - s2.top) + 'px';
+        ghost.style.width = h.width + 'px';
+        var from = 'translate(' + (r.left - h.left) + 'px,' + (r.top - h.top) + 'px) scale(' + (r.width / h.width).toFixed(2) + ')';
+        var up = 'translate(' + ((r.left - h.left) / 2) + 'px,' + (Math.min(r.top - h.top, 0) - 90) + 'px) scale(0.8)';
+        hop([{ transform: from }, { transform: up, offset: 0.55 }, { transform: 'translate(0,0) scale(1)' }], function () {
           ghost.remove();
           udonEl.style.visibility = '';
+          player.udon = false; render();
           done();
         });
       }, 2400);
@@ -1256,6 +1303,16 @@
             add.classList.remove('is-added');
           }, 1100);
         }
+        return;
+      }
+      var ch = e.target.closest('[data-char]');
+      if (ch) {
+        pickChar(ch.getAttribute('data-char'));
+        sheetBody.querySelectorAll('[data-char]').forEach(function (b) {
+          var on = b.getAttribute('data-char') === who;
+          b.classList.toggle('is-picked', on);
+          b.setAttribute('aria-pressed', on);
+        });
         return;
       }
       var go = e.target.closest('[data-goto]');
