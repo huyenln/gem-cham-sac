@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title data-i18n="title.studio">Studio Gem · Gem Chạm Sắc</title>
+  <meta name="description" content="Dạo một vòng Studio Gem vẽ tay: xem đồ, thử đồ, chọn quà và đặt hàng.">
+  <!-- Bản thử: chưa có trên menu, chưa cho tìm kiếm. -->
+  <meta name="robots" content="noindex">
+
+  <link rel="icon" type="image/png" href="images/logo/gem_logo_icon_120.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600&family=Dancing+Script:wght@400;500;600&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="preload" as="image" href="images/studio/bg/strip.webp">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/studio.css">
+  <script src="js/i18n.js" defer></script>
+</head>
+<body class="studio-page" data-basket>
+
+  <header class="st-top">
+    <a href="index.html" class="st-brand">
+      <img src="images/logo/gem_logo_icon_120.png" alt="Gem Chạm Sắc" width="36" height="36">
+      <span>Studio Gem</span>
+    </a>
+    <a href="san-pham.html" class="st-list-link">
+      <span class="st-long" data-i18n="studio.list_view">Xem dạng danh sách</span>
+      <span class="st-short" data-i18n="studio.list_short">Danh sách</span>
+    </a>
+    <div class="lang-switch" role="group" data-i18n-attr="aria-label:lang.aria" aria-label="Ngôn ngữ">
+      <button type="button" class="lang-btn" data-lang="vi" aria-pressed="true">VI</button>
+      <button type="button" class="lang-btn" data-lang="en" aria-pressed="false">EN</button>
+    </div>
+  </header>
+
+  <main class="st">
+    <div class="st-stage" id="st-stage">
+      <div class="st-world" id="st-world">
+        <img class="st-bg" src="images/studio/bg/strip.webp" alt="" draggable="false">
+        <!-- Điểm bấm, Udon và nhân vật do js/studio.js dựng từ cấu hình cảnh. -->
+      </div>
+
+      <div class="st-bubble" id="st-bubble" role="status" aria-live="polite" hidden>
+        <img src="images/mascot/udon_portrait.png" alt="" width="44" height="44">
+        <p id="st-bubble-text"></p>
+      </div>
+    </div>
+
+    <nav class="st-nav" data-i18n-attr="aria-label:studio.nav_aria" aria-label="Đi tới khu">
+      <button type="button" data-go="door" data-i18n="studio.go_door">Cửa vào</button>
+      <button type="button" data-go="fitting" data-i18n="studio.go_fitting">Thử đồ</button>
+      <button type="button" data-go="shelves" data-i18n="studio.go_shelves">Kệ hàng</button>
+      <button type="button" data-go="sewing" data-i18n="studio.go_sewing">Bàn chắp vải</button>
+      <button type="button" data-go="wall" data-i18n="studio.go_tu">Tủ của bạn</button>
+      <button type="button" data-go="counter" data-i18n="studio.go_counter">Quầy</button>
+    </nav>
+
+    <p class="st-sr" data-i18n="studio.sr_help">Chạm vào đồ vật trong studio để xem hàng. Bấm Tab để đi qua từng điểm.</p>
+  </main>
+
+  <div class="st-modal" id="st-modal" hidden>
+    <div class="st-sheet" role="dialog" aria-modal="true" aria-labelledby="st-sheet-title">
+      <button type="button" class="st-close" data-i18n-attr="aria-label:studio.close" aria-label="Đóng">&times;</button>
+      <div class="st-sheet-body" id="st-sheet-body"></div>
+    </div>
+  </div>
+
+  <script src="js/gem-db.js" defer></script>
+  <script src="js/vietqr.js" defer></script>
+  <!-- patch.js: thiết kế riêng từ bàn chắp vải (giỏ hàng vẽ lại và ghi vào đơn) -->
+  <script src="js/patch.js" defer></script>
+  <!-- collection.js: Tủ sưu tầm, lưu trên máy khách (sau patch.js, trước basket.js) -->
+  <script src="js/collection.js" defer></script>
+  <script src="js/basket.js" defer></script>
+  <script src="js/studio.js" defer></script>
+</body>
+</html>

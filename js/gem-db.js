@@ -96,6 +96,17 @@ window.GemDB = (function () {
       });
     },
 
+    // Tủ sưu tầm: lấy lại món đã mua bằng mã đơn + SĐT. Trả
+    // { ok, code, received, items:[sku] } hoặc { ok:false, error }.
+    // Database chỉ trả sku, không trả tên/địa chỉ của đơn.
+    claimCollection: function (code, phone) {
+      return req('/rest/v1/rpc/claim_collection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_code: code, p_phone: phone })
+      });
+    },
+
     // Giữ chỗ. Trả về { ok, code, seats_left } hoặc { ok:false, error }.
     book: function (payload) {
       return req('/rest/v1/rpc/book_session', {
