@@ -43,14 +43,20 @@
   background: none; border: 1px solid var(--sage-light); border-radius: 999px;
   padding: 0.35em 0.9em; font-size: var(--text-xs); color: var(--ink-body); cursor: pointer;
 }
-.ad-tabs { display: flex; gap: var(--space-2); padding: 0 var(--space-4) var(--space-3); }
+.ad-tabs { display: flex; gap: var(--space-2); padding: 0 var(--space-4) var(--space-3); overflow-x: auto; scrollbar-width: none; }
 .ad-tabs button {
-  flex: 1; min-height: 44px;
+  /* 6 tabs: scroll sideways on a phone rather than squash the labels */
+  flex: 1 0 auto; min-height: 44px; padding: 0 var(--space-3); white-space: nowrap;
   background: transparent; border: 1.5px solid transparent; border-radius: 999px;
   font-family: var(--font-body); font-size: var(--text-sm); font-weight: 500;
   color: var(--ink-body); cursor: pointer;
 }
 .ad-tabs button.active { background: var(--sage-deep); color: var(--paper-white); font-weight: 600; }
+.ad-tab-count {
+  display: inline-block; min-width: 1.4em; margin-left: 4px; padding: 0 5px;
+  border-radius: 999px; background: #A6503C; color: #fff;
+  font-size: 0.72rem; font-weight: 700; line-height: 1.4em; text-align: center;
+}
 
 .ad-main { padding: var(--space-4); max-width: 46rem; margin: 0 auto; }
 .ad-loading, .ad-hint { color: var(--ink-soft); font-size: var(--text-sm); }
@@ -293,6 +299,9 @@
 .ad-post-body { min-width: 0; }
 .ad-post-meta { font-size: var(--text-xs); color: var(--ink-soft); margin: 2px 0 0; }
 .ad-post .ad-acts { grid-column: 1 / -1; margin-top: 0; }
+.ad-note { grid-template-columns: 1fr; }
+.ad-note .ad-btn.danger { color: #A6503C; border-color: #D9BBB0; }
+.ad-note-text { margin: 0; white-space: pre-line; overflow-wrap: anywhere; line-height: 1.6; }
 
 /* ---------- soạn bài ---------- */
 .ad-post-form { margin-top: var(--space-4); }
