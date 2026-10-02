@@ -125,11 +125,6 @@
   position: absolute;
   inset: -10px -6px;
 }
-/* Tapped the object itself: the character walks over and the label nods. */
-.st-hot.is-hint .st-hot-label { animation: st-hint 0.6s ease 2; }
-@keyframes st-hint {
-  50% { transform: translate(-50%, -60%) scale(1.12); background: var(--sage-deep); color: var(--paper-white); }
-}
 
 .st-hot:hover .st-hot-label,
 .st-hot:focus-visible .st-hot-label {
@@ -527,7 +522,6 @@
 /* ---------- REDUCED MOTION ---------- */
 @media (prefers-reduced-motion: reduce) {
   .st-udon { animation: none; }
-  .st-hot.is-hint .st-hot-label { animation: none; background: var(--sage-deep); color: var(--paper-white); }
   .st-udon,
   .st-player.is-moving .st-bob,
   .st-bubble,
@@ -552,9 +546,9 @@
 /* A sheet is open: the nav is covered anyway, so back to the corner. */
 .studio-page.st-lock .gb-widget { bottom: max(0.75rem, env(safe-area-inset-bottom)); }
 
-/* ---------- BÀN CHẮP VẢI (designer) ---------- */
+/* ---------- BÀN THIẾT KẾ (designer) ---------- */
 .pt { display: grid; gap: var(--space-4); }
-.pt-side { display: grid; gap: var(--space-3); }
+.pt-side { display: grid; gap: var(--space-4); }
 
 .pt-tabs { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 
@@ -577,47 +571,30 @@
 .pt-tool:disabled { opacity: 0.45; cursor: default; }
 .pt-tool.is-added { background: var(--kraft); border-color: var(--kraft); color: var(--paper-white); }
 
-.pt-board {
-  width: 100%;
-  max-width: 360px;
-  justify-self: center;
-}
-
+.pt-view { display: grid; gap: var(--space-1); justify-items: center; }
+.pt-board { width: 100%; max-width: 300px; }
 .pt-board svg { display: block; width: 100%; height: auto; }
-.pt-cell { cursor: pointer; }
-.pt-cell:hover rect { filter: brightness(1.06); }
 
-.pt-status {
-  margin: 0;
-  min-height: 1.5em;
-  font-family: var(--font-display);
-  font-weight: 700;
-  color: var(--ink-dark);
-}
+.pt-sec { display: grid; gap: var(--space-2); }
 
 .pt-label {
   margin: 0;
+  font-family: var(--font-body);
   font-size: var(--text-xs);
+  font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--ink-soft);
 }
+.pt-small { margin: 0; font-size: var(--text-xs); color: var(--ink-soft); line-height: 1.5; }
 
-.pt-mats {
-  display: flex;
-  gap: var(--space-2);
-  overflow-x: auto;
-  padding-bottom: 4px;
-  scrollbar-width: thin;
-}
-
-.pt-mat {
-  flex: none;
+.pt-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.pt-chip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   min-height: 44px;
-  padding: 0 var(--space-3) 0 6px;
+  padding: 0 var(--space-3) 0 var(--space-2);
   border: 1.5px solid var(--sage-light);
   border-radius: 999px;
   background: var(--paper-white);
@@ -625,24 +602,49 @@
   font-size: var(--text-sm);
   cursor: pointer;
 }
+.pt-chip svg { flex: none; display: block; }
+.pt-chip.is-on { border-color: var(--sage-deep); box-shadow: 0 0 0 2px var(--sage-deep) inset; background: #F3F1E4; }
+.pt-layouts .pt-chip { padding-left: 4px; border-radius: 12px; }
+.pt-layouts .pt-chip svg { width: 40px; height: 40px; }
 
-.pt-mat.is-on { border-color: var(--sage-deep); box-shadow: 0 0 0 2px var(--sage-deep) inset; }
+.pt-other,
+.pt-notefield { display: grid; gap: var(--space-1); font-size: var(--text-sm); }
+.pt-other input,
+.pt-notefield textarea {
+  min-height: 44px;
+  padding: var(--space-2) var(--space-3);
+  border: 1.5px solid var(--sage-light);
+  border-radius: 8px;
+  background: var(--paper-white);
+  font: inherit;
+}
+.pt-notefield textarea { resize: vertical; }
+.pt-other input:focus,
+.pt-notefield textarea:focus { outline: none; border-color: var(--sage-deep); }
 
-.pt-ways { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-
-.pt-way {
-  width: 48px;
-  height: 48px;
-  padding: 2px;
+.pt-draw { display: grid; gap: var(--space-2); justify-items: start; }
+.pt-canvas {
+  width: 100%;
+  max-width: 280px;
+  aspect-ratio: 1;
+  border: 1.5px solid var(--sage-light);
+  border-radius: 10px;
+  background: #FBF6EE;
+  touch-action: none;
+  cursor: crosshair;
+}
+.pt-inks { display: flex; gap: var(--space-2); }
+.pt-ink {
+  width: 44px;
+  height: 44px;
+  padding: 8px;
   border: 2px solid transparent;
   border-radius: 50%;
-  background: transparent;
+  background: none;
   cursor: pointer;
 }
-
-.pt-way svg { display: block; width: 100%; height: 100%; }
-.pt-way:hover { border-color: var(--sage-light); }
-.pt-way.is-on { border-color: var(--sage-deep); }
+.pt-ink span { display: block; width: 100%; height: 100%; border-radius: 50%; }
+.pt-ink.is-on { border-color: var(--sage-deep); }
 
 .pt-tools,
 .pt-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
@@ -652,18 +654,15 @@
 .pt-note { margin: 0; font-size: var(--text-xs); color: var(--ink-soft); line-height: 1.5; }
 
 @media (min-width: 768px) {
-  .pt { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+  .pt { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; }
   .pt-tabs { grid-column: 1 / -1; }
-  .pt-board { align-self: start; }
-  .pt-side { display: grid; gap: var(--space-3); }
+  /* the preview stays in view while the choices scroll past */
+  .pt-view { position: sticky; top: 0; }
 }
 
 /* An open sheet owns the screen: the language pill waits behind it. */
 .studio-page.st-lock .lang-hint { display: none; }
 
-@media (min-width: 768px) {
-  .pt-mats { flex-wrap: wrap; overflow: visible; }
-}
 
 /* TỦ SƯU TẦM */
 .st-prod.is-owned img { filter: none; }

@@ -168,26 +168,34 @@
     'studio.sofa_news':    { vi: `Bản tin — chuyện ở studio`, en: `Newsletter — studio notes` },
 
     'studio.sewing_h':     { vi: `Bàn thiết kế`, en: `Design table` },
-    'studio.sewing_p':     { vi: `Bạn phác ý tưởng, Gem may thật. Chạm vào một ô, chọn chất vải rồi chọn màu.`, en: `You sketch the idea, Gem sews it for real. Tap a patch, pick a fabric, then a colour.` },
-    'studio.pt_cell':      { vi: `Ô`, en: `Patch` },
-    'studio.pt_empty':     { vi: `chưa chọn vải`, en: `no fabric yet` },
-    'studio.pt_done':      { vi: `Bản phác xong rồi! Đặt Gem may, hoặc lưu lại để khoe nhé.`, en: `Sketch done! Ask Gem to sew it, or save it to show off.` },
-    'studio.pt_random':    { vi: `Để Gem chọn giúp`, en: `Let Gem pick` },
+    'studio.sewing_p':     { vi: `Kể cho Gem bạn muốn món thế nào. Chỗ nào chưa chắc, cứ để Gem chọn.`, en: `Tell Gem what you'd like. Anything you're unsure of, leave to Gem.` },
+    'studio.pt_random':    { vi: `Gợi ý ngẫu nhiên`, en: `Surprise me` },
+    'studio.pt_preview':   { vi: `Hình minh họa. Vải vụn thật sẽ khác một chút.`, en: `An illustration. The real scraps will differ a little.` },
+    'studio.pt_layout':    { vi: `Kiểu ghép`, en: `Piecing` },
+    'studio.pt_tones':     { vi: `Tông màu (tối đa 2)`, en: `Colours (up to 2)` },
+    'studio.pt_prints':    { vi: `Họa tiết (chọn bao nhiêu cũng được)`, en: `Prints (pick any)` },
+    'studio.pt_fabrics':   { vi: `Chất vải`, en: `Fabrics` },
+    'studio.pt_other':     { vi: `Khác:`, en: `Other:` },
+    'studio.pt_other_ph':  { vi: `vd: lụa, vải áo dài cũ`, en: `e.g. silk, an old áo dài` },
+    'studio.pt_gem':       { vi: `Để Gem chọn`, en: `Let Gem choose` },
+    'studio.pt_draw':      { vi: `Tự vẽ`, en: `Draw it` },
+    'studio.pt_draw_p':    { vi: `Không bắt buộc. Vẽ hình, chữ hay bố cục bạn muốn, Gem may theo tinh thần đó.`, en: `Optional. Sketch a shape, a letter or a layout and Gem sews in that spirit.` },
+    'studio.pt_draw_need': { vi: `Vẽ vài nét để Gem hiểu ý bạn nhé.`, en: `Draw a few lines so Gem gets the idea.` },
+    'studio.pt_draw_full': { vi: `Hình đã đủ chi tiết rồi.`, en: `That's as much detail as it takes.` },
+    'studio.pt_ink':       { vi: `Màu bút`, en: `Pen colour` },
+    'studio.pt_clear':     { vi: `Xoá hình`, en: `Clear` },
+    'studio.pt_note_label':{ vi: `Lưu ý cho Gem`, en: `A note for Gem` },
+    'studio.pt_note_ph':   { vi: `vd: quà tặng mẹ, thêu chữ M ở góc`, en: `e.g. a gift for mum, an M in the corner` },
     'studio.pt_undo':      { vi: `Hoàn tác`, en: `Undo` },
-    'studio.pt_reset':     { vi: `Làm lại`, en: `Start over` },
     'studio.pt_add':       { vi: `Đặt Gem may`, en: `Ask Gem to sew it` },
     'studio.pt_save':      { vi: `Lưu ảnh`, en: `Save image` },
     'studio.pt_keep':      { vi: `Lưu vào tủ`, en: `Keep in cabinet` },
     'studio.pt_kept':      { vi: `Đã lưu`, en: `Kept` },
     'studio.pt_link':      { vi: `Chép link`, en: `Copy link` },
     'studio.pt_copied':    { vi: `Đã chép`, en: `Copied` },
-    'studio.pt_fill_all':  { vi: `Chọn vải cho đủ các ô để cho vào giỏ.`, en: `Fill every patch to add it to your cart.` },
-    'studio.pt_note':      { vi: `Đây là bản phác. Thợ sẽ chọn vải vụn gần nhất với bản phác, nên màu và hoa văn sẽ gần giống chứ không giống hệt. Gem nhắn ảnh vải cho bạn duyệt trước khi may.`, en: `This is a sketch. Gem picks the scraps closest to it, so colours and prints will be close, not identical. Gem sends you a photo of the fabrics before sewing.` },
+    'studio.pt_note':      { vi: `Đây là bản phác. Thợ chọn vải vụn theo tông, họa tiết và kiểu ghép bạn chọn, nên màu và hoa văn sẽ gần giống chứ không giống hệt. Gem nhắn ảnh vải cho bạn duyệt trước khi may.`, en: `This is a sketch. Gem picks the scraps closest to it, so colours and prints will be close, not identical. Gem sends you a photo of the fabrics before sewing.` },
     'studio.pt_real':      { vi: `Đồ thật Gem đã may`, en: `Pieces Gem has sewn` },
     'studio.pt_similar':   { vi: `Có sẵn, tông gần giống — mua được ngay`, en: `Ready now, in a similar palette` },
-    'studio.tap_label':    { vi: `Chạm vào nhãn để xem đồ ở đây nhé.`, en: `Tap the label to see what's here.` },
-    'studio.pt_mat':       { vi: `Chất vải`, en: `Fabric` },
-    'studio.pt_way':       { vi: `Màu`, en: `Colour` },
     'studio.pt_products':  { vi: `Chọn món`, en: `Choose a piece` },
     'studio.pt_caption':   { vi: `Thiết kế riêng · Gem Chạm Sắc`, en: `My own design · Gem Chạm Sắc` },
 
@@ -548,25 +556,23 @@
     );
   }
 
-  /* ---------- Bàn chắp vải (designer) ----------
-     Colour + material only, no real-fabric inventory: Gem matches the
-     closest scraps by hand and sends a photo before sewing. Data and
-     drawing live in js/patch.js. */
+  /* ---------- Bàn thiết kế (designer) ----------
+     A brief for the maker, not a pixel drawing: piece, piecing layout,
+     colour families, prints, fabrics — each "or let Gem choose" — plus an
+     optional sketch and note. Data and drawing live in js/patch.js. The
+     note / "other fabric" are the customer's words: textContent / esc()
+     only, and they also travel in the share link. */
   var P = window.GemPatch;
-  var D = { product: 'goi', cells: {}, sel: 0, mat: 'tr', undo: [] };
+  var D = { d: P ? P.blank('goi') : null, drawing: null, ink: 0 };
 
-  function cellsNow() {
-    if (!D.cells[D.product]) {
-      D.cells[D.product] = [];
-      for (var i = 0; i < P.cellsOf(D.product); i++) D.cells[D.product].push(null);
-    }
-    return D.cells[D.product];
-  }
-
-  function specNow() { return P.encode(D.product, cellsNow()); }
+  function specNow() { return P.encode(D.d); }
 
   function lng() {
     return (window.GemI18n && window.GemI18n.getLang && window.GemI18n.getLang()) === 'en' ? 'en' : 'vi';
+  }
+
+  function pointsUsed() {
+    return D.d.sketch.reduce(function (n, s) { return n + s.pts.length; }, 0);
   }
 
   function designerSheet() {
@@ -575,24 +581,39 @@
       head('studio.sewing_h', 'studio.sewing_p') +
       '<div class="pt">' +
         '<div class="pt-tabs" role="group" data-i18n-attr="aria-label:studio.pt_products" aria-label="' + esc(t('studio.pt_products')) + '"></div>' +
-        '<div class="pt-board"></div>' +
+        '<div class="pt-view">' +
+          '<div class="pt-board"></div>' +
+          tr('p', 'studio.pt_preview', ' class="pt-small"') +
+        '</div>' +
         '<div class="pt-side">' +
-          '<p class="pt-status" aria-live="polite"></p>' +
-          tr('p', 'studio.pt_mat', ' class="pt-label"') +
-          '<div class="pt-mats"></div>' +
-          tr('p', 'studio.pt_way', ' class="pt-label"') +
-          '<div class="pt-ways"></div>' +
-          '<div class="pt-tools">' +
-            '<button type="button" class="pt-tool" data-pt="random" data-i18n="studio.pt_random">' + esc(t('studio.pt_random')) + '</button>' +
-            '<button type="button" class="pt-tool" data-pt="undo" data-i18n="studio.pt_undo">' + esc(t('studio.pt_undo')) + '</button>' +
-            '<button type="button" class="pt-tool" data-pt="reset" data-i18n="studio.pt_reset">' + esc(t('studio.pt_reset')) + '</button>' +
-          '</div>' +
+          '<section class="pt-sec">' + tr('h3', 'studio.pt_layout', ' class="pt-label"') + '<div class="pt-layouts pt-chips"></div></section>' +
+          '<section class="pt-sec">' + tr('h3', 'studio.pt_tones', ' class="pt-label"') + '<div class="pt-tones pt-chips"></div></section>' +
+          '<section class="pt-sec">' + tr('h3', 'studio.pt_prints', ' class="pt-label"') + '<div class="pt-prints pt-chips"></div></section>' +
+          '<section class="pt-sec">' + tr('h3', 'studio.pt_fabrics', ' class="pt-label"') + '<div class="pt-fabrics pt-chips"></div>' +
+            '<label class="pt-other">' + tr('span', 'studio.pt_other') +
+              '<input name="other" maxlength="' + P.MAX_OTHER + '" autocomplete="off" data-i18n-attr="placeholder:studio.pt_other_ph" placeholder="' + esc(t('studio.pt_other_ph')) + '"></label>' +
+          '</section>' +
+          '<section class="pt-sec">' + tr('h3', 'studio.pt_draw', ' class="pt-label"') +
+            tr('p', 'studio.pt_draw_p', ' class="pt-small"') +
+            '<div class="pt-draw">' +
+              '<canvas class="pt-canvas" width="512" height="512" data-i18n-attr="aria-label:studio.pt_draw" aria-label="' + esc(t('studio.pt_draw')) + '"></canvas>' +
+              '<div class="pt-inks" role="group"></div>' +
+              '<div class="pt-tools">' +
+                '<button type="button" class="pt-tool" data-pt="undo" data-i18n="studio.pt_undo">' + esc(t('studio.pt_undo')) + '</button>' +
+                '<button type="button" class="pt-tool" data-pt="clear" data-i18n="studio.pt_clear">' + esc(t('studio.pt_clear')) + '</button>' +
+              '</div>' +
+              '<p class="pt-small pt-draw-msg" aria-live="polite"></p>' +
+            '</div>' +
+          '</section>' +
+          '<section class="pt-sec"><label class="pt-notefield">' + tr('span', 'studio.pt_note_label', ' class="pt-label"') +
+            '<textarea name="note" rows="2" maxlength="' + P.MAX_NOTE + '" data-i18n-attr="placeholder:studio.pt_note_ph" placeholder="' + esc(t('studio.pt_note_ph')) + '"></textarea></label></section>' +
           '<div class="pt-actions">' +
             '<span class="pt-price"></span>' +
             '<button type="button" class="st-btn" data-pt="add" data-i18n="studio.pt_add">' + esc(t('studio.pt_add')) + '</button>' +
             (window.GemTu ? '<button type="button" class="pt-tool" data-pt="keep" data-i18n="studio.pt_keep">' + esc(t('studio.pt_keep')) + '</button>' : '') +
             '<button type="button" class="pt-tool" data-pt="save" data-i18n="studio.pt_save">' + esc(t('studio.pt_save')) + '</button>' +
             '<button type="button" class="pt-tool" data-pt="link" data-i18n="studio.pt_link">' + esc(t('studio.pt_link')) + '</button>' +
+            '<button type="button" class="pt-tool" data-pt="random" data-i18n="studio.pt_random">' + esc(t('studio.pt_random')) + '</button>' +
           '</div>' +
           tr('p', 'studio.pt_note', ' class="pt-note"') +
         '</div>' +
@@ -603,52 +624,79 @@
         '</div>' +
       '</div>'
     );
+    var root = sheetBody.querySelector('.pt');
+    root.querySelector('[name="other"]').value = D.d.other;
+    root.querySelector('[name="note"]').value = D.d.note;
+    bindCanvas(root.querySelector('.pt-canvas'));
     renderDesigner();
+  }
+
+  function chip(attr, id, on, label, icon) {
+    return '<button type="button" class="pt-chip' + (on ? ' is-on' : '') + '" ' + attr + '="' + id +
+      '" aria-pressed="' + on + '">' + (icon || '') + '<span>' + esc(label) + '</span></button>';
   }
 
   function renderDesigner() {
     var root = sheetBody.querySelector('.pt');
-    if (!root) return;
-    var l = lng();
-    var cells = cellsNow();
+    if (!root || !P) return;
+    var l = lng(), d = D.d, prod = P.PRODUCTS[d.product];
+    var gemTones = d.tones[0] === P.GEM, gemPrints = d.prints[0] === P.GEM;
 
     root.querySelector('.pt-tabs').innerHTML = P.PRODUCT_ORDER.map(function (id) {
-      return '<button type="button" class="pt-tab' + (id === D.product ? ' is-on' : '') +
-        '" data-product="' + id + '" aria-pressed="' + (id === D.product) + '">' + esc(P.PRODUCTS[id][l]) + '</button>';
+      return '<button type="button" class="pt-tab' + (id === d.product ? ' is-on' : '') +
+        '" data-product="' + id + '" aria-pressed="' + (id === d.product) + '">' + esc(P.PRODUCTS[id][l]) + '</button>';
     }).join('');
 
-    root.querySelector('.pt-board').innerHTML =
-      P.svg({ product: D.product, cells: cells }, { cellAttrs: true, sel: D.sel });
-
-    var cur = cells[D.sel];
-    var n = cells.length;
-    var filled = cells.filter(Boolean).length;
-    root.querySelector('.pt-status').textContent = filled === n
-      ? t('studio.pt_done')
-      : (n > 1 ? t('studio.pt_cell') + ' ' + (D.sel + 1) + '/' + n + ' · ' : '') +
-        (cur ? P.cellName(cur, l) : t('studio.pt_empty'));
-
-    root.querySelector('.pt-mats').innerHTML = P.MAT_ORDER.map(function (m) {
-      return '<button type="button" class="pt-mat' + (m === D.mat ? ' is-on' : '') + '" data-mat="' + m +
-        '" aria-pressed="' + (m === D.mat) + '">' + P.swatch(m + '0', 22) + '<span>' + esc(P.MATERIALS[m][l]) + '</span></button>';
+    root.querySelector('.pt-layouts').innerHTML = prod.layouts.map(function (id) {
+      var preview = Object.assign({}, d, { layout: id });
+      var icon = id === 'tuve' && !d.sketch.length
+        ? '<svg viewBox="0 0 24 24" width="40" height="40" aria-hidden="true"><path d="M5 19l3-1L18 8l-2-2L6 16z" fill="none" stroke="#8A6A44" stroke-width="1.6" stroke-linejoin="round"/></svg>'
+        : P.svg(preview, { size: 40 });
+      return chip('data-layout', id, id === d.layout, P.LAYOUTS[id][l], icon);
     }).join('');
 
-    root.querySelector('.pt-ways').innerHTML = P.MATERIALS[D.mat].ways.map(function (w, i) {
-      var code = D.mat + i;
-      return '<button type="button" class="pt-way' + (code === cur ? ' is-on' : '') + '" data-way="' + code +
-        '" aria-label="' + esc(P.cellName(code, l)) + '" title="' + esc(w[l]) + '">' + P.swatch(code, 40) + '</button>';
+    root.querySelector('.pt-tones').innerHTML = P.TONE_ORDER.map(function (id) {
+      return chip('data-tone', id, d.tones.indexOf(id) >= 0, P.TONES[id][l], P.toneDot(id, 22));
+    }).join('') + chip('data-tone', P.GEM, gemTones, t('studio.pt_gem'));
+
+    root.querySelector('.pt-prints').innerHTML = P.PRINT_ORDER.map(function (id) {
+      return chip('data-print', id, d.prints.indexOf(id) >= 0, P.PRINTS[id][l], P.printDot(id, 22));
+    }).join('') + chip('data-print', P.GEM, gemPrints, t('studio.pt_gem'));
+
+    root.querySelector('.pt-fabrics').innerHTML = P.FABRIC_ORDER.map(function (id) {
+      return chip('data-fabric', id, d.fabrics.indexOf(id) >= 0, P.FABRICS[id][l]);
     }).join('');
 
-    var info = window.GemBasket ? window.GemBasket.info(P.PRODUCTS[D.product].sku) : null;
+    root.querySelector('.pt-inks').innerHTML = P.INKS.map(function (c, i) {
+      return '<button type="button" class="pt-ink' + (i === D.ink ? ' is-on' : '') + '" data-ink="' + i +
+        '" aria-pressed="' + (i === D.ink) + '" aria-label="' + esc(t('studio.pt_ink')) + ' ' + (i + 1) +
+        '"><span style="background:' + c + '"></span></button>';
+    }).join('');
+
+    renderPreview();
+  }
+
+  // The parts that change while typing / drawing, without rebuilding inputs.
+  function renderPreview() {
+    var root = sheetBody.querySelector('.pt');
+    if (!root) return;
+    var d = D.d, spec = specNow(), ok = P.isComplete(d);
+    root.querySelector('.pt-board').innerHTML = P.svg(d, { title: esc(P.describe(d)) });
+    drawCanvas();
+    root.querySelector('[data-pt="undo"]').disabled = !d.sketch.length;
+    root.querySelector('[data-pt="clear"]').disabled = !d.sketch.length;
+    root.querySelector('.pt-draw-msg').textContent = d.layout === 'tuve' && !d.sketch.length
+      ? t('studio.pt_draw_need')
+      : pointsUsed() >= P.MAX_POINTS ? t('studio.pt_draw_full') : '';
+
+    var sku = P.PRODUCTS[d.product].sku;
+    var info = window.GemBasket ? window.GemBasket.info(sku) : null;
     root.querySelector('.pt-price').textContent = info ? info.price : '';
     var add = root.querySelector('[data-pt="add"]');
-    add.disabled = filled !== n || (info && !info.inStock);
-    add.title = filled !== n ? t('studio.pt_fill_all') : '';
-    root.querySelector('[data-pt="undo"]').disabled = !D.undo.length;
+    add.disabled = !ok || (info && !info.inStock);
     var keep = root.querySelector('[data-pt="keep"]');
-    if (keep) keep.disabled = filled !== n;
+    if (keep) keep.disabled = !ok;
 
-    var sku = P.PRODUCTS[D.product].sku;
     root.querySelector('.pt-real').innerHTML = [sku].concat(REAL.filter(function (s) { return s !== sku; }))
       .map(function (s) {
         var i = window.GemBasket ? window.GemBasket.info(s) : null;
@@ -657,7 +705,7 @@
           '" alt="" loading="lazy" width="112" height="112">' + esc(i.name) + '</li>';
       }).join('');
 
-    var similar = filled === n ? similarTo(specNow()) : [];
+    var similar = ok ? similarTo(spec) : [];
     root.querySelector('.pt-similar').innerHTML = similar.length
       ? tr('h3', 'studio.pt_similar') + '<ul class="st-grid">' + similar.map(productCard).join('') + '</ul>'
       : '';
@@ -678,21 +726,74 @@
       .slice(0, 3).map(function (r) { return r.sku; });
   }
 
-  function remember() {
-    D.undo.push({ product: D.product, cells: cellsNow().slice(), sel: D.sel });
-    if (D.undo.length > 30) D.undo.shift();
+  // Multi-pick with a "let Gem choose" that clears the rest (and vice versa).
+  function toggle(listName, id, max) {
+    var arr = D.d[listName];
+    if (id === P.GEM) { D.d[listName] = arr[0] === P.GEM ? [] : [P.GEM]; return; }
+    arr = arr.filter(function (x) { return x !== P.GEM; });
+    var at = arr.indexOf(id);
+    if (at >= 0) arr.splice(at, 1);
+    else {
+      arr.push(id);
+      if (max && arr.length > max) arr.shift();   // keep the latest picks
+    }
+    D.d[listName] = arr;
   }
 
-  function pickWay(code) {
-    var cells = cellsNow();
-    remember();
-    cells[D.sel] = code;
-    // jump to the next empty patch, so filling a cushion is nine quick taps
-    for (var k2 = 1; k2 <= cells.length; k2++) {
-      var j = (D.sel + k2) % cells.length;
-      if (!cells[j]) { D.sel = j; break; }
+  /* --- sketch pad: strokes on a 64 x 64 grid --- */
+  function bindCanvas(cv) {
+    var cell = function (e) {
+      var r = cv.getBoundingClientRect();
+      var x = Math.floor((e.clientX - r.left) / r.width * P.GRID);
+      var y = Math.floor((e.clientY - r.top) / r.height * P.GRID);
+      return [Math.max(0, Math.min(P.GRID - 1, x)), Math.max(0, Math.min(P.GRID - 1, y))];
+    };
+    cv.addEventListener('pointerdown', function (e) {
+      if (D.d.sketch.length >= P.MAX_STROKES || pointsUsed() >= P.MAX_POINTS) { renderPreview(); return; }
+      e.preventDefault();
+      try { cv.setPointerCapture(e.pointerId); } catch (x) { /* ignore */ }
+      D.drawing = { c: D.ink, pts: [cell(e)] };
+      D.d.sketch.push(D.drawing);
+      drawCanvas();
+    });
+    cv.addEventListener('pointermove', function (e) {
+      if (!D.drawing) return;
+      var p = cell(e), last = D.drawing.pts[D.drawing.pts.length - 1];
+      if (p[0] === last[0] && p[1] === last[1]) return;
+      if (pointsUsed() >= P.MAX_POINTS) return;
+      D.drawing.pts.push(p);
+      drawCanvas();
+    });
+    var end = function () {
+      if (!D.drawing) return;
+      D.drawing = null;
+      renderPreview();
+    };
+    cv.addEventListener('pointerup', end);
+    cv.addEventListener('pointercancel', end);
+  }
+
+  function drawCanvas() {
+    var cv = sheetBody.querySelector('.pt-canvas');
+    if (!cv || !cv.getContext) return;
+    var g = cv.getContext('2d'), s = cv.width / P.GRID;
+    g.fillStyle = '#FBF6EE';
+    g.fillRect(0, 0, cv.width, cv.height);
+    g.strokeStyle = 'rgba(138,106,68,0.12)';
+    g.lineWidth = 1;
+    for (var k = 8; k < P.GRID; k += 8) {
+      g.beginPath(); g.moveTo(k * s, 0); g.lineTo(k * s, cv.height); g.moveTo(0, k * s); g.lineTo(cv.width, k * s); g.stroke();
     }
-    renderDesigner();
+    g.lineCap = 'round'; g.lineJoin = 'round'; g.lineWidth = s * 1.3;
+    D.d.sketch.forEach(function (st) {
+      g.strokeStyle = P.INKS[st.c];
+      g.beginPath();
+      st.pts.forEach(function (p, i) {
+        var x = (p[0] + 0.5) * s, y = (p[1] + 0.5) * s;
+        if (i) g.lineTo(x, y); else { g.moveTo(x, y); g.lineTo(x + 0.01, y); }
+      });
+      g.stroke();
+    });
   }
 
   function flash(btn, key, back) {
@@ -702,8 +803,7 @@
   }
 
   function saveImage(btn) {
-    var spec = specNow();
-    var svgText = P.svg(spec, { size: 900 });
+    var svgText = P.svg(D.d, { size: 900 });
     var img = new Image();
     img.onload = function () {
       var c = document.createElement('canvas');
@@ -713,7 +813,7 @@
       g.drawImage(img, 90, 120, 900, 900);
       g.fillStyle = '#3D4A2E'; g.textAlign = 'center';
       g.font = '800 54px Nunito, sans-serif';
-      g.fillText(P.PRODUCTS[D.product][lng()], 540, 1120);
+      g.fillText(P.PRODUCTS[D.d.product][lng()], 540, 1120);
       g.font = '500 34px "Be Vietnam Pro", sans-serif';
       g.fillStyle = '#87965A';
       g.fillText(t('studio.pt_caption'), 540, 1180);
@@ -721,7 +821,7 @@
         if (!blob) return;
         var a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = 'gem-thiet-ke-' + D.product + '.png';
+        a.download = 'gem-thiet-ke-' + D.d.product + '.png';
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
         setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
       }, 'image/png');
@@ -743,55 +843,62 @@
   function designerClick(e) {
     var el;
     if ((el = e.target.closest('[data-product]'))) {
-      D.product = el.getAttribute('data-product');
-      D.sel = 0;
-      renderDesigner();
-    } else if ((el = e.target.closest('[data-cell]'))) {
-      D.sel = +el.getAttribute('data-cell');
-      var cur = cellsNow()[D.sel];
-      if (cur) D.mat = cur.slice(0, 2);
-      renderDesigner();
-    } else if ((el = e.target.closest('[data-mat]'))) {
-      D.mat = el.getAttribute('data-mat');
-      renderDesigner();
-    } else if ((el = e.target.closest('[data-way]'))) {
-      pickWay(el.getAttribute('data-way'));
+      var keep = D.d;
+      D.d = P.blank(el.getAttribute('data-product'));
+      // carry the taste over to the new piece
+      D.d.tones = keep.tones; D.d.prints = keep.prints; D.d.fabrics = keep.fabrics;
+      D.d.other = keep.other; D.d.note = keep.note; D.d.sketch = keep.sketch;
+      if (keep.layout === 'tuve') D.d.layout = 'tuve';
+    } else if ((el = e.target.closest('[data-layout]'))) {
+      D.d.layout = el.getAttribute('data-layout');
+    } else if ((el = e.target.closest('[data-tone]'))) {
+      toggle('tones', el.getAttribute('data-tone'), P.MAX_TONES);
+    } else if ((el = e.target.closest('[data-print]'))) {
+      toggle('prints', el.getAttribute('data-print'));
+    } else if ((el = e.target.closest('[data-fabric]'))) {
+      toggle('fabrics', el.getAttribute('data-fabric'));
+    } else if ((el = e.target.closest('[data-ink]'))) {
+      D.ink = +el.getAttribute('data-ink');
     } else if ((el = e.target.closest('[data-pt]'))) {
       var act = el.getAttribute('data-pt');
-      if (act === 'random') {
-        remember();
-        D.cells[D.product] = P.randomFill(D.product);
-        D.sel = 0;
-      } else if (act === 'undo') {
-        var last = D.undo.pop();
-        if (last) { D.product = last.product; D.cells[last.product] = last.cells; D.sel = last.sel; }
-      } else if (act === 'reset') {
-        remember();
-        D.cells[D.product] = null;
-        D.sel = 0;
+      if (act === 'undo') {
+        D.d.sketch.pop();
+      } else if (act === 'clear') {
+        D.d.sketch = [];
+      } else if (act === 'random') {
+        var r = P.randomFill(D.d.product);
+        r.other = D.d.other; r.note = D.d.note; r.sketch = D.d.sketch;
+        D.d = r;
       } else if (act === 'add') {
         var spec = specNow();
         var board = sheetBody.querySelector('.pt-board svg');
-        if (window.GemBasket && window.GemBasket.add(P.PRODUCTS[D.product].sku, board, spec)) {
+        if (window.GemBasket && window.GemBasket.add(P.PRODUCTS[D.d.product].sku, board, spec)) {
           flash(el, 'studio.added', 'studio.pt_add');
           if (window.GemTu) window.GemTu.saveDesign(spec);
         }
-        return;
+        return true;
       } else if (act === 'keep') {
         if (window.GemTu && window.GemTu.saveDesign(specNow())) flash(el, 'studio.pt_kept', 'studio.pt_keep');
-        return;
+        return true;
       } else if (act === 'save') {
         saveImage(el);
-        return;
+        return true;
       } else if (act === 'link') {
         copyLink(el);
-        return;
+        return true;
       }
-      renderDesigner();
     } else {
       return false;
     }
+    renderDesigner();
     return true;
+  }
+
+  function designerInput(e) {
+    var n = e.target.name;
+    if (n !== 'other' && n !== 'note') return;
+    D.d[n] = e.target.value.slice(0, n === 'other' ? P.MAX_OTHER : P.MAX_NOTE);
+    renderPreview();
   }
 
   /* ---------- Tủ sưu tầm ----------
@@ -877,10 +984,7 @@
     if ((el = e.target.closest('[data-tu-open]'))) {
       var spec = P && P.parse(el.getAttribute('data-tu-open'));
       if (!spec) return true;
-      D.product = spec.product;
-      D.cells[spec.product] = spec.cells;
-      D.sel = 0;
-      if (spec.cells[0]) D.mat = spec.cells[0].slice(0, 2);
+      D.d = spec;
       closeSheet();
       visit('sewing');
       return true;
@@ -1074,19 +1178,23 @@
     counter: counter
   };
 
-  var hinted = false;
-  function hint(hot) {
-    hot.classList.remove('is-hint');
-    void hot.offsetWidth; // restart the nod
-    hot.classList.add('is-hint');
-    setTimeout(function () { hot.classList.remove('is-hint'); }, 1300);
-    if (!hinted) { hinted = true; say('studio.tap_label', 3000); }
-  }
-
+  // Open right away and let the character walk over behind the sheet.
+  // (Opening only on arrival meant a second tap mid-walk cancelled the
+  // first, so it took several taps to get anything open.)
   function visit(id, open) {
     var h = hotById(id);
     if (!h) return;
-    walkTo(standX(h), open === false ? null : ACTIONS[id]);
+    walkTo(standX(h));
+    if (open !== false && ACTIONS[id]) ACTIONS[id]();
+  }
+
+  // Is a tap on (or right beside) the character? Then it means "walk",
+  // even when a shelf or sofa happens to be behind them.
+  function nearPlayer(x, y) {
+    var img = frameEls[player.frame];
+    if (!img || img.hidden) return false;
+    var r = img.getBoundingClientRect();
+    return x > r.left - 16 && x < r.right + 16 && y > r.top - 8 && y < r.bottom + 8;
   }
 
   /* ======================================================================
@@ -1096,16 +1204,14 @@
     world.addEventListener('click', function (e) {
       if (e.target.closest('.st-udon')) { udonJoke(); return; }
       var hot = e.target.closest('.st-hot');
-      // Label tapped, or Enter/Space on a focused spot (detail 0): open it.
-      if (hot && (e.detail === 0 || e.target.closest('.st-hot-label'))) {
+      // A label, an object, or Enter/Space on a focused spot (detail 0):
+      // open it — unless the tap lands on the character, which means walk.
+      if (hot && (e.detail === 0 || e.target.closest('.st-hot-label') || !nearPlayer(e.clientX, e.clientY))) {
         visit(hot.getAttribute('data-hot'));
         return;
       }
-      // Anywhere else — floor, wall, or the object itself — just walk there.
-      // Opening on any tap meant a tap beside the character opened a sheet.
       var rect = stage.getBoundingClientRect();
       walkTo((e.clientX - rect.left + cam) / k);
-      if (hot) hint(hot);
     });
 
     document.querySelectorAll('[data-go]').forEach(function (b) {
@@ -1179,6 +1285,7 @@
       else tuSubmit(form);
     });
     modal.addEventListener('input', function (e) {
+      if (e.target.closest('.pt')) { designerInput(e); return; }
       if (e.target.name !== 'body' || !e.target.closest('.mb-form')) return;
       e.target.closest('.mb-form').querySelector('.mb-count').textContent = e.target.value.length + '/280';
     });
@@ -1228,10 +1335,7 @@
     try { shared = P && P.parse(new URLSearchParams(location.search).get('d') || ''); } catch (e) { /* old browser */ }
     if (shared) {
       try { sessionStorage.setItem('gem-src', 'link-chia-se'); } catch (e) { /* private mode */ }
-      D.product = shared.product;
-      D.cells[shared.product] = shared.cells;
-      D.sel = 0;
-      if (shared.cells[0]) D.mat = shared.cells[0].slice(0, 2);
+      D.d = shared;
       try { localStorage.setItem('gem-studio-intro', '1'); } catch (e) { /* ignore */ }
       setTimeout(function () { visit('sewing'); }, 400);
       return;
