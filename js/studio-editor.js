@@ -91,6 +91,14 @@ window.GemStudioEditor = (function () {
     worldEl.addEventListener('pointerdown', pointerDown);
     panelEl.addEventListener('click', panelClick);
     panelEl.addEventListener('change', panelChange);
+    panelEl.addEventListener('input', function (e) {
+      if (e.target.name !== 'se-size' || !sel || sel.kind !== 'item') return;
+      resize(data.items[sel.i], +e.target.value);
+      var num = panelEl.querySelector('[name="se-h"]');
+      if (num) num.value = e.target.value;
+      dirty = true;
+      draw();
+    });
     document.addEventListener('keydown', keyDown);
     window.addEventListener('resize', draw);
 
@@ -327,6 +335,12 @@ window.GemStudioEditor = (function () {
         '<b>Đồ đang chọn</b>' +
         '<label><input type="radio" name="se-layer" value="back"' + (it.layer !== 'front' ? ' checked' : '') + '> Sau nhân vật</label>' +
         '<label><input type="radio" name="se-layer" value="front"' + (it.layer === 'front' ? ' checked' : '') + '> Trước nhân vật</label>' +
+        '<label class="se-size">Cỡ <input type="range" name="se-size" min="20" max="1000" step="5" value="' + Math.round(it.h) + '">' +
+          '<input type="number" name="se-h" min="20" max="2000" step="5" value="' + Math.round(it.h) + '"> px cao</label>' +
+        '<div class="se-row">' +
+          '<button type="button" class="ad-btn" data-act="smaller">Nhỏ hơn</button>' +
+          '<button type="button" class="ad-btn" data-act="bigger">To hơn</button>' +
+        '</div>' +
         '<label>Xoay <input type="number" name="se-rot" value="' + it.rot + '" step="1" min="-180" max="180"> độ</label>' +
         '<div class="se-row">' +
           '<button type="button" class="ad-btn" data-act="up">Lên trên</button>' +
@@ -377,6 +391,7 @@ window.GemStudioEditor = (function () {
     var it = data.items[sel.i];
     remember();
     if (e.target.name === 'se-layer') it.layer = e.target.value;
+    if (e.target.name === 'se-size' || e.target.name === 'se-h') resize(it, +e.target.value);
     if (e.target.name === 'se-rot') it.rot = Math.max(-180, Math.min(180, Math.round(+e.target.value || 0)));
     draw();
   }
@@ -390,6 +405,8 @@ window.GemStudioEditor = (function () {
       var c = clone(it); c.x += 40; c.y += 20;
       data.items.push(c); sel = { kind: 'item', i: data.items.length - 1 };
     } else if (a === 'flip') it.flip = !it.flip;
+    else if (a === 'bigger') resize(it, it.h * 1.15);
+    else if (a === 'smaller') resize(it, it.h / 1.15);
     else if (a === 'frame') it.frame = !it.frame;
     else if (a === 'up' && i < data.items.length - 1) {
       data.items.splice(i, 1); data.items.splice(i + 1, 0, it); sel.i = i + 1;
@@ -397,6 +414,13 @@ window.GemStudioEditor = (function () {
       data.items.splice(i, 1); data.items.splice(i - 1, 0, it); sel.i = i - 1;
     }
     draw(); renderPanel();
+  }
+
+  // Height in strip px, width follows (aspect kept), centre stays put.
+  function resize(it, h) {
+    h = Math.max(20, Math.min(2000, Math.round(h) || it.h));
+    it.w = Math.max(8, Math.round(it.w * h / it.h));
+    it.h = h;
   }
 
   // New piece in the middle of what's on screen, a sensible size.
