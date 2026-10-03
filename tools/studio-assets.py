@@ -8,6 +8,7 @@ WebP files it writes. Source PNGs stay in Drive (D-assets), not in the repo.
     python3 tools/studio-assets.py --cast <folder with ch-pN-*.png>
     python3 tools/studio-assets.py --pieces <folder>   (names: see PIECES)
     python3 tools/studio-assets.py --batch <folder>    (sheet-/pr-/full- files)
+    python3 tools/studio-assets.py --outside <facade.png>  (street scene)
 
 Expects in <source-folder> (names from the "Bộ tài sản D" doc):
     bg-z1.png … bg-z5.png        five studio zones, 1536 x 1024
@@ -503,30 +504,126 @@ def build_batch(src):
 
 
 # ---------------------------------------------------------------------------
+# Street outside the studio (studio.html starts here, the door leads in).
+# The painted facade is 1536 wide — narrower than a desktop screen — so the
+# plain wall at both ends is mirrored back and forth to widen it. Mirroring
+# keeps every join seamless; only plain wall + pavement is repeated, never
+# the window or the door.
+#   python3 tools/studio-assets.py --outside <facade.png>
+# js/studio-layout.js OUTSIDE (door box, start) uses the numbers it prints.
+# ---------------------------------------------------------------------------
+OUT_BAND = (0, 190, 1340, 1536)   # plain wall: left band x0-x1, right band x0-x1
+OUT_PAD = 768                     # px added on each side
+
+
+def build_outside(src):
+    im = np.asarray(Image.open(src).convert('RGB').resize((1536, 1024), Image.LANCZOS)).astype(np.float32)
+    l0, l1, r0, r1 = OUT_BAND
+    h = im.shape[0]
+
+    def pad(band, leftward):
+        # Colour of each row (wall vs pavement), flat, plus only the fine
+        # paper grain of the band: big watercolour stains, repeated, look
+        # like an ink-blot test.
+        prof = np.median(band, axis=1, keepdims=True)                    # h x 1 x 3
+        # smooth along y (streaks), but not across the skirting line
+        k = np.exp(-np.linspace(-2, 2, 15) ** 2); k /= k.sum()
+        for c in range(3):
+            col = prof[:, 0, c]
+            sm = np.convolve(np.pad(col, 7, mode='edge'), k, mode='valid')
+            prof[:, 0, c] = np.where(np.abs(col - sm) > 18, col, sm)
+        soft = np.asarray(Image.fromarray(band.astype(np.uint8)).filter(ImageFilter.GaussianBlur(6)), np.float32)
+        grain = np.clip(band - soft, -10, 10)   # no wall sockets, no stain rims
+        tiles, flip = [], False
+        while sum(t.shape[1] for t in tiles) < OUT_PAD:
+            tiles.append(grain[:, ::-1] if flip else grain)
+            flip = not flip
+        g = np.concatenate(tiles, axis=1)[:, :OUT_PAD]
+        if leftward:
+            g = g[:, ::-1]
+        flat = np.repeat(prof, OUT_PAD, axis=1) + g * 0.7
+        # cross-fade into the painted edge over the band's width
+        w = band.shape[1]
+        edge = band if leftward else band
+        t = np.linspace(0, 1, w)[None, :, None]
+        if leftward:
+            flat[:, -w:] = flat[:, -w:] * (1 - t) + edge * t
+        else:
+            flat[:, :w] = edge * (1 - t) + flat[:, :w] * t
+        return flat
+
+    left = pad(im[:, l0:l1], True)
+    right = pad(im[:, r0:r1], False)
+    # the faded edge replaces the painted band, so drop it from the middle
+    mid = im[:, l1:r0]
+    out = np.clip(np.concatenate([left, mid, right], axis=1), 0, 255).astype(np.uint8)
+    out = Image.fromarray(out)
+    save_webp(out, OUT / 'bg' / 'ngoai.webp', quality=80)
+    print(f'  OUTSIDE width {out.size[0]}, facade x shifted by {OUT_PAD - l1}')
+
+
+# ---------------------------------------------------------------------------
 # images/studio/assets.json: what the layout editor offers, grouped by folder
 # (the site is static, so the browser can't list folders itself).
 #   python3 tools/studio-assets.py --manifest .
 # ---------------------------------------------------------------------------
-LIBRARY = [
-    ('props', 'Nội thất'), ('cay', 'Cây & hoa'), ('cay2', 'Cây nhỏ'), ('deco', 'Trang trí'),
-    ('vn', 'Đồ Việt'), ('wear', 'Đồ mặc'), ('ui', 'Giấy & khung'), ('udon', 'Udon'),
+# Grouped by where a piece goes when laying out a scene, not by which sticker
+# sheet it came from (files stay in their sheet folders, so saved layouts keep
+# working). FOLDER_GROUP = default for a folder, PICK = per-file exceptions.
+GROUPS = [
+    ('noi-that', 'Nội thất'), ('cay', 'Cây & hoa'), ('treo', 'Treo tường & trần'),
+    ('de-ban', 'Đồ để bàn, kệ'), ('vai', 'Vải, gối & thảm'), ('may', 'Đồ may & len'),
+    ('wear', 'Đồ mặc'), ('ui', 'Giấy & khung'), ('udon', 'Udon'),
 ]
+FOLDER_GROUP = {
+    'props': 'noi-that', 'cay': 'cay', 'cay2': 'cay', 'chuon': 'de-ban', 'deco': 'de-ban',
+    'vn': 'de-ban', 'may': 'may', 'nha': 'de-ban', 'wear': 'wear', 'ui': 'ui', 'udon': 'udon',
+}
+
+
+def _pick(spec):
+    out = {}
+    for group, names in spec.items():
+        for n in names.split():
+            out[n] = group
+    return out
+
+
+PICK = _pick({
+    'treo': (
+        'bang-ten bang-treo den-01 den-02 den-03 '
+        'deco-01 deco-02 deco-03 deco-04 deco-05 deco-06 deco-07 deco-08 deco-09 deco-10 '
+        'deco-13 deco-14 deco-15 deco-16 '
+        'vn-01 vn-02 vn-03 vn-04 vn-05 vn-06 vn-07 vn-08 vn-10 vn-11 vn-12 vn-13 vn-14 vn-15 '
+        'vn-16 vn-17 vn-43 vn-44 '
+        'may-04 may-13 may-18 nha-25 nha-27'),
+    'de-ban': 'gio may-09 may-33',
+    'noi-that': 'deco-50 vn-36 vn-39 vn-40 vn-41 vn-45 nha-16 nha-17 nha-18',
+    'cay': 'vn-09 vn-18 vn-19 vn-20 vn-21 vn-46 may-08 may-25 nha-21 nha-22 nha-23 nha-24',
+    'vai': ('deco-40 deco-41 deco-42 deco-43 deco-44 deco-45 '
+            'may-03 may-07 may-30 may-35 may-40 '
+            'nha-01 nha-02 nha-03 nha-04 nha-05 nha-06 nha-07 nha-08 nha-09 nha-10 nha-11 '
+            'nha-12 nha-13 nha-14 nha-15 nha-31'),
+})
 
 
 def build_manifest():
-    groups = []
-    for folder, label in LIBRARY:
-        items = []
+    found = {g: [] for g, _ in GROUPS}
+    for folder in sorted(FOLDER_GROUP):
         for f in sorted((OUT / folder).glob('*.webp')):
+            group = PICK.get(f.stem, FOLDER_GROUP[folder])
             w, h = Image.open(f).size
-            items.append({'src': f'images/studio/{folder}/{f.name}', 'w': w, 'h': h})
-        groups.append({'id': folder, 'label': label, 'items': items})
+            found[group].append({'src': f'images/studio/{folder}/{f.name}', 'w': w, 'h': h})
+    unknown = set(PICK) - {f.stem for d in FOLDER_GROUP for f in (OUT / d).glob('*.webp')}
+    if unknown:
+        print('  PICK names with no file:', ' '.join(sorted(unknown)))
+    groups = [{'id': g, 'label': label, 'items': found[g]} for g, label in GROUPS]
     prods = []
     for f in sorted((ROOT / 'images' / 'products').glob('*-thumb.jpg')):
         prods.append({'src': f'images/products/{f.name}', 'w': 600, 'h': 600, 'frame': True})
     groups.append({'id': 'products', 'label': 'Ảnh sản phẩm', 'items': prods})
     bgs = []
-    for name in ('strip-trong', 'strip'):
+    for name in ('strip-trong', 'strip', 'ngoai'):
         f = OUT / 'bg' / f'{name}.webp'
         if f.exists():
             w, h = Image.open(f).size
@@ -548,6 +645,9 @@ if __name__ == '__main__':
         sys.exit()
     if len(sys.argv) == 3 and sys.argv[1] == '--strip-empty':
         print('empty strip:'); build_strip(Path(sys.argv[2]), ZONES_EMPTY, SHIFT_EMPTY, {}, PILLAR_EMPTY, 4, 'strip-trong')
+        sys.exit()
+    if len(sys.argv) == 3 and sys.argv[1] == '--outside':
+        print('outside:'); build_outside(Path(sys.argv[2]))
         sys.exit()
     if len(sys.argv) == 3 and sys.argv[1] == '--manifest':
         build_manifest(); sys.exit()
