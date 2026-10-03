@@ -25,7 +25,7 @@ window.GemStudioEditor = (function () {
   var k = 0.45;             // screen px per strip px
   var zoom = 1;
   var dirty = false;
-  var group = 'props';
+  var group = 'noi-that';
   var profiles = [];        // [{ id, name, updated_at }] saved layouts ('p-…')
   var liveName = null;      // name of the profile that is live, if any
   var current = null;       // profile id loaded in the editor (null = draft)
@@ -473,7 +473,7 @@ window.GemStudioEditor = (function () {
     var b;
     if ((b = e.target.closest('[data-group]'))) { group = b.dataset.group; renderPanel(); return; }
     if ((b = e.target.closest('[data-asset]'))) {
-      var g = lib.groups.filter(function (x) { return x.id === group; })[0];
+      var g = lib.groups.filter(function (x) { return x.id === group; })[0] || lib.groups[0];
       add(g.items[+b.dataset.asset]);
       return;
     }

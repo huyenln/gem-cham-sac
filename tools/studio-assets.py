@@ -567,20 +567,57 @@ def build_outside(src):
 # (the site is static, so the browser can't list folders itself).
 #   python3 tools/studio-assets.py --manifest .
 # ---------------------------------------------------------------------------
-LIBRARY = [
-    ('props', 'Nội thất'), ('cay', 'Cây & hoa'), ('cay2', 'Cây nhỏ'), ('deco', 'Trang trí'),
-    ('vn', 'Đồ Việt'), ('chuon', 'Chuồn chuồn'), ('wear', 'Đồ mặc'), ('ui', 'Giấy & khung'), ('udon', 'Udon'),
+# Grouped by where a piece goes when laying out a scene, not by which sticker
+# sheet it came from (files stay in their sheet folders, so saved layouts keep
+# working). FOLDER_GROUP = default for a folder, PICK = per-file exceptions.
+GROUPS = [
+    ('noi-that', 'Nội thất'), ('cay', 'Cây & hoa'), ('treo', 'Treo tường & trần'),
+    ('de-ban', 'Đồ để bàn, kệ'), ('vai', 'Vải, gối & thảm'), ('may', 'Đồ may & len'),
+    ('wear', 'Đồ mặc'), ('ui', 'Giấy & khung'), ('udon', 'Udon'),
 ]
+FOLDER_GROUP = {
+    'props': 'noi-that', 'cay': 'cay', 'cay2': 'cay', 'chuon': 'de-ban', 'deco': 'de-ban',
+    'vn': 'de-ban', 'may': 'may', 'nha': 'de-ban', 'wear': 'wear', 'ui': 'ui', 'udon': 'udon',
+}
+
+
+def _pick(spec):
+    out = {}
+    for group, names in spec.items():
+        for n in names.split():
+            out[n] = group
+    return out
+
+
+PICK = _pick({
+    'treo': (
+        'bang-ten bang-treo den-01 den-02 den-03 '
+        'deco-01 deco-02 deco-03 deco-04 deco-05 deco-06 deco-07 deco-08 deco-09 deco-10 '
+        'deco-13 deco-14 deco-15 deco-16 '
+        'vn-01 vn-02 vn-03 vn-04 vn-05 vn-06 vn-07 vn-08 vn-10 vn-11 vn-12 vn-13 vn-14 vn-15 '
+        'vn-16 vn-17 vn-43 vn-44 '
+        'may-04 may-13 may-18 nha-25 nha-27'),
+    'de-ban': 'gio may-09 may-33',
+    'noi-that': 'deco-50 vn-36 vn-39 vn-40 vn-41 vn-45 nha-16 nha-17 nha-18',
+    'cay': 'vn-09 vn-18 vn-19 vn-20 vn-21 vn-46 may-08 may-25 nha-21 nha-22 nha-23 nha-24',
+    'vai': ('deco-40 deco-41 deco-42 deco-43 deco-44 deco-45 '
+            'may-03 may-07 may-30 may-35 may-40 '
+            'nha-01 nha-02 nha-03 nha-04 nha-05 nha-06 nha-07 nha-08 nha-09 nha-10 nha-11 '
+            'nha-12 nha-13 nha-14 nha-15 nha-31'),
+})
 
 
 def build_manifest():
-    groups = []
-    for folder, label in LIBRARY:
-        items = []
+    found = {g: [] for g, _ in GROUPS}
+    for folder in sorted(FOLDER_GROUP):
         for f in sorted((OUT / folder).glob('*.webp')):
+            group = PICK.get(f.stem, FOLDER_GROUP[folder])
             w, h = Image.open(f).size
-            items.append({'src': f'images/studio/{folder}/{f.name}', 'w': w, 'h': h})
-        groups.append({'id': folder, 'label': label, 'items': items})
+            found[group].append({'src': f'images/studio/{folder}/{f.name}', 'w': w, 'h': h})
+    unknown = set(PICK) - {f.stem for d in FOLDER_GROUP for f in (OUT / d).glob('*.webp')}
+    if unknown:
+        print('  PICK names with no file:', ' '.join(sorted(unknown)))
+    groups = [{'id': g, 'label': label, 'items': found[g]} for g, label in GROUPS]
     prods = []
     for f in sorted((ROOT / 'images' / 'products').glob('*-thumb.jpg')):
         prods.append({'src': f'images/products/{f.name}', 'w': 600, 'h': 600, 'frame': True})

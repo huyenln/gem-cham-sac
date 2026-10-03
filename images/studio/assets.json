@@ -12,15 +12,35 @@
   },
   {
    "src": "images/studio/bg/ngoai.webp",
-   "w": 3072,
+   "w": 2686,
    "h": 1024
   }
  ],
  "groups": [
   {
-   "id": "props",
+   "id": "noi-that",
    "label": "Nội thất",
    "items": [
+    {
+     "src": "images/studio/deco/deco-50.webp",
+     "w": 130,
+     "h": 151
+    },
+    {
+     "src": "images/studio/nha/nha-16.webp",
+     "w": 271,
+     "h": 171
+    },
+    {
+     "src": "images/studio/nha/nha-17.webp",
+     "w": 144,
+     "h": 159
+    },
+    {
+     "src": "images/studio/nha/nha-18.webp",
+     "w": 157,
+     "h": 160
+    },
     {
      "src": "images/studio/props/ban-may-day.webp",
      "w": 900,
@@ -30,16 +50,6 @@
      "src": "images/studio/props/ban-may.webp",
      "w": 900,
      "h": 865
-    },
-    {
-     "src": "images/studio/props/bang-ten.webp",
-     "w": 900,
-     "h": 557
-    },
-    {
-     "src": "images/studio/props/bang-treo.webp",
-     "w": 574,
-     "h": 741
     },
     {
      "src": "images/studio/props/cua-di.webp",
@@ -62,29 +72,9 @@
      "h": 367
     },
     {
-     "src": "images/studio/props/den-01.webp",
-     "w": 551,
-     "h": 432
-    },
-    {
-     "src": "images/studio/props/den-02.webp",
-     "w": 260,
-     "h": 502
-    },
-    {
-     "src": "images/studio/props/den-03.webp",
-     "w": 643,
-     "h": 352
-    },
-    {
      "src": "images/studio/props/ghe-dai.webp",
      "w": 900,
      "h": 202
-    },
-    {
-     "src": "images/studio/props/gio.webp",
-     "w": 900,
-     "h": 268
     },
     {
      "src": "images/studio/props/ke-gia-day.webp",
@@ -135,6 +125,31 @@
      "src": "images/studio/props/xe.webp",
      "w": 878,
      "h": 900
+    },
+    {
+     "src": "images/studio/vn/vn-36.webp",
+     "w": 173,
+     "h": 111
+    },
+    {
+     "src": "images/studio/vn/vn-39.webp",
+     "w": 188,
+     "h": 174
+    },
+    {
+     "src": "images/studio/vn/vn-40.webp",
+     "w": 140,
+     "h": 144
+    },
+    {
+     "src": "images/studio/vn/vn-41.webp",
+     "w": 149,
+     "h": 185
+    },
+    {
+     "src": "images/studio/vn/vn-45.webp",
+     "w": 119,
+     "h": 147
     }
    ]
   },
@@ -296,13 +311,7 @@
      "src": "images/studio/cay/cay-31.webp",
      "w": 228,
      "h": 157
-    }
-   ]
-  },
-  {
-   "id": "cay2",
-   "label": "Cây nhỏ",
-   "items": [
+    },
     {
      "src": "images/studio/cay2/cay2-01.webp",
      "w": 281,
@@ -382,12 +391,72 @@
      "src": "images/studio/cay2/cay2-16.webp",
      "w": 224,
      "h": 193
+    },
+    {
+     "src": "images/studio/may/may-08.webp",
+     "w": 151,
+     "h": 203
+    },
+    {
+     "src": "images/studio/may/may-25.webp",
+     "w": 212,
+     "h": 170
+    },
+    {
+     "src": "images/studio/nha/nha-21.webp",
+     "w": 145,
+     "h": 197
+    },
+    {
+     "src": "images/studio/nha/nha-22.webp",
+     "w": 124,
+     "h": 195
+    },
+    {
+     "src": "images/studio/nha/nha-23.webp",
+     "w": 164,
+     "h": 219
+    },
+    {
+     "src": "images/studio/nha/nha-24.webp",
+     "w": 164,
+     "h": 181
+    },
+    {
+     "src": "images/studio/vn/vn-09.webp",
+     "w": 329,
+     "h": 365
+    },
+    {
+     "src": "images/studio/vn/vn-18.webp",
+     "w": 108,
+     "h": 214
+    },
+    {
+     "src": "images/studio/vn/vn-19.webp",
+     "w": 165,
+     "h": 244
+    },
+    {
+     "src": "images/studio/vn/vn-20.webp",
+     "w": 190,
+     "h": 365
+    },
+    {
+     "src": "images/studio/vn/vn-21.webp",
+     "w": 171,
+     "h": 220
+    },
+    {
+     "src": "images/studio/vn/vn-46.webp",
+     "w": 135,
+     "h": 127
     }
    ]
   },
   {
-   "id": "deco",
-   "label": "Trang trí",
+   "id": "treo",
+   "label": "Treo tường & trần",
    "items": [
     {
      "src": "images/studio/deco/deco-01.webp",
@@ -440,16 +509,6 @@
      "h": 163
     },
     {
-     "src": "images/studio/deco/deco-11.webp",
-     "w": 64,
-     "h": 134
-    },
-    {
-     "src": "images/studio/deco/deco-12.webp",
-     "w": 63,
-     "h": 145
-    },
-    {
      "src": "images/studio/deco/deco-13.webp",
      "w": 362,
      "h": 142
@@ -468,6 +527,237 @@
      "src": "images/studio/deco/deco-16.webp",
      "w": 77,
      "h": 122
+    },
+    {
+     "src": "images/studio/may/may-04.webp",
+     "w": 162,
+     "h": 183
+    },
+    {
+     "src": "images/studio/may/may-13.webp",
+     "w": 149,
+     "h": 177
+    },
+    {
+     "src": "images/studio/may/may-18.webp",
+     "w": 140,
+     "h": 157
+    },
+    {
+     "src": "images/studio/nha/nha-25.webp",
+     "w": 92,
+     "h": 124
+    },
+    {
+     "src": "images/studio/nha/nha-27.webp",
+     "w": 146,
+     "h": 184
+    },
+    {
+     "src": "images/studio/props/bang-ten.webp",
+     "w": 900,
+     "h": 557
+    },
+    {
+     "src": "images/studio/props/bang-treo.webp",
+     "w": 574,
+     "h": 741
+    },
+    {
+     "src": "images/studio/props/den-01.webp",
+     "w": 551,
+     "h": 432
+    },
+    {
+     "src": "images/studio/props/den-02.webp",
+     "w": 260,
+     "h": 502
+    },
+    {
+     "src": "images/studio/props/den-03.webp",
+     "w": 643,
+     "h": 352
+    },
+    {
+     "src": "images/studio/vn/vn-01.webp",
+     "w": 226,
+     "h": 277
+    },
+    {
+     "src": "images/studio/vn/vn-02.webp",
+     "w": 97,
+     "h": 278
+    },
+    {
+     "src": "images/studio/vn/vn-03.webp",
+     "w": 106,
+     "h": 260
+    },
+    {
+     "src": "images/studio/vn/vn-04.webp",
+     "w": 100,
+     "h": 268
+    },
+    {
+     "src": "images/studio/vn/vn-05.webp",
+     "w": 134,
+     "h": 254
+    },
+    {
+     "src": "images/studio/vn/vn-06.webp",
+     "w": 377,
+     "h": 122
+    },
+    {
+     "src": "images/studio/vn/vn-07.webp",
+     "w": 192,
+     "h": 124
+    },
+    {
+     "src": "images/studio/vn/vn-08.webp",
+     "w": 182,
+     "h": 123
+    },
+    {
+     "src": "images/studio/vn/vn-10.webp",
+     "w": 163,
+     "h": 107
+    },
+    {
+     "src": "images/studio/vn/vn-11.webp",
+     "w": 159,
+     "h": 111
+    },
+    {
+     "src": "images/studio/vn/vn-12.webp",
+     "w": 167,
+     "h": 106
+    },
+    {
+     "src": "images/studio/vn/vn-13.webp",
+     "w": 135,
+     "h": 137
+    },
+    {
+     "src": "images/studio/vn/vn-14.webp",
+     "w": 131,
+     "h": 246
+    },
+    {
+     "src": "images/studio/vn/vn-15.webp",
+     "w": 132,
+     "h": 191
+    },
+    {
+     "src": "images/studio/vn/vn-16.webp",
+     "w": 103,
+     "h": 222
+    },
+    {
+     "src": "images/studio/vn/vn-17.webp",
+     "w": 149,
+     "h": 200
+    },
+    {
+     "src": "images/studio/vn/vn-43.webp",
+     "w": 125,
+     "h": 158
+    },
+    {
+     "src": "images/studio/vn/vn-44.webp",
+     "w": 90,
+     "h": 181
+    }
+   ]
+  },
+  {
+   "id": "de-ban",
+   "label": "Đồ để bàn, kệ",
+   "items": [
+    {
+     "src": "images/studio/chuon/chuon-01.webp",
+     "w": 464,
+     "h": 439
+    },
+    {
+     "src": "images/studio/chuon/chuon-02.webp",
+     "w": 469,
+     "h": 286
+    },
+    {
+     "src": "images/studio/chuon/chuon-03.webp",
+     "w": 470,
+     "h": 385
+    },
+    {
+     "src": "images/studio/chuon/chuon-04.webp",
+     "w": 412,
+     "h": 280
+    },
+    {
+     "src": "images/studio/chuon/chuon-05.webp",
+     "w": 543,
+     "h": 276
+    },
+    {
+     "src": "images/studio/chuon/chuon-06.webp",
+     "w": 374,
+     "h": 393
+    },
+    {
+     "src": "images/studio/chuon/chuon-07.webp",
+     "w": 401,
+     "h": 367
+    },
+    {
+     "src": "images/studio/chuon/chuon-08.webp",
+     "w": 354,
+     "h": 326
+    },
+    {
+     "src": "images/studio/chuon/chuon-09.webp",
+     "w": 420,
+     "h": 395
+    },
+    {
+     "src": "images/studio/chuon/chuon-10.webp",
+     "w": 388,
+     "h": 338
+    },
+    {
+     "src": "images/studio/chuon/chuon-11.webp",
+     "w": 362,
+     "h": 273
+    },
+    {
+     "src": "images/studio/chuon/chuon-12.webp",
+     "w": 371,
+     "h": 330
+    },
+    {
+     "src": "images/studio/chuon/chuon-13.webp",
+     "w": 372,
+     "h": 295
+    },
+    {
+     "src": "images/studio/chuon/chuon-14.webp",
+     "w": 376,
+     "h": 323
+    },
+    {
+     "src": "images/studio/chuon/chuon-15.webp",
+     "w": 389,
+     "h": 292
+    },
+    {
+     "src": "images/studio/deco/deco-11.webp",
+     "w": 64,
+     "h": 134
+    },
+    {
+     "src": "images/studio/deco/deco-12.webp",
+     "w": 63,
+     "h": 145
     },
     {
      "src": "images/studio/deco/deco-17.webp",
@@ -585,36 +875,6 @@
      "h": 121
     },
     {
-     "src": "images/studio/deco/deco-40.webp",
-     "w": 140,
-     "h": 126
-    },
-    {
-     "src": "images/studio/deco/deco-41.webp",
-     "w": 132,
-     "h": 121
-    },
-    {
-     "src": "images/studio/deco/deco-42.webp",
-     "w": 125,
-     "h": 118
-    },
-    {
-     "src": "images/studio/deco/deco-43.webp",
-     "w": 129,
-     "h": 121
-    },
-    {
-     "src": "images/studio/deco/deco-44.webp",
-     "w": 127,
-     "h": 121
-    },
-    {
-     "src": "images/studio/deco/deco-45.webp",
-     "w": 127,
-     "h": 120
-    },
-    {
      "src": "images/studio/deco/deco-46.webp",
      "w": 68,
      "h": 116
@@ -633,11 +893,6 @@
      "src": "images/studio/deco/deco-49.webp",
      "w": 191,
      "h": 126
-    },
-    {
-     "src": "images/studio/deco/deco-50.webp",
-     "w": 130,
-     "h": 151
     },
     {
      "src": "images/studio/deco/deco-51.webp",
@@ -678,117 +933,51 @@
      "src": "images/studio/deco/deco-58.webp",
      "w": 170,
      "h": 130
-    }
-   ]
-  },
-  {
-   "id": "vn",
-   "label": "Đồ Việt",
-   "items": [
-    {
-     "src": "images/studio/vn/vn-01.webp",
-     "w": 226,
-     "h": 277
     },
     {
-     "src": "images/studio/vn/vn-02.webp",
-     "w": 97,
-     "h": 278
+     "src": "images/studio/may/may-09.webp",
+     "w": 227,
+     "h": 195
     },
     {
-     "src": "images/studio/vn/vn-03.webp",
-     "w": 106,
-     "h": 260
+     "src": "images/studio/may/may-33.webp",
+     "w": 113,
+     "h": 105
     },
     {
-     "src": "images/studio/vn/vn-04.webp",
-     "w": 100,
-     "h": 268
+     "src": "images/studio/nha/nha-19.webp",
+     "w": 160,
+     "h": 145
     },
     {
-     "src": "images/studio/vn/vn-05.webp",
-     "w": 134,
-     "h": 254
-    },
-    {
-     "src": "images/studio/vn/vn-06.webp",
-     "w": 377,
+     "src": "images/studio/nha/nha-20.webp",
+     "w": 177,
      "h": 122
     },
     {
-     "src": "images/studio/vn/vn-07.webp",
-     "w": 192,
-     "h": 124
-    },
-    {
-     "src": "images/studio/vn/vn-08.webp",
-     "w": 182,
-     "h": 123
-    },
-    {
-     "src": "images/studio/vn/vn-09.webp",
-     "w": 329,
-     "h": 365
-    },
-    {
-     "src": "images/studio/vn/vn-10.webp",
-     "w": 163,
-     "h": 107
-    },
-    {
-     "src": "images/studio/vn/vn-11.webp",
-     "w": 159,
-     "h": 111
-    },
-    {
-     "src": "images/studio/vn/vn-12.webp",
-     "w": 167,
-     "h": 106
-    },
-    {
-     "src": "images/studio/vn/vn-13.webp",
-     "w": 135,
-     "h": 137
-    },
-    {
-     "src": "images/studio/vn/vn-14.webp",
-     "w": 131,
-     "h": 246
-    },
-    {
-     "src": "images/studio/vn/vn-15.webp",
-     "w": 132,
+     "src": "images/studio/nha/nha-26.webp",
+     "w": 145,
      "h": 191
     },
     {
-     "src": "images/studio/vn/vn-16.webp",
-     "w": 103,
-     "h": 222
+     "src": "images/studio/nha/nha-28.webp",
+     "w": 208,
+     "h": 131
     },
     {
-     "src": "images/studio/vn/vn-17.webp",
-     "w": 149,
-     "h": 200
+     "src": "images/studio/nha/nha-29.webp",
+     "w": 205,
+     "h": 146
     },
     {
-     "src": "images/studio/vn/vn-18.webp",
-     "w": 108,
-     "h": 214
+     "src": "images/studio/nha/nha-30.webp",
+     "w": 207,
+     "h": 155
     },
     {
-     "src": "images/studio/vn/vn-19.webp",
-     "w": 165,
-     "h": 244
-    },
-    {
-     "src": "images/studio/vn/vn-20.webp",
-     "w": 190,
-     "h": 365
-    },
-    {
-     "src": "images/studio/vn/vn-21.webp",
-     "w": 171,
-     "h": 220
+     "src": "images/studio/props/gio.webp",
+     "w": 900,
+     "h": 268
     },
     {
      "src": "images/studio/vn/vn-22.webp",
@@ -861,11 +1050,6 @@
      "h": 118
     },
     {
-     "src": "images/studio/vn/vn-36.webp",
-     "w": 173,
-     "h": 111
-    },
-    {
      "src": "images/studio/vn/vn-37.webp",
      "w": 49,
      "h": 130
@@ -876,125 +1060,301 @@
      "h": 140
     },
     {
-     "src": "images/studio/vn/vn-39.webp",
-     "w": 188,
-     "h": 174
-    },
-    {
-     "src": "images/studio/vn/vn-40.webp",
-     "w": 140,
-     "h": 144
-    },
-    {
-     "src": "images/studio/vn/vn-41.webp",
-     "w": 149,
-     "h": 185
-    },
-    {
      "src": "images/studio/vn/vn-42.webp",
      "w": 661,
      "h": 164
-    },
-    {
-     "src": "images/studio/vn/vn-43.webp",
-     "w": 125,
-     "h": 158
-    },
-    {
-     "src": "images/studio/vn/vn-44.webp",
-     "w": 90,
-     "h": 181
-    },
-    {
-     "src": "images/studio/vn/vn-45.webp",
-     "w": 119,
-     "h": 147
-    },
-    {
-     "src": "images/studio/vn/vn-46.webp",
-     "w": 135,
-     "h": 127
     }
    ]
   },
   {
-   "id": "chuon",
-   "label": "Chuồn chuồn",
+   "id": "vai",
+   "label": "Vải, gối & thảm",
    "items": [
     {
-     "src": "images/studio/chuon/chuon-01.webp",
-     "w": 464,
-     "h": 439
+     "src": "images/studio/deco/deco-40.webp",
+     "w": 140,
+     "h": 126
     },
     {
-     "src": "images/studio/chuon/chuon-02.webp",
-     "w": 469,
-     "h": 286
+     "src": "images/studio/deco/deco-41.webp",
+     "w": 132,
+     "h": 121
     },
     {
-     "src": "images/studio/chuon/chuon-03.webp",
-     "w": 470,
-     "h": 385
+     "src": "images/studio/deco/deco-42.webp",
+     "w": 125,
+     "h": 118
     },
     {
-     "src": "images/studio/chuon/chuon-04.webp",
-     "w": 412,
-     "h": 280
+     "src": "images/studio/deco/deco-43.webp",
+     "w": 129,
+     "h": 121
     },
     {
-     "src": "images/studio/chuon/chuon-05.webp",
-     "w": 543,
-     "h": 276
+     "src": "images/studio/deco/deco-44.webp",
+     "w": 127,
+     "h": 121
     },
     {
-     "src": "images/studio/chuon/chuon-06.webp",
-     "w": 374,
-     "h": 393
+     "src": "images/studio/deco/deco-45.webp",
+     "w": 127,
+     "h": 120
     },
     {
-     "src": "images/studio/chuon/chuon-07.webp",
-     "w": 401,
-     "h": 367
+     "src": "images/studio/may/may-03.webp",
+     "w": 215,
+     "h": 161
     },
     {
-     "src": "images/studio/chuon/chuon-08.webp",
+     "src": "images/studio/may/may-07.webp",
+     "w": 253,
+     "h": 174
+    },
+    {
+     "src": "images/studio/may/may-30.webp",
+     "w": 157,
+     "h": 125
+    },
+    {
+     "src": "images/studio/may/may-35.webp",
+     "w": 155,
+     "h": 151
+    },
+    {
+     "src": "images/studio/may/may-40.webp",
+     "w": 230,
+     "h": 160
+    },
+    {
+     "src": "images/studio/nha/nha-01.webp",
+     "w": 393,
+     "h": 161
+    },
+    {
+     "src": "images/studio/nha/nha-02.webp",
+     "w": 402,
+     "h": 168
+    },
+    {
+     "src": "images/studio/nha/nha-03.webp",
+     "w": 315,
+     "h": 134
+    },
+    {
+     "src": "images/studio/nha/nha-04.webp",
+     "w": 367,
+     "h": 159
+    },
+    {
+     "src": "images/studio/nha/nha-05.webp",
+     "w": 305,
+     "h": 142
+    },
+    {
+     "src": "images/studio/nha/nha-06.webp",
+     "w": 452,
+     "h": 184
+    },
+    {
+     "src": "images/studio/nha/nha-07.webp",
+     "w": 417,
+     "h": 180
+    },
+    {
+     "src": "images/studio/nha/nha-08.webp",
+     "w": 308,
+     "h": 139
+    },
+    {
+     "src": "images/studio/nha/nha-09.webp",
+     "w": 184,
+     "h": 113
+    },
+    {
+     "src": "images/studio/nha/nha-10.webp",
+     "w": 164,
+     "h": 110
+    },
+    {
+     "src": "images/studio/nha/nha-11.webp",
+     "w": 210,
+     "h": 130
+    },
+    {
+     "src": "images/studio/nha/nha-12.webp",
+     "w": 223,
+     "h": 138
+    },
+    {
+     "src": "images/studio/nha/nha-13.webp",
+     "w": 180,
+     "h": 104
+    },
+    {
+     "src": "images/studio/nha/nha-14.webp",
+     "w": 150,
+     "h": 134
+    },
+    {
+     "src": "images/studio/nha/nha-15.webp",
+     "w": 161,
+     "h": 151
+    },
+    {
+     "src": "images/studio/nha/nha-31.webp",
+     "w": 253,
+     "h": 154
+    }
+   ]
+  },
+  {
+   "id": "may",
+   "label": "Đồ may & len",
+   "items": [
+    {
+     "src": "images/studio/may/may-01.webp",
+     "w": 296,
+     "h": 201
+    },
+    {
+     "src": "images/studio/may/may-02.webp",
+     "w": 179,
+     "h": 214
+    },
+    {
+     "src": "images/studio/may/may-05.webp",
+     "w": 148,
+     "h": 147
+    },
+    {
+     "src": "images/studio/may/may-06.webp",
+     "w": 144,
+     "h": 223
+    },
+    {
+     "src": "images/studio/may/may-10.webp",
+     "w": 162,
+     "h": 241
+    },
+    {
+     "src": "images/studio/may/may-11.webp",
+     "w": 202,
+     "h": 233
+    },
+    {
+     "src": "images/studio/may/may-12.webp",
      "w": 354,
-     "h": 326
+     "h": 144
     },
     {
-     "src": "images/studio/chuon/chuon-09.webp",
-     "w": 420,
-     "h": 395
+     "src": "images/studio/may/may-14.webp",
+     "w": 185,
+     "h": 169
     },
     {
-     "src": "images/studio/chuon/chuon-10.webp",
-     "w": 388,
-     "h": 338
+     "src": "images/studio/may/may-15.webp",
+     "w": 69,
+     "h": 167
     },
     {
-     "src": "images/studio/chuon/chuon-11.webp",
-     "w": 362,
-     "h": 273
+     "src": "images/studio/may/may-16.webp",
+     "w": 40,
+     "h": 150
     },
     {
-     "src": "images/studio/chuon/chuon-12.webp",
-     "w": 371,
-     "h": 330
+     "src": "images/studio/may/may-17.webp",
+     "w": 36,
+     "h": 161
     },
     {
-     "src": "images/studio/chuon/chuon-13.webp",
-     "w": 372,
-     "h": 295
+     "src": "images/studio/may/may-19.webp",
+     "w": 94,
+     "h": 148
     },
     {
-     "src": "images/studio/chuon/chuon-14.webp",
-     "w": 376,
-     "h": 323
+     "src": "images/studio/may/may-20.webp",
+     "w": 135,
+     "h": 160
     },
     {
-     "src": "images/studio/chuon/chuon-15.webp",
-     "w": 389,
-     "h": 292
+     "src": "images/studio/may/may-21.webp",
+     "w": 122,
+     "h": 135
+    },
+    {
+     "src": "images/studio/may/may-22.webp",
+     "w": 142,
+     "h": 126
+    },
+    {
+     "src": "images/studio/may/may-23.webp",
+     "w": 245,
+     "h": 141
+    },
+    {
+     "src": "images/studio/may/may-24.webp",
+     "w": 156,
+     "h": 165
+    },
+    {
+     "src": "images/studio/may/may-26.webp",
+     "w": 174,
+     "h": 148
+    },
+    {
+     "src": "images/studio/may/may-27.webp",
+     "w": 192,
+     "h": 104
+    },
+    {
+     "src": "images/studio/may/may-28.webp",
+     "w": 221,
+     "h": 118
+    },
+    {
+     "src": "images/studio/may/may-29.webp",
+     "w": 140,
+     "h": 96
+    },
+    {
+     "src": "images/studio/may/may-31.webp",
+     "w": 99,
+     "h": 132
+    },
+    {
+     "src": "images/studio/may/may-32.webp",
+     "w": 87,
+     "h": 61
+    },
+    {
+     "src": "images/studio/may/may-34.webp",
+     "w": 212,
+     "h": 183
+    },
+    {
+     "src": "images/studio/may/may-36.webp",
+     "w": 41,
+     "h": 168
+    },
+    {
+     "src": "images/studio/may/may-37.webp",
+     "w": 111,
+     "h": 169
+    },
+    {
+     "src": "images/studio/may/may-38.webp",
+     "w": 236,
+     "h": 191
+    },
+    {
+     "src": "images/studio/may/may-39.webp",
+     "w": 124,
+     "h": 174
+    },
+    {
+     "src": "images/studio/may/may-41.webp",
+     "w": 275,
+     "h": 181
     }
    ]
   },

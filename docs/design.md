@@ -1315,6 +1315,15 @@ Câu kiểm GRANT-vs-policy: không thêm dòng mới.
 - **Thư viện thêm (10/2026):** `chuon/` 15 chuồn chuồn tre (2 tờ sticker, đã
   bỏ 6 con trùng mẫu + trùng kiểu đế), `props/ke-gia-day` và `props/thu-do-day`
   (bản đầy đồ của kệ + giá treo, góc thử đồ).
+  Thêm `may/` (41 đồ may & len) và `nha/` (31 thảm, gối, bàn ghế, đèn…) từ 2
+  tờ sticker; đã bỏ 10 món trùng với thư viện cũ, tách 2 hình dính nhau.
+- **Nhóm trong thư viện = chỗ đặt khi lắp**, không theo tờ sticker gốc: Nội
+  thất · Cây & hoa · Treo tường & trần · Đồ để bàn, kệ · Vải, gối & thảm · Đồ
+  may & len · Đồ mặc · Giấy & khung · Udon · Ảnh sản phẩm. File vẫn nằm ở thư
+  mục theo tờ gốc (bố cục đã lưu trỏ theo đường dẫn), chỉ `assets.json` nhóm
+  lại: `FOLDER_GROUP` (mặc định theo thư mục) + `PICK` (từng file) trong
+  `tools/studio-assets.py`. Thêm tranh mới → thêm tên vào `PICK` nếu không hợp
+  nhóm mặc định, rồi `--manifest .`.
 
 ### Phụ kiện trên nhân vật (đợt 1)
 
