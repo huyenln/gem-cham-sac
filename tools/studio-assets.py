@@ -41,7 +41,7 @@ ZONES = [
     ('bg-z4.png', 740, 1536),
     ('bg-z5.png', 440, 1536),
 ]
-BLEND = 64        # px of cross-fade at every join
+BLEND_DEFAULT = 64   # px of cross-fade at every join (set 1)
 # Zones whose painted floor doesn't match the others: from row y down, the
 # floor is replaced by a clean, empty band of floor (rows y0–y1 of another
 # zone), stretched to fit and blended in over 24 px.
@@ -61,13 +61,32 @@ def save_webp(img, path, quality=82):
 # to put the skirting at ~y 820 before joining. Zone 3's cabinet is painted
 # empty on purpose: js/studio.js stands real product photos on its shelves.
 ZONES2 = [
-    ('z1.png', 0, 1536),
-    ('z2.png', 480, 1536),
-    ('z3.png', 485, 1536),
-    ('z4.png', 0, 1536),
-    ('z5.png', 195, 1536),
+    ('z1.png', 0, 1450),
+    ('z2.png', 480, 1512),
+    ('z3.png', 488, 1520),
+    ('z4.png', 0, 1515),
+    ('z5.png', 196, 1536),
 ]
-SHIFT2 = {'z1.png': -15, 'z2.png': 20, 'z3.png': 20, 'z4.png': -20, 'z5.png': 20}
+SHIFT2 = {'z1.png': -15, 'z2.png': 20, 'z3.png': 20, 'z4.png': -20, 'z5.png': 20,
+          'nen-z4.png': -20}
+# Scenes are cut at plain wall and joined with a wall pillar (from the empty
+# wall painting) instead of cross-fading: a fade ghosted one scene's
+# furniture over the next (mirror over the pegboard, bench over the cabinet).
+PILLAR2 = ('nen-z4.png', 340, 460)
+SEAM2 = 4    # px of soft edge where a scene meets the pillar
+
+
+# Empty walls (no furniture) for the layout editor in admin.html: the owner
+# places every piece on top. Same pillar joins; skirting lined up at ~y 820.
+ZONES_EMPTY = [
+    ('nen-z1.png', 0, 1450),     # door + window
+    ('nen-z2.png', 545, 1500),   # window
+    ('nen-z3.png', 245, 1460),   # long plain wall
+    ('nen-z4.png', 450, 1515),   # the CHẠM SẮC window
+    ('nen-z5.png', 185, 1536),   # plain wall to the corner
+]
+SHIFT_EMPTY = {'nen-z1.png': -13, 'nen-z2.png': 36, 'nen-z3.png': 31, 'nen-z4.png': -18, 'nen-z5.png': 15}
+PILLAR_EMPTY = ('nen-z4.png', 340, 460)
 
 
 def nudge(arr, dy):
@@ -78,7 +97,7 @@ def nudge(arr, dy):
     return arr
 
 
-def build_strip(src, zones=None, shift=None, floor_fix=None):
+def build_strip(src, zones=None, shift=None, floor_fix=None, pillar=None, blend=None, out='strip'):
     zones = zones or ZONES
     shift = shift or {}
     floor_fix = FLOOR_FIX if floor_fix is None else floor_fix
@@ -97,8 +116,16 @@ def build_strip(src, zones=None, shift=None, floor_fix=None):
             ramp = np.linspace(0, 1, 24, dtype=np.float32)[:, None, None]
             arr[fy:fy + 24] = arr[fy:fy + 24] * (1 - ramp) + donor[fy:fy + 24] * ramp
             arr[fy + 24:] = donor[fy + 24:]
+        if pillar and parts:
+            pim = Image.open(src / pillar[0]).convert('RGB')
+            if pim.height != HEIGHT:
+                pim = pim.resize((round(pim.width * HEIGHT / pim.height), HEIGHT), Image.LANCZOS)
+            parr = nudge(np.asarray(pim, dtype=np.float32).copy(), shift.get(pillar[0], 0))
+            parts.append(parr[:, pillar[1]:pillar[2]])
         parts.append(arr[:, x0:x1])
 
+    BLEND = BLEND_DEFAULT if blend is None else blend
+    starts = []   # where each zone (not pillar) starts, for js/studio.js
     width = sum(p.shape[1] for p in parts) - BLEND * (len(parts) - 1)
     strip = np.zeros((HEIGHT, width, 3), dtype=np.float32)
     offsets = []
@@ -113,9 +140,11 @@ def build_strip(src, zones=None, shift=None, floor_fix=None):
             strip[:, x + BLEND:x + w] = p[:, BLEND:]
         offsets.append(x)
         x += w - BLEND
+    if pillar:          # every other part is a pillar
+        offsets = offsets[::2]
 
     img = Image.fromarray(strip.clip(0, 255).astype(np.uint8))
-    save_webp(img, OUT / 'bg' / 'strip.webp', quality=80)
+    save_webp(img, OUT / 'bg' / f'{out}.webp', quality=80)
     # Numbers for STRIP in js/studio.js: where each zone's kept part starts.
     print('  STRIP =', json.dumps({
         'width': width, 'height': HEIGHT,
@@ -473,6 +502,40 @@ def build_batch(src):
             save_webp(p, OUT / folder / f'{label}.webp', quality=84)
 
 
+# ---------------------------------------------------------------------------
+# images/studio/assets.json: what the layout editor offers, grouped by folder
+# (the site is static, so the browser can't list folders itself).
+#   python3 tools/studio-assets.py --manifest .
+# ---------------------------------------------------------------------------
+LIBRARY = [
+    ('props', 'Nội thất'), ('cay', 'Cây & hoa'), ('cay2', 'Cây nhỏ'), ('deco', 'Trang trí'),
+    ('vn', 'Đồ Việt'), ('wear', 'Đồ mặc'), ('ui', 'Giấy & khung'), ('udon', 'Udon'),
+]
+
+
+def build_manifest():
+    groups = []
+    for folder, label in LIBRARY:
+        items = []
+        for f in sorted((OUT / folder).glob('*.webp')):
+            w, h = Image.open(f).size
+            items.append({'src': f'images/studio/{folder}/{f.name}', 'w': w, 'h': h})
+        groups.append({'id': folder, 'label': label, 'items': items})
+    prods = []
+    for f in sorted((ROOT / 'images' / 'products').glob('*-thumb.jpg')):
+        prods.append({'src': f'images/products/{f.name}', 'w': 600, 'h': 600, 'frame': True})
+    groups.append({'id': 'products', 'label': 'Ảnh sản phẩm', 'items': prods})
+    bgs = []
+    for name in ('strip-trong', 'strip'):
+        f = OUT / 'bg' / f'{name}.webp'
+        if f.exists():
+            w, h = Image.open(f).size
+            bgs.append({'src': f'images/studio/bg/{name}.webp', 'w': w, 'h': h})
+    out = OUT / 'assets.json'
+    out.write_text(json.dumps({'backgrounds': bgs, 'groups': groups}, ensure_ascii=False, indent=1))
+    print(f'  {out.relative_to(ROOT)}  {sum(len(g["items"]) for g in groups)} assets')
+
+
 if __name__ == '__main__':
     if len(sys.argv) == 3 and sys.argv[1] == '--batch':
         print('batch:'); build_batch(Path(sys.argv[2]))
@@ -481,8 +544,13 @@ if __name__ == '__main__':
         print('pieces:'); build_pieces(Path(sys.argv[2]))
         sys.exit()
     if len(sys.argv) == 3 and sys.argv[1] == '--strip2':
-        print('strip (set 2):'); build_strip(Path(sys.argv[2]), ZONES2, SHIFT2, {})
+        print('strip (set 2):'); build_strip(Path(sys.argv[2]), ZONES2, SHIFT2, {}, PILLAR2, SEAM2)
         sys.exit()
+    if len(sys.argv) == 3 and sys.argv[1] == '--strip-empty':
+        print('empty strip:'); build_strip(Path(sys.argv[2]), ZONES_EMPTY, SHIFT_EMPTY, {}, PILLAR_EMPTY, 4, 'strip-trong')
+        sys.exit()
+    if len(sys.argv) == 3 and sys.argv[1] == '--manifest':
+        build_manifest(); sys.exit()
     if len(sys.argv) == 3 and sys.argv[1] == '--cast':
         print('cast:'); build_cast(Path(sys.argv[2]))
         sys.exit()

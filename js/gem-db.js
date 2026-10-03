@@ -286,6 +286,32 @@ window.GemDB = (function () {
       ]).then(function (r) { return { orders: r[0], sessions: r[1], notes: r[2] }; });
     },
 
+    /* ---------- bố cục Studio Gem (owner lắp trong admin.html) ---------- */
+
+    // id = 'live' (ai cũng đọc được) hoặc 'draft' (chỉ owner). Trả data hoặc null.
+    studioLayout: function (id) {
+      return req('/rest/v1/studio_layout?select=data,updated_at&id=eq.' + encodeURIComponent(id))
+        .then(function (rows) { return (rows && rows[0]) ? rows[0].data : null; });
+    },
+
+    // Ghi đè (upsert) một dòng. RLS chỉ cho owner.
+    saveStudioLayout: function (id, data, name) {
+      return req('/rest/v1/studio_layout?on_conflict=id', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify({ id: id, data: data, name: name || null, updated_at: new Date().toISOString() })
+      });
+    },
+
+    // Bố cục đã lưu (id 'p-…') + tên của bản đang chạy. Chỉ owner đọc được.
+    studioProfiles: function () {
+      return req('/rest/v1/studio_layout?select=id,name,updated_at&or=(id.like.p-*,id.eq.live)&order=updated_at.desc');
+    },
+
+    deleteStudioLayout: function (id) {
+      return req('/rest/v1/studio_layout?id=eq.' + encodeURIComponent(id), { method: 'DELETE' });
+    },
+
     adminNotes: function () {
       return req('/rest/v1/notes?select=*&order=created_at.desc&limit=200');
     },

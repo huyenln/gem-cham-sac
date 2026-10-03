@@ -1274,6 +1274,34 @@ thành `bg/strip.webp` (6264px; tủ trống ở khu 3 được giữ để bày
 **File gốc nặng không cần lên GitHub.** Trang chỉ dùng bản WebP (~55 KB/khung).
 Giữ gốc ở Drive, chỉ commit bản đã xử lý.
 
+### Lắp studio (admin.html → tab "Lắp studio", chỉ owner)
+
+Bảng `studio_layout` (migration `gem_studio_layout`): hai dòng `draft` / `live`,
+cột `data` jsonb. RLS: `anon` + `authenticated` chỉ đọc `live`; `is_owner()`
+đọc cả hai và ghi. Đã kiểm 4 vai trong transaction (rollback): khách và tài
+khoản thường chỉ thấy `live`, update 0 dòng / insert bị chặn; nhân sự
+(`staff`) cũng chỉ thấy `live`, update 0 dòng; owner thấy cả hai, update được.
+Câu kiểm GRANT-vs-policy: không thêm dòng mới.
+
+- `js/studio-layout.js`: định dạng + `sanitize()` (dùng cả hai phía). Ảnh chỉ
+  được từ `images/studio/`, `images/products/` hoặc bucket `gem-media`; số đều
+  bị kẹp; studio chỉ gán `img.src` và style, không `innerHTML` từ JSON.
+- `js/studio-editor.js`: kéo để di chuyển, kéo góc để đổi cỡ (giữ tỉ lệ), nút
+  tròn để xoay (hít về 0°), lớp trước/sau nhân vật, lên/xuống, lật, khung gỗ
+  (cho ảnh sản phẩm), nhân bản, xoá, Ctrl+Z. Thư viện đọc
+  `images/studio/assets.json` (`python3 tools/studio-assets.py --manifest .`
+  sau khi thêm tranh). "Tải ảnh mới" đưa lên `gem-media` (tối đa 3 MB).
+  Vùng bấm, chỗ dừng của nhân vật, Udon, điểm xuất phát cũng kéo được.
+- "Lưu nháp" → `draft`; "Xuất bản" → `draft` + `live`; `studio.html?nhap=1`
+  (cùng tab đã đăng nhập) xem bản nháp.
+- Chưa xuất bản bố cục nào thì studio vẫn dùng dải tranh vẽ sẵn như cũ.
+- **Bố cục đã lưu (profile)** — migration `gem_studio_layout_profiles`: thêm
+  dòng `p-<slug>` + cột `name` (vd "Tết 2027"). Trong trình lắp: Mở (nạp vào
+  để sửa), Cho chạy ngay (chép thành `live`), Xoá, Lưu vào bố cục đang mở, Lưu
+  thành bố cục mới. `live.name` = tên bố cục đang chạy. Quyền không đổi: khách
+  và nhân sự vẫn chỉ đọc `live` (đã kiểm lại 3 vai + id sai bị từ chối).
+- Nền trống: `bg/strip-trong.webp` (`--strip-empty`, 5 tường trống nối bằng cột).
+
 ### Báo mail cho nhân sự (đơn mới / đặt workshop / lời nhắn)
 
 Migration `gem_notify_mail` + `gem_notify_payload`, Edge Function `notify`

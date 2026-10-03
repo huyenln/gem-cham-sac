@@ -157,6 +157,9 @@
           '<button type="button" data-tab="products">Sản phẩm</button>' +
           '<button type="button" data-tab="posts">Bản tin</button>' +
           '<button type="button" data-tab="notes">Lời nhắn</button>' +
+          // Only the owner may change the studio (RLS enforces it too).
+          (me && me.role === 'owner' && window.GemStudioEditor
+            ? '<button type="button" data-tab="studio">Lắp studio</button>' : '') +
         '</nav>' +
       '</header>' +
       '<main class="ad-main"><p class="ad-loading">Đang tải...</p></main>';
@@ -168,7 +171,10 @@
     });
     el.root.querySelectorAll('.ad-tabs button').forEach(function (b) {
       b.addEventListener('click', function () {
+        if (tab === 'studio' && window.GemStudioEditor && window.GemStudioEditor.isDirty() &&
+            !window.confirm('Bố cục studio có thay đổi chưa lưu. Rời đi?')) return;
         tab = b.getAttribute('data-tab');
+        el.main.classList.toggle('is-wide', tab === 'studio');
         editingPost = null;
         editingProduct = null;
         paintTabs();
@@ -1251,6 +1257,11 @@
 
   function load() {
     var job;
+    if (window.GemStudioEditor) window.GemStudioEditor.unmount();
+    if (tab === 'studio') {
+      paintCounts();
+      return window.GemStudioEditor.mount(el.main);
+    }
     if (tab === 'orders') {
       job = window.GemDB.adminOrders().then(function (rows) { orders = rows || []; });
     } else if (tab === 'products') {

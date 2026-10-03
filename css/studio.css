@@ -147,10 +147,29 @@
   transform-origin: 50% 100%;
   animation: st-udon 6s ease-in-out infinite;
 }
-.st-udon img { display: block; width: 100%; height: auto; pointer-events: none; }
+.st-udon img {
+  position: absolute; left: 50%; bottom: 0;
+  height: 100%; width: auto; max-width: none;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.st-udon img[hidden] { display: none; }
+/* asleep: the lying pose is wide and low */
+.st-udon img[data-pose="ud-ngu"] { height: 62%; }
+.st-udon.is-asleep { animation: none; }
 .st-udon:focus-visible { outline: 3px solid var(--sage-deep); outline-offset: 4px; border-radius: 12px; }
 .st-udon-ghost { position: absolute; z-index: 6; height: auto; max-width: none; pointer-events: none; }
 .st-stage * { -webkit-tap-highlight-color: transparent; }
+
+/* Owner's layout pieces (js/studio-layout.js): behind the character unless
+   'front'. Never tappable themselves; the hotspots under them are. */
+.st-item { position: absolute; z-index: 1; pointer-events: none; object-fit: contain; max-width: none; }
+.st-item.is-front { z-index: 4; }
+.st-hot { z-index: 2; }
+.st-player { z-index: 3; }
+.st-udon { z-index: 5; }
+.st-wait .st-world { opacity: 0; }
+.st-world { transition: opacity 0.25s ease; }
 
 /* Real product photos standing on the empty cabinet's shelves, in a thin
    wooden frame, like prints propped up for sale. */
@@ -256,7 +275,7 @@
 }
 
 .st-bubble[hidden] { display: none; }
-.st-bubble img { flex: none; border-radius: 50%; background: var(--paper-cream); }
+.st-bubble img { flex: none; border-radius: 50%; background: var(--paper-cream); object-fit: cover; object-position: 50% 15%; }
 .st-bubble p { margin: 0; font-size: 1rem; color: var(--ink-dark); line-height: 1.45; }
 
 @keyframes st-pop {
@@ -329,7 +348,7 @@
   overflow-y: auto;
   padding: var(--space-6) var(--space-4) var(--space-8);
   padding-bottom: max(var(--space-8), calc(env(safe-area-inset-bottom) + 96px));
-  background: var(--paper-white);
+  background: var(--paper-white) url("../images/studio/ui/giay-nen.webp") center / cover;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   box-shadow: var(--shadow-paper);
   animation: st-up 0.25s ease-out;
@@ -819,20 +838,56 @@
   gap: var(--space-3);
 }
 .mb-note {
-  padding: var(--space-3);
-  background: #FBF6EE;
-  border: 1px solid var(--paper-cream-warm);
-  box-shadow: 0 2px 6px rgba(61, 74, 46, 0.12);
+  padding: var(--space-5) var(--space-4);
+  background: url("../images/studio/ui/giay-ngang.webp") center / 100% 100% no-repeat;
+  filter: drop-shadow(0 2px 3px rgba(61, 74, 46, 0.16));
   font-size: var(--text-sm);
   line-height: 1.55;
   overflow-wrap: anywhere;
 }
 .mb-note:nth-child(3n+1) { transform: rotate(-1deg); }
-.mb-note:nth-child(3n+2) { transform: rotate(0.8deg); background: #F3E3D3; }
+.mb-note:nth-child(3n+2) { transform: rotate(0.8deg); }
 .mb-note p { margin: 0 0 var(--space-2); white-space: pre-line; }
 .mb-who { font-family: var(--font-hand, 'Dancing Script', cursive); font-size: 1.05rem; color: var(--kraft); }
 .mb-empty { grid-column: 1 / -1; color: var(--ink-soft); font-size: var(--text-sm); }
 
 @media (min-width: 768px) {
   .mb-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+/* GÓC THỬ ĐỒ: the model wears the piece you tap */
+.fit { display: grid; gap: var(--space-4); }
+.fit-model {
+  margin: 0;
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: url("../images/studio/ui/khung-hoa-2.webp") center / cover;
+  border-radius: var(--radius-md);
+}
+.fit-model img { height: 260px; width: auto; max-width: 100%; object-fit: contain; }
+.fit-cap { font-family: var(--font-hand); font-size: 1.3rem; color: var(--ink-dark); }
+.fit-list {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3);
+}
+.fit-item { display: grid; gap: var(--space-2); justify-items: start; }
+.fit-pick {
+  width: 100%;
+  display: grid; justify-items: center; gap: var(--space-1);
+  padding: var(--space-2);
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  background: rgba(251, 246, 238, 0.7);
+  cursor: pointer;
+  font: inherit; font-size: var(--text-sm); color: var(--ink-dark);
+}
+.fit-pick img { height: 96px; width: 100%; object-fit: contain; }
+.fit-item.is-on .fit-pick { border-color: var(--sage-deep); background: var(--paper-white); }
+.st-btn-sm { min-height: 40px; padding: 0 var(--space-3); font-size: var(--text-xs); }
+@media (min-width: 768px) {
+  .fit { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); align-items: start; }
+  .fit-model img { height: 340px; }
+  .fit-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
