@@ -65,6 +65,10 @@ window.GemStudioEditor = (function () {
             '<button type="button" data-se="sc-out" aria-pressed="false">Ngoài cửa</button>' +
           '</span>' +
           '<select class="se-bgsel" aria-label="Nền"></select>' +
+          '<span class="se-seg se-len" role="group" aria-label="Chiều dài khu vực">' +
+            '<button type="button" data-se="w-" title="Bớt một đoạn tường">Ngắn lại</button>' +
+            '<button type="button" data-se="w+" title="Nối thêm một đoạn tường">Dài thêm</button>' +
+          '</span>' +
           '<button type="button" class="se-tb" data-se="undo" title="Hoàn tác (Ctrl+Z)">Hoàn tác</button>' +
           '<button type="button" class="se-tb se-sq" data-se="zout" aria-label="Thu nhỏ">−</button>' +
           '<button type="button" class="se-tb se-sq" data-se="zin" aria-label="Phóng to">+</button>' +
@@ -166,6 +170,31 @@ window.GemStudioEditor = (function () {
     }
   }
 
+  // "Ngắn lại / Dài thêm": only for walls with a seamless loop (GemLayout.EXTEND).
+  function syncLen() {
+    var e = L.EXTEND[S().bg.src];
+    var less = root.querySelector('[data-se="w-"]'), more = root.querySelector('[data-se="w+"]');
+    more.disabled = !e || S().bg.w + e.tileW > 20000;
+    less.disabled = !e || S().bg.w <= e.w0;
+    var why = e ? '' : 'Nền này không nối dài được — chọn "Tường trơn" (hoặc Mặt tiền ở Ngoài cửa)';
+    more.title = why || 'Nối thêm một đoạn tường (' + e.tileW + ' px)';
+    less.title = why || 'Bớt một đoạn tường';
+  }
+
+  function lengthen(dir) {
+    var e = L.EXTEND[S().bg.src];
+    if (!e) return;
+    var w = S().bg.w + dir * e.tileW;
+    if (w < e.w0 || w > 20000) return;
+    remember();
+    S().bg.w = w;
+    var out = S().items.filter(function (it) { return it.x - it.w / 2 > w; }).length;
+    draw();
+    if (dir > 0) stageEl.scrollLeft = stageEl.scrollWidth;   // show the new wall
+    status('Khu vực dài ' + w.toLocaleString('vi-VN') + ' px' +
+      (out ? ' — ' + out + ' món nằm ngoài tường, kéo vào hoặc Dài thêm lại' : ''));
+  }
+
   function setScene(name) {
     scene = name;
     sel = null;
@@ -207,7 +236,16 @@ window.GemStudioEditor = (function () {
     worldEl.style.height = px(S().bg.h);
     var bg = worldEl.querySelector('.se-bgimg');
     if (bg.getAttribute('src') !== S().bg.src) bg.src = S().bg.src;
-    worldEl.querySelectorAll('.se-el').forEach(function (n) { n.remove(); });
+    worldEl.querySelectorAll('.se-el, .se-bgx').forEach(function (n) { n.remove(); });
+    var parts = L.bgParts(S().bg);   // a lengthened wall: picture + loop + corner
+    bg.style.visibility = parts.length > 1 ? 'hidden' : '';
+    if (parts.length > 1) parts.forEach(function (part) {
+      var d = document.createElement('div');
+      d.className = 'se-bgx';
+      Object.assign(d.style, L.partStyle(part, S().bg.w));
+      bg.insertAdjacentElement('afterend', d);
+    });
+    syncLen();
 
     S().items.forEach(function (it, i) {
       var n = document.createElement('div');
@@ -672,6 +710,7 @@ window.GemStudioEditor = (function () {
     if (!b || !data) return;
     var a = b.dataset.se;
     if (a === 'sc-in' || a === 'sc-out') return setScene(a.slice(3));
+    if (a === 'w+' || a === 'w-') return lengthen(a === 'w+' ? 1 : -1);
     if (a === 'hot') {
       showHot = !showHot;
       b.setAttribute('aria-pressed', showHot);

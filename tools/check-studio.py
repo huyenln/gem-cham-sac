@@ -7,7 +7,7 @@ and walks through what broke before:
   street   studio.html opens on the facade, the door leads in, the character
            picker leads back out
   wear     try-on accessories stay on the character, on all 4 x 10 frames
-  editor   (owner) add a piece, publish, studio.html shows it, Xoá hết,
+  editor   (owner) add a piece, Dài thêm, publish, studio.html shows it, Xoá hết,
            backgrounds offered per scene, the street scene saves too
 
 Screenshots go to /tmp/gem-check/ — look at them, a pass only means nothing
@@ -164,6 +164,11 @@ async def editor(browser, db):
         check('Mặt tiền' not in opts and len(opts) >= 2, f'{name}: studio backgrounds only inside ({opts})')
         await js_click(pg, '.se-asset[data-asset="0"]')
         await pg.wait_for_timeout(300)
+        await js_click(pg, '[data-se="w+"]')
+        await js_click(pg, '[data-se="w+"]')
+        await pg.wait_for_timeout(300)
+        await pg.screenshot(path=OUT / f'editor-{name}-3long.png')
+        check(await pg.evaluate("document.querySelectorAll('.se-bgx').length") == 3, f'{name}: Dài thêm paints wall + loop + corner')
         await pg.screenshot(path=OUT / f'editor-{name}-2.png')
         await js_click(pg, '[data-se="sc-out"]')
         await pg.wait_for_timeout(400)
@@ -173,6 +178,7 @@ async def editor(browser, db):
         await pg.wait_for_timeout(600)
         live = db.rows.get('live') or {}
         check(len(live.get('items', [])) == 1, f'{name}: publish saves the studio piece')
+        check(live.get('bg', {}).get('w') == 5792 + 2 * 1040, f'{name}: publish saves the longer wall ({live.get("bg")})')
         check(len((live.get('outside') or {}).get('items', [])) > 0, f'{name}: publish saves the street too')
         check(not pg.errors, f'{name}: no script errors {pg.errors}')
 
@@ -180,6 +186,7 @@ async def editor(browser, db):
         await st.goto(f'{BASE}/studio.html')
         await st.wait_for_timeout(1500)
         check(await st.evaluate("document.querySelectorAll('.st-item').length") == 1, f'{name}: studio.html shows the published piece')
+        check(await st.evaluate("document.querySelectorAll('.st-bgx').length") == 3, f'{name}: studio.html paints the longer wall')
         await st.context.close()
 
         await js_click(pg, '[data-se="sc-in"]')

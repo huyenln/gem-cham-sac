@@ -573,22 +573,44 @@ def build_outside(src):
 #   python3 tools/studio-assets.py --plain <wall.png>
 # ---------------------------------------------------------------------------
 PLAIN_TILE = (200, 1460)    # x range of plain wall in the source
-PLAIN_COUNT = 6
-PLAIN_FADE = 220            # px of cross-fade at each join
+PLAIN_COUNT = 5
+PLAIN_FADE = 220            # px of cross-fade that closes the loop
+
+
+def lap_tile(tile, fade):
+    """A seamless loop from a strip of wall: its tail cross-fades into its
+    head, so copies placed end to end show no seam. Width = tile - fade."""
+    t = np.linspace(0, 1, fade)[None, :, None]
+    head = tile[:, -fade:] * (1 - t) + tile[:, :fade] * t
+    return np.concatenate([head, tile[:, fade:-fade]], axis=1)
 
 
 def build_plain(src):
+    """bg/strip-tron.webp = cap L + lap x PLAIN_COUNT + cap R, and
+    bg/tuong-lap.webp = the lap alone. The editor's "+ Tường" makes a scene
+    longer by repeating the lap before cap R (js/studio-layout.js EXTEND)."""
     im = np.asarray(Image.open(src).convert('RGB').resize((1536, 1024), Image.LANCZOS)).astype(np.float32)
     t0, t1 = PLAIN_TILE
     tile, corner = im[:, t0:t1], im[:, t1:]
-    t = np.linspace(0, 1, PLAIN_FADE)[None, :, None]
-    row = tile
-    for _ in range(PLAIN_COUNT - 1):
-        mix = row[:, -PLAIN_FADE:] * (1 - t) + tile[:, :PLAIN_FADE] * t
-        row = np.concatenate([row[:, :-PLAIN_FADE], mix, tile[:, PLAIN_FADE:]], axis=1)
-    row = np.concatenate([corner[:, ::-1], row, corner], axis=1)
-    out = Image.fromarray(np.clip(row, 0, 255).astype(np.uint8))
-    save_webp(out, OUT / 'bg' / 'strip-tron.webp', quality=80)
+    lap = lap_tile(tile, PLAIN_FADE)
+    # cap R picks up where a lap ends (tile column T-F) and runs to the corner
+    cap_r = np.concatenate([tile[:, -PLAIN_FADE:], corner], axis=1)
+    cap_l = cap_r[:, ::-1]
+    row = np.concatenate([cap_l] + [lap] * PLAIN_COUNT + [cap_r], axis=1)
+    u8 = lambda a: Image.fromarray(np.clip(a, 0, 255).astype(np.uint8))
+    save_webp(u8(row), OUT / 'bg' / 'strip-tron.webp', quality=80)
+    save_webp(u8(lap), OUT / 'bg' / 'tuong-lap.webp', quality=80)
+    print(f'  EXTEND strip-tron: tileW {lap.shape[1]}, capR {cap_r.shape[1]}')
+
+
+def build_outside_lap():
+    """bg/ngoai-lap.webp: the plain wall + pavement at the street's right end,
+    as a loop, so the street can be made longer too (no cap: the lap simply
+    follows the painting)."""
+    im = np.asarray(Image.open(OUT / 'bg' / 'ngoai.webp').convert('RGB')).astype(np.float32)
+    lap = lap_tile(im[:, -560:], 160)
+    save_webp(Image.fromarray(np.clip(lap, 0, 255).astype(np.uint8)), OUT / 'bg' / 'ngoai-lap.webp', quality=80)
+    print(f'  EXTEND ngoai: tileW {lap.shape[1]}, capR 0')
 
 
 # ---------------------------------------------------------------------------
@@ -697,7 +719,7 @@ if __name__ == '__main__':
         print('empty strip:'); build_strip(Path(sys.argv[2]), ZONES_EMPTY, SHIFT_EMPTY, {}, PILLAR_EMPTY, 4, 'strip-trong')
         sys.exit()
     if len(sys.argv) == 3 and sys.argv[1] == '--plain':
-        print('plain wall:'); build_plain(Path(sys.argv[2]))
+        print('plain wall:'); build_plain(Path(sys.argv[2])); build_outside_lap()
         sys.exit()
     if len(sys.argv) == 3 and sys.argv[1] == '--outside':
         print('outside:'); build_outside(Path(sys.argv[2]))

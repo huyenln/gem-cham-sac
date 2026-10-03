@@ -85,6 +85,7 @@
   height: 100%;
   pointer-events: none;
 }
+.st-bgx { position: absolute; top: 0; height: 100%; pointer-events: none; }
 
 /* ---------- HOTSPOTS ---------- */
 .st-hot {

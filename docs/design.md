@@ -1325,11 +1325,17 @@ Câu kiểm GRANT-vs-policy: không thêm dòng mới.
   `tools/studio-assets.py`. Thêm tranh mới → thêm tên vào `PICK` nếu không hợp
   nhóm mặc định, rồi `--manifest .`.
 
-- **Tường trơn** (10/2026): `bg/strip-tron.webp` (`--plain <tường.png>`): một
-  bức tường vẽ (1536×1024) nhân 6 lần phần giữa, mỗi mối nối hoà 220px, góc
-  phòng ở hai đầu. Không cửa, không cửa sổ — chúng là món trong nhóm "Cửa &
+- **Tường trơn** (10/2026): `bg/strip-tron.webp` (`--plain <tường.png>`, 5.792px):
+  phần giữa của một bức tường vẽ (1536×1024) làm thành đoạn lặp liền mạch, nhân
+  5 lần, góc phòng ở hai đầu. Không cửa, không cửa sổ — chúng là món trong nhóm "Cửa &
   cửa sổ" (cỡ + chỗ đặt ban đầu đúng tỉ lệ: `START_H` / `START_Y` trong tool).
   Bố cục mới mặc định dùng nền này.
+- **Mở rộng khu vực:** nút "Ngắn lại / Dài thêm" trong trình lắp, mỗi lần một
+  đoạn tường (Tường trơn 1.040px, Mặt tiền 400px), tối đa 20.000px. Nền vẽ
+  thành 3 phần: tranh (bỏ góc phải) + đoạn lặp liền mạch (`bg/tuong-lap.webp`,
+  `bg/ngoai-lap.webp`) + góc phòng — `EXTEND` / `bgParts()` trong
+  `js/studio-layout.js`, số do `--plain` in ra. Nền khác (có cửa, tranh vẽ sẵn)
+  không nối dài được.
 - **Trình lắp gọn lại (10/2026):** một hàng công cụ (Trong / Ngoài cửa, nền,
   Hoàn tác, thu phóng, "Khung bấm" ẩn/hiện khung xanh, "Xoá hết" món trong cảnh
   đang sửa — Hoàn tác lấy lại được); lưu / xuất bản / bố cục đã lưu gom vào

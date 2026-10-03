@@ -411,6 +411,7 @@
 /* "Lưu" menu: save / publish / saved layouts, out of the way until needed */
 .se-menu { position: relative; margin-left: auto; order: 1; }
 .se-bar > .se-seg, .se-bar > .se-bgsel { order: 0; }
+.se-bar > .se-len { order: 2; }
 .se-bar > .se-tb { order: 2; }
 .se-menu summary { list-style: none; display: inline-flex; align-items: center; }
 .se-menu summary::-webkit-details-marker { display: none; }
@@ -442,6 +443,8 @@
 }
 .se-world { position: relative; user-select: none; -webkit-user-select: none; }
 .se-bgimg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.se-bgx { position: absolute; top: 0; height: 100%; pointer-events: none; }
+.se-seg button:disabled { opacity: 0.45; cursor: default; }
 
 .se-el { position: absolute; box-sizing: border-box; touch-action: none; cursor: move; }
 .se-item img { display: block; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
