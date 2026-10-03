@@ -238,14 +238,17 @@
   height: 100%;
 }
 
-.st-bob > img:not(.st-udon-ghost) {
+.st-fr {
   position: absolute;
   left: 0;
   bottom: 0;
   height: 100%;
-  width: auto;
-  max-width: none;
 }
+.st-fr > img { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; }
+
+/* Accessories worn by the character (js/studio.js WEAR), placed in % of
+   the frame; height = share of the character's height. */
+.st-fr > .st-acc { inset: auto; width: auto; }
 
 .st-player.is-moving .st-bob { animation: st-bob 0.34s ease-in-out infinite; }
 
@@ -910,6 +913,21 @@
 .fit-pick img { height: 96px; width: 100%; object-fit: contain; }
 .fit-pick b { min-height: 2.6em; display: flex; align-items: center; }
 .fit-item .st-btn, .fit-item .st-lock-tag { align-self: center; }
+.fit-pick { position: relative; }
+.fit-worn {
+  position: absolute; top: 0; left: 0;
+  padding: 2px 8px; border-radius: 999px;
+  background: var(--sage-deep); color: var(--paper-white);
+  font-style: normal; font-size: var(--text-xs); font-weight: 700;
+}
+.fit-wear { margin: var(--space-3) 0 0; text-align: center; }
+.fit-note { margin: var(--space-2) auto 0; max-width: 340px; font-size: var(--text-xs); color: var(--ink-soft); text-align: center; }
+.st-link {
+  min-height: 44px; padding: 0 var(--space-2);
+  border: 0; background: none; cursor: pointer;
+  font: inherit; font-size: var(--text-sm); color: var(--ink-dark);
+  text-decoration: underline; text-underline-offset: 3px;
+}
 .st-btn-sm { min-height: 40px; padding: 0 var(--space-3); font-size: var(--text-xs); }
 @media (min-width: 768px) {
   .fit { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); align-items: start; }

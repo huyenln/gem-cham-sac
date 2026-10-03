@@ -1301,6 +1301,33 @@ Câu kiểm GRANT-vs-policy: không thêm dòng mới.
   thành bố cục mới. `live.name` = tên bố cục đang chạy. Quyền không đổi: khách
   và nhân sự vẫn chỉ đọc `live` (đã kiểm lại 3 vai + id sai bị từ chối).
 - Nền trống: `bg/strip-trong.webp` (`--strip-empty`, 5 tường trống nối bằng cột).
+- **Cảnh ngoài cửa** (10/2026): `studio.html` mở ở mặt tiền, chạm cửa thì nhân
+  vật đi tới rồi mờ dần vào studio; ô chọn nhân vật trong studio có nút "Ra
+  ngoài cửa". Trong cùng lượt (sessionStorage `gem-scene`) đã vào rồi thì mở
+  thẳng trong studio; link chia sẻ thiết kế cũng vào thẳng. Nền
+  `bg/ngoai.webp` (`--outside <mặt tiền.png>`: tranh 1536px, hai bên nối
+  thêm tường trơn giữ thớ giấy cho đủ rộng màn máy tính). Bố cục nằm trong
+  cùng JSON, khoá `outside` ({ bg, items, hot: { enter }, start }); chưa lắp
+  thì dùng `OUTSIDE` mặc định trong `js/studio-layout.js`. Trình lắp: nút
+  "Trong studio / Ngoài cửa" đổi cảnh đang sửa; lưu / xuất bản lưu cả hai.
+  Tranh mặt tiền dọc có sẵn Udon (`bg/mat-tien.webp`) chưa dùng — khổ dọc
+  không hợp sân khấu ngang.
+- **Thư viện thêm (10/2026):** `chuon/` 15 chuồn chuồn tre (2 tờ sticker, đã
+  bỏ 6 con trùng mẫu + trùng kiểu đế), `props/ke-gia-day` và `props/thu-do-day`
+  (bản đầy đồ của kệ + giá treo, góc thử đồ).
+
+### Phụ kiện trên nhân vật (đợt 1)
+
+5 món "đồ mặc" đều là phụ kiện (túi Oxford, túi Denim, dây buộc tóc, dây đeo
+cổ tay, Bloom Charm) nên dùng luôn sticker `wear/<sku>.webp`, không cần vẽ
+lại nhân vật. `WEAR_AT` trong `js/studio.js`: mỗi khung (4 bạn × 10) có tỉ lệ
+khung, điểm bàn tay gần (dò màu da, nắm tay / chỗ cầm tay xe) và gáy (dò mép
+tóc ở 12% chiều cao). `WEAR`: túi treo ở tay (một túi một lúc), dây đeo và
+charm hai bên túi, dây buộc tóc ở gáy. Góc thử đồ có nút "Đeo thử" / "Tháo
+ra". Đồ thử theo khách hết lượt (sessionStorage `gem-mac`); món đã mua (có
+trong Tủ) thì nhớ luôn (localStorage `gem-mac`). Có tranh nhân vật mới → chạy
+lại phần dò điểm và dán `WEAR_AT` mới. Áo (đổi dáng người) thuộc đợt 2: phải
+vẽ lại khung, không dán đè được.
 
 ### Báo mail cho nhân sự (đơn mới / đặt workshop / lời nhắn)
 

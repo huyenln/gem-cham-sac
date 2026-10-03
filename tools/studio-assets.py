@@ -8,6 +8,7 @@ WebP files it writes. Source PNGs stay in Drive (D-assets), not in the repo.
     python3 tools/studio-assets.py --cast <folder with ch-pN-*.png>
     python3 tools/studio-assets.py --pieces <folder>   (names: see PIECES)
     python3 tools/studio-assets.py --batch <folder>    (sheet-/pr-/full- files)
+    python3 tools/studio-assets.py --outside <facade.png>  (street scene)
 
 Expects in <source-folder> (names from the "Bộ tài sản D" doc):
     bg-z1.png … bg-z5.png        five studio zones, 1536 x 1024
@@ -503,13 +504,72 @@ def build_batch(src):
 
 
 # ---------------------------------------------------------------------------
+# Street outside the studio (studio.html starts here, the door leads in).
+# The painted facade is 1536 wide — narrower than a desktop screen — so the
+# plain wall at both ends is mirrored back and forth to widen it. Mirroring
+# keeps every join seamless; only plain wall + pavement is repeated, never
+# the window or the door.
+#   python3 tools/studio-assets.py --outside <facade.png>
+# js/studio-layout.js OUTSIDE (door box, start) uses the numbers it prints.
+# ---------------------------------------------------------------------------
+OUT_BAND = (0, 190, 1340, 1536)   # plain wall: left band x0-x1, right band x0-x1
+OUT_PAD = 768                     # px added on each side
+
+
+def build_outside(src):
+    im = np.asarray(Image.open(src).convert('RGB').resize((1536, 1024), Image.LANCZOS)).astype(np.float32)
+    l0, l1, r0, r1 = OUT_BAND
+    h = im.shape[0]
+
+    def pad(band, leftward):
+        # Colour of each row (wall vs pavement), flat, plus only the fine
+        # paper grain of the band: big watercolour stains, repeated, look
+        # like an ink-blot test.
+        prof = np.median(band, axis=1, keepdims=True)                    # h x 1 x 3
+        # smooth along y (streaks), but not across the skirting line
+        k = np.exp(-np.linspace(-2, 2, 15) ** 2); k /= k.sum()
+        for c in range(3):
+            col = prof[:, 0, c]
+            sm = np.convolve(np.pad(col, 7, mode='edge'), k, mode='valid')
+            prof[:, 0, c] = np.where(np.abs(col - sm) > 18, col, sm)
+        soft = np.asarray(Image.fromarray(band.astype(np.uint8)).filter(ImageFilter.GaussianBlur(6)), np.float32)
+        grain = np.clip(band - soft, -10, 10)   # no wall sockets, no stain rims
+        tiles, flip = [], False
+        while sum(t.shape[1] for t in tiles) < OUT_PAD:
+            tiles.append(grain[:, ::-1] if flip else grain)
+            flip = not flip
+        g = np.concatenate(tiles, axis=1)[:, :OUT_PAD]
+        if leftward:
+            g = g[:, ::-1]
+        flat = np.repeat(prof, OUT_PAD, axis=1) + g * 0.7
+        # cross-fade into the painted edge over the band's width
+        w = band.shape[1]
+        edge = band if leftward else band
+        t = np.linspace(0, 1, w)[None, :, None]
+        if leftward:
+            flat[:, -w:] = flat[:, -w:] * (1 - t) + edge * t
+        else:
+            flat[:, :w] = edge * (1 - t) + flat[:, :w] * t
+        return flat
+
+    left = pad(im[:, l0:l1], True)
+    right = pad(im[:, r0:r1], False)
+    # the faded edge replaces the painted band, so drop it from the middle
+    mid = im[:, l1:r0]
+    out = np.clip(np.concatenate([left, mid, right], axis=1), 0, 255).astype(np.uint8)
+    out = Image.fromarray(out)
+    save_webp(out, OUT / 'bg' / 'ngoai.webp', quality=80)
+    print(f'  OUTSIDE width {out.size[0]}, facade x shifted by {OUT_PAD - l1}')
+
+
+# ---------------------------------------------------------------------------
 # images/studio/assets.json: what the layout editor offers, grouped by folder
 # (the site is static, so the browser can't list folders itself).
 #   python3 tools/studio-assets.py --manifest .
 # ---------------------------------------------------------------------------
 LIBRARY = [
     ('props', 'Nội thất'), ('cay', 'Cây & hoa'), ('cay2', 'Cây nhỏ'), ('deco', 'Trang trí'),
-    ('vn', 'Đồ Việt'), ('wear', 'Đồ mặc'), ('ui', 'Giấy & khung'), ('udon', 'Udon'),
+    ('vn', 'Đồ Việt'), ('chuon', 'Chuồn chuồn'), ('wear', 'Đồ mặc'), ('ui', 'Giấy & khung'), ('udon', 'Udon'),
 ]
 
 
@@ -526,7 +586,7 @@ def build_manifest():
         prods.append({'src': f'images/products/{f.name}', 'w': 600, 'h': 600, 'frame': True})
     groups.append({'id': 'products', 'label': 'Ảnh sản phẩm', 'items': prods})
     bgs = []
-    for name in ('strip-trong', 'strip'):
+    for name in ('strip-trong', 'strip', 'ngoai'):
         f = OUT / 'bg' / f'{name}.webp'
         if f.exists():
             w, h = Image.open(f).size
@@ -548,6 +608,9 @@ if __name__ == '__main__':
         sys.exit()
     if len(sys.argv) == 3 and sys.argv[1] == '--strip-empty':
         print('empty strip:'); build_strip(Path(sys.argv[2]), ZONES_EMPTY, SHIFT_EMPTY, {}, PILLAR_EMPTY, 4, 'strip-trong')
+        sys.exit()
+    if len(sys.argv) == 3 and sys.argv[1] == '--outside':
+        print('outside:'); build_outside(Path(sys.argv[2]))
         sys.exit()
     if len(sys.argv) == 3 and sys.argv[1] == '--manifest':
         build_manifest(); sys.exit()

@@ -9,6 +9,11 @@
    "src": "images/studio/bg/strip.webp",
    "w": 6817,
    "h": 1024
+  },
+  {
+   "src": "images/studio/bg/ngoai.webp",
+   "w": 3072,
+   "h": 1024
   }
  ],
  "groups": [
@@ -82,6 +87,11 @@
      "h": 268
     },
     {
+     "src": "images/studio/props/ke-gia-day.webp",
+     "w": 900,
+     "h": 858
+    },
+    {
      "src": "images/studio/props/ke-gia.webp",
      "w": 900,
      "h": 793
@@ -95,6 +105,11 @@
      "src": "images/studio/props/sofa.webp",
      "w": 900,
      "h": 349
+    },
+    {
+     "src": "images/studio/props/thu-do-day.webp",
+     "w": 772,
+     "h": 900
     },
     {
      "src": "images/studio/props/thu-do.webp",
@@ -903,6 +918,87 @@
    ]
   },
   {
+   "id": "chuon",
+   "label": "Chuồn chuồn",
+   "items": [
+    {
+     "src": "images/studio/chuon/chuon-01.webp",
+     "w": 464,
+     "h": 439
+    },
+    {
+     "src": "images/studio/chuon/chuon-02.webp",
+     "w": 469,
+     "h": 286
+    },
+    {
+     "src": "images/studio/chuon/chuon-03.webp",
+     "w": 470,
+     "h": 385
+    },
+    {
+     "src": "images/studio/chuon/chuon-04.webp",
+     "w": 412,
+     "h": 280
+    },
+    {
+     "src": "images/studio/chuon/chuon-05.webp",
+     "w": 543,
+     "h": 276
+    },
+    {
+     "src": "images/studio/chuon/chuon-06.webp",
+     "w": 374,
+     "h": 393
+    },
+    {
+     "src": "images/studio/chuon/chuon-07.webp",
+     "w": 401,
+     "h": 367
+    },
+    {
+     "src": "images/studio/chuon/chuon-08.webp",
+     "w": 354,
+     "h": 326
+    },
+    {
+     "src": "images/studio/chuon/chuon-09.webp",
+     "w": 420,
+     "h": 395
+    },
+    {
+     "src": "images/studio/chuon/chuon-10.webp",
+     "w": 388,
+     "h": 338
+    },
+    {
+     "src": "images/studio/chuon/chuon-11.webp",
+     "w": 362,
+     "h": 273
+    },
+    {
+     "src": "images/studio/chuon/chuon-12.webp",
+     "w": 371,
+     "h": 330
+    },
+    {
+     "src": "images/studio/chuon/chuon-13.webp",
+     "w": 372,
+     "h": 295
+    },
+    {
+     "src": "images/studio/chuon/chuon-14.webp",
+     "w": 376,
+     "h": 323
+    },
+    {
+     "src": "images/studio/chuon/chuon-15.webp",
+     "w": 389,
+     "h": 292
+    }
+   ]
+  },
+  {
    "id": "wear",
    "label": "Đồ mặc",
    "items": [
@@ -1051,6 +1147,11 @@
      "src": "images/studio/ui/khung-hoa-3.webp",
      "w": 1080,
      "h": 1080
+    },
+    {
+     "src": "images/studio/ui/khung-polaroid.webp",
+     "w": 560,
+     "h": 800
     },
     {
      "src": "images/studio/ui/sh-story-1.webp",

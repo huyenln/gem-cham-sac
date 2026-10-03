@@ -40,11 +40,11 @@ Static website (5 trang) cho cửa hàng **Gem Chạm Sắc** — pop-up store s
 ├── js/admin.js               Trang quản trị: Hôm nay / Đơn hàng / Đặt lịch / Sản phẩm
 ├── js/ban-tin.js             Danh sách bài + đọc bài (?bai=<slug>)
 ├── js/vietqr.js              Sinh mã VietQR ngay trong trình duyệt (EMVCo + QR encoder)
-├── js/studio.js              Studio 2D: cảnh, nhân vật, điểm bấm, bàn thiết kế, bảng lời nhắn; mua qua window.GemBasket
+├── js/studio.js              Studio 2D: mặt tiền + cảnh trong, nhân vật + phụ kiện đeo thử, điểm bấm, bàn thiết kế, bảng lời nhắn; mua qua window.GemBasket
 ├── js/patch.js               Bàn thiết kế (v2): món + kiểu ghép + tông + họa tiết + chất vải + hình vẽ + ghi chú → mã thiết kế, vẽ SVG (dùng chung với giỏ, tủ)
 ├── js/collection.js         Tủ sưu tầm: thiết kế đã lưu + món đã mua (localStorage gem-tu, rpc claim_collection)
 ├── js/studio-layout.js        Định dạng + kiểm tra bố cục studio (dùng chung studio.html / admin.html)
-├── js/studio-editor.js        Tab "Lắp studio" trong admin (chỉ owner): kéo, đổi cỡ, xoay asset
+├── js/studio-editor.js        Tab "Lắp studio" trong admin (chỉ owner): kéo, đổi cỡ, xoay asset — cả trong studio lẫn ngoài cửa
 ├── supabase/functions/notify/ Edge Function báo mail cho nhân sự (đơn / workshop / lời nhắn) — xem docs/design.md
 ├── tools/studio-assets.py    Chạy tay khi có tranh mới: ghép dải studio, tách nền nhân vật → images/studio/
 ├── images/

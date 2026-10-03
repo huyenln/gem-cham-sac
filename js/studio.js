@@ -63,6 +63,13 @@
     { id: 'memo',     zone: 5, box: [1065, 205, 1420, 415], label: 'studio.hot_memo' }
   ];
 
+  // The street in front of the studio (studio.html opens here; the door
+  // leads in). Scene, pieces and the door box come from the owner's layout
+  // (layout.outside) or GemLayout's built-in street.
+  var OUT_HOT = [{ id: 'enter', label: 'studio.hot_enter' }];
+  var sceneName = 'in';
+  var INSIDE = null;    // the studio's own scene numbers, kept while outside
+
   // The cast (images/studio/char/pN-*.webp, cut by tools/studio-assets.py
   // --cast). Each has standing (front / side / three-quarter), a 4-frame
   // walk and a 3-frame cart push. ANCHOR = where the head sits across each
@@ -71,6 +78,23 @@
   var FRAME_NAMES = ['front', 'side', 'q', 'walk1', 'walk2', 'walk3', 'walk4', 'cart1', 'cart2', 'cart3'];
   var ANCHOR = {"p1-front": 0.516, "p1-side": 0.515, "p1-q": 0.475, "p1-walk1": 0.487, "p1-walk2": 0.538, "p1-walk3": 0.501, "p1-walk4": 0.431, "p1-cart1": 0.378, "p1-cart2": 0.242, "p1-cart3": 0.303, "p2-front": 0.509, "p2-side": 0.486, "p2-q": 0.498, "p2-walk1": 0.554, "p2-walk2": 0.555, "p2-walk3": 0.522, "p2-walk4": 0.52, "p2-cart1": 0.451, "p2-cart2": 0.333, "p2-cart3": 0.392, "p3-front": 0.541, "p3-side": 0.472, "p3-q": 0.51, "p3-walk1": 0.469, "p3-walk2": 0.512, "p3-walk3": 0.472, "p3-walk4": 0.502, "p3-cart1": 0.344, "p3-cart2": 0.295, "p3-cart3": 0.268, "p4-front": 0.519, "p4-side": 0.547, "p4-q": 0.504, "p4-walk1": 0.488, "p4-walk2": 0.475, "p4-walk3": 0.465, "p4-walk4": 0.426, "p4-cart1": 0.377, "p4-cart2": 0.333, "p4-cart3": 0.348};
   var STEP_MS = 150;   // one walk / push frame
+
+  // Where accessories go on each frame (found by tools-side skin detection,
+  // checked by eye): [width/height, hand x, hand y, back-of-head x, y], as
+  // fractions of the frame. The hand is the near one (the front fist in a
+  // walk, the grip on the cart handle); bags hang from it.
+  var WEAR_AT = {"p1-front": [0.3056, 0.915, 0.564, 0.118, 0.12], "p1-side": [0.2736, 0.659, 0.579, 0.122, 0.12], "p1-q": [0.3097, 0.87, 0.512, 0.139, 0.12], "p1-walk1": [0.5292, 0.758, 0.557, 0.283, 0.12], "p1-walk2": [0.3083, 0.877, 0.592, 0.189, 0.12], "p1-walk3": [0.5472, 0.781, 0.56, 0.292, 0.12], "p1-walk4": [0.3847, 0.575, 0.583, 0.148, 0.12], "p1-cart1": [0.8667, 0.527, 0.506, 0.22, 0.12], "p1-cart2": [0.6736, 0.414, 0.471, 0.07, 0.12], "p1-cart3": [0.7972, 0.48, 0.506, 0.134, 0.12], "p2-front": [0.3208, 0.85, 0.584, 0.277, 0.12], "p2-side": [0.2056, 0.583, 0.587, 0.074, 0.12], "p2-q": [0.3111, 0.863, 0.579, 0.254, 0.12], "p2-walk1": [0.5292, 0.843, 0.543, 0.352, 0.12], "p2-walk2": [0.2542, 0.614, 0.6, 0.148, 0.12], "p2-walk3": [0.5389, 0.781, 0.515, 0.325, 0.12], "p2-walk4": [0.2403, 0.639, 0.597, 0.087, 0.12], "p2-cart1": [0.8292, 0.615, 0.527, 0.308, 0.12], "p2-cart2": [0.6875, 0.549, 0.525, 0.166, 0.12], "p2-cart3": [0.7472, 0.587, 0.523, 0.23, 0.12], "p3-front": [0.3528, 0.899, 0.562, 0.276, 0.12], "p3-side": [0.3028, 0.587, 0.575, 0.142, 0.12], "p3-q": [0.3486, 0.902, 0.566, 0.235, 0.12], "p3-walk1": [0.5236, 0.707, 0.565, 0.284, 0.12], "p3-walk2": [0.3417, 0.93, 0.564, 0.232, 0.12], "p3-walk3": [0.5194, 0.722, 0.555, 0.283, 0.12], "p3-walk4": [0.3681, 0.619, 0.584, 0.238, 0.12], "p3-cart1": [0.8014, 0.502, 0.497, 0.222, 0.12], "p3-cart2": [0.7042, 0.467, 0.52, 0.158, 0.12], "p3-cart3": [0.7194, 0.488, 0.52, 0.131, 0.12], "p4-front": [0.3708, 0.872, 0.594, 0.21, 0.12], "p4-side": [0.2972, 0.842, 0.47, 0.131, 0.12], "p4-q": [0.3917, 0.843, 0.59, 0.202, 0.12], "p4-walk1": [0.5278, 0.86, 0.564, 0.239, 0.12], "p4-walk2": [0.3847, 0.902, 0.557, 0.134, 0.12], "p4-walk3": [0.5139, 0.798, 0.561, 0.214, 0.12], "p4-walk4": [0.4306, 0.821, 0.551, 0.119, 0.12], "p4-cart1": [0.8083, 0.504, 0.521, 0.21, 0.12], "p4-cart2": [0.7042, 0.485, 0.51, 0.134, 0.12], "p4-cart3": [0.7625, 0.574, 0.499, 0.171, 0.12]};
+
+  // How each piece sits: slot (one bag at a time), height as a fraction of
+  // the character, which point it hangs from, and the CSS shift that puts
+  // its hook / handle on that point.
+  var WEAR = {
+    denim:     { slot: 'bag',   h: 0.24, at: 'hand', shift: 'translate(-50%, -6%)' },
+    oxford:    { slot: 'bag',   h: 0.2, at: 'hand', shift: 'translate(-50%, -4%)' },
+    daydeo:    { slot: 'wrist', h: 0.15, at: 'hand', shift: 'translate(-30%, -8%)' },
+    bloom:     { slot: 'charm', h: 0.13, at: 'hand', shift: 'translate(-15%, -2%)' },
+    scrunchie: { slot: 'hair',  h: 0.075, at: 'head', shift: 'translate(-55%, -50%)' }
+  };
 
   function charSrc(who, name) { return 'images/studio/char/' + who + '-' + name + '.webp'; }
 
@@ -196,6 +220,14 @@
     'studio.char_p3':      { vi: `Bạn váy yếm, túi hoa`, en: `Pinafore dress, floral tote` },
     'studio.char_p4':      { vi: `Bạn áo len hồng, túi bò`, en: `Pink jumper, denim tote` },
     'studio.door_go':      { vi: `Vào studio`, en: `Step inside` },
+    'studio.go_out':       { vi: `Ra ngoài cửa`, en: `Step outside` },
+    'studio.hot_enter':    { vi: `Vào studio`, en: `Go in` },
+    'studio.out_intro':    { vi: `Chào bạn! Chạm vào cửa để vào studio nhé.`, en: `Hi! Tap the door to come in.` },
+    'studio.wear_on':      { vi: `Đeo thử`, en: `Try it on` },
+    'studio.wear_off':     { vi: `Tháo ra`, en: `Take it off` },
+    'studio.wear_tag':     { vi: `Đang đeo`, en: `Wearing` },
+    'studio.wear_said':    { vi: `Hợp ghê! Đi một vòng xem nào.`, en: `Looks good! Take a walk.` },
+    'studio.wear_note':    { vi: `Đồ đeo thử theo bạn hết lượt này. Món đã mua thì đeo lần nào cũng được.`, en: `Tried-on pieces stay with you this visit. Pieces you own, every visit.` },
 
     'studio.fitting_h':    { vi: `Góc thử đồ`, en: `Fitting corner` },
     'studio.fitting_p':    { vi: `Chạm vào một món để thử lên người. Mua rồi thì món đó nằm trong tủ của bạn.`, en: `Tap a piece to try it on. Once it's yours, it waits in your cabinet.` },
@@ -319,7 +351,8 @@
   }
 
   function hotById(id) {
-    for (var i = 0; i < HOTSPOTS.length; i++) if (HOTSPOTS[i].id === id) return HOTSPOTS[i];
+    var list = sceneName === 'out' ? OUT_HOT : HOTSPOTS;
+    for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
     return null;
   }
 
@@ -390,8 +423,8 @@
     });
   }
 
-  function buildItems() {
-    LAYOUT.items.forEach(function (it) {
+  function buildItems(items) {
+    items.forEach(function (it) {
       var el = document.createElement(it.frame ? 'span' : 'img');
       var img = el;
       if (it.frame) {
@@ -415,7 +448,7 @@
   }
 
   function build() {
-    if (LAYOUT) buildItems();
+    if (LAYOUT) buildItems(LAYOUT.items);
     // Product photos on the zone-3 shelves, under the hotspots (not tappable
     // on their own: the whole cabinet opens).
     DISPLAY.forEach(function (d) {
@@ -430,22 +463,7 @@
       world.appendChild(fr);
     });
 
-    // Hotspots
-    HOTSPOTS.forEach(function (h) {
-      var b = boxOf(h);
-      var btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'st-hot';
-      btn.setAttribute('data-hot', h.id);
-      btn.setAttribute('data-i18n-attr', 'aria-label:' + h.label);
-      btn.setAttribute('aria-label', t(h.label));
-      btn.style.left = pct(b.x0, SCENE.width);
-      btn.style.top = pct(b.y0, SCENE.height);
-      btn.style.width = pct(b.x1 - b.x0, SCENE.width);
-      btn.style.height = pct(b.y1 - b.y0, SCENE.height);
-      btn.innerHTML = '<span class="st-hot-label" data-i18n="' + h.label + '">' + esc(t(h.label)) + '</span>';
-      world.appendChild(btn);
-    });
+    HOTSPOTS.forEach(addHot);
 
     // Udon on the counter
     var u = SCENE.udon;
@@ -476,7 +494,27 @@
     memoPins.style.height = pct(mb.y1 - mb.y0, SCENE.height);
     world.insertBefore(memoPins, world.querySelector('.st-hot'));
 
-    // Character: one <img> per frame, toggled — swapping src would flicker.
+    addPlayer();
+  }
+
+  function addHot(h) {
+    var b = boxOf(h);
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'st-hot';
+    btn.setAttribute('data-hot', h.id);
+    btn.setAttribute('data-i18n-attr', 'aria-label:' + h.label);
+    btn.setAttribute('aria-label', t(h.label));
+    btn.style.left = pct(b.x0, SCENE.width);
+    btn.style.top = pct(b.y0, SCENE.height);
+    btn.style.width = pct(b.x1 - b.x0, SCENE.width);
+    btn.style.height = pct(b.y1 - b.y0, SCENE.height);
+    btn.innerHTML = '<span class="st-hot-label" data-i18n="' + h.label + '">' + esc(t(h.label)) + '</span>';
+    world.appendChild(btn);
+  }
+
+  // Character: one frame per pose, toggled — swapping src would flicker.
+  function addPlayer() {
     playerEl = document.createElement('div');
     playerEl.className = 'st-player';
     playerEl.style.height = pct(SCENE.playerH, SCENE.height);
@@ -488,21 +526,160 @@
     dress();
   }
 
-  // (Re)build the frames for the chosen character.
+  /* ---------- the street outside, and going in / out ---------- */
+  function outsideScene() {
+    return (LAYOUT && LAYOUT.outside) || window.GemLayout.outsideDefault();
+  }
+
+  function buildOutside(O) {
+    buildItems(O.items);
+    var h = OUT_HOT[0], o = O.hot.enter;
+    h.abs = o.box; h.standAbs = o.stand;
+    addHot(h);
+    addPlayer();
+  }
+
+  function setScene(name) {
+    sceneName = name;
+    Array.prototype.slice.call(world.children).forEach(function (n) {
+      if (!n.classList.contains('st-bg')) n.remove();
+    });
+    udonEl = null; memoPins = null;
+    var bg = world.querySelector('.st-bg');
+    if (name === 'out') {
+      var O = outsideScene();
+      SCENE.width = O.bg.w; SCENE.height = O.bg.h; SCENE.startX = O.start;
+      bg.src = O.bg.src;
+      buildOutside(O);
+    } else {
+      SCENE.width = INSIDE.width; SCENE.height = INSIDE.height; SCENE.startX = INSIDE.startX;
+      bg.src = INSIDE.bg;
+      build();
+      paintPins();
+    }
+    walkToken++;
+    player.x = SCENE.startX; player.facing = 1; player.moving = false; player.moved = false;
+    layout();
+    try { sessionStorage.setItem('gem-scene', name); } catch (e) { /* private mode */ }
+  }
+
+  // Fade out, swap scenes, fade back in once the new wall has loaded.
+  function goScene(name, then) {
+    if (name === sceneName) { if (then) then(); return; }
+    closeSheet();
+    var html = document.documentElement;
+    html.classList.add('st-wait');
+    setTimeout(function () {
+      setScene(name);
+      var bg = world.querySelector('.st-bg'), shown = false;
+      var show = function () {
+        if (shown) return;
+        shown = true;
+        html.classList.remove('st-wait');
+        if (then) setTimeout(then, 250);
+      };
+      if (bg.complete && bg.naturalWidth) show();
+      else { bg.addEventListener('load', show, { once: true }); bg.addEventListener('error', show, { once: true }); setTimeout(show, 2500); }
+    }, 260);
+  }
+
+  function enterStudio() {
+    walkTo(standX(hotById('enter')), function () { goScene('in', hello); });
+  }
+
+  // (Re)build the frames for the chosen character. Each frame is a box the
+  // size of its picture, so accessories can be placed in % of it.
   function dress() {
     bobEl.textContent = '';
     frameEls = {};
     FRAME_NAMES.forEach(function (name) {
+      var key = who + '-' + name;
+      var fr = document.createElement('span');
+      fr.className = 'st-fr';
+      if (WEAR_AT[key]) fr.style.aspectRatio = String(WEAR_AT[key][0]);
+      fr.style.transform = 'translateX(' + (-(ANCHOR[key] || 0.5) * 100) + '%)';
+      fr.hidden = true;
       var img = document.createElement('img');
       img.src = charSrc(who, name);
       img.alt = '';
       img.draggable = false;
-      img.style.transform = 'translateX(' + (-(ANCHOR[who + '-' + name] || 0.5) * 100) + '%)';
-      img.hidden = true;
-      frameEls[name] = img;
-      bobEl.appendChild(img);
+      fr.appendChild(img);
+      frameEls[name] = fr;
+      bobEl.appendChild(fr);
     });
+    dressWear();
     player.frame = null;
+  }
+
+  /* ---------- accessories on the character ----------
+     Anything can be tried on; a tried piece stays for this visit
+     (sessionStorage), a piece you own stays for good (localStorage). */
+  var worn = [];
+  var SLOT_ORDER = ['hair', 'bag', 'wrist', 'charm'];   // drawing order, back to front
+
+  function owns(sku) { return !!(window.GemTu && window.GemTu.owns(sku)); }
+
+  function wearPut(sku) {
+    var slot = WEAR[sku].slot;
+    worn = worn.filter(function (s) { return WEAR[s].slot !== slot; });
+    worn.push(sku);
+  }
+
+  function loadWorn() {
+    var a = [], b = [];
+    try { a = JSON.parse(sessionStorage.getItem('gem-mac') || '[]'); } catch (e) { /* private mode */ }
+    try { b = JSON.parse(localStorage.getItem('gem-mac') || '[]'); } catch (e) { /* private mode */ }
+    worn = [];
+    (Array.isArray(b) ? b.filter(owns) : []).concat(Array.isArray(a) ? a : []).forEach(function (s) {
+      if (typeof s === 'string' && WEAR.hasOwnProperty(s) && worn.indexOf(s) < 0) wearPut(s);
+    });
+  }
+
+  function saveWorn() {
+    try { sessionStorage.setItem('gem-mac', JSON.stringify(worn)); } catch (e) { /* private mode */ }
+    try { localStorage.setItem('gem-mac', JSON.stringify(worn.filter(owns))); } catch (e) { /* private mode */ }
+  }
+
+  function toggleWear(sku) {
+    if (!WEAR.hasOwnProperty(sku)) return false;
+    var on = worn.indexOf(sku) < 0;
+    if (on) wearPut(sku);
+    else worn = worn.filter(function (s) { return s !== sku; });
+    saveWorn();
+    dressWear();
+    return on;
+  }
+
+  function dressWear() {
+    var list = worn.slice().sort(function (a, b) {
+      return SLOT_ORDER.indexOf(WEAR[a].slot) - SLOT_ORDER.indexOf(WEAR[b].slot);
+    });
+    var bag = list.some(function (s) { return WEAR[s].slot === 'bag'; });
+    Object.keys(frameEls).forEach(function (name) {
+      var fr = frameEls[name], at = WEAR_AT[who + '-' + name];
+      fr.querySelectorAll('.st-acc').forEach(function (n) { n.remove(); });
+      if (!at) return;
+      list.forEach(function (sku) {
+        var w = WEAR[sku];
+        var x = w.at === 'head' ? at[3] : at[1];
+        var y = w.at === 'head' ? at[4] : at[2];
+        // Offsets are in character heights (÷ aspect for x): with a bag in
+        // hand, the charm hangs off its far side and the strap off the near
+        // side, so the bag doesn't hide them.
+        if (w.slot === 'charm') { x += (bag ? 0.065 : 0.02) / at[0]; y += bag ? 0.045 : 0; }
+        if (w.slot === 'wrist' && bag) x -= 0.03 / at[0];
+        var im = document.createElement('img');
+        im.className = 'st-acc';
+        im.src = 'images/studio/wear/' + sku + '.webp';
+        im.alt = '';
+        im.draggable = false;
+        im.style.left = (x * 100).toFixed(2) + '%';
+        im.style.top = (y * 100).toFixed(2) + '%';
+        im.style.height = (w.h * 100) + '%';
+        im.style.transform = w.shift;
+        fr.appendChild(im);
+      });
+    });
   }
 
   function pickChar(id) {
@@ -667,7 +844,8 @@
           '<img src="' + charSrc(id, 'front') + '" alt="" loading="lazy"></button></li>';
       }).join('') + '</ul>' +
       '<p class="st-foot"><button type="button" class="st-btn" data-close data-i18n="studio.door_go">' +
-        esc(t('studio.door_go')) + '</button></p>'
+        esc(t('studio.door_go')) + '</button> ' +
+        '<button type="button" class="st-link" data-out data-i18n="studio.go_out">' + esc(t('studio.go_out')) + '</button></p>'
     );
   }
 
@@ -675,7 +853,11 @@
     openSheet(
       head('studio.fitting_h', 'studio.fitting_p') +
       '<div class="fit">' +
-        '<figure class="fit-model"><img alt=""><figcaption class="fit-cap"></figcaption></figure>' +
+        '<div class="fit-side">' +
+          '<figure class="fit-model"><img alt=""><figcaption class="fit-cap"></figcaption></figure>' +
+          '<p class="fit-wear"><button type="button" class="st-btn" data-wear></button></p>' +
+          tr('p', 'studio.wear_note', ' class="fit-note"') +
+        '</div>' +
         '<ul class="fit-list"></ul>' +
       '</div>'
     );
@@ -689,12 +871,17 @@
     var model = root.querySelector('.fit-model img');
     model.src = 'images/studio/wear/' + tryOn + '-mac.webp';
     root.querySelector('.fit-cap').textContent = info ? info.name : '';
+    var wb = root.querySelector('[data-wear]'), wearing = worn.indexOf(tryOn) >= 0;
+    wb.setAttribute('data-wear', tryOn);
+    wb.textContent = t(wearing ? 'studio.wear_off' : 'studio.wear_on');
+    wb.classList.toggle('is-added', wearing);
     root.querySelector('.fit-list').innerHTML = WEARABLES.map(function (sku) {
       var it = window.GemBasket ? window.GemBasket.info(sku) : null;
       if (!it) return '';
       var have = window.GemTu && window.GemTu.owns(sku);
       return '<li class="fit-item' + (sku === tryOn ? ' is-on' : '') + '">' +
         '<button type="button" class="fit-pick" data-try="' + esc(sku) + '" aria-pressed="' + (sku === tryOn) + '">' +
+          (worn.indexOf(sku) >= 0 ? tr('i', 'studio.wear_tag', ' class="fit-worn"') : '') +
           '<img src="images/studio/wear/' + esc(sku) + '.webp" alt="" loading="lazy">' +
           '<b>' + esc(it.name) + '</b>' +
         '</button>' +
@@ -1371,13 +1558,18 @@
     sewing: designerSheet,
     memo: memoSheet,
     tu: tuSheet,
-    counter: counter
+    counter: counter,
+    enter: enterStudio
   };
 
   // Open right away and let the character walk over behind the sheet.
   // (Opening only on arrival meant a second tap mid-walk cancelled the
   // first, so it took several taps to get anything open.)
   function visit(id, open) {
+    if (sceneName === 'out' && id !== 'enter') {   // a nav button from the street: go in first
+      goScene('in', function () { visit(id, open); });
+      return;
+    }
     var h = hotById(id);
     if (!h) return;
     walkTo(standX(h));
@@ -1439,6 +1631,18 @@
             add.textContent = t('studio.add');
             add.classList.remove('is-added');
           }, 1100);
+        }
+        return;
+      }
+      if (e.target.closest('[data-out]')) { goScene('out'); return; }
+      var wr = e.target.closest('[data-wear]');
+      if (wr) {
+        if (toggleWear(wr.getAttribute('data-wear'))) {
+          closeSheet();
+          render();
+          say('studio.wear_said', 3500);
+        } else {
+          renderFitting();
         }
         return;
       }
@@ -1543,10 +1747,11 @@
   });
 
   function start() {
-    build();
+    INSIDE = { width: SCENE.width, height: SCENE.height, startX: SCENE.startX,
+      bg: LAYOUT ? LAYOUT.bg.src : 'images/studio/bg/strip.webp' };
+    loadWorn();
     bind();
     cartCount = window.GemBasket ? window.GemBasket.count() : 0;
-    layout();
     loadNotes();   // pins on the memo board
 
     // A shared design link (studio.html?d=…): walk to the table and open it.
@@ -1556,10 +1761,28 @@
       try { sessionStorage.setItem('gem-src', 'link-chia-se'); } catch (e) { /* private mode */ }
       D.d = shared;
       try { localStorage.setItem('gem-studio-intro', '1'); } catch (e) { /* ignore */ }
+      setScene('in');
       setTimeout(function () { visit('sewing'); }, 400);
       return;
     }
 
+    // Start on the street, unless this visit already went in.
+    var was = null;
+    try { was = sessionStorage.getItem('gem-scene'); } catch (e) { /* private mode */ }
+    setScene(was === 'in' ? 'in' : 'out');
+    if (sceneName === 'in') { hello(); return; }
+    // the studio wall, fetched while they look at the street
+    new Image().src = INSIDE.bg;
+    var seenOut = false;
+    try { seenOut = localStorage.getItem('gem-studio-out') === '1'; } catch (e) { /* private mode */ }
+    if (!seenOut) {
+      setTimeout(function () { say('studio.out_intro', 6000); }, 600);
+      try { localStorage.setItem('gem-studio-out', '1'); } catch (e) { /* ignore */ }
+    }
+  }
+
+  // First time inside: Udon says where things are.
+  function hello() {
     var seen = false;
     try { seen = localStorage.getItem('gem-studio-intro') === '1'; } catch (e) { /* private mode */ }
     if (!seen) {

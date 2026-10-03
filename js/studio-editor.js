@@ -4,8 +4,9 @@
 // new one to the gem-media bucket), drag to move, drag a corner to resize,
 // drag the round handle to rotate. Hotspots (what opens when tapped), the
 // spot where the character stops for each, Udon and the start point are
-// placed the same way. "Lưu nháp" saves the draft; "Xuất bản" makes it what
-// customers see. studio.html?nhap=1 previews the draft (owner only).
+// placed the same way. "Ngoài cửa" switches to the street in front of the
+// studio (layout.outside), where studio.html opens. "Lưu nháp" saves the
+// draft; "Xuất bản" makes it what customers see. studio.html?nhap=1 previews the draft (owner only).
 //
 // Layout format and validation: js/studio-layout.js. RLS on studio_layout
 // lets only the owner write; this screen is a convenience, not the lock.
@@ -28,6 +29,11 @@ window.GemStudioEditor = (function () {
   var profiles = [];        // [{ id, name, updated_at }] saved layouts ('p-…')
   var liveName = null;      // name of the profile that is live, if any
   var current = null;       // profile id loaded in the editor (null = draft)
+  var scene = 'in';         // 'in' = the studio, 'out' = the street in front (data.outside)
+
+  // The part of the layout on screen: the studio itself or the street.
+  function S() { return scene === 'out' ? data.outside : data; }
+  function spots() { return scene === 'out' ? L.OUT_SPOTS : L.SPOTS; }
 
   function esc(s) {
     return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
@@ -51,6 +57,10 @@ window.GemStudioEditor = (function () {
     root.innerHTML =
       '<div class="se">' +
         '<div class="se-bar">' +
+          '<span class="se-scene" role="group" aria-label="Cảnh">' +
+            '<button type="button" class="ad-filter active" data-se="sc-in" aria-pressed="true">Trong studio</button>' +
+            '<button type="button" class="ad-filter" data-se="sc-out" aria-pressed="false">Ngoài cửa</button>' +
+          '</span>' +
           '<label class="se-bg">Nền <select class="se-bgsel"></select></label>' +
           '<button type="button" class="ad-btn" data-se="undo">Hoàn tác</button>' +
           '<button type="button" class="ad-btn" data-se="zout" aria-label="Thu nhỏ">−</button>' +
@@ -85,7 +95,7 @@ window.GemStudioEditor = (function () {
       var b = lib.backgrounds[+e.target.value];
       if (!b) return;
       remember();
-      data.bg = { src: b.src, w: b.w, h: b.h };
+      S().bg = { src: b.src, w: b.w, h: b.h };
       draw();
     });
     // Pinch first (capture), so a second finger never starts a drag.
@@ -98,7 +108,7 @@ window.GemStudioEditor = (function () {
     panelEl.addEventListener('change', panelChange);
     panelEl.addEventListener('input', function (e) {
       if (e.target.name !== 'se-size' || !sel || sel.kind !== 'item') return;
-      resize(data.items[sel.i], +e.target.value);
+      resize(S().items[sel.i], +e.target.value);
       var num = panelEl.querySelector('[name="se-h"]');
       if (num) num.value = e.target.value;
       dirty = true;
@@ -117,7 +127,7 @@ window.GemStudioEditor = (function () {
       root.querySelector('.se-bgsel').innerHTML = lib.backgrounds.map(function (b, i) {
         return '<option value="' + i + '">' + esc(b.src.split('/').pop()) + '</option>';
       }).join('');
-      lib.backgrounds.forEach(function (b, i) { if (b.src === data.bg.src) root.querySelector('.se-bgsel').value = i; });
+      syncBg();
       status(r[1] ? 'Đang sửa bản nháp' : r[2] ? 'Bắt đầu từ bản đang chạy' : 'Bố cục mới');
       draw();
       renderPanel();
@@ -125,6 +135,24 @@ window.GemStudioEditor = (function () {
     }).catch(function (err) {
       status('Không tải được: ' + (err.message || ''), true);
     });
+  }
+
+  function syncBg() {
+    var el = root.querySelector('.se-bgsel');
+    lib.backgrounds.forEach(function (b, i) { if (b.src === S().bg.src) el.value = i; });
+  }
+
+  function setScene(name) {
+    scene = name;
+    sel = null;
+    root.querySelectorAll('[data-se^="sc-"]').forEach(function (b) {
+      var on = b.dataset.se === 'sc-' + name;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-pressed', on);
+    });
+    syncBg();
+    stageEl.scrollLeft = 0;
+    draw(); renderPanel();
   }
 
   function unmount() {
@@ -144,14 +172,14 @@ window.GemStudioEditor = (function () {
     // scrolling. Tap empty wall to deselect and scroll again.
     stageEl.style.touchAction = sel && sel.kind === 'item' ? 'none' : '';
     var h = stageEl.clientHeight || 420;
-    k = (h - 40) / data.bg.h * zoom;   // minus the stage padding
-    worldEl.style.width = px(data.bg.w);
-    worldEl.style.height = px(data.bg.h);
+    k = (h - 40) / S().bg.h * zoom;   // minus the stage padding
+    worldEl.style.width = px(S().bg.w);
+    worldEl.style.height = px(S().bg.h);
     var bg = worldEl.querySelector('.se-bgimg');
-    if (bg.getAttribute('src') !== data.bg.src) bg.src = data.bg.src;
+    if (bg.getAttribute('src') !== S().bg.src) bg.src = S().bg.src;
     worldEl.querySelectorAll('.se-el').forEach(function (n) { n.remove(); });
 
-    data.items.forEach(function (it, i) {
+    S().items.forEach(function (it, i) {
       var n = document.createElement('div');
       n.className = 'se-el se-item' + (it.layer === 'front' ? ' is-front' : '') + (it.frame ? ' is-frame' : '') +
         (isSel('item', i) ? ' is-sel' : '');
@@ -171,16 +199,16 @@ window.GemStudioEditor = (function () {
     var guy = document.createElement('div');
     guy.className = 'se-el se-start' + (isSel('start') ? ' is-sel' : '');
     guy.dataset.kind = 'start';
-    place(guy, data.start - 70, feet - ph, 140, ph);
+    place(guy, S().start - 70, feet - ph, 140, ph);
     guy.innerHTML = '<img src="images/studio/char/p1-front.webp" alt="" draggable="false"><span>Điểm xuất phát</span>';
     worldEl.appendChild(guy);
     var floor = document.createElement('div');
     floor.className = 'se-el se-floor';
-    place(floor, 0, feet, data.bg.w, 2);
+    place(floor, 0, feet, S().bg.w, 2);
     worldEl.appendChild(floor);
 
-    L.SPOTS.forEach(function (sp) {
-      var o = data.hot[sp.id], b = o.box;
+    spots().forEach(function (sp) {
+      var o = S().hot[sp.id], b = o.box;
       var n = document.createElement('div');
       n.className = 'se-el se-hot' + (isSel('hot', sp.id) ? ' is-sel' : '');
       n.dataset.kind = 'hot'; n.dataset.id = sp.id;
@@ -196,6 +224,7 @@ window.GemStudioEditor = (function () {
       worldEl.appendChild(st);
     });
 
+    if (scene === 'out') return;   // Udon lives in the studio
     var u = data.udon;
     var un = document.createElement('div');
     un.className = 'se-el se-udon' + (isSel('udon') ? ' is-sel' : '');
@@ -254,7 +283,7 @@ window.GemStudioEditor = (function () {
     e.preventDefault();
     var p = pair();
     pinchGen++;
-    pinch = { d0: p.d, a0: p.ang, mid0: p.mid, start: clone(data.items[sel.i]), before: clone(data) };
+    pinch = { d0: p.d, a0: p.ang, mid0: p.mid, start: clone(S().items[sel.i]), before: clone(data) };
   }
 
   function pinchMove(e) {
@@ -262,7 +291,7 @@ window.GemStudioEditor = (function () {
     touches[e.pointerId] = { x: e.clientX, y: e.clientY };
     if (!pinch || !sel || sel.kind !== 'item') return;
     e.preventDefault();
-    var p = pair(), it = data.items[sel.i], st = pinch.start;
+    var p = pair(), it = S().items[sel.i], st = pinch.start;
     var s = Math.max(0.05, p.d / pinch.d0);
     it.w = Math.max(8, Math.round(st.w * s));
     it.h = Math.max(8, Math.round(st.h * s));
@@ -343,7 +372,7 @@ window.GemStudioEditor = (function () {
       } else if (kind === 'stand') {
         obj.stand = Math.round(start.stand + dx);
       } else if (kind === 'start') {
-        data.start = Math.round(Math.max(120, Math.min(data.bg.w - 120, start.v + dx)));
+        S().start = Math.round(Math.max(120, Math.min(S().bg.w - 120, start.v + dx)));
       }
       draw();
     }
@@ -363,10 +392,10 @@ window.GemStudioEditor = (function () {
   // the object the selection points at (start is wrapped so it can be edited)
   function target() {
     if (!sel) return null;
-    if (sel.kind === 'item') return data.items[sel.i];
-    if (sel.kind === 'hot' || sel.kind === 'stand') return data.hot[sel.id];
+    if (sel.kind === 'item') return S().items[sel.i];
+    if (sel.kind === 'hot' || sel.kind === 'stand') return S().hot[sel.id];
     if (sel.kind === 'udon') return data.udon;
-    if (sel.kind === 'start') return { v: data.start };
+    if (sel.kind === 'start') return { v: S().start };
     return null;
   }
 
@@ -375,7 +404,7 @@ window.GemStudioEditor = (function () {
     if (e.target.closest && e.target.closest('input, select, textarea')) return;
     if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); doUndo(); return; }
     if (!sel || sel.kind !== 'item') return;
-    var it = data.items[sel.i];
+    var it = S().items[sel.i];
     var step = e.shiftKey ? 20 : 2;
     var m = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] }[e.key];
     if (m) { e.preventDefault(); remember(); it.x += m[0]; it.y += m[1]; draw(); return; }
@@ -386,6 +415,7 @@ window.GemStudioEditor = (function () {
     var last = undo.pop();
     if (!last) return;
     data = last; sel = null; dirty = true;
+    syncBg();
     status('Đã hoàn tác');
     draw(); renderPanel();
   }
@@ -395,7 +425,7 @@ window.GemStudioEditor = (function () {
     if (!lib) return;
     var tools = '';
     if (sel && sel.kind === 'item') {
-      var it = data.items[sel.i];
+      var it = S().items[sel.i];
       tools = '<div class="se-tools">' +
         '<b>Đồ đang chọn</b>' +
         '<label><input type="radio" name="se-layer" value="back"' + (it.layer !== 'front' ? ' checked' : '') + '> Sau nhân vật</label>' +
@@ -416,7 +446,7 @@ window.GemStudioEditor = (function () {
           '<button type="button" class="ad-btn danger" data-act="del">Xoá</button>' +
         '</div></div>';
     } else if (sel && (sel.kind === 'hot' || sel.kind === 'stand')) {
-      var name = L.SPOTS.filter(function (s) { return s.id === sel.id; })[0].vi;
+      var name = spots().filter(function (s) { return s.id === sel.id; })[0].vi;
       tools = '<div class="se-tools"><b>' + esc(name) + '</b><p class="ad-hint">Khung nét đứt = chỗ khách chạm để mở. ' +
         'Cột nhỏ ở sàn = chỗ nhân vật dừng lại. Kéo góc để đổi cỡ.</p></div>';
     } else {
@@ -453,7 +483,7 @@ window.GemStudioEditor = (function () {
   function panelChange(e) {
     if (e.target.type === 'file') return upload(e.target.files && e.target.files[0]);
     if (!sel || sel.kind !== 'item') return;
-    var it = data.items[sel.i];
+    var it = S().items[sel.i];
     remember();
     if (e.target.name === 'se-layer') it.layer = e.target.value;
     if (e.target.name === 'se-size' || e.target.name === 'se-h') resize(it, +e.target.value);
@@ -463,20 +493,20 @@ window.GemStudioEditor = (function () {
 
   function act(a) {
     if (!sel || sel.kind !== 'item') return;
-    var i = sel.i, it = data.items[i];
+    var i = sel.i, it = S().items[i];
     remember();
-    if (a === 'del') { data.items.splice(i, 1); sel = null; }
+    if (a === 'del') { S().items.splice(i, 1); sel = null; }
     else if (a === 'dup') {
       var c = clone(it); c.x += 40; c.y += 20;
-      data.items.push(c); sel = { kind: 'item', i: data.items.length - 1 };
+      S().items.push(c); sel = { kind: 'item', i: S().items.length - 1 };
     } else if (a === 'flip') it.flip = !it.flip;
     else if (a === 'bigger') resize(it, it.h * 1.15);
     else if (a === 'smaller') resize(it, it.h / 1.15);
     else if (a === 'frame') it.frame = !it.frame;
-    else if (a === 'up' && i < data.items.length - 1) {
-      data.items.splice(i, 1); data.items.splice(i + 1, 0, it); sel.i = i + 1;
+    else if (a === 'up' && i < S().items.length - 1) {
+      S().items.splice(i, 1); S().items.splice(i + 1, 0, it); sel.i = i + 1;
     } else if (a === 'down' && i > 0) {
-      data.items.splice(i, 1); data.items.splice(i - 1, 0, it); sel.i = i - 1;
+      S().items.splice(i, 1); S().items.splice(i - 1, 0, it); sel.i = i - 1;
     }
     draw(); renderPanel();
   }
@@ -495,9 +525,9 @@ window.GemStudioEditor = (function () {
     var h = a.frame ? 110 : Math.min(420, a.h * 0.6);
     var w = Math.round(h * a.w / a.h);
     var cx = (stageEl.scrollLeft + stageEl.clientWidth / 2) / k;
-    data.items.push({ src: a.src, x: Math.round(cx), y: Math.round(L.FEET_Y - h / 2 - 40), w: w, h: Math.round(h),
+    S().items.push({ src: a.src, x: Math.round(cx), y: Math.round(L.FEET_Y - h / 2 - 40), w: w, h: Math.round(h),
       rot: 0, flip: false, layer: 'back', frame: !!a.frame });
-    sel = { kind: 'item', i: data.items.length - 1 };
+    sel = { kind: 'item', i: S().items.length - 1 };
     draw(); renderPanel();
   }
 
@@ -569,7 +599,7 @@ window.GemStudioEditor = (function () {
         if (!ok) throw new Error('bố cục hỏng');
         undo.push(clone(data));
         data = ok; current = id; sel = null; dirty = false;
-        draw(); renderPanel();
+        syncBg(); draw(); renderPanel();
         return 'Đã mở "' + (p.name || id) + '"';
       });
     } else if (a === 'p-live' && p) {
@@ -614,6 +644,7 @@ window.GemStudioEditor = (function () {
     var b = e.target.closest('[data-se]');
     if (!b || !data) return;
     var a = b.dataset.se;
+    if (a === 'sc-in' || a === 'sc-out') return setScene(a.slice(3));
     if (a === 'undo') return doUndo();
     if (a === 'zin' || a === 'zout') {
       var mid = (stageEl.scrollLeft + stageEl.clientWidth / 2) / k;
