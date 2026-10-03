@@ -152,6 +152,25 @@
 .st-udon-ghost { position: absolute; z-index: 6; height: auto; max-width: none; pointer-events: none; }
 .st-stage * { -webkit-tap-highlight-color: transparent; }
 
+/* Real product photos standing on the empty cabinet's shelves, in a thin
+   wooden frame, like prints propped up for sale. */
+.st-shelf-item {
+  position: absolute;
+  display: block;
+  aspect-ratio: 1;
+  transform: translateX(-50%);
+  padding: 0;   /* % padding would be relative to the whole strip */
+  background: #FBF6EE;
+  border: 3px solid #B08452;
+  border-radius: 3px;
+  box-shadow: 2px 3px 4px rgba(61, 74, 46, 0.28);
+  pointer-events: none;
+}
+.st-shelf-item img {
+  display: block; box-sizing: border-box; width: 100%; height: 100%;
+  object-fit: cover; border: 3px solid #FBF6EE;
+}
+
 /* Paper notes on the memo board: a hint that people have written. */
 .st-pins { position: absolute; pointer-events: none; }
 .st-pin {

@@ -1264,7 +1264,7 @@ bên cạnh) thì tool tự cắt ở cột thưa nét nhất; giấy trắng k�
 tay xe cũng được xoá.
 
 **Bộ tranh 2 (10/2026):** `--strip2 <thư mục z1..z5.png>` ghép 5 cảnh mới
-thành `bg/strip.webp` (5590px; khu 3 chỉ lấy bảng treo, tủ đầy lấy ở khu 5).
+thành `bg/strip.webp` (6264px; tủ trống ở khu 3 được giữ để bày ảnh sản phẩm thật — `DISPLAY` trong `js/studio.js`).
 `--pieces` (đồ mặc, Udon, giấy UI — tên trong `PIECES`) và `--batch`
 (`sheet-` tờ sticker → tách từng món, `pr-` một món đồ, `set-` nhiều món,
 `full-` giữ nguyên) cho phần còn lại. Thư viện chưa dùng hết: `cay/`,
