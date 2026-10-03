@@ -79,21 +79,25 @@
   var ANCHOR = {"p1-front": 0.516, "p1-side": 0.515, "p1-q": 0.475, "p1-walk1": 0.487, "p1-walk2": 0.538, "p1-walk3": 0.501, "p1-walk4": 0.431, "p1-cart1": 0.378, "p1-cart2": 0.242, "p1-cart3": 0.303, "p2-front": 0.509, "p2-side": 0.486, "p2-q": 0.498, "p2-walk1": 0.554, "p2-walk2": 0.555, "p2-walk3": 0.522, "p2-walk4": 0.52, "p2-cart1": 0.451, "p2-cart2": 0.333, "p2-cart3": 0.392, "p3-front": 0.541, "p3-side": 0.472, "p3-q": 0.51, "p3-walk1": 0.469, "p3-walk2": 0.512, "p3-walk3": 0.472, "p3-walk4": 0.502, "p3-cart1": 0.344, "p3-cart2": 0.295, "p3-cart3": 0.268, "p4-front": 0.519, "p4-side": 0.547, "p4-q": 0.504, "p4-walk1": 0.488, "p4-walk2": 0.475, "p4-walk3": 0.465, "p4-walk4": 0.426, "p4-cart1": 0.377, "p4-cart2": 0.333, "p4-cart3": 0.348};
   var STEP_MS = 150;   // one walk / push frame
 
-  // Where accessories go on each frame (found by tools-side skin detection,
-  // checked by eye): [width/height, hand x, hand y, back-of-head x, y], as
+  // Where accessories go on each frame (tools/studio-assets.py --hands):
+  // [width/height, hand x, hand y, back-of-head x, y, fist box x, y, w, h],
   // fractions of the frame. The hand is the near one (the front fist in a
-  // walk, the grip on the cart handle); bags hang from it.
-  var WEAR_AT = {"p1-front": [0.3056, 0.915, 0.564, 0.118, 0.12], "p1-side": [0.2736, 0.659, 0.579, 0.122, 0.12], "p1-q": [0.3097, 0.87, 0.512, 0.139, 0.12], "p1-walk1": [0.5292, 0.758, 0.557, 0.283, 0.12], "p1-walk2": [0.3083, 0.877, 0.592, 0.189, 0.12], "p1-walk3": [0.5472, 0.781, 0.56, 0.292, 0.12], "p1-walk4": [0.3847, 0.575, 0.583, 0.148, 0.12], "p1-cart1": [0.8667, 0.527, 0.506, 0.22, 0.12], "p1-cart2": [0.6736, 0.414, 0.471, 0.07, 0.12], "p1-cart3": [0.7972, 0.48, 0.506, 0.134, 0.12], "p2-front": [0.3208, 0.85, 0.584, 0.277, 0.12], "p2-side": [0.2056, 0.583, 0.587, 0.074, 0.12], "p2-q": [0.3111, 0.863, 0.579, 0.254, 0.12], "p2-walk1": [0.5292, 0.843, 0.543, 0.352, 0.12], "p2-walk2": [0.2542, 0.614, 0.6, 0.148, 0.12], "p2-walk3": [0.5389, 0.781, 0.515, 0.325, 0.12], "p2-walk4": [0.2403, 0.639, 0.597, 0.087, 0.12], "p2-cart1": [0.8292, 0.615, 0.527, 0.308, 0.12], "p2-cart2": [0.6875, 0.549, 0.525, 0.166, 0.12], "p2-cart3": [0.7472, 0.587, 0.523, 0.23, 0.12], "p3-front": [0.3528, 0.899, 0.562, 0.276, 0.12], "p3-side": [0.3028, 0.587, 0.575, 0.142, 0.12], "p3-q": [0.3486, 0.902, 0.566, 0.235, 0.12], "p3-walk1": [0.5236, 0.707, 0.565, 0.284, 0.12], "p3-walk2": [0.3417, 0.93, 0.564, 0.232, 0.12], "p3-walk3": [0.5194, 0.722, 0.555, 0.283, 0.12], "p3-walk4": [0.3681, 0.619, 0.584, 0.238, 0.12], "p3-cart1": [0.8014, 0.502, 0.497, 0.222, 0.12], "p3-cart2": [0.7042, 0.467, 0.52, 0.158, 0.12], "p3-cart3": [0.7194, 0.488, 0.52, 0.131, 0.12], "p4-front": [0.3708, 0.872, 0.594, 0.21, 0.12], "p4-side": [0.2972, 0.842, 0.47, 0.131, 0.12], "p4-q": [0.3917, 0.843, 0.59, 0.202, 0.12], "p4-walk1": [0.5278, 0.86, 0.564, 0.239, 0.12], "p4-walk2": [0.3847, 0.902, 0.557, 0.134, 0.12], "p4-walk3": [0.5139, 0.798, 0.561, 0.214, 0.12], "p4-walk4": [0.4306, 0.821, 0.551, 0.119, 0.12], "p4-cart1": [0.8083, 0.504, 0.521, 0.21, 0.12], "p4-cart2": [0.7042, 0.485, 0.51, 0.134, 0.12], "p4-cart3": [0.7625, 0.574, 0.499, 0.171, 0.12]};
+  // walk, the grip on the cart handle); bags hang from it, and the fist
+  // (char/pN-<frame>-tay.webp) is drawn back over the handle.
+  var WEAR_AT = {"p1-front": [0.3056, 0.915, 0.564, 0.118, 0.12, 0.8409, 0.4708, 0.15, 0.1208], "p1-side": [0.2736, 0.659, 0.579, 0.122, 0.12, 0.5584, 0.4958, 0.203, 0.1056], "p1-q": [0.3097, 0.87, 0.512, 0.139, 0.12, 0.7848, 0.4917, 0.1435, 0.0333], "p1-walk1": [0.5292, 0.758, 0.557, 0.283, 0.12, 0.5774, 0.4917, 0.2441, 0.0931], "p1-walk2": [0.3083, 0.877, 0.592, 0.189, 0.12, 0.8108, 0.5208, 0.1036, 0.0931], "p1-walk3": [0.5472, 0.781, 0.56, 0.292, 0.12, 0.6066, 0.4917, 0.2234, 0.0931], "p1-walk4": [0.3847, 0.575, 0.583, 0.148, 0.12, 0.4477, 0.4944, 0.2022, 0.1153], "p1-cart1": [0.8667, 0.527, 0.506, 0.22, 0.12, 0.508, 0.4972, 0.0529, 0.0236], "p1-cart2": [0.6736, 0.414, 0.471, 0.07, 0.12, 0.3608, 0.4486, 0.0804, 0.0361], "p1-cart3": [0.7972, 0.48, 0.506, 0.134, 0.12, 0.453, 0.4972, 0.0592, 0.0208], "p2-front": [0.3208, 0.85, 0.584, 0.277, 0.12, 0.7792, 0.4972, 0.1558, 0.1153], "p2-side": [0.2056, 0.583, 0.587, 0.074, 0.12, 0.3986, 0.4958, 0.3243, 0.1153], "p2-q": [0.3111, 0.863, 0.579, 0.254, 0.12, 0.7812, 0.4931, 0.1518, 0.1139], "p2-walk1": [0.5292, 0.843, 0.543, 0.352, 0.12, 0.7795, 0.5222, 0.0892, 0.0333], "p2-walk2": [0.2542, 0.614, 0.6, 0.148, 0.12, 0.459, 0.5194, 0.2896, 0.1056], "p2-walk3": [0.5389, 0.781, 0.515, 0.325, 0.12, 0.6263, 0.4667, 0.2216, 0.075], "p2-walk4": [0.2403, 0.639, 0.597, 0.087, 0.12, 0.4277, 0.5125, 0.3353, 0.1083], "p2-cart1": [0.8292, 0.615, 0.527, 0.308, 0.12, 0.5762, 0.5069, 0.057, 0.0347], "p2-cart2": [0.6875, 0.549, 0.525, 0.166, 0.12, 0.5071, 0.5069, 0.0626, 0.0319], "p2-cart3": [0.7472, 0.587, 0.523, 0.23, 0.12, 0.5409, 0.5042, 0.0651, 0.0333], "p3-front": [0.3528, 0.899, 0.562, 0.276, 0.12, 0.8031, 0.4528, 0.1535, 0.1458], "p3-side": [0.3028, 0.587, 0.575, 0.142, 0.12, 0.4587, 0.4625, 0.211, 0.1417], "p3-q": [0.3486, 0.902, 0.566, 0.235, 0.12, 0.8048, 0.4611, 0.1434, 0.1347], "p3-walk1": [0.5236, 0.707, 0.565, 0.284, 0.12, 0.4828, 0.4597, 0.2891, 0.1375], "p3-walk2": [0.3417, 0.93, 0.564, 0.232, 0.12, 0.8333, 0.5347, 0.1667, 0.0486], "p3-walk3": [0.5194, 0.722, 0.555, 0.283, 0.12, 0.4866, 0.4569, 0.3075, 0.1319], "p3-walk4": [0.3681, 0.619, 0.584, 0.238, 0.12, 0.4868, 0.4667, 0.2038, 0.1472], "p3-cart1": [0.8014, 0.502, 0.497, 0.222, 0.12, 0.409, 0.4444, 0.1334, 0.0667], "p3-cart2": [0.7042, 0.467, 0.52, 0.158, 0.12, 0.4122, 0.5111, 0.1203, 0.0236], "p3-cart3": [0.7194, 0.488, 0.52, 0.131, 0.12, 0.4517, 0.5125, 0.0714, 0.0236], "p4-front": [0.3708, 0.872, 0.594, 0.21, 0.12, 0.8127, 0.5486, 0.1311, 0.0694], "p4-side": [0.2972, 0.842, 0.47, 0.131, 0.12, 0.729, 0.4319, 0.2617, 0.0611], "p4-q": [0.3917, 0.843, 0.59, 0.202, 0.12, 0.7801, 0.5472, 0.1206, 0.0639], "p4-walk1": [0.5278, 0.86, 0.564, 0.239, 0.12, 0.7974, 0.5403, 0.0816, 0.0403], "p4-walk2": [0.3847, 0.902, 0.557, 0.134, 0.12, 0.8195, 0.5319, 0.1227, 0.0417], "p4-walk3": [0.5139, 0.798, 0.561, 0.214, 0.12, 0.7405, 0.5389, 0.0838, 0.0347], "p4-walk4": [0.4306, 0.821, 0.551, 0.119, 0.12, 0.7516, 0.5333, 0.1032, 0.0319], "p4-cart1": [0.8083, 0.504, 0.521, 0.21, 0.12, 0.4656, 0.5042, 0.0911, 0.0319], "p4-cart2": [0.7042, 0.485, 0.51, 0.134, 0.12, 0.4517, 0.5, 0.069, 0.0222], "p4-cart3": [0.7625, 0.574, 0.499, 0.171, 0.12, 0.5446, 0.4903, 0.0565, 0.0208]};
 
   // How each piece sits: slot (one bag at a time), height as a fraction of
   // the character, which point it hangs from, and the CSS shift that puts
   // its hook / handle on that point.
+  // dy: nudge from the point, in character heights (the hand point is the
+  // fingertips; the grip is a little higher). shift puts the handle's top /
+  // the loop's top on that point.
   var WEAR = {
-    denim:     { slot: 'bag',   h: 0.24, at: 'hand', shift: 'translate(-50%, -6%)' },
-    oxford:    { slot: 'bag',   h: 0.2, at: 'hand', shift: 'translate(-50%, -4%)' },
-    daydeo:    { slot: 'wrist', h: 0.15, at: 'hand', shift: 'translate(-30%, -8%)' },
-    bloom:     { slot: 'charm', h: 0.13, at: 'hand', shift: 'translate(-15%, -2%)' },
-    scrunchie: { slot: 'hair',  h: 0.075, at: 'head', shift: 'translate(-55%, -50%)' }
+    denim:     { slot: 'bag',   h: 0.2,  at: 'hand', dy: -0.02, shift: 'translate(-44%, 0)' },
+    oxford:    { slot: 'bag',   h: 0.18, at: 'hand', dy: -0.02, shift: 'translate(-42%, 0)' },
+    daydeo:    { slot: 'wrist', h: 0.13, at: 'hand', dy: -0.05, shift: 'translate(-22%, 0)' },
+    bloom:     { slot: 'charm', h: 0.1,  at: 'hand', dy: 0,      shift: 'translate(-20%, -4%)' },
+    scrunchie: { slot: 'hair',  h: 0.075, at: 'head', dy: 0,     shift: 'translate(-55%, -50%)' }
   };
 
   function charSrc(who, name) { return 'images/studio/char/' + who + '-' + name + '.webp'; }
@@ -558,6 +562,9 @@
 
   function setScene(name) {
     sceneName = name;
+    // On the street the nav offers only the way in; the studio's places
+    // come back once inside.
+    document.body.classList.toggle('st-is-out', name === 'out');
     Array.prototype.slice.call(world.children).forEach(function (n) {
       if (!n.classList.contains('st-bg')) n.remove();   // .st-bgx too: paintBg redraws it
     });
@@ -682,8 +689,8 @@
         // Offsets are in character heights (÷ aspect for x): with a bag in
         // hand, the charm hangs off its far side and the strap off the near
         // side, so the bag doesn't hide them.
-        if (w.slot === 'charm') { x += (bag ? 0.065 : 0.02) / at[0]; y += bag ? 0.045 : 0; }
-        if (w.slot === 'wrist' && bag) x -= 0.03 / at[0];
+        y += w.dy;
+        if (w.slot === 'charm') { x += (bag ? 0.05 : 0.01) / at[0]; y += bag ? 0.02 : -0.01; }   // clipped to the bag's handle
         var im = document.createElement('img');
         im.className = 'st-acc';
         im.src = 'images/studio/wear/' + sku + '.webp';
@@ -695,6 +702,19 @@
         im.style.transform = w.shift;
         fr.appendChild(im);
       });
+      // the fist back on top of whatever it holds
+      if (at.length > 5 && list.some(function (sku) { return WEAR[sku].at === 'hand'; })) {
+        var fist = document.createElement('img');
+        fist.className = 'st-acc';
+        fist.src = 'images/studio/char/' + who + '-' + name + '-tay.webp';
+        fist.alt = '';
+        fist.draggable = false;
+        fist.style.left = (at[5] * 100).toFixed(2) + '%';
+        fist.style.top = (at[6] * 100).toFixed(2) + '%';
+        fist.style.width = (at[7] * 100).toFixed(2) + '%';
+        fist.style.height = (at[8] * 100).toFixed(2) + '%';
+        fr.appendChild(fist);
+      }
     });
   }
 
@@ -946,9 +966,16 @@
       head('studio.sewing_h', 'studio.sewing_p') +
       '<div class="pt">' +
         '<div class="pt-tabs" role="group" data-i18n-attr="aria-label:studio.pt_products" aria-label="' + esc(t('studio.pt_products')) + '"></div>' +
+        '<div class="pt-left">' +
         '<div class="pt-view">' +
           '<div class="pt-board"></div>' +
           tr('p', 'studio.pt_preview', ' class="pt-small"') +
+        '</div>' +
+        '<div class="pt-more">' +
+          tr('h3', 'studio.pt_real') +
+          '<ul class="pt-real"></ul>' +
+          '<div class="pt-similar"></div>' +
+        '</div>' +
         '</div>' +
         '<div class="pt-side">' +
           '<section class="pt-sec">' + tr('h3', 'studio.pt_layout', ' class="pt-label"') + '<div class="pt-layouts pt-chips"></div></section>' +
@@ -981,11 +1008,6 @@
             '<button type="button" class="pt-tool" data-pt="random" data-i18n="studio.pt_random">' + esc(t('studio.pt_random')) + '</button>' +
           '</div>' +
           tr('p', 'studio.pt_note', ' class="pt-note"') +
-        '</div>' +
-        '<div class="pt-more">' +
-          tr('h3', 'studio.pt_real') +
-          '<ul class="pt-real"></ul>' +
-          '<div class="pt-similar"></div>' +
         '</div>' +
       '</div>'
     );
@@ -1625,7 +1647,7 @@
           visit('display', false);
         } else {
           // The places people come for open straight away.
-          visit(go, go === 'sewing' || go === 'counter' || go === 'tu');
+          visit(go, go === 'sewing' || go === 'counter' || go === 'tu' || go === 'enter');
         }
       });
     });

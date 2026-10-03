@@ -300,6 +300,13 @@
 }
 
 .st-nav::-webkit-scrollbar { display: none; }
+/* street: only "Vào studio"; inside: everything but it */
+.st-nav .st-go-in { display: none; }
+.st-is-out .st-nav button { display: none; }
+.st-is-out .st-nav .st-go-in {
+  display: inline-flex; align-items: center;
+  background: var(--sage-deep); border-color: var(--sage-deep); color: var(--paper-white);
+}
 
 .st-nav button {
   flex: none;
@@ -575,6 +582,14 @@
   height: 60px;
   bottom: calc(72px + env(safe-area-inset-bottom));
 }
+/* Painted wicker basket (images/studio/ui/gio-hang.webp) instead of the
+   line-drawn one: the same picture twice, the front copy cut below the rim,
+   so items in the basket still sit inside it. */
+.studio-page .gb-layer svg { display: none; }
+.studio-page .gb-layer {
+  background: url("../images/studio/ui/gio-hang.webp") center bottom / contain no-repeat;
+}
+.studio-page .gb-layer-front { clip-path: inset(33% 0 0 0); }
 /* A sheet is open: the nav is covered anyway, so back to the corner. */
 .studio-page.st-lock .gb-widget { bottom: max(0.75rem, env(safe-area-inset-bottom)); }
 
@@ -604,7 +619,7 @@
 .pt-tool.is-added { background: var(--kraft); border-color: var(--kraft); color: var(--paper-white); }
 
 .pt-view { display: grid; gap: var(--space-1); justify-items: center; }
-.pt-board { width: 100%; max-width: 300px; }
+.pt-board { width: 100%; max-width: min(300px, 38vh); }
 .pt-board svg { display: block; width: 100%; height: auto; }
 
 .pt-sec { display: grid; gap: var(--space-2); }
@@ -688,8 +703,9 @@
 @media (min-width: 768px) {
   .pt { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; }
   .pt-tabs { grid-column: 1 / -1; }
-  /* the preview stays in view while the choices scroll past */
-  .pt-view { position: sticky; top: 0; }
+  /* preview + real pieces stay in view, together, while the choices scroll
+     past (the preview alone used to slide over the real-pieces row) */
+  /* .pt-left: see below, after its phone rule */
 }
 
 /* An open sheet owns the screen: the language pill waits behind it. */
@@ -782,6 +798,16 @@
 
 /* Real pieces + ready-made suggestions under the designer */
 .pt-more { display: grid; gap: var(--space-3); grid-column: 1 / -1; }
+/* phone: one column — preview, choices, then the real pieces */
+.pt-left { display: contents; }
+.pt-left .pt-more { order: 3; }
+@media (min-width: 768px) {
+  /* preview + real pieces stay in view, together, while the choices scroll
+     past (the preview alone used to slide over the real-pieces row) */
+  .pt-left { display: grid; gap: var(--space-4); align-content: start; position: sticky; top: 0; }
+  .pt-left .pt-more { grid-column: auto; order: 0; }
+  .pt-left .pt-view { position: static; }
+}
 .pt-more h3 {
   margin: var(--space-2) 0 0;
   font-family: var(--font-display);
