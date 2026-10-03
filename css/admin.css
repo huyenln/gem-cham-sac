@@ -485,3 +485,13 @@
 .se-live { color: var(--ink-soft); }
 .se-prof .ad-btn.danger { color: #A6503C; border-color: #D9BBB0; }
 @media (min-width: 1100px) { .se-prof { grid-column: 1 / -1; } }
+
+.se-size { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.se-size input[type="range"] { flex: 1; min-width: 140px; accent-color: var(--sage-deep); }
+/* bigger grips for fingers */
+@media (pointer: coarse) {
+  .se-h { width: 28px; height: 28px; }
+  .se-h-nw { left: -15px; top: -15px; } .se-h-ne { right: -15px; top: -15px; }
+  .se-h-sw { left: -15px; bottom: -15px; } .se-h-se { right: -15px; bottom: -15px; }
+  .se-rot { width: 30px; height: 30px; top: -46px; }
+}

@@ -88,9 +88,22 @@ window.GemStudioEditor = (function () {
       data.bg = { src: b.src, w: b.w, h: b.h };
       draw();
     });
+    // Pinch first (capture), so a second finger never starts a drag.
+    worldEl.addEventListener('pointerdown', pinchDown, true);
     worldEl.addEventListener('pointerdown', pointerDown);
+    document.addEventListener('pointermove', pinchMove);
+    document.addEventListener('pointerup', pinchUp);
+    document.addEventListener('pointercancel', pinchUp);
     panelEl.addEventListener('click', panelClick);
     panelEl.addEventListener('change', panelChange);
+    panelEl.addEventListener('input', function (e) {
+      if (e.target.name !== 'se-size' || !sel || sel.kind !== 'item') return;
+      resize(data.items[sel.i], +e.target.value);
+      var num = panelEl.querySelector('[name="se-h"]');
+      if (num) num.value = e.target.value;
+      dirty = true;
+      draw();
+    });
     document.addEventListener('keydown', keyDown);
     window.addEventListener('resize', draw);
 
@@ -116,6 +129,9 @@ window.GemStudioEditor = (function () {
 
   function unmount() {
     document.removeEventListener('keydown', keyDown);
+    document.removeEventListener('pointermove', pinchMove);
+    document.removeEventListener('pointerup', pinchUp);
+    document.removeEventListener('pointercancel', pinchUp);
     window.removeEventListener('resize', draw);
   }
 
@@ -124,6 +140,9 @@ window.GemStudioEditor = (function () {
 
   function draw() {
     if (!data || !worldEl) return;
+    // A piece is selected: fingers belong to it (pinch / drag), not to
+    // scrolling. Tap empty wall to deselect and scroll again.
+    stageEl.style.touchAction = sel && sel.kind === 'item' ? 'none' : '';
     var h = stageEl.clientHeight || 420;
     k = (h - 40) / data.bg.h * zoom;   // minus the stage padding
     worldEl.style.width = px(data.bg.w);
@@ -215,7 +234,59 @@ window.GemStudioEditor = (function () {
     return { x: (e.clientX - r.left) / k, y: (e.clientY - r.top) / k };
   }
 
+  /* ---------- two fingers: pinch to resize, twist to rotate ---------- */
+  var touches = {};       // pointerId -> { x, y } in screen px (scroll can't skew them)
+  var pinch = null;       // { d0, a0, mid0, start, before }
+  var pinchGen = 0;       // bumps on every pinch: a drag that saw one stops
+
+  function pair() {
+    var ids = Object.keys(touches).slice(0, 2);
+    var a = touches[ids[0]], b = touches[ids[1]];
+    return { ids: ids, d: Math.hypot(b.x - a.x, b.y - a.y) || 1, ang: Math.atan2(b.y - a.y, b.x - a.x),
+      mid: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 } };
+  }
+
+  function pinchDown(e) {
+    if (e.pointerType !== 'touch') return;
+    touches[e.pointerId] = { x: e.clientX, y: e.clientY };
+    if (Object.keys(touches).length !== 2 || !sel || sel.kind !== 'item') return;
+    e.stopPropagation();          // not a new selection / drag
+    e.preventDefault();
+    var p = pair();
+    pinchGen++;
+    pinch = { d0: p.d, a0: p.ang, mid0: p.mid, start: clone(data.items[sel.i]), before: clone(data) };
+  }
+
+  function pinchMove(e) {
+    if (!(e.pointerId in touches)) return;
+    touches[e.pointerId] = { x: e.clientX, y: e.clientY };
+    if (!pinch || !sel || sel.kind !== 'item') return;
+    e.preventDefault();
+    var p = pair(), it = data.items[sel.i], st = pinch.start;
+    var s = Math.max(0.05, p.d / pinch.d0);
+    it.w = Math.max(8, Math.round(st.w * s));
+    it.h = Math.max(8, Math.round(st.h * s));
+    var r = st.rot + (p.ang - pinch.a0) * 180 / Math.PI;
+    r = ((r + 540) % 360) - 180;
+    it.rot = Math.abs(r) < 4 ? 0 : Math.round(r);
+    it.x = Math.round(st.x + (p.mid.x - pinch.mid0.x) / k);
+    it.y = Math.round(st.y + (p.mid.y - pinch.mid0.y) / k);
+    draw();
+  }
+
+  function pinchUp(e) {
+    delete touches[e.pointerId];
+    if (pinch && Object.keys(touches).length < 2) {
+      undo.push(pinch.before);
+      dirty = true;
+      status('Có thay đổi chưa lưu');
+      pinch = null;
+      renderPanel();
+    }
+  }
+
   function pointerDown(e) {
+    if (pinch || Object.keys(touches).length > 1) return;   // second finger of a pinch
     var n = e.target.closest('.se-el');
     if (!n || n.classList.contains('se-floor')) {
       if (sel) { sel = null; draw(); renderPanel(); }
@@ -230,8 +301,10 @@ window.GemStudioEditor = (function () {
     var obj = target();
     var start = clone(obj);
     var moved = false;
+    var gen = pinchGen;
 
     function move(ev) {
+      if (pinch || gen !== pinchGen) return;   // two fingers took over this gesture
       var p = toStrip(ev);
       var dx = p.x - p0.x, dy = p.y - p0.y;
       if (!moved && Math.abs(dx) + Math.abs(dy) < 2 / k) return;
@@ -327,6 +400,12 @@ window.GemStudioEditor = (function () {
         '<b>Đồ đang chọn</b>' +
         '<label><input type="radio" name="se-layer" value="back"' + (it.layer !== 'front' ? ' checked' : '') + '> Sau nhân vật</label>' +
         '<label><input type="radio" name="se-layer" value="front"' + (it.layer === 'front' ? ' checked' : '') + '> Trước nhân vật</label>' +
+        '<label class="se-size">Cỡ <input type="range" name="se-size" min="20" max="1000" step="5" value="' + Math.round(it.h) + '">' +
+          '<input type="number" name="se-h" min="20" max="2000" step="5" value="' + Math.round(it.h) + '"> px cao</label>' +
+        '<div class="se-row">' +
+          '<button type="button" class="ad-btn" data-act="smaller">Nhỏ hơn</button>' +
+          '<button type="button" class="ad-btn" data-act="bigger">To hơn</button>' +
+        '</div>' +
         '<label>Xoay <input type="number" name="se-rot" value="' + it.rot + '" step="1" min="-180" max="180"> độ</label>' +
         '<div class="se-row">' +
           '<button type="button" class="ad-btn" data-act="up">Lên trên</button>' +
@@ -342,7 +421,7 @@ window.GemStudioEditor = (function () {
         'Cột nhỏ ở sàn = chỗ nhân vật dừng lại. Kéo góc để đổi cỡ.</p></div>';
     } else {
       tools = '<p class="ad-hint">Chọn một món trong thư viện để thêm vào giữa màn hình. Kéo để di chuyển, kéo góc để đổi cỡ, ' +
-        'kéo nút tròn để xoay. Phím mũi tên dịch từng chút, Ctrl+Z hoàn tác.</p>';
+        'kéo nút tròn để xoay. Trên điện thoại: chụm / mở hai ngón để đổi cỡ, vặn hai ngón để xoay. Phím mũi tên dịch từng chút, Ctrl+Z hoàn tác.</p>';
     }
     var g = lib.groups.filter(function (x) { return x.id === group; })[0] || lib.groups[0];
     panelEl.innerHTML = tools +
@@ -377,6 +456,7 @@ window.GemStudioEditor = (function () {
     var it = data.items[sel.i];
     remember();
     if (e.target.name === 'se-layer') it.layer = e.target.value;
+    if (e.target.name === 'se-size' || e.target.name === 'se-h') resize(it, +e.target.value);
     if (e.target.name === 'se-rot') it.rot = Math.max(-180, Math.min(180, Math.round(+e.target.value || 0)));
     draw();
   }
@@ -390,6 +470,8 @@ window.GemStudioEditor = (function () {
       var c = clone(it); c.x += 40; c.y += 20;
       data.items.push(c); sel = { kind: 'item', i: data.items.length - 1 };
     } else if (a === 'flip') it.flip = !it.flip;
+    else if (a === 'bigger') resize(it, it.h * 1.15);
+    else if (a === 'smaller') resize(it, it.h / 1.15);
     else if (a === 'frame') it.frame = !it.frame;
     else if (a === 'up' && i < data.items.length - 1) {
       data.items.splice(i, 1); data.items.splice(i + 1, 0, it); sel.i = i + 1;
@@ -397,6 +479,13 @@ window.GemStudioEditor = (function () {
       data.items.splice(i, 1); data.items.splice(i - 1, 0, it); sel.i = i - 1;
     }
     draw(); renderPanel();
+  }
+
+  // Height in strip px, width follows (aspect kept), centre stays put.
+  function resize(it, h) {
+    h = Math.max(20, Math.min(2000, Math.round(h) || it.h));
+    it.w = Math.max(8, Math.round(it.w * h / it.h));
+    it.h = h;
   }
 
   // New piece in the middle of what's on screen, a sensible size.
