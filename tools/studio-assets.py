@@ -10,6 +10,7 @@ WebP files it writes. Source PNGs stay in Drive (D-assets), not in the repo.
     python3 tools/studio-assets.py --batch <folder>    (sheet-/pr-/full- files)
     python3 tools/studio-assets.py --outside <facade.png>  (street scene)
     python3 tools/studio-assets.py --plain <wall.png>      (studio wall, no openings)
+    python3 tools/studio-assets.py --hands                 (accessory points + fists)
 
 Expects in <source-folder> (names from the "Bộ tài sản D" doc):
     bg-z1.png … bg-z5.png        five studio zones, 1536 x 1024
@@ -614,6 +615,83 @@ def build_outside_lap():
 
 
 # ---------------------------------------------------------------------------
+# Where accessories go on each character frame, and the near hand cut out on
+# its own (char/pN-<frame>-tay.webp) so studio.js can draw a bag in front of
+# the character and the fist back over its handle — the bag looks held.
+#   python3 tools/studio-assets.py --hands
+# Prints WEAR_AT for js/studio.js: [aspect, hand x, hand y, head x, head y,
+# fist box x, y, w, h] — fractions of the frame.
+# ---------------------------------------------------------------------------
+FRAMES = ['front', 'side', 'q', 'walk1', 'walk2', 'walk3', 'walk4', 'cart1', 'cart2', 'cart3']
+
+
+def _label(m):
+    h, w = m.shape
+    lab = np.zeros((h, w), np.int32)
+    n = 0
+    for y0, x0 in zip(*np.nonzero(m)):
+        if lab[y0, x0]:
+            continue
+        n += 1
+        todo = [(y0, x0)]
+        lab[y0, x0] = n
+        while todo:
+            y, x = todo.pop()
+            for yy, xx in ((y - 1, x), (y + 1, x), (y, x - 1), (y, x + 1)):
+                if 0 <= yy < h and 0 <= xx < w and m[yy, xx] and not lab[yy, xx]:
+                    lab[yy, xx] = n
+                    todo.append((yy, xx))
+    return lab, n
+
+
+def build_hands():
+    out = {}
+    for who in ('p1', 'p2', 'p3', 'p4'):
+        for name in FRAMES:
+            f = OUT / 'char' / f'{who}-{name}.webp'
+            im = Image.open(f).convert('RGBA')
+            a = np.asarray(im).astype(int)
+            H, W = a.shape[:2]
+            r, g, b, al = a[..., 0], a[..., 1], a[..., 2], a[..., 3]
+            skin = (al > 200) & (r > 215) & (g > 165) & (g < 225) & (b > 130) & (b < 200) & \
+                   (r - g > 18) & (r - g < 60) & (g - b > 8)
+            y0, y1 = (0.28, 0.56) if name.startswith('cart') else (0.40, 0.68)
+            m = np.zeros_like(skin)
+            m[int(H * y0):int(H * y1)] = skin[int(H * y0):int(H * y1)]
+            lab, n = _label(m)
+            best = None    # the near hand: furthest forward (right), then lowest
+            for i in range(1, n + 1):
+                ys, xs = np.nonzero(lab == i)
+                if len(xs) < 150:
+                    continue
+                sel = ys >= np.percentile(ys, 88) - 3
+                c = (xs[sel].mean(), ys[sel].mean(), i)
+                if best is None or c[0] + 0.3 * c[1] > best[0] + 0.3 * best[1]:
+                    best = c
+            row = np.nonzero(al[int(H * 0.12)] > 200)[0]
+            head = (row[0] / W if len(row) else 0.3, 0.12)
+            if best is None:
+                out[f'{who}-{name}'] = [round(W / H, 4), 0.6, 0.55, round(head[0], 3), 0.12]
+                continue
+            # the fist: the hand blob grown over its ink outline, only the
+            # lower part (fingers + palm), cut from the frame
+            blob = Image.fromarray(((lab == best[2]) * 255).astype(np.uint8)).filter(ImageFilter.MaxFilter(9))
+            hm = np.asarray(blob) > 0
+            ys, xs = np.nonzero(hm)
+            top = int(np.percentile(ys, 35))
+            hm[:top] = False
+            ys, xs = np.nonzero(hm)
+            bx0, by0, bx1, by1 = xs.min(), ys.min(), xs.max() + 1, ys.max() + 1
+            cut = a[by0:by1, bx0:bx1].copy()
+            cut[..., 3] = np.where(hm[by0:by1, bx0:bx1], cut[..., 3], 0)
+            save_webp(Image.fromarray(cut.astype(np.uint8)), OUT / 'char' / f'{who}-{name}-tay.webp', quality=86)
+            out[f'{who}-{name}'] = [round(W / H, 4), round(best[0] / W, 3), round(best[1] / H, 3),
+                                    round(head[0], 3), 0.12,
+                                    round(bx0 / W, 4), round(by0 / H, 4), round((bx1 - bx0) / W, 4), round((by1 - by0) / H, 4)]
+    print('  WEAR_AT = ' + json.dumps(out, separators=(', ', ': ')))
+
+
+# ---------------------------------------------------------------------------
 # images/studio/assets.json: what the layout editor offers, grouped by folder
 # (the site is static, so the browser can't list folders itself).
 #   python3 tools/studio-assets.py --manifest .
@@ -717,6 +795,9 @@ if __name__ == '__main__':
         sys.exit()
     if len(sys.argv) == 3 and sys.argv[1] == '--strip-empty':
         print('empty strip:'); build_strip(Path(sys.argv[2]), ZONES_EMPTY, SHIFT_EMPTY, {}, PILLAR_EMPTY, 4, 'strip-trong')
+        sys.exit()
+    if len(sys.argv) == 2 and sys.argv[1] == '--hands':
+        print('hands:'); build_hands()
         sys.exit()
     if len(sys.argv) == 3 and sys.argv[1] == '--plain':
         print('plain wall:'); build_plain(Path(sys.argv[2])); build_outside_lap()

@@ -136,7 +136,7 @@ async def wear(browser, db):
         await pg.goto(f'{BASE}/studio.html')
         await pg.wait_for_timeout(1500)
         n = await pg.evaluate("[...document.querySelectorAll('.st-fr')].map(f => f.querySelectorAll('.st-acc').length)")
-        check(len(n) == 10 and all(c == len(WEAR) for c in n), f'{who}: {len(WEAR)} accessories on each of 10 frames ({n})')
+        check(len(n) == 10 and all(c == len(WEAR) + 1 for c in n), f'{who}: {len(WEAR)} accessories + the fist on each of 10 frames ({n})')
         await pg.add_style_tag(content='.lang-hint,.st-bubble{display:none!important}')
         for i in (0, 4, 8):   # standing, walking, pushing the cart
             await pg.evaluate(f"document.querySelectorAll('.st-fr').forEach((f, k) => f.hidden = k !== {i})")

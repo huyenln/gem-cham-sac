@@ -1359,7 +1359,8 @@ lại nhân vật. `WEAR_AT` trong `js/studio.js`: mỗi khung (4 bạn × 10) c
 khung, điểm bàn tay gần (dò màu da, nắm tay / chỗ cầm tay xe) và gáy (dò mép
 tóc ở 12% chiều cao). `WEAR`: túi treo ở tay (một túi một lúc), dây đeo và
 charm hai bên túi, dây buộc tóc ở gáy. Góc thử đồ có nút "Đeo thử" / "Tháo
-ra". Đồ thử theo khách hết lượt (sessionStorage `gem-mac`); món đã mua (có
+ra". Nắm tay gần (`char/pN-<khung>-tay.webp`, `--hands` cắt ra cùng `WEAR_AT`) được vẽ đè lại lên
+quai túi / vòng dây nên món đồ trông như đang cầm, không dán bên ngoài. Đồ thử theo khách hết lượt (sessionStorage `gem-mac`); món đã mua (có
 trong Tủ) thì nhớ luôn (localStorage `gem-mac`). Có tranh nhân vật mới → chạy
 lại phần dò điểm và dán `WEAR_AT` mới. Áo (đổi dáng người) thuộc đợt 2: phải
 vẽ lại khung, không dán đè được.
