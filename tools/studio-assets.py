@@ -9,6 +9,7 @@ WebP files it writes. Source PNGs stay in Drive (D-assets), not in the repo.
     python3 tools/studio-assets.py --pieces <folder>   (names: see PIECES)
     python3 tools/studio-assets.py --batch <folder>    (sheet-/pr-/full- files)
     python3 tools/studio-assets.py --outside <facade.png>  (street scene)
+    python3 tools/studio-assets.py --plain <wall.png>      (studio wall, no openings)
 
 Expects in <source-folder> (names from the "Bộ tài sản D" doc):
     bg-z1.png … bg-z5.png        five studio zones, 1536 x 1024
@@ -563,6 +564,34 @@ def build_outside(src):
 
 
 # ---------------------------------------------------------------------------
+# Plain studio wall: no door, no window — they are pieces in the layout
+# editor now (props/cua-*). One painted wall (1536 x 1024, window at the far
+# left, room corner at the far right) is repeated: the plain middle
+# (PLAIN_TILE) six times, each join cross-faded so the seam doesn't show
+# (no mirroring: mirrored watercolour reads as an ink-blot), with the corner
+# at the right end and its mirror image at the left.
+#   python3 tools/studio-assets.py --plain <wall.png>
+# ---------------------------------------------------------------------------
+PLAIN_TILE = (200, 1460)    # x range of plain wall in the source
+PLAIN_COUNT = 6
+PLAIN_FADE = 220            # px of cross-fade at each join
+
+
+def build_plain(src):
+    im = np.asarray(Image.open(src).convert('RGB').resize((1536, 1024), Image.LANCZOS)).astype(np.float32)
+    t0, t1 = PLAIN_TILE
+    tile, corner = im[:, t0:t1], im[:, t1:]
+    t = np.linspace(0, 1, PLAIN_FADE)[None, :, None]
+    row = tile
+    for _ in range(PLAIN_COUNT - 1):
+        mix = row[:, -PLAIN_FADE:] * (1 - t) + tile[:, :PLAIN_FADE] * t
+        row = np.concatenate([row[:, :-PLAIN_FADE], mix, tile[:, PLAIN_FADE:]], axis=1)
+    row = np.concatenate([corner[:, ::-1], row, corner], axis=1)
+    out = Image.fromarray(np.clip(row, 0, 255).astype(np.uint8))
+    save_webp(out, OUT / 'bg' / 'strip-tron.webp', quality=80)
+
+
+# ---------------------------------------------------------------------------
 # images/studio/assets.json: what the layout editor offers, grouped by folder
 # (the site is static, so the browser can't list folders itself).
 #   python3 tools/studio-assets.py --manifest .
@@ -571,7 +600,7 @@ def build_outside(src):
 # sheet it came from (files stay in their sheet folders, so saved layouts keep
 # working). FOLDER_GROUP = default for a folder, PICK = per-file exceptions.
 GROUPS = [
-    ('noi-that', 'Nội thất'), ('cay', 'Cây & hoa'), ('treo', 'Treo tường & trần'),
+    ('cua', 'Cửa & cửa sổ'), ('noi-that', 'Nội thất'), ('cay', 'Cây & hoa'), ('treo', 'Treo tường & trần'),
     ('de-ban', 'Đồ để bàn, kệ'), ('vai', 'Vải, gối & thảm'), ('may', 'Đồ may & len'),
     ('wear', 'Đồ mặc'), ('ui', 'Giấy & khung'), ('udon', 'Udon'),
 ]
@@ -590,6 +619,7 @@ def _pick(spec):
 
 
 PICK = _pick({
+    'cua': 'cua-di cua-so-2 cua-so-3 cua-so-4',
     'treo': (
         'bang-ten bang-treo den-01 den-02 den-03 '
         'deco-01 deco-02 deco-03 deco-04 deco-05 deco-06 deco-07 deco-08 deco-09 deco-10 '
@@ -607,13 +637,33 @@ PICK = _pick({
 })
 
 
+# Height (strip px, character = 410) a piece starts at when added, for the
+# ones whose right size isn't obvious from the picture: doors and windows.
+START_H = {'cua-di': 760, 'cua-so-2': 420, 'cua-so-3': 380, 'cua-so-4': 380}
+# ...and where its centre starts (y): door on the skirting, windows at eye height
+START_Y = {'cua-di': 420, 'cua-so-2': 330, 'cua-so-3': 330, 'cua-so-4': 330}
+
+# Backgrounds the editor offers, per scene ('in' = studio, 'out' = street).
+BACKGROUNDS = [
+    ('strip-tron', 'Tường trơn', 'in'),
+    ('strip-trong', 'Tường có cửa', 'in'),
+    ('strip', 'Tranh vẽ sẵn', 'in'),
+    ('ngoai', 'Mặt tiền', 'out'),
+]
+
+
 def build_manifest():
     found = {g: [] for g, _ in GROUPS}
     for folder in sorted(FOLDER_GROUP):
         for f in sorted((OUT / folder).glob('*.webp')):
             group = PICK.get(f.stem, FOLDER_GROUP[folder])
             w, h = Image.open(f).size
-            found[group].append({'src': f'images/studio/{folder}/{f.name}', 'w': w, 'h': h})
+            item = {'src': f'images/studio/{folder}/{f.name}', 'w': w, 'h': h}
+            if f.stem in START_H:
+                item['h0'] = START_H[f.stem]
+            if f.stem in START_Y:
+                item['y0'] = START_Y[f.stem]
+            found[group].append(item)
     unknown = set(PICK) - {f.stem for d in FOLDER_GROUP for f in (OUT / d).glob('*.webp')}
     if unknown:
         print('  PICK names with no file:', ' '.join(sorted(unknown)))
@@ -623,11 +673,11 @@ def build_manifest():
         prods.append({'src': f'images/products/{f.name}', 'w': 600, 'h': 600, 'frame': True})
     groups.append({'id': 'products', 'label': 'Ảnh sản phẩm', 'items': prods})
     bgs = []
-    for name in ('strip-trong', 'strip', 'ngoai'):
+    for name, label, scene in BACKGROUNDS:
         f = OUT / 'bg' / f'{name}.webp'
         if f.exists():
             w, h = Image.open(f).size
-            bgs.append({'src': f'images/studio/bg/{name}.webp', 'w': w, 'h': h})
+            bgs.append({'src': f'images/studio/bg/{name}.webp', 'w': w, 'h': h, 'label': label, 'scene': scene})
     out = OUT / 'assets.json'
     out.write_text(json.dumps({'backgrounds': bgs, 'groups': groups}, ensure_ascii=False, indent=1))
     print(f'  {out.relative_to(ROOT)}  {sum(len(g["items"]) for g in groups)} assets')
@@ -645,6 +695,9 @@ if __name__ == '__main__':
         sys.exit()
     if len(sys.argv) == 3 and sys.argv[1] == '--strip-empty':
         print('empty strip:'); build_strip(Path(sys.argv[2]), ZONES_EMPTY, SHIFT_EMPTY, {}, PILLAR_EMPTY, 4, 'strip-trong')
+        sys.exit()
+    if len(sys.argv) == 3 and sys.argv[1] == '--plain':
+        print('plain wall:'); build_plain(Path(sys.argv[2]))
         sys.exit()
     if len(sys.argv) == 3 and sys.argv[1] == '--outside':
         print('outside:'); build_outside(Path(sys.argv[2]))

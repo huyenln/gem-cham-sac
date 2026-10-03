@@ -1,22 +1,69 @@
 {
  "backgrounds": [
   {
+   "src": "images/studio/bg/strip-tron.webp",
+   "w": 6612,
+   "h": 1024,
+   "label": "Tường trơn",
+   "scene": "in"
+  },
+  {
    "src": "images/studio/bg/strip-trong.webp",
    "w": 6484,
-   "h": 1024
+   "h": 1024,
+   "label": "Tường có cửa",
+   "scene": "in"
   },
   {
    "src": "images/studio/bg/strip.webp",
    "w": 6817,
-   "h": 1024
+   "h": 1024,
+   "label": "Tranh vẽ sẵn",
+   "scene": "in"
   },
   {
    "src": "images/studio/bg/ngoai.webp",
    "w": 2686,
-   "h": 1024
+   "h": 1024,
+   "label": "Mặt tiền",
+   "scene": "out"
   }
  ],
  "groups": [
+  {
+   "id": "cua",
+   "label": "Cửa & cửa sổ",
+   "items": [
+    {
+     "src": "images/studio/props/cua-di.webp",
+     "w": 636,
+     "h": 900,
+     "h0": 760,
+     "y0": 420
+    },
+    {
+     "src": "images/studio/props/cua-so-2.webp",
+     "w": 900,
+     "h": 653,
+     "h0": 420,
+     "y0": 330
+    },
+    {
+     "src": "images/studio/props/cua-so-3.webp",
+     "w": 900,
+     "h": 432,
+     "h0": 380,
+     "y0": 330
+    },
+    {
+     "src": "images/studio/props/cua-so-4.webp",
+     "w": 900,
+     "h": 367,
+     "h0": 380,
+     "y0": 330
+    }
+   ]
+  },
   {
    "id": "noi-that",
    "label": "Nội thất",
@@ -43,33 +90,13 @@
     },
     {
      "src": "images/studio/props/ban-may-day.webp",
-     "w": 900,
+     "w": 887,
      "h": 891
     },
     {
      "src": "images/studio/props/ban-may.webp",
-     "w": 900,
+     "w": 877,
      "h": 865
-    },
-    {
-     "src": "images/studio/props/cua-di.webp",
-     "w": 636,
-     "h": 900
-    },
-    {
-     "src": "images/studio/props/cua-so-2.webp",
-     "w": 900,
-     "h": 653
-    },
-    {
-     "src": "images/studio/props/cua-so-3.webp",
-     "w": 900,
-     "h": 432
-    },
-    {
-     "src": "images/studio/props/cua-so-4.webp",
-     "w": 900,
-     "h": 367
     },
     {
      "src": "images/studio/props/ghe-dai.webp",
@@ -83,8 +110,8 @@
     },
     {
      "src": "images/studio/props/ke-gia.webp",
-     "w": 900,
-     "h": 793
+     "w": 882,
+     "h": 785
     },
     {
      "src": "images/studio/props/quay.webp",
@@ -118,8 +145,8 @@
     },
     {
      "src": "images/studio/props/tu-ke.webp",
-     "w": 900,
-     "h": 764
+     "w": 883,
+     "h": 757
     },
     {
      "src": "images/studio/props/xe.webp",
@@ -1606,8 +1633,8 @@
     },
     {
      "src": "images/studio/udon/ud-quay.webp",
-     "w": 1254,
-     "h": 1254
+     "w": 1209,
+     "h": 1076
     },
     {
      "src": "images/studio/udon/ud-vay.webp",

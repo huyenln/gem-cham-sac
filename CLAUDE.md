@@ -2,7 +2,7 @@
 
 ## Project at a glance
 
-Static website (5 trang) cho cửa hàng **Gem Chạm Sắc** — pop-up store sustainability/handmade upcycling tại Hà Nội. Live tại `https://gemchamsac.com` (host on GitHub Pages, repo `huyenln/gem-cham-sac`).
+Static website cho cửa hàng **Gem Chạm Sắc** — pop-up store sustainability/handmade upcycling tại Hà Nội. Live tại `https://gemchamsac.com` (host on GitHub Pages, repo `huyenln/gem-cham-sac`).
 
 **Tagline:** Chạm Xanh · Gửi Sắc
 **Stack:** HTML + CSS + tiny vanilla JS. KHÔNG framework, KHÔNG build step.
@@ -47,6 +47,8 @@ Static website (5 trang) cho cửa hàng **Gem Chạm Sắc** — pop-up store s
 ├── js/studio-editor.js        Tab "Lắp studio" trong admin (chỉ owner): kéo, đổi cỡ, xoay asset — cả trong studio lẫn ngoài cửa
 ├── supabase/functions/notify/ Edge Function báo mail cho nhân sự (đơn / workshop / lời nhắn) — xem docs/design.md
 ├── tools/studio-assets.py    Chạy tay khi có tranh mới: ghép dải studio, tách nền nhân vật → images/studio/
+├── tools/clean-white.py      Xoá phần giấy trắng còn sót trong asset đã tách nền
+├── tools/check-studio.py     Kiểm tra studio + trình lắp bằng Playwright (Supabase giả lập)
 ├── images/
 │   ├── logo/                 Logo Gem variants
 │   ├── mascot/               6 pose Udon (PNG transparent)
@@ -117,10 +119,10 @@ Quick reference:
 ## Decisions đã chốt (ĐỪNG hỏi lại)
 
 **Scope & content:**
-- 5 trang chính + `season-02.html` (câu chuyện Season 02, không nằm trong nav). Không tạo thêm trang mới trừ khi user yêu cầu rõ.
-- KHÔNG hiện giá sản phẩm trên web. "Ghé cửa hàng" để biết giá.
+- 5 trang chính trên nav + các trang phụ: `season-02.html` (không nằm trong nav), `workshop.html`, `ban-tin.html`, `admin.html` (nhân sự), `studio.html` (bản thử, chưa lên nav). Không tạo thêm trang mới trừ khi user yêu cầu rõ.
+- **Có hiện giá** (quyết định D3 trong `docs/design.md`, đảo lại "không hiện giá" cũ). Giá đọc từ bảng `products`; món chưa có giá ghi "Liên hệ".
 - Email signup: **Mailerlite đã tích hợp** (account `2380127`, form `41774242`). `js/mailerlite.js` submit bằng `fetch` mode `no-cors` rồi hiện success inline (`.ml-success`) — KHÔNG load script Mailerlite, KHÔNG redirect. Form ở `index.html` và `ghe-tham.html`.
-- KHÔNG có e-commerce, KHÔNG có cart, KHÔNG có user account.
+- **Có giỏ hàng + đặt đơn** (`js/basket.js`): trả khi nhận (COD) hoặc chuyển khoản VietQR (D14). KHÔNG có cổng thẻ, KHÔNG có tài khoản khách — đăng nhập chỉ dành cho nhân sự (`admin.html`). Khách xem lại món đã mua qua "Tủ sưu tầm" bằng mã đơn + SĐT.
 
 **Products (5 categories):**
 1. Phụ kiện vải vụn (14 sản phẩm — tên thương hiệu in sẵn trên ảnh: Origami Pouch, Oxford Shirt, Reimagine the Denim, Bloom Charm, Túi bút kẹp sổ, Thảm/Gối Chắp Sắc, Lót Cốc, Túi đeo chéo, Bookmark, Ví & thẻ vải ghép, Bìa sổ, Dây đeo cổ tay, Dây buộc tóc)
@@ -147,7 +149,8 @@ Quick reference:
 - HTTPS đã enforce qua Let's Encrypt.
 - KHÔNG add npm/build tools. KHÔNG convert sang React/Vue/Next.
 - KHÔNG move CSS sang Tailwind. Plain CSS với CSS variables là intentional.
-- KHÔNG dùng JavaScript framework. Vanilla JS chỉ khi cần (mobile menu, i18n, carousel, mailerlite).
+- KHÔNG dùng JavaScript framework. Vanilla JS (mỗi tính năng một file trong `js/`, xem Architecture).
+- `admin.html` và `studio.html` gắn `?v=YYYYMMDD` sau CSS/JS để điện thoại không giữ bản cũ — đổi số khi sửa các file đó.
 
 **Đa ngôn ngữ (VI/EN):**
 - Engine: `js/i18n.js` — toàn bộ chữ dịch được nằm trong object `STRINGS` (key → `{ vi, en }`). Mặc định `vi`, lưu lựa chọn ở `localStorage['gem-lang']`, áp dụng across pages.
@@ -340,6 +343,11 @@ the testing before bothering the user.
 - ✅ Supabase: đặt lịch workshop, sản phẩm, đơn hàng, thanh toán COD + QR, Bản tin
 - ✅ Trang quản trị: Hôm nay / Đơn hàng / Đặt lịch / Sản phẩm / Bản tin
 - ✅ UX đợt 2: bỏ lặp, căn trái đoạn dài, badge Season thành dải, vùng bấm 44px, lazy-load
+
+**Studio Gem (`studio.html`, bản thử, chưa lên nav):** mặt tiền → vào studio, 4
+nhân vật, phụ kiện đeo thử, bàn thiết kế, tủ sưu tầm, bảng lời nhắn; owner lắp
+bố cục ở tab "Lắp studio". Chi tiết + cách đưa tranh mới vào: `docs/design.md`.
+Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
 
 **Còn lại:**
 - 📸 **Buổi chụp ảnh** — việc chặn nhiều thứ nhất. 8/19 ảnh hiện tại là poster

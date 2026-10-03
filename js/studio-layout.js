@@ -98,7 +98,7 @@ window.GemLayout = (function () {
   }
 
   function blank(bg) {
-    bg = bg || { src: 'images/studio/bg/strip-trong.webp', w: 6484, h: 1024 };
+    bg = bg || { src: 'images/studio/bg/strip-tron.webp', w: 6612, h: 1024 };
     return {
       v: 1, bg: { src: bg.src, w: bg.w, h: bg.h }, items: [], hot: spreadHot(SPOTS, bg.w),
       udon: { x: bg.w - 400, y: 450, w: 128, h: 140 }, start: 400,
