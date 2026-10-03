@@ -7,7 +7,8 @@
 //
 //   {
 //     v: 1,
-//     bg:    { src, w, h },                  background strip
+//     bg:    { src, w, h },                  background strip; w may be longer
+//            than the picture for backgrounds in EXTEND (owner's "Dài thêm")
 //     items: [{ src, x, y, w, h, rot, flip, layer, frame }],
 //            x, y = centre; rot = degrees; layer 'back' (behind the
 //            character) | 'front' (in front); frame = thin wooden frame
@@ -69,6 +70,39 @@ window.GemLayout = (function () {
     start: 1460   // beside the door: on a phone the door is on screen
   };
 
+  // Backgrounds that can be made longer: the picture minus its right cap,
+  // then a seamless wall loop (tile) repeated, then the cap (the room's
+  // corner). Numbers from tools/studio-assets.py --plain.
+  var EXTEND = {
+    'images/studio/bg/strip-tron.webp': { w0: 5792, tile: 'images/studio/bg/tuong-lap.webp', tileW: 1040, capR: 296 },
+    'images/studio/bg/ngoai.webp': { w0: 2686, tile: 'images/studio/bg/ngoai-lap.webp', tileW: 400, capR: 0 }
+  };
+
+  // How to paint a background: one stretched picture, or picture + loop + cap.
+  // [{ src, x, w, how: 'fill' | 'left' | 'repeat' | 'right' }], strip px.
+  function bgParts(bg) {
+    var e = EXTEND[bg.src];
+    if (!e || bg.w <= e.w0) return [{ src: bg.src, x: 0, w: bg.w, how: 'fill' }];
+    var parts = [
+      { src: bg.src, x: 0, w: e.w0 - e.capR, how: 'left' },
+      { src: e.tile, x: e.w0 - e.capR, w: bg.w - e.w0, how: 'repeat' }
+    ];
+    if (e.capR) parts.push({ src: bg.src, x: bg.w - e.capR, w: e.capR, how: 'right' });
+    return parts;
+  }
+
+  // CSS for one part: the picture's height fills the strip, so widths follow.
+  function partStyle(part, W) {
+    return {
+      left: (part.x / W * 100).toFixed(4) + '%',
+      width: (part.w / W * 100).toFixed(4) + '%',
+      backgroundImage: 'url("' + part.src + '")',
+      backgroundSize: 'auto 100%',
+      backgroundRepeat: part.how === 'repeat' ? 'repeat-x' : 'no-repeat',
+      backgroundPosition: part.how === 'right' ? 'right top' : 'left top'
+    };
+  }
+
   var BUCKET = 'https://dxdovvqsfjeizsoprrfn.supabase.co/storage/v1/object/public/gem-media/';
   var LOCAL = /^images\/(studio|products)\/[a-z0-9_\/.-]+\.(webp|png|jpe?g)$/;
   var REMOTE = /^[A-Za-z0-9%._-]+$/;
@@ -98,7 +132,7 @@ window.GemLayout = (function () {
   }
 
   function blank(bg) {
-    bg = bg || { src: 'images/studio/bg/strip-trong.webp', w: 6484, h: 1024 };
+    bg = bg || { src: 'images/studio/bg/strip-tron.webp', w: 5792, h: 1024 };
     return {
       v: 1, bg: { src: bg.src, w: bg.w, h: bg.h }, items: [], hot: spreadHot(SPOTS, bg.w),
       udon: { x: bg.w - 400, y: 450, w: 128, h: 140 }, start: 400,
@@ -114,6 +148,8 @@ window.GemLayout = (function () {
     if (!d || typeof d !== 'object' || !d.bg || !srcOk(d.bg.src)) return null;
     var W = num(d.bg.w, 800, 20000, 0), H = num(d.bg.h, 400, 4000, 0);
     if (!W || !H) return null;
+    var e = EXTEND[d.bg.src];
+    if (e) W = e.w0 + Math.max(0, Math.round((W - e.w0) / e.tileW)) * e.tileW;   // whole loops only
     var out = { bg: { src: d.bg.src, w: W, h: H }, items: [], hot: spreadHot(spots, W), start: 400 };
 
     (Array.isArray(d.items) ? d.items : []).slice(0, MAX_ITEMS).forEach(function (it) {
@@ -157,5 +193,5 @@ window.GemLayout = (function () {
   }
 
   return { SPOTS: SPOTS, OUT_SPOTS: OUT_SPOTS, FEET_Y: FEET_Y, srcOk: srcOk, blank: blank, sanitize: sanitize,
-    outsideDefault: outsideDefault };
+    outsideDefault: outsideDefault, EXTEND: EXTEND, bgParts: bgParts, partStyle: partStyle };
 })();

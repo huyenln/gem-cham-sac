@@ -25,11 +25,12 @@ window.GemStudioEditor = (function () {
   var k = 0.45;             // screen px per strip px
   var zoom = 1;
   var dirty = false;
-  var group = 'noi-that';
+  var group = 'cua';
   var profiles = [];        // [{ id, name, updated_at }] saved layouts ('p-…')
   var liveName = null;      // name of the profile that is live, if any
   var current = null;       // profile id loaded in the editor (null = draft)
-  var scene = 'in';         // 'in' = the studio, 'out' = the street in front (data.outside)
+  var scene = 'in';
+  var showHot = true;       // hotspot boxes + stop markers on the stage         // 'in' = the studio, 'out' = the street in front (data.outside)
 
   // The part of the layout on screen: the studio itself or the street.
   function S() { return scene === 'out' ? data.outside : data; }
@@ -54,32 +55,51 @@ window.GemStudioEditor = (function () {
   /* ---------- mount ---------- */
   function mount(el) {
     root = el;
+    // Compact on purpose: one tool row, saving + saved layouts tucked in the
+    // "Lưu" menu, so the stage gets the screen (on a phone especially).
     root.innerHTML =
       '<div class="se">' +
         '<div class="se-bar">' +
-          '<span class="se-scene" role="group" aria-label="Cảnh">' +
-            '<button type="button" class="ad-filter active" data-se="sc-in" aria-pressed="true">Trong studio</button>' +
-            '<button type="button" class="ad-filter" data-se="sc-out" aria-pressed="false">Ngoài cửa</button>' +
+          '<span class="se-seg" role="group" aria-label="Cảnh">' +
+            '<button type="button" class="is-on" data-se="sc-in" aria-pressed="true">Trong</button>' +
+            '<button type="button" data-se="sc-out" aria-pressed="false">Ngoài cửa</button>' +
           '</span>' +
-          '<label class="se-bg">Nền <select class="se-bgsel"></select></label>' +
-          '<button type="button" class="ad-btn" data-se="undo">Hoàn tác</button>' +
-          '<button type="button" class="ad-btn" data-se="zout" aria-label="Thu nhỏ">−</button>' +
-          '<button type="button" class="ad-btn" data-se="zin" aria-label="Phóng to">+</button>' +
-          '<span class="se-status" role="status"></span>' +
-          '<a class="ad-btn" href="studio.html?nhap=1">Xem thử bản nháp</a>' +
-          '<button type="button" class="ad-btn" data-se="save">Lưu nháp</button>' +
-          '<button type="button" class="ad-btn on" data-se="publish">Xuất bản</button>' +
+          '<select class="se-bgsel" aria-label="Nền"></select>' +
+          '<span class="se-seg se-len" role="group" aria-label="Chiều dài khu vực">' +
+            '<button type="button" data-se="w-" title="Bớt một đoạn tường">Ngắn lại</button>' +
+            '<button type="button" data-se="w+" title="Nối thêm một đoạn tường">Dài thêm</button>' +
+          '</span>' +
+          '<button type="button" class="se-tb" data-se="undo" title="Hoàn tác (Ctrl+Z)">Hoàn tác</button>' +
+          '<button type="button" class="se-tb se-sq" data-se="zout" aria-label="Thu nhỏ">−</button>' +
+          '<button type="button" class="se-tb se-sq" data-se="zin" aria-label="Phóng to">+</button>' +
+          '<button type="button" class="se-tb" data-se="hot" aria-pressed="true" title="Hiện / ẩn khung bấm">Khung bấm</button>' +
+          '<button type="button" class="se-tb danger" data-se="clear">Xoá hết</button>' +
+          '<details class="se-menu">' +
+            '<summary class="se-tb on">Lưu</summary>' +
+            '<div class="se-pop">' +
+              '<div class="se-row">' +
+                '<button type="button" class="ad-btn" data-se="save">Lưu nháp</button>' +
+                '<button type="button" class="ad-btn on" data-se="publish">Xuất bản</button>' +
+                '<a class="ad-btn" href="studio.html?nhap=1" target="_blank" rel="noopener">Xem thử nháp</a>' +
+              '</div>' +
+              '<div class="se-prof">' +
+                '<b>Bố cục đã lưu</b>' +
+                '<select class="se-profsel" aria-label="Bố cục đã lưu"></select>' +
+                '<div class="se-row">' +
+                  '<button type="button" class="ad-btn" data-se="p-open">Mở</button>' +
+                  '<button type="button" class="ad-btn on" data-se="p-live">Cho chạy ngay</button>' +
+                  '<button type="button" class="ad-btn danger" data-se="p-del">Xoá</button>' +
+                '</div>' +
+                '<div class="se-row">' +
+                  '<button type="button" class="ad-btn" data-se="p-save">Lưu vào bố cục đang mở</button>' +
+                  '<button type="button" class="ad-btn" data-se="p-new">Lưu thành bố cục mới…</button>' +
+                '</div>' +
+                '<span class="se-live"></span>' +
+              '</div>' +
+            '</div>' +
+          '</details>' +
         '</div>' +
-        '<div class="se-prof">' +
-          '<label>Bố cục đã lưu <select class="se-profsel"></select></label>' +
-          '<button type="button" class="ad-btn" data-se="p-open">Mở</button>' +
-          '<button type="button" class="ad-btn on" data-se="p-live">Cho chạy ngay</button>' +
-          '<button type="button" class="ad-btn danger" data-se="p-del">Xoá</button>' +
-          '<span class="se-sep"></span>' +
-          '<button type="button" class="ad-btn" data-se="p-save">Lưu vào bố cục đang mở</button>' +
-          '<button type="button" class="ad-btn" data-se="p-new">Lưu thành bố cục mới…</button>' +
-          '<span class="se-live"></span>' +
-        '</div>' +
+        '<p class="se-status" role="status"></p>' +
         '<div class="se-stage"><div class="se-world"><img class="se-bgimg" alt="" draggable="false"></div></div>' +
         '<div class="se-panel"></div>' +
       '</div>';
@@ -91,8 +111,10 @@ window.GemStudioEditor = (function () {
 
     root.querySelector('.se-bar').addEventListener('click', barClick);
     root.querySelector('.se-prof').addEventListener('click', profClick);
+    // the Lưu menu closes when you tap elsewhere
+    document.addEventListener('click', menuAway);
     root.querySelector('.se-bgsel').addEventListener('change', function (e) {
-      var b = lib.backgrounds[+e.target.value];
+      var b = lib.backgrounds[e.target.value === '' ? -1 : +e.target.value];
       if (!b) return;
       remember();
       S().bg = { src: b.src, w: b.w, h: b.h };
@@ -124,9 +146,6 @@ window.GemStudioEditor = (function () {
     ]).then(function (r) {
       lib = r[0];
       data = L.sanitize(r[1]) || L.sanitize(r[2]) || L.blank(lib.backgrounds[0]);
-      root.querySelector('.se-bgsel').innerHTML = lib.backgrounds.map(function (b, i) {
-        return '<option value="' + i + '">' + esc(b.src.split('/').pop()) + '</option>';
-      }).join('');
       syncBg();
       status(r[1] ? 'Đang sửa bản nháp' : r[2] ? 'Bắt đầu từ bản đang chạy' : 'Bố cục mới');
       draw();
@@ -137,9 +156,43 @@ window.GemStudioEditor = (function () {
     });
   }
 
+  // Backgrounds for the scene on screen only: the street for 'Ngoài cửa',
+  // studio walls for 'Trong' (a street behind the studio's hotspots made no sense).
   function syncBg() {
     var el = root.querySelector('.se-bgsel');
-    lib.backgrounds.forEach(function (b, i) { if (b.src === S().bg.src) el.value = i; });
+    var want = scene === 'out' ? 'out' : 'in';
+    el.innerHTML = lib.backgrounds.map(function (b, i) {
+      if ((b.scene || 'in') !== want) return '';
+      return '<option value="' + i + '"' + (b.src === S().bg.src ? ' selected' : '') + '>' + esc(b.label || b.src.split('/').pop()) + '</option>';
+    }).join('');
+    if (!lib.backgrounds.some(function (b) { return b.src === S().bg.src; })) {
+      el.insertAdjacentHTML('afterbegin', '<option value="" selected>' + esc(S().bg.src.split('/').pop()) + '</option>');
+    }
+  }
+
+  // "Ngắn lại / Dài thêm": only for walls with a seamless loop (GemLayout.EXTEND).
+  function syncLen() {
+    var e = L.EXTEND[S().bg.src];
+    var less = root.querySelector('[data-se="w-"]'), more = root.querySelector('[data-se="w+"]');
+    more.disabled = !e || S().bg.w + e.tileW > 20000;
+    less.disabled = !e || S().bg.w <= e.w0;
+    var why = e ? '' : 'Nền này không nối dài được — chọn "Tường trơn" (hoặc Mặt tiền ở Ngoài cửa)';
+    more.title = why || 'Nối thêm một đoạn tường (' + e.tileW + ' px)';
+    less.title = why || 'Bớt một đoạn tường';
+  }
+
+  function lengthen(dir) {
+    var e = L.EXTEND[S().bg.src];
+    if (!e) return;
+    var w = S().bg.w + dir * e.tileW;
+    if (w < e.w0 || w > 20000) return;
+    remember();
+    S().bg.w = w;
+    var out = S().items.filter(function (it) { return it.x - it.w / 2 > w; }).length;
+    draw();
+    if (dir > 0) stageEl.scrollLeft = stageEl.scrollWidth;   // show the new wall
+    status('Khu vực dài ' + w.toLocaleString('vi-VN') + ' px' +
+      (out ? ' — ' + out + ' món nằm ngoài tường, kéo vào hoặc Dài thêm lại' : ''));
   }
 
   function setScene(name) {
@@ -147,7 +200,7 @@ window.GemStudioEditor = (function () {
     sel = null;
     root.querySelectorAll('[data-se^="sc-"]').forEach(function (b) {
       var on = b.dataset.se === 'sc-' + name;
-      b.classList.toggle('active', on);
+      b.classList.toggle('is-on', on);
       b.setAttribute('aria-pressed', on);
     });
     syncBg();
@@ -155,7 +208,13 @@ window.GemStudioEditor = (function () {
     draw(); renderPanel();
   }
 
+  function menuAway(e) {
+    var m = root && root.querySelector('.se-menu');
+    if (m && m.open && !m.contains(e.target)) m.open = false;
+  }
+
   function unmount() {
+    document.removeEventListener('click', menuAway);
     document.removeEventListener('keydown', keyDown);
     document.removeEventListener('pointermove', pinchMove);
     document.removeEventListener('pointerup', pinchUp);
@@ -177,7 +236,16 @@ window.GemStudioEditor = (function () {
     worldEl.style.height = px(S().bg.h);
     var bg = worldEl.querySelector('.se-bgimg');
     if (bg.getAttribute('src') !== S().bg.src) bg.src = S().bg.src;
-    worldEl.querySelectorAll('.se-el').forEach(function (n) { n.remove(); });
+    worldEl.querySelectorAll('.se-el, .se-bgx').forEach(function (n) { n.remove(); });
+    var parts = L.bgParts(S().bg);   // a lengthened wall: picture + loop + corner
+    bg.style.visibility = parts.length > 1 ? 'hidden' : '';
+    if (parts.length > 1) parts.forEach(function (part) {
+      var d = document.createElement('div');
+      d.className = 'se-bgx';
+      Object.assign(d.style, L.partStyle(part, S().bg.w));
+      bg.insertAdjacentElement('afterend', d);
+    });
+    syncLen();
 
     S().items.forEach(function (it, i) {
       var n = document.createElement('div');
@@ -207,7 +275,7 @@ window.GemStudioEditor = (function () {
     place(floor, 0, feet, S().bg.w, 2);
     worldEl.appendChild(floor);
 
-    spots().forEach(function (sp) {
+    if (showHot) spots().forEach(function (sp) {
       var o = S().hot[sp.id], b = o.box;
       var n = document.createElement('div');
       n.className = 'se-el se-hot' + (isSel('hot', sp.id) ? ' is-sel' : '');
@@ -426,41 +494,38 @@ window.GemStudioEditor = (function () {
     var tools = '';
     if (sel && sel.kind === 'item') {
       var it = S().items[sel.i];
+      // one strip of small controls; scrolls sideways on a phone
       tools = '<div class="se-tools">' +
-        '<b>Đồ đang chọn</b>' +
-        '<label><input type="radio" name="se-layer" value="back"' + (it.layer !== 'front' ? ' checked' : '') + '> Sau nhân vật</label>' +
-        '<label><input type="radio" name="se-layer" value="front"' + (it.layer === 'front' ? ' checked' : '') + '> Trước nhân vật</label>' +
+        '<span class="se-seg" role="group" aria-label="Lớp">' +
+          '<button type="button" data-act="back" class="' + (it.layer !== 'front' ? 'is-on' : '') + '">Sau người</button>' +
+          '<button type="button" data-act="front" class="' + (it.layer === 'front' ? 'is-on' : '') + '">Trước người</button>' +
+        '</span>' +
         '<label class="se-size">Cỡ <input type="range" name="se-size" min="20" max="1000" step="5" value="' + Math.round(it.h) + '">' +
-          '<input type="number" name="se-h" min="20" max="2000" step="5" value="' + Math.round(it.h) + '"> px cao</label>' +
-        '<div class="se-row">' +
-          '<button type="button" class="ad-btn" data-act="smaller">Nhỏ hơn</button>' +
-          '<button type="button" class="ad-btn" data-act="bigger">To hơn</button>' +
-        '</div>' +
-        '<label>Xoay <input type="number" name="se-rot" value="' + it.rot + '" step="1" min="-180" max="180"> độ</label>' +
-        '<div class="se-row">' +
-          '<button type="button" class="ad-btn" data-act="up">Lên trên</button>' +
-          '<button type="button" class="ad-btn" data-act="down">Xuống dưới</button>' +
-          '<button type="button" class="ad-btn" data-act="flip">Lật ngang</button>' +
-          '<button type="button" class="ad-btn" data-act="frame">' + (it.frame ? 'Bỏ khung' : 'Thêm khung') + '</button>' +
-          '<button type="button" class="ad-btn" data-act="dup">Nhân bản</button>' +
-          '<button type="button" class="ad-btn danger" data-act="del">Xoá</button>' +
-        '</div></div>';
+          '<input type="number" name="se-h" min="20" max="2000" step="5" value="' + Math.round(it.h) + '" aria-label="Chiều cao (px)"></label>' +
+        '<label class="se-size">Xoay <input type="number" name="se-rot" value="' + it.rot + '" step="1" min="-180" max="180" aria-label="Xoay (độ)">°</label>' +
+        '<button type="button" class="se-tb" data-act="flip">Lật</button>' +
+        '<button type="button" class="se-tb" data-act="up" title="Đưa lên trên các món khác">Lên</button>' +
+        '<button type="button" class="se-tb" data-act="down" title="Đưa xuống dưới các món khác">Xuống</button>' +
+        '<button type="button" class="se-tb" data-act="frame">' + (it.frame ? 'Bỏ khung' : 'Khung gỗ') + '</button>' +
+        '<button type="button" class="se-tb" data-act="dup">Nhân bản</button>' +
+        '<button type="button" class="se-tb danger" data-act="del">Xoá</button>' +
+      '</div>';
     } else if (sel && (sel.kind === 'hot' || sel.kind === 'stand')) {
-      var name = spots().filter(function (s) { return s.id === sel.id; })[0].vi;
-      tools = '<div class="se-tools"><b>' + esc(name) + '</b><p class="ad-hint">Khung nét đứt = chỗ khách chạm để mở. ' +
-        'Cột nhỏ ở sàn = chỗ nhân vật dừng lại. Kéo góc để đổi cỡ.</p></div>';
+      var name = spots().filter(function (x) { return x.id === sel.id; })[0].vi;
+      tools = '<p class="se-tools se-hint"><b>' + esc(name) + '</b> — khung nét đứt là chỗ khách chạm; cột đỏ ở sàn là chỗ nhân vật dừng.</p>';
     } else {
-      tools = '<p class="ad-hint">Chọn một món trong thư viện để thêm vào giữa màn hình. Kéo để di chuyển, kéo góc để đổi cỡ, ' +
-        'kéo nút tròn để xoay. Trên điện thoại: chụm / mở hai ngón để đổi cỡ, vặn hai ngón để xoay. Phím mũi tên dịch từng chút, Ctrl+Z hoàn tác.</p>';
+      tools = '<details class="se-help"><summary>Cách dùng</summary><p>Chạm một món ở thư viện để thêm vào giữa màn hình. ' +
+        'Kéo để di chuyển, kéo góc để đổi cỡ, kéo nút tròn để xoay. Điện thoại: chụm / mở hai ngón để đổi cỡ, vặn hai ngón để xoay. ' +
+        'Phím mũi tên dịch từng chút, Ctrl+Z hoàn tác. "Khung bấm" ẩn các khung xanh khi xếp đồ.</p></details>';
     }
     var g = lib.groups.filter(function (x) { return x.id === group; })[0] || lib.groups[0];
     panelEl.innerHTML = tools +
       '<div class="se-lib">' +
         '<div class="se-tabs">' + lib.groups.map(function (x) {
-          return '<button type="button" class="ad-filter' + (x.id === g.id ? ' active' : '') + '" data-group="' + esc(x.id) + '">' +
+          return '<button type="button" class="se-chip' + (x.id === g.id ? ' is-on' : '') + '" data-group="' + esc(x.id) + '">' +
             esc(x.label) + '</button>';
         }).join('') +
-        '<label class="ad-filter se-upload">+ Tải ảnh mới<input type="file" accept="image/png,image/webp,image/jpeg" hidden></label>' +
+        '<label class="se-chip se-upload">+ Tải ảnh<input type="file" accept="image/png,image/webp,image/jpeg" hidden></label>' +
         '</div>' +
         '<div class="se-grid">' + g.items.map(function (a, i) {
           return '<button type="button" class="se-asset" data-asset="' + i + '" title="' + esc(a.src.split('/').pop()) + '">' +
@@ -485,7 +550,6 @@ window.GemStudioEditor = (function () {
     if (!sel || sel.kind !== 'item') return;
     var it = S().items[sel.i];
     remember();
-    if (e.target.name === 'se-layer') it.layer = e.target.value;
     if (e.target.name === 'se-size' || e.target.name === 'se-h') resize(it, +e.target.value);
     if (e.target.name === 'se-rot') it.rot = Math.max(-180, Math.min(180, Math.round(+e.target.value || 0)));
     draw();
@@ -503,6 +567,7 @@ window.GemStudioEditor = (function () {
     else if (a === 'bigger') resize(it, it.h * 1.15);
     else if (a === 'smaller') resize(it, it.h / 1.15);
     else if (a === 'frame') it.frame = !it.frame;
+    else if (a === 'back' || a === 'front') it.layer = a;
     else if (a === 'up' && i < S().items.length - 1) {
       S().items.splice(i, 1); S().items.splice(i + 1, 0, it); sel.i = i + 1;
     } else if (a === 'down' && i > 0) {
@@ -522,10 +587,10 @@ window.GemStudioEditor = (function () {
   function add(a) {
     if (!a || !L.srcOk(a.src)) return;
     remember();
-    var h = a.frame ? 110 : Math.min(420, a.h * 0.6);
+    var h = a.h0 || (a.frame ? 110 : Math.min(420, a.h * 0.6));   // h0: doors / windows, set in the manifest
     var w = Math.round(h * a.w / a.h);
     var cx = (stageEl.scrollLeft + stageEl.clientWidth / 2) / k;
-    S().items.push({ src: a.src, x: Math.round(cx), y: Math.round(L.FEET_Y - h / 2 - 40), w: w, h: Math.round(h),
+    S().items.push({ src: a.src, x: Math.round(cx), y: Math.round(a.y0 || L.FEET_Y - h / 2 - 40), w: w, h: Math.round(h),
       rot: 0, flip: false, layer: 'back', frame: !!a.frame });
     sel = { kind: 'item', i: S().items.length - 1 };
     draw(); renderPanel();
@@ -645,6 +710,25 @@ window.GemStudioEditor = (function () {
     if (!b || !data) return;
     var a = b.dataset.se;
     if (a === 'sc-in' || a === 'sc-out') return setScene(a.slice(3));
+    if (a === 'w+' || a === 'w-') return lengthen(a === 'w+' ? 1 : -1);
+    if (a === 'hot') {
+      showHot = !showHot;
+      b.setAttribute('aria-pressed', showHot);
+      b.classList.toggle('is-off', !showHot);
+      draw();
+      return;
+    }
+    if (a === 'clear') {
+      if (!S().items.length) { status('Cảnh này chưa có món nào.'); return; }
+      if (!window.confirm('Xoá hết ' + S().items.length + ' món trong cảnh ' + (scene === 'out' ? '"Ngoài cửa"' : '"Trong studio"') +
+        '? Vùng bấm, Udon và điểm xuất phát giữ nguyên. Bấm Hoàn tác để lấy lại.')) return;
+      remember();
+      S().items = [];
+      sel = null;
+      draw(); renderPanel();
+      status('Đã xoá hết đồ — xếp lại từ tường trống');
+      return;
+    }
     if (a === 'undo') return doUndo();
     if (a === 'zin' || a === 'zout') {
       var mid = (stageEl.scrollLeft + stageEl.clientWidth / 2) / k;

@@ -416,7 +416,7 @@
     SCENE.height = L.bg.h;
     SCENE.udon = L.udon;
     SCENE.startX = player.x = L.start;
-    world.querySelector('.st-bg').src = L.bg.src;
+    paintBg(L.bg);
     HOTSPOTS.forEach(function (h) {
       var o = L.hot[h.id];
       if (o) { h.abs = o.box; h.standAbs = o.stand; }
@@ -539,21 +539,37 @@
     addPlayer();
   }
 
+  // The wall: one picture, or (a scene the owner made longer) picture + a
+  // repeated loop of wall + the room's corner — GemLayout.bgParts.
+  function paintBg(bg) {
+    var img = world.querySelector('.st-bg');
+    img.src = bg.src;
+    world.querySelectorAll('.st-bgx').forEach(function (n) { n.remove(); });
+    var parts = window.GemLayout ? window.GemLayout.bgParts(bg) : [];
+    img.style.visibility = parts.length > 1 ? 'hidden' : '';
+    if (parts.length < 2) return;
+    parts.forEach(function (part) {
+      var d = document.createElement('div');
+      d.className = 'st-bgx';
+      Object.assign(d.style, window.GemLayout.partStyle(part, bg.w));
+      img.insertAdjacentElement('afterend', d);
+    });
+  }
+
   function setScene(name) {
     sceneName = name;
     Array.prototype.slice.call(world.children).forEach(function (n) {
-      if (!n.classList.contains('st-bg')) n.remove();
+      if (!n.classList.contains('st-bg')) n.remove();   // .st-bgx too: paintBg redraws it
     });
     udonEl = null; memoPins = null;
-    var bg = world.querySelector('.st-bg');
     if (name === 'out') {
       var O = outsideScene();
       SCENE.width = O.bg.w; SCENE.height = O.bg.h; SCENE.startX = O.start;
-      bg.src = O.bg.src;
+      paintBg(O.bg);
       buildOutside(O);
     } else {
       SCENE.width = INSIDE.width; SCENE.height = INSIDE.height; SCENE.startX = INSIDE.startX;
-      bg.src = INSIDE.bg;
+      paintBg({ src: INSIDE.bg, w: INSIDE.width, h: INSIDE.height });
       build();
       paintPins();
     }

@@ -1325,6 +1325,32 @@ Câu kiểm GRANT-vs-policy: không thêm dòng mới.
   `tools/studio-assets.py`. Thêm tranh mới → thêm tên vào `PICK` nếu không hợp
   nhóm mặc định, rồi `--manifest .`.
 
+- **Tường trơn** (10/2026): `bg/strip-tron.webp` (`--plain <tường.png>`, 5.792px):
+  phần giữa của một bức tường vẽ (1536×1024) làm thành đoạn lặp liền mạch, nhân
+  5 lần, góc phòng ở hai đầu. Không cửa, không cửa sổ — chúng là món trong nhóm "Cửa &
+  cửa sổ" (cỡ + chỗ đặt ban đầu đúng tỉ lệ: `START_H` / `START_Y` trong tool).
+  Bố cục mới mặc định dùng nền này.
+- **Mở rộng khu vực:** nút "Ngắn lại / Dài thêm" trong trình lắp, mỗi lần một
+  đoạn tường (Tường trơn 1.040px, Mặt tiền 400px), tối đa 20.000px. Nền vẽ
+  thành 3 phần: tranh (bỏ góc phải) + đoạn lặp liền mạch (`bg/tuong-lap.webp`,
+  `bg/ngoai-lap.webp`) + góc phòng — `EXTEND` / `bgParts()` trong
+  `js/studio-layout.js`, số do `--plain` in ra. Nền khác (có cửa, tranh vẽ sẵn)
+  không nối dài được.
+- **Trình lắp gọn lại (10/2026):** một hàng công cụ (Trong / Ngoài cửa, nền,
+  Hoàn tác, thu phóng, "Khung bấm" ẩn/hiện khung xanh, "Xoá hết" món trong cảnh
+  đang sửa — Hoàn tác lấy lại được); lưu / xuất bản / bố cục đã lưu gom vào
+  menu "Lưu". Điện thoại: thư viện một hàng cuộn ngang ngay dưới sân khấu. Nền
+  chỉ hiện loại hợp cảnh (`scene` trong `assets.json`).
+- **Giấy trắng sót trong asset:** `tools/clean-white.py` (đã chạy cho giá treo
+  trống, 2 bàn may, 2 tủ kệ, quầy Udon). `--loose` quét thêm bóng giấy ở đáy;
+  `--ink N` cho tranh có lông / sơn trắng trùng màu giấy (Udon). Xem kết quả
+  trước khi commit.
+- `admin.html` / `studio.html` gắn `?v=YYYYMMDD` sau CSS/JS — điện thoại từng giữ
+  bản cũ (không thấy nút Ngoài cửa). Đổi số mỗi lần sửa.
+- **Kiểm tra:** `python3 tools/check-studio.py` (mặt tiền ↔ trong, phụ kiện 4×10
+  khung, trình lắp: thêm / xuất bản / Xoá hết / nền theo cảnh). Supabase giả lập,
+  không ghi gì thật; ảnh chụp ở `/tmp/gem-check/`.
+
 ### Phụ kiện trên nhân vật (đợt 1)
 
 5 món "đồ mặc" đều là phụ kiện (túi Oxford, túi Denim, dây buộc tóc, dây đeo
