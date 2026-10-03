@@ -1271,7 +1271,7 @@ thành `bg/strip.webp` (6264px; tủ trống ở khu 3 được giữ để bày
 `cay2/`, `deco/`, `vn/`, `props/`, `ui/`, `wear/`, `bg/nen-*` (tường trống
 để sau này đặt đồ tách lớp).
 
-**File gốc nặng không cần lên GitHub.** Trang chỉ dùng bản WebP (~55 KB/khung).
+**File gốc nặng không cần lên GitHub** (bản PNG gốc trong `images/gem2d-assets/` đã xoá khỏi repo 10/2026, gốc giữ ở Drive). Trang chỉ dùng bản WebP (~55 KB/khung).
 Giữ gốc ở Drive, chỉ commit bản đã xử lý.
 
 ### Lắp studio (admin.html → tab "Lắp studio", chỉ owner)
