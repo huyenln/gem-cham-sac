@@ -43,6 +43,8 @@ Static website (5 trang) cho cửa hàng **Gem Chạm Sắc** — pop-up store s
 ├── js/studio.js              Studio 2D: cảnh, nhân vật, điểm bấm, bàn thiết kế, bảng lời nhắn; mua qua window.GemBasket
 ├── js/patch.js               Bàn thiết kế (v2): món + kiểu ghép + tông + họa tiết + chất vải + hình vẽ + ghi chú → mã thiết kế, vẽ SVG (dùng chung với giỏ, tủ)
 ├── js/collection.js         Tủ sưu tầm: thiết kế đã lưu + món đã mua (localStorage gem-tu, rpc claim_collection)
+├── js/studio-layout.js        Định dạng + kiểm tra bố cục studio (dùng chung studio.html / admin.html)
+├── js/studio-editor.js        Tab "Lắp studio" trong admin (chỉ owner): kéo, đổi cỡ, xoay asset
 ├── supabase/functions/notify/ Edge Function báo mail cho nhân sự (đơn / workshop / lời nhắn) — xem docs/design.md
 ├── tools/studio-assets.py    Chạy tay khi có tranh mới: ghép dải studio, tách nền nhân vật → images/studio/
 ├── images/
@@ -57,7 +59,7 @@ Static website (5 trang) cho cửa hàng **Gem Chạm Sắc** — pop-up store s
 
 **Backend (từ Sprint 3):** Supabase (project `dxdovvqsfjeizsoprrfn`, Singapore,
 Postgres 17). Bảng: `products`, `orders`, `order_items`, `sessions`, `bookings`,
-`workshop_types`, `staff`, `settings`, `posts`, `notes` (bảng lời nhắn Studio). Kho ảnh: Storage bucket
+`workshop_types`, `staff`, `settings`, `posts`, `notes` (bảng lời nhắn Studio), `studio_layout` (bố cục studio, chỉ owner ghi). Kho ảnh: Storage bucket
 `gem-media` (đọc công khai, tải lên chỉ nhân sự). Chi tiết ở `docs/design.md`.
 
 > ⚠️ **Hai luật bảo mật, đọc trước khi đụng vào database:**

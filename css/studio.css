@@ -161,6 +161,16 @@
 .st-udon-ghost { position: absolute; z-index: 6; height: auto; max-width: none; pointer-events: none; }
 .st-stage * { -webkit-tap-highlight-color: transparent; }
 
+/* Owner's layout pieces (js/studio-layout.js): behind the character unless
+   'front'. Never tappable themselves; the hotspots under them are. */
+.st-item { position: absolute; z-index: 1; pointer-events: none; object-fit: contain; max-width: none; }
+.st-item.is-front { z-index: 4; }
+.st-hot { z-index: 2; }
+.st-player { z-index: 3; }
+.st-udon { z-index: 5; }
+.st-wait .st-world { opacity: 0; }
+.st-world { transition: opacity 0.25s ease; }
+
 /* Real product photos standing on the empty cabinet's shelves, in a thin
    wooden frame, like prints propped up for sale. */
 .st-shelf-item {

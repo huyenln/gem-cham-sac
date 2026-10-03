@@ -15,6 +15,7 @@
 
 (function () {
   'use strict';
+  document.documentElement.classList.add('st-wait');   // until the layout is known
 
   /* ======================================================================
      SCENE — numbers come from tools/studio-assets.py (the STRIP line)
@@ -310,6 +311,7 @@
   }
 
   function boxOf(h) {
+    if (h.abs) return { x0: h.abs[0], y0: h.abs[1], x1: h.abs[2], y1: h.abs[3] };
     return {
       x0: zoneX(h.zone, h.box[0]), y0: h.box[1],
       x1: zoneX(h.zone, h.box[2]), y1: h.box[3]
@@ -322,6 +324,7 @@
   }
 
   function standX(h) {
+    if (h.standAbs != null) return h.standAbs;
     if (h.stand != null) return zoneX(h.zone, h.stand);
     var b = boxOf(h);
     return (b.x0 + b.x1) / 2;
@@ -360,11 +363,63 @@
   var cartCount = 0;
   var lastFocus = null;
 
+  /* ---------- owner's layout (admin.html → studio_layout table) ----------
+     When one is published, the scene is the empty-wall strip with the
+     owner's pieces on it; otherwise the painted strip above, unchanged. */
+  var LAYOUT = null;
+
+  function loadLayout() {
+    if (!window.GemLayout || !window.GemDB || !window.GemDB.studioLayout) return Promise.resolve(null);
+    var draft = false;
+    try { draft = new URLSearchParams(location.search).get('nhap') === '1' && window.GemDB.isSignedIn(); } catch (e) { /* old browser */ }
+    var get = window.GemDB.studioLayout(draft ? 'draft' : 'live').then(window.GemLayout.sanitize, function () { return null; });
+    var late = new Promise(function (res) { setTimeout(function () { res(null); }, 2500); });
+    return Promise.race([get, late]);
+  }
+
+  function applyLayout(L) {
+    LAYOUT = L;
+    SCENE.width = L.bg.w;
+    SCENE.height = L.bg.h;
+    SCENE.udon = L.udon;
+    SCENE.startX = player.x = L.start;
+    world.querySelector('.st-bg').src = L.bg.src;
+    HOTSPOTS.forEach(function (h) {
+      var o = L.hot[h.id];
+      if (o) { h.abs = o.box; h.standAbs = o.stand; }
+    });
+  }
+
+  function buildItems() {
+    LAYOUT.items.forEach(function (it) {
+      var el = document.createElement(it.frame ? 'span' : 'img');
+      var img = el;
+      if (it.frame) {
+        img = document.createElement('img');
+        el.appendChild(img);
+        el.className = 'st-item st-shelf-item';
+      } else {
+        el.className = 'st-item';
+      }
+      if (it.layer === 'front') el.classList.add('is-front');
+      img.src = it.src;
+      img.alt = '';
+      img.draggable = false;
+      el.style.left = pct(it.x - it.w / 2, SCENE.width);
+      el.style.top = pct(it.y - it.h / 2, SCENE.height);
+      el.style.width = pct(it.w, SCENE.width);
+      el.style.height = pct(it.h, SCENE.height);
+      el.style.transform = 'rotate(' + it.rot + 'deg)' + (it.flip ? ' scaleX(-1)' : '');
+      world.appendChild(el);
+    });
+  }
+
   function build() {
+    if (LAYOUT) buildItems();
     // Product photos on the zone-3 shelves, under the hotspots (not tappable
     // on their own: the whole cabinet opens).
     DISPLAY.forEach(function (d) {
-      if (!THUMB[d.sku]) return;
+      if (LAYOUT || !THUMB[d.sku]) return;   // a layout places its own photos
       var x0 = zoneX(3, d.x[0]), x1 = zoneX(3, d.x[1]);
       var fr = document.createElement('span');
       fr.className = 'st-shelf-item';
@@ -1480,6 +1535,14 @@
     sheetBody = document.getElementById('st-sheet-body');
     if (!stage || !world) return;
 
+    loadLayout().then(function (L) {
+      if (L) applyLayout(L);
+      start();
+      document.documentElement.classList.remove('st-wait');
+    });
+  });
+
+  function start() {
     build();
     bind();
     cartCount = window.GemBasket ? window.GemBasket.count() : 0;
@@ -1503,5 +1566,5 @@
       setTimeout(function () { say('studio.intro', 7000); }, 600);
       try { localStorage.setItem('gem-studio-intro', '1'); } catch (e) { /* ignore */ }
     }
-  });
+  }
 })();

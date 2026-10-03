@@ -76,6 +76,19 @@ PILLAR2 = ('nen-z4.png', 340, 460)
 SEAM2 = 4    # px of soft edge where a scene meets the pillar
 
 
+# Empty walls (no furniture) for the layout editor in admin.html: the owner
+# places every piece on top. Same pillar joins; skirting lined up at ~y 820.
+ZONES_EMPTY = [
+    ('nen-z1.png', 0, 1450),     # door + window
+    ('nen-z2.png', 545, 1500),   # window
+    ('nen-z3.png', 245, 1460),   # long plain wall
+    ('nen-z4.png', 450, 1515),   # the CHẠM SẮC window
+    ('nen-z5.png', 185, 1536),   # plain wall to the corner
+]
+SHIFT_EMPTY = {'nen-z1.png': -13, 'nen-z2.png': 36, 'nen-z3.png': 31, 'nen-z4.png': -18, 'nen-z5.png': 15}
+PILLAR_EMPTY = ('nen-z4.png', 340, 460)
+
+
 def nudge(arr, dy):
     if dy > 0:      # move down: repeat the top rows (wall)
         return np.concatenate([np.repeat(arr[:1], dy, axis=0), arr[:-dy]])
@@ -84,7 +97,7 @@ def nudge(arr, dy):
     return arr
 
 
-def build_strip(src, zones=None, shift=None, floor_fix=None, pillar=None, blend=None):
+def build_strip(src, zones=None, shift=None, floor_fix=None, pillar=None, blend=None, out='strip'):
     zones = zones or ZONES
     shift = shift or {}
     floor_fix = FLOOR_FIX if floor_fix is None else floor_fix
@@ -131,7 +144,7 @@ def build_strip(src, zones=None, shift=None, floor_fix=None, pillar=None, blend=
         offsets = offsets[::2]
 
     img = Image.fromarray(strip.clip(0, 255).astype(np.uint8))
-    save_webp(img, OUT / 'bg' / 'strip.webp', quality=80)
+    save_webp(img, OUT / 'bg' / f'{out}.webp', quality=80)
     # Numbers for STRIP in js/studio.js: where each zone's kept part starts.
     print('  STRIP =', json.dumps({
         'width': width, 'height': HEIGHT,
@@ -489,6 +502,40 @@ def build_batch(src):
             save_webp(p, OUT / folder / f'{label}.webp', quality=84)
 
 
+# ---------------------------------------------------------------------------
+# images/studio/assets.json: what the layout editor offers, grouped by folder
+# (the site is static, so the browser can't list folders itself).
+#   python3 tools/studio-assets.py --manifest .
+# ---------------------------------------------------------------------------
+LIBRARY = [
+    ('props', 'Nội thất'), ('cay', 'Cây & hoa'), ('cay2', 'Cây nhỏ'), ('deco', 'Trang trí'),
+    ('vn', 'Đồ Việt'), ('wear', 'Đồ mặc'), ('ui', 'Giấy & khung'), ('udon', 'Udon'),
+]
+
+
+def build_manifest():
+    groups = []
+    for folder, label in LIBRARY:
+        items = []
+        for f in sorted((OUT / folder).glob('*.webp')):
+            w, h = Image.open(f).size
+            items.append({'src': f'images/studio/{folder}/{f.name}', 'w': w, 'h': h})
+        groups.append({'id': folder, 'label': label, 'items': items})
+    prods = []
+    for f in sorted((ROOT / 'images' / 'products').glob('*-thumb.jpg')):
+        prods.append({'src': f'images/products/{f.name}', 'w': 600, 'h': 600, 'frame': True})
+    groups.append({'id': 'products', 'label': 'Ảnh sản phẩm', 'items': prods})
+    bgs = []
+    for name in ('strip-trong', 'strip'):
+        f = OUT / 'bg' / f'{name}.webp'
+        if f.exists():
+            w, h = Image.open(f).size
+            bgs.append({'src': f'images/studio/bg/{name}.webp', 'w': w, 'h': h})
+    out = OUT / 'assets.json'
+    out.write_text(json.dumps({'backgrounds': bgs, 'groups': groups}, ensure_ascii=False, indent=1))
+    print(f'  {out.relative_to(ROOT)}  {sum(len(g["items"]) for g in groups)} assets')
+
+
 if __name__ == '__main__':
     if len(sys.argv) == 3 and sys.argv[1] == '--batch':
         print('batch:'); build_batch(Path(sys.argv[2]))
@@ -499,6 +546,11 @@ if __name__ == '__main__':
     if len(sys.argv) == 3 and sys.argv[1] == '--strip2':
         print('strip (set 2):'); build_strip(Path(sys.argv[2]), ZONES2, SHIFT2, {}, PILLAR2, SEAM2)
         sys.exit()
+    if len(sys.argv) == 3 and sys.argv[1] == '--strip-empty':
+        print('empty strip:'); build_strip(Path(sys.argv[2]), ZONES_EMPTY, SHIFT_EMPTY, {}, PILLAR_EMPTY, 4, 'strip-trong')
+        sys.exit()
+    if len(sys.argv) == 3 and sys.argv[1] == '--manifest':
+        build_manifest(); sys.exit()
     if len(sys.argv) == 3 and sys.argv[1] == '--cast':
         print('cast:'); build_cast(Path(sys.argv[2]))
         sys.exit()
