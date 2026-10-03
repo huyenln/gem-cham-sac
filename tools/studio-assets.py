@@ -41,7 +41,7 @@ ZONES = [
     ('bg-z4.png', 740, 1536),
     ('bg-z5.png', 440, 1536),
 ]
-BLEND = 64        # px of cross-fade at every join
+BLEND_DEFAULT = 64   # px of cross-fade at every join (set 1)
 # Zones whose painted floor doesn't match the others: from row y down, the
 # floor is replaced by a clean, empty band of floor (rows y0–y1 of another
 # zone), stretched to fit and blended in over 24 px.
@@ -61,13 +61,19 @@ def save_webp(img, path, quality=82):
 # to put the skirting at ~y 820 before joining. Zone 3's cabinet is painted
 # empty on purpose: js/studio.js stands real product photos on its shelves.
 ZONES2 = [
-    ('z1.png', 0, 1536),
-    ('z2.png', 480, 1536),
-    ('z3.png', 485, 1536),
-    ('z4.png', 0, 1536),
-    ('z5.png', 195, 1536),
+    ('z1.png', 0, 1450),
+    ('z2.png', 480, 1512),
+    ('z3.png', 488, 1520),
+    ('z4.png', 0, 1515),
+    ('z5.png', 196, 1536),
 ]
-SHIFT2 = {'z1.png': -15, 'z2.png': 20, 'z3.png': 20, 'z4.png': -20, 'z5.png': 20}
+SHIFT2 = {'z1.png': -15, 'z2.png': 20, 'z3.png': 20, 'z4.png': -20, 'z5.png': 20,
+          'nen-z4.png': -20}
+# Scenes are cut at plain wall and joined with a wall pillar (from the empty
+# wall painting) instead of cross-fading: a fade ghosted one scene's
+# furniture over the next (mirror over the pegboard, bench over the cabinet).
+PILLAR2 = ('nen-z4.png', 340, 460)
+SEAM2 = 4    # px of soft edge where a scene meets the pillar
 
 
 def nudge(arr, dy):
@@ -78,7 +84,7 @@ def nudge(arr, dy):
     return arr
 
 
-def build_strip(src, zones=None, shift=None, floor_fix=None):
+def build_strip(src, zones=None, shift=None, floor_fix=None, pillar=None, blend=None):
     zones = zones or ZONES
     shift = shift or {}
     floor_fix = FLOOR_FIX if floor_fix is None else floor_fix
@@ -97,8 +103,16 @@ def build_strip(src, zones=None, shift=None, floor_fix=None):
             ramp = np.linspace(0, 1, 24, dtype=np.float32)[:, None, None]
             arr[fy:fy + 24] = arr[fy:fy + 24] * (1 - ramp) + donor[fy:fy + 24] * ramp
             arr[fy + 24:] = donor[fy + 24:]
+        if pillar and parts:
+            pim = Image.open(src / pillar[0]).convert('RGB')
+            if pim.height != HEIGHT:
+                pim = pim.resize((round(pim.width * HEIGHT / pim.height), HEIGHT), Image.LANCZOS)
+            parr = nudge(np.asarray(pim, dtype=np.float32).copy(), shift.get(pillar[0], 0))
+            parts.append(parr[:, pillar[1]:pillar[2]])
         parts.append(arr[:, x0:x1])
 
+    BLEND = BLEND_DEFAULT if blend is None else blend
+    starts = []   # where each zone (not pillar) starts, for js/studio.js
     width = sum(p.shape[1] for p in parts) - BLEND * (len(parts) - 1)
     strip = np.zeros((HEIGHT, width, 3), dtype=np.float32)
     offsets = []
@@ -113,6 +127,8 @@ def build_strip(src, zones=None, shift=None, floor_fix=None):
             strip[:, x + BLEND:x + w] = p[:, BLEND:]
         offsets.append(x)
         x += w - BLEND
+    if pillar:          # every other part is a pillar
+        offsets = offsets[::2]
 
     img = Image.fromarray(strip.clip(0, 255).astype(np.uint8))
     save_webp(img, OUT / 'bg' / 'strip.webp', quality=80)
@@ -481,7 +497,7 @@ if __name__ == '__main__':
         print('pieces:'); build_pieces(Path(sys.argv[2]))
         sys.exit()
     if len(sys.argv) == 3 and sys.argv[1] == '--strip2':
-        print('strip (set 2):'); build_strip(Path(sys.argv[2]), ZONES2, SHIFT2, {})
+        print('strip (set 2):'); build_strip(Path(sys.argv[2]), ZONES2, SHIFT2, {}, PILLAR2, SEAM2)
         sys.exit()
     if len(sys.argv) == 3 and sys.argv[1] == '--cast':
         print('cast:'); build_cast(Path(sys.argv[2]))

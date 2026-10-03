@@ -24,22 +24,23 @@
   // real product photos stand on its shelves (DISPLAY below). Hotspot y values below are in strip pixels (the
   // tool nudges each scene up/down to line up the skirting).
   var SCENE = {
-    width: 6264,
+    width: 6817,
     height: 1024,
     // x = where the zone starts in the strip, cropL = first source pixel kept
+    // (a wall pillar sits between zones, so they don't overlap)
     zones: [
       { x: 0,    cropL: 0 },
-      { x: 1472, cropL: 480 },
-      { x: 2464, cropL: 485 },
-      { x: 3451, cropL: 0 },
-      { x: 4923, cropL: 195 }
+      { x: 1562, cropL: 480 },
+      { x: 2706, cropL: 488 },
+      { x: 3850, cropL: 0 },
+      { x: 5477, cropL: 196 }
     ],
     feetY: 965,          // where the character's feet touch the floor
     playerH: 410,        // character height, strip pixels
     startX: 640,         // just inside the door
     speed: 900,          // strip pixels per second
-    // Udon sitting on the walnut counter, left of the bell
-    udon: { x: 5774, y: 468, w: 128, h: 120 }
+    // Udon sitting on the walnut counter, right end (clear of its label)
+    udon: { x: 6600, y: 448, w: 128, h: 140 }
   };
 
   // box = [x0, y0, x1, y1] in the zone's source image (1536 x 1024)
@@ -116,7 +117,10 @@
   var REAL = ['goi', 'tham', 'lotcoc', 'scrunchie'];
 
   // Things the character can wear later — bought first, then unlocked.
-  var WEARABLES = ['denim', 'scrunchie', 'daydeo', 'bloom'];
+  // Pieces you can try on at the fitting corner: images/studio/wear/<sku>-mac
+  // (the model wearing / carrying it) and <sku> (the piece on its own).
+  var WEARABLES = ['oxford', 'denim', 'scrunchie', 'daydeo', 'bloom'];
+  var tryOn = WEARABLES[0];
 
   var THUMB = {
     origami: 'vai-vun-tui-1-thumb.jpg',
@@ -193,7 +197,7 @@
     'studio.door_go':      { vi: `Vào studio`, en: `Step inside` },
 
     'studio.fitting_h':    { vi: `Góc thử đồ`, en: `Fitting corner` },
-    'studio.fitting_p':    { vi: `Mua món nào của Gem thì mặc được món đó cho nhân vật.`, en: `Buy a Gem piece and your character can wear it too.` },
+    'studio.fitting_p':    { vi: `Chạm vào một món để thử lên người. Mua rồi thì món đó nằm trong tủ của bạn.`, en: `Tap a piece to try it on. Once it's yours, it waits in your cabinet.` },
     'studio.fitting_lock': { vi: `Mua để mặc`, en: `Buy to wear` },
     'studio.fitting_have': { vi: `Đã có`, en: `Yours` },
 
@@ -329,6 +333,25 @@
      STATE + DOM
      ====================================================================== */
   var udonEl, memoPins, notesCache = null;
+  var UDON_POSES = ['ud-ngoi-a', 'ud-ngoi-b', 'ud-vay', 'ud-ngu'];
+  var UDON_SLEEP_MS = 25000;
+  var lastTouch = Date.now();
+
+  function udonPose(p) {
+    if (!udonEl) return;
+    udonEl.querySelectorAll('img').forEach(function (im) { im.hidden = im.getAttribute('data-pose') !== p; });
+    udonEl.classList.toggle('is-asleep', p === 'ud-ngu');
+  }
+
+  // Which pose now: asleep after a quiet spell, waving when you're near,
+  // otherwise sitting and wagging (two frames).
+  function udonTick() {
+    if (!udonEl || udonBusy) return;
+    if (Date.now() - lastTouch > UDON_SLEEP_MS) return udonPose('ud-ngu');
+    if (Math.abs(player.x - SCENE.udon.x) < 420) return udonPose('ud-vay');
+    if (reduceMotion) return udonPose('ud-ngoi-a');
+    udonPose(Math.floor(Date.now() / 650) % 2 ? 'ud-ngoi-b' : 'ud-ngoi-a');
+  }
   var stage, world, playerEl, bobEl, frameEls = {}, bubble, bubbleText, modal, sheetBody;
   var k = 1;           // screen px per strip px
   var cam = 0;
@@ -376,10 +399,16 @@
     udonEl.className = 'st-udon';
     udonEl.setAttribute('data-i18n-attr', 'aria-label:studio.udon_aria');
     udonEl.setAttribute('aria-label', t('studio.udon_aria'));
-    udonEl.innerHTML = '<img src="images/mascot/udon_sit_happy.png" alt="" draggable="false">';
+    // Poses (images/studio/udon): sitting with a two-frame tail wag, a wave
+    // when you come close, asleep when nobody's touched anything for a while.
+    udonEl.innerHTML = UDON_POSES.map(function (p) {
+      return '<img src="images/studio/udon/' + p + '.webp" alt="" draggable="false" data-pose="' + p + '"' +
+        (p === 'ud-ngoi-a' ? '' : ' hidden') + '>';
+    }).join('');
     udonEl.style.left = pct(u.x, SCENE.width);
     udonEl.style.top = pct(u.y, SCENE.height);
     udonEl.style.width = pct(u.w, SCENE.width);
+    udonEl.style.height = pct(u.h, SCENE.height);
     world.appendChild(udonEl);
 
     // Paper notes pinned on the memo board (filled once notes load)
@@ -588,27 +617,41 @@
   }
 
   function fittingSheet() {
-    var items = WEARABLES.map(function (sku) {
-      var info = window.GemBasket ? window.GemBasket.info(sku) : null;
-      if (!info) return '';
-      var have = window.GemTu && window.GemTu.owns(sku);
-      return '<li class="st-prod' + (have ? ' is-owned' : ' is-locked') + '">' +
-        '<img src="images/products/' + THUMB[sku] + '" alt="" loading="lazy" width="300" height="300">' +
-        '<b>' + esc(info.name) + '</b>' +
-        (have
-          ? tr('span', 'studio.fitting_have', ' class="st-lock-tag is-have"')
-          : tr('span', 'studio.fitting_lock', ' class="st-lock-tag"')) +
-        (!have && info.inStock
-          ? '<button type="button" class="st-btn" data-add="' + esc(sku) + '" data-i18n="studio.add">' + esc(t('studio.add')) + '</button>'
-          : '') +
-      '</li>';
-    }).join('');
     openSheet(
       head('studio.fitting_h', 'studio.fitting_p') +
-      '<div class="st-fitting"><img src="' + charSrc(who, 'front') + '" alt=""></div>' +
-      '<ul class="st-grid">' + items + '</ul>'
+      '<div class="fit">' +
+        '<figure class="fit-model"><img alt=""><figcaption class="fit-cap"></figcaption></figure>' +
+        '<ul class="fit-list"></ul>' +
+      '</div>'
     );
+    renderFitting();
   }
+
+  function renderFitting() {
+    var root = sheetBody.querySelector('.fit');
+    if (!root) return;
+    var info = window.GemBasket ? window.GemBasket.info(tryOn) : null;
+    var model = root.querySelector('.fit-model img');
+    model.src = 'images/studio/wear/' + tryOn + '-mac.webp';
+    root.querySelector('.fit-cap').textContent = info ? info.name : '';
+    root.querySelector('.fit-list').innerHTML = WEARABLES.map(function (sku) {
+      var it = window.GemBasket ? window.GemBasket.info(sku) : null;
+      if (!it) return '';
+      var have = window.GemTu && window.GemTu.owns(sku);
+      return '<li class="fit-item' + (sku === tryOn ? ' is-on' : '') + '">' +
+        '<button type="button" class="fit-pick" data-try="' + esc(sku) + '" aria-pressed="' + (sku === tryOn) + '">' +
+          '<img src="images/studio/wear/' + esc(sku) + '.webp" alt="" loading="lazy">' +
+          '<b>' + esc(it.name) + '</b>' +
+        '</button>' +
+        (have
+          ? tr('span', 'studio.fitting_have', ' class="st-lock-tag is-have"')
+          : it.inStock
+            ? '<button type="button" class="st-btn st-btn-sm" data-add="' + esc(sku) + '" data-i18n="studio.add">' + esc(t('studio.add')) + '</button>'
+            : tr('span', 'studio.out', ' class="st-lock-tag"')) +
+      '</li>';
+    }).join('');
+  }
+
 
   function sofaSheet() {
     openSheet(
@@ -1122,7 +1165,8 @@
     }
     var a = udonEl.getBoundingClientRect(), b = target.getBoundingClientRect();
     var sr = stage.getBoundingClientRect();
-    var ghost = udonEl.querySelector('img').cloneNode();
+    udonPose('ud-ngoi-a');
+    var ghost = udonEl.querySelector('img:not([hidden])').cloneNode();
     ghost.className = 'st-udon-ghost';
     // Inside the stage (overflow: hidden), not on <body>: a fixed element
     // past the screen edge made Chrome on Android zoom the whole page out.
@@ -1332,7 +1376,7 @@
       if (sheetBody.querySelector('.tu') && tuClick(e)) return;
       var add = e.target.closest('[data-add]');
       if (add && window.GemBasket) {
-        var card = add.closest('.st-prod');
+        var card = add.closest('.st-prod, .fit-item');
         if (window.GemBasket.add(add.getAttribute('data-add'), card && card.querySelector('img'))) {
           add.textContent = t('studio.added');
           add.classList.add('is-added');
@@ -1343,6 +1387,8 @@
         }
         return;
       }
+      var tri = e.target.closest('[data-try]');
+      if (tri) { tryOn = tri.getAttribute('data-try'); renderFitting(); return; }
       var ch = e.target.closest('[data-char]');
       if (ch) {
         pickChar(ch.getAttribute('data-char'));
@@ -1398,6 +1444,7 @@
     document.addEventListener('gem:tu', function () {
       // Another tab, or an order just went through: refresh what's open.
       if (sheetBody.querySelector('.tu')) renderTu();
+      if (sheetBody.querySelector('.fit')) renderFitting();
     });
 
     document.addEventListener('gem:basket', function (e) {
@@ -1408,6 +1455,11 @@
     bubble.addEventListener('click', function () { bubble.hidden = true; });
 
     window.addEventListener('resize', layout);
+
+    ['pointerdown', 'keydown'].forEach(function (ev) {
+      document.addEventListener(ev, function () { lastTouch = Date.now(); udonTick(); }, true);
+    });
+    setInterval(udonTick, 325);
 
     // Focusing something off-screen (Tab, find-in-page) makes the browser
     // scroll the stage itself; the camera does the moving, so undo that.
