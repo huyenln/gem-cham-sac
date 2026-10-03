@@ -295,12 +295,21 @@ window.GemDB = (function () {
     },
 
     // Ghi đè (upsert) một dòng. RLS chỉ cho owner.
-    saveStudioLayout: function (id, data) {
+    saveStudioLayout: function (id, data, name) {
       return req('/rest/v1/studio_layout?on_conflict=id', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal' },
-        body: JSON.stringify({ id: id, data: data, updated_at: new Date().toISOString() })
+        body: JSON.stringify({ id: id, data: data, name: name || null, updated_at: new Date().toISOString() })
       });
+    },
+
+    // Bố cục đã lưu (id 'p-…') + tên của bản đang chạy. Chỉ owner đọc được.
+    studioProfiles: function () {
+      return req('/rest/v1/studio_layout?select=id,name,updated_at&or=(id.like.p-*,id.eq.live)&order=updated_at.desc');
+    },
+
+    deleteStudioLayout: function (id) {
+      return req('/rest/v1/studio_layout?id=eq.' + encodeURIComponent(id), { method: 'DELETE' });
     },
 
     adminNotes: function () {

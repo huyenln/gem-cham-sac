@@ -25,6 +25,9 @@ window.GemStudioEditor = (function () {
   var zoom = 1;
   var dirty = false;
   var group = 'props';
+  var profiles = [];        // [{ id, name, updated_at }] saved layouts ('p-…')
+  var liveName = null;      // name of the profile that is live, if any
+  var current = null;       // profile id loaded in the editor (null = draft)
 
   function esc(s) {
     return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
@@ -57,6 +60,16 @@ window.GemStudioEditor = (function () {
           '<button type="button" class="ad-btn" data-se="save">Lưu nháp</button>' +
           '<button type="button" class="ad-btn on" data-se="publish">Xuất bản</button>' +
         '</div>' +
+        '<div class="se-prof">' +
+          '<label>Bố cục đã lưu <select class="se-profsel"></select></label>' +
+          '<button type="button" class="ad-btn" data-se="p-open">Mở</button>' +
+          '<button type="button" class="ad-btn on" data-se="p-live">Cho chạy ngay</button>' +
+          '<button type="button" class="ad-btn danger" data-se="p-del">Xoá</button>' +
+          '<span class="se-sep"></span>' +
+          '<button type="button" class="ad-btn" data-se="p-save">Lưu vào bố cục đang mở</button>' +
+          '<button type="button" class="ad-btn" data-se="p-new">Lưu thành bố cục mới…</button>' +
+          '<span class="se-live"></span>' +
+        '</div>' +
         '<div class="se-stage"><div class="se-world"><img class="se-bgimg" alt="" draggable="false"></div></div>' +
         '<div class="se-panel"></div>' +
       '</div>';
@@ -67,6 +80,7 @@ window.GemStudioEditor = (function () {
     status('Đang tải...');
 
     root.querySelector('.se-bar').addEventListener('click', barClick);
+    root.querySelector('.se-prof').addEventListener('click', profClick);
     root.querySelector('.se-bgsel').addEventListener('change', function (e) {
       var b = lib.backgrounds[+e.target.value];
       if (!b) return;
@@ -94,6 +108,7 @@ window.GemStudioEditor = (function () {
       status(r[1] ? 'Đang sửa bản nháp' : r[2] ? 'Bắt đầu từ bản đang chạy' : 'Bố cục mới');
       draw();
       renderPanel();
+      return loadProfiles();
     }).catch(function (err) {
       status('Không tải được: ' + (err.message || ''), true);
     });
@@ -417,6 +432,94 @@ window.GemStudioEditor = (function () {
     }).catch(function (err) { status('Không tải được ảnh: ' + (err.message || ''), true); });
   }
 
+  /* ---------- profiles: named layouts to switch between quickly ---------- */
+  function loadProfiles() {
+    return DB.studioProfiles().then(function (rows) {
+      rows = rows || [];
+      profiles = rows.filter(function (r) { return r.id !== 'live'; });
+      var live = rows.filter(function (r) { return r.id === 'live'; })[0];
+      liveName = live ? live.name : null;
+      renderProfiles();
+    }).catch(function () { profiles = []; renderProfiles(); });
+  }
+
+  function renderProfiles() {
+    var selEl = root.querySelector('.se-profsel');
+    selEl.innerHTML = profiles.length
+      ? profiles.map(function (p) {
+          return '<option value="' + esc(p.id) + '">' + esc(p.name || p.id) +
+            (p.name && p.name === liveName ? ' (đang chạy)' : '') + '</option>';
+        }).join('')
+      : '<option value="">(chưa có)</option>';
+    if (current) selEl.value = current;
+    var open = profiles.filter(function (p) { return p.id === current; })[0];
+    root.querySelector('[data-se="p-save"]').disabled = !open;
+    root.querySelector('[data-se="p-save"]').textContent = open ? 'Lưu vào "' + (open.name || open.id) + '"' : 'Lưu vào bố cục đang mở';
+    root.querySelector('.se-live').textContent = 'Khách đang thấy: ' + (liveName || (profiles.length ? 'bố cục chưa đặt tên' : '—'));
+  }
+
+  function slug(name) {
+    var s = String(name).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D')
+      .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30);
+    return 'p-' + (s || 'bo-cuc') + '-' + Date.now().toString(36).slice(-4);
+  }
+
+  function profClick(e) {
+    var b = e.target.closest('[data-se]');
+    if (!b || !data) return;
+    var a = b.dataset.se;
+    var id = root.querySelector('.se-profsel').value;
+    var p = profiles.filter(function (x) { return x.id === id; })[0];
+    var clean = L.sanitize(data);
+    var job = null;
+
+    if (a === 'p-open' && p) {
+      if (dirty && !window.confirm('Bố cục đang sửa chưa lưu. Mở bố cục khác?')) return;
+      job = DB.studioLayout(id).then(function (d) {
+        var ok = L.sanitize(d);
+        if (!ok) throw new Error('bố cục hỏng');
+        undo.push(clone(data));
+        data = ok; current = id; sel = null; dirty = false;
+        draw(); renderPanel();
+        return 'Đã mở "' + (p.name || id) + '"';
+      });
+    } else if (a === 'p-live' && p) {
+      if (!window.confirm('Cho khách thấy "' + (p.name || id) + '" ngay?')) return;
+      job = DB.studioLayout(id).then(function (d) {
+        var ok = L.sanitize(d);
+        if (!ok) throw new Error('bố cục hỏng');
+        return DB.saveStudioLayout('live', ok, p.name || id);
+      }).then(function () { return '"' + (p.name || id) + '" đang chạy'; });
+    } else if (a === 'p-del' && p) {
+      if (!window.confirm('Xoá hẳn bố cục "' + (p.name || id) + '"? (Bản khách đang thấy không bị xoá.)')) return;
+      job = DB.deleteStudioLayout(id).then(function () {
+        if (current === id) current = null;
+        return 'Đã xoá "' + (p.name || id) + '"';
+      });
+    } else if (a === 'p-save' && current) {
+      var cur = profiles.filter(function (x) { return x.id === current; })[0];
+      if (!clean || !cur) return;
+      job = DB.saveStudioLayout(current, clean, cur.name).then(function () {
+        dirty = false;
+        return 'Đã lưu vào "' + (cur.name || current) + '"';
+      });
+    } else if (a === 'p-new') {
+      if (!clean) return;
+      var name = (window.prompt('Tên bố cục (vd: Tết 2027, Mùa thu):') || '').trim().slice(0, 60);
+      if (!name) return;
+      var nid = slug(name);
+      job = DB.saveStudioLayout(nid, clean, name).then(function () {
+        current = nid; dirty = false;
+        return 'Đã lưu thành "' + name + '"';
+      });
+    }
+    if (!job) return;
+    b.disabled = true;
+    job.then(function (msg) { status(msg); return loadProfiles(); })
+      .catch(function (err) { status('Không làm được: ' + (err.message || ''), true); })
+      .then(function () { b.disabled = false; });
+  }
+
   /* ---------- save / publish ---------- */
   function barClick(e) {
     var b = e.target.closest('[data-se]');
@@ -436,12 +539,16 @@ window.GemStudioEditor = (function () {
     var job = a === 'save'
       ? DB.saveStudioLayout('draft', clean)
       : (window.confirm('Xuất bản bố cục này cho khách?')
-        ? DB.saveStudioLayout('draft', clean).then(function () { return DB.saveStudioLayout('live', clean); })
+        ? DB.saveStudioLayout('draft', clean).then(function () {
+            var cur = profiles.filter(function (x) { return x.id === current; })[0];
+            return DB.saveStudioLayout('live', clean, cur ? cur.name : null);
+          })
         : null);
     if (!job) { b.disabled = false; return; }
     job.then(function () {
       dirty = false;
       status(a === 'save' ? 'Đã lưu nháp' : 'Đã xuất bản — khách thấy bố cục mới');
+      if (a !== 'save') loadProfiles();
     }).catch(function (err) {
       status('Không lưu được: ' + (err.message || '') + (err.status === 403 || err.status === 401 ? ' (chỉ tài khoản chủ được lưu)' : ''), true);
     }).then(function () { b.disabled = false; });

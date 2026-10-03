@@ -472,3 +472,12 @@
   .se-panel { align-content: start; }
 }
 .se-bar a.ad-btn { display: inline-flex; align-items: center; text-decoration: none; }
+
+.se-prof { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); font-size: var(--text-sm); }
+.se-prof .ad-btn { margin: 0; }
+.se-prof label { display: flex; align-items: center; gap: var(--space-2); }
+.se-prof select { min-height: 40px; max-width: 16em; border: 1.5px solid var(--sage-light); border-radius: 8px; background: var(--paper-white); font: inherit; }
+.se-sep { width: 1px; height: 28px; background: var(--sage-light); }
+.se-live { color: var(--ink-soft); }
+.se-prof .ad-btn.danger { color: #A6503C; border-color: #D9BBB0; }
+@media (min-width: 1100px) { .se-prof { grid-column: 1 / -1; } }

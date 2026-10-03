@@ -1295,6 +1295,11 @@ Câu kiểm GRANT-vs-policy: không thêm dòng mới.
 - "Lưu nháp" → `draft`; "Xuất bản" → `draft` + `live`; `studio.html?nhap=1`
   (cùng tab đã đăng nhập) xem bản nháp.
 - Chưa xuất bản bố cục nào thì studio vẫn dùng dải tranh vẽ sẵn như cũ.
+- **Bố cục đã lưu (profile)** — migration `gem_studio_layout_profiles`: thêm
+  dòng `p-<slug>` + cột `name` (vd "Tết 2027"). Trong trình lắp: Mở (nạp vào
+  để sửa), Cho chạy ngay (chép thành `live`), Xoá, Lưu vào bố cục đang mở, Lưu
+  thành bố cục mới. `live.name` = tên bố cục đang chạy. Quyền không đổi: khách
+  và nhân sự vẫn chỉ đọc `live` (đã kiểm lại 3 vai + id sai bị từ chối).
 - Nền trống: `bg/strip-trong.webp` (`--strip-empty`, 5 tường trống nối bằng cột).
 
 ### Báo mail cho nhân sự (đơn mới / đặt workshop / lời nhắn)
