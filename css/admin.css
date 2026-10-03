@@ -397,12 +397,16 @@
 .se-status.bad { color: #A6503C; }
 
 .se-stage {
+  /* own stacking context: the editor's handles/labels (z 40–50) must stay
+     under the sticky admin header (z 20) when the page scrolls */
+  position: relative;
+  isolation: isolate;
   height: min(62vh, 560px);
   overflow: auto;
   border: 1px solid var(--sage-light);
   border-radius: var(--radius-md);
   background: #e9dcc6;
-  padding: 8px;
+  padding: 28px 8px 8px;   /* room for the labels above the top boxes */
   touch-action: pan-x pan-y;
 }
 .se-world { position: relative; user-select: none; -webkit-user-select: none; }

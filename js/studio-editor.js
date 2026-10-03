@@ -125,7 +125,7 @@ window.GemStudioEditor = (function () {
   function draw() {
     if (!data || !worldEl) return;
     var h = stageEl.clientHeight || 420;
-    k = (h - 16) / data.bg.h * zoom;
+    k = (h - 40) / data.bg.h * zoom;   // minus the stage padding
     worldEl.style.width = px(data.bg.w);
     worldEl.style.height = px(data.bg.h);
     var bg = worldEl.querySelector('.se-bgimg');
