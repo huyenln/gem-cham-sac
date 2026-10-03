@@ -20,26 +20,26 @@
      SCENE — numbers come from tools/studio-assets.py (the STRIP line)
      ====================================================================== */
   // Strip = five painted scenes joined by tools/studio-assets.py --strip2
-  // (it prints these numbers). Zone 3 is only the pegboard; zone 5 starts
-  // at the full cabinet. Hotspot y values below are in strip pixels (the
+  // (it prints these numbers). Zone 3's cabinet is empty on purpose: the
+  // real product photos stand on its shelves (DISPLAY below). Hotspot y values below are in strip pixels (the
   // tool nudges each scene up/down to line up the skirting).
   var SCENE = {
-    width: 5590,
+    width: 6264,
     height: 1024,
     // x = where the zone starts in the strip, cropL = first source pixel kept
     zones: [
       { x: 0,    cropL: 0 },
       { x: 1472, cropL: 480 },
       { x: 2464, cropL: 485 },
-      { x: 2777, cropL: 0 },
-      { x: 4249, cropL: 195 }
+      { x: 3451, cropL: 0 },
+      { x: 4923, cropL: 195 }
     ],
     feetY: 965,          // where the character's feet touch the floor
     playerH: 410,        // character height, strip pixels
     startX: 640,         // just inside the door
     speed: 900,          // strip pixels per second
     // Udon sitting on the walnut counter, left of the bell
-    udon: { x: 5100, y: 468, w: 128, h: 120 }
+    udon: { x: 5774, y: 468, w: 128, h: 120 }
   };
 
   // box = [x0, y0, x1, y1] in the zone's source image (1536 x 1024)
@@ -53,6 +53,7 @@
     { id: 'rail',     zone: 2, box: [520, 360, 1065, 720],  label: 'studio.hot_rail' },               // shelf + clothes rail
     { id: 'fitting',  zone: 2, box: [1095, 340, 1500, 740], label: 'studio.hot_fitting' },
     { id: 'pegboard', zone: 3, box: [495, 280, 855, 720],   label: 'studio.hot_pegboard' },
+    { id: 'display',  zone: 3, box: [883, 300, 1485, 655],  label: 'studio.hot_display', stand: 870 },  // open shelves; stop beside, not in front
     { id: 'sewing',   zone: 4, box: [45, 450, 790, 590],    label: 'studio.hot_sewing', stand: 860 },  // table top only
     { id: 'tu',       zone: 4, box: [820, 385, 1180, 510],  label: 'studio.hot_tu' },                 // frames + CHẠM SẮC
     { id: 'cabinet',  zone: 5, box: [200, 260, 895, 600],   label: 'studio.hot_cabinet' },            // open shelves only
@@ -74,9 +75,25 @@
   var who = 'p1';
   try { if (CAST.indexOf(localStorage.getItem('gem-char')) >= 0) who = localStorage.getItem('gem-char'); } catch (e) { /* private mode */ }
 
+  // Products standing in the empty zone-3 cabinet, one per cubby: zone source
+  // x of the cubby's left/right edge, strip y of the shelf it stands on.
+  // The top-right cubby is skipped (the painted dolls live there).
+  var DISPLAY = [
+    { sku: 'origami',  x: [883, 1073],  y: 407 },
+    { sku: 'oxford',   x: [1090, 1280], y: 407 },
+    { sku: 'denim',    x: [883, 1073],  y: 530 },
+    { sku: 'tuibut',   x: [1090, 1280], y: 530 },
+    { sku: 'biaso',    x: [1297, 1485], y: 530 },
+    { sku: 'so-kraft', x: [883, 1073],  y: 650 },
+    { sku: 'so-khau',  x: [1090, 1280], y: 650 },
+    { sku: 'set-qua',  x: [1297, 1485], y: 650 }
+  ];
+  var DISPLAY_H = 100;  // frame height on the shelf, strip px
+
   var SHELVES = {
-    pegboard: ['scrunchie', 'bookmark', 'tuibut', 'origami', 'bloom', 'daydeo', 'biaso', 'so-kraft', 'so-khau'],
-    cabinet:  ['goi', 'tham', 'lotcoc', 'oxford', 'denim', 'set-qua']
+    pegboard: ['scrunchie', 'bookmark', 'bloom', 'daydeo'],
+    display:  DISPLAY.map(function (d) { return d.sku; }),
+    cabinet:  ['goi', 'tham', 'lotcoc', 'set-qua']
   };
 
   // The "bộ sưu tập" counted in the Tủ: every fabric-scrap piece.
@@ -140,7 +157,8 @@
     'studio.hot_sofa':     { vi: `Góc nghỉ chân`, en: `Sofa corner` },
     'studio.hot_rail':     { vi: `Đồ 2hand`, en: `Secondhand` },
     'studio.hot_fitting':  { vi: `Góc thử đồ`, en: `Fitting corner` },
-    'studio.hot_pegboard': { vi: `Phụ kiện & sổ`, en: `Accessories & notebooks` },
+    'studio.hot_pegboard': { vi: `Phụ kiện nhỏ`, en: `Little accessories` },
+    'studio.hot_display':  { vi: `Túi & sổ`, en: `Bags & notebooks` },
     'studio.hot_cabinet':  { vi: `Gối, thảm & quà`, en: `Cushions, rugs & gifts` },
     'studio.hot_sewing':   { vi: `Bàn thiết kế`, en: `Design table` },
     'studio.hot_memo':     { vi: `Bảng lời nhắn`, en: `Message board` },
@@ -155,7 +173,9 @@
     'studio.out':          { vi: `Tạm hết hàng`, en: `Out of stock` },
     'studio.all_products': { vi: `Xem tất cả trên trang Sản phẩm`, en: `See everything on the Products page` },
 
-    'studio.pegboard_h':   { vi: `Phụ kiện vải vụn & sổ`, en: `Fabric-scrap accessories & notebooks` },
+    'studio.display_h':    { vi: `Túi, sổ & set quà`, en: `Bags, notebooks & gift sets` },
+    'studio.display_p':    { vi: `Những món đang bày trên kệ — mỗi chiếc một kiểu vải.`, en: `What's on the shelves right now — each one in its own fabrics.` },
+    'studio.pegboard_h':   { vi: `Phụ kiện vải vụn`, en: `Fabric-scrap accessories` },
     'studio.pegboard_p':   { vi: `Mỗi món ghép từ vải vụn, không cái nào giống cái nào.`, en: `Each piece is sewn from scraps, so no two are alike.` },
     'studio.cabinet_h':    { vi: `Gối, thảm & set quà`, en: `Cushions, rugs & gift sets` },
     'studio.cabinet_p':    { vi: `Đồ chắp vải cỡ lớn và những set quà gói sẵn.`, en: `Larger patchwork pieces and ready-wrapped gift sets.` },
@@ -318,6 +338,20 @@
   var lastFocus = null;
 
   function build() {
+    // Product photos on the zone-3 shelves, under the hotspots (not tappable
+    // on their own: the whole cabinet opens).
+    DISPLAY.forEach(function (d) {
+      if (!THUMB[d.sku]) return;
+      var x0 = zoneX(3, d.x[0]), x1 = zoneX(3, d.x[1]);
+      var fr = document.createElement('span');
+      fr.className = 'st-shelf-item';
+      fr.style.left = pct((x0 + x1) / 2, SCENE.width);
+      fr.style.bottom = pct(SCENE.height - d.y, SCENE.height);
+      fr.style.height = pct(DISPLAY_H, SCENE.height);
+      fr.innerHTML = '<img src="images/products/' + THUMB[d.sku] + '" alt="" loading="lazy" draggable="false">';
+      world.appendChild(fr);
+    });
+
     // Hotspots
     HOTSPOTS.forEach(function (h) {
       var b = boxOf(h);
@@ -1233,6 +1267,7 @@
     rail: railSheet,
     fitting: fittingSheet,
     pegboard: function () { shelfSheet('pegboard'); },
+    display: function () { shelfSheet('display'); },
     cabinet: function () { shelfSheet('cabinet'); },
     sewing: designerSheet,
     memo: memoSheet,
@@ -1280,7 +1315,7 @@
       b.addEventListener('click', function () {
         var go = b.getAttribute('data-go');
         if (go === 'shelves') {
-          visit('cabinet', false);
+          visit('display', false);
         } else {
           // The places people come for open straight away.
           visit(go, go === 'sewing' || go === 'counter' || go === 'tu');

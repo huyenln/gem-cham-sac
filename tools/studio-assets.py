@@ -58,12 +58,12 @@ def save_webp(img, path, quality=82):
 
 # Second painted set (Oct 2026): five scenes, wall/floor line not quite at
 # the same height in each, so every scene is nudged (SHIFT2, px, + = down)
-# to put the skirting at ~y 820 before joining. Zone 3's empty cabinet is
-# left out: zone 5 paints the same cabinet full, next to the counter.
+# to put the skirting at ~y 820 before joining. Zone 3's cabinet is painted
+# empty on purpose: js/studio.js stands real product photos on its shelves.
 ZONES2 = [
     ('z1.png', 0, 1536),
     ('z2.png', 480, 1536),
-    ('z3.png', 485, 862),
+    ('z3.png', 485, 1536),
     ('z4.png', 0, 1536),
     ('z5.png', 195, 1536),
 ]
