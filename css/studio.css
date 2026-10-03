@@ -855,39 +855,63 @@
   .mb-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
-/* GÓC THỬ ĐỒ: the model wears the piece you tap */
+/* GÓC THỬ ĐỒ: the model wears the piece you tap, standing in the middle of
+   the polaroid (khung-polaroid = khung-hoa-2 cropped so the photo is centred) */
 .fit { display: grid; gap: var(--space-4); }
 .fit-model {
-  margin: 0;
-  display: grid;
-  justify-items: center;
-  gap: var(--space-2);
-  padding: var(--space-3);
-  background: url("../images/studio/ui/khung-hoa-2.webp") center / cover;
-  border-radius: var(--radius-md);
+  position: relative;
+  margin: 0 auto;
+  width: min(100%, 340px);
+  aspect-ratio: 560 / 800;
+  background: url("../images/studio/ui/khung-polaroid.webp") center / 100% 100% no-repeat;
 }
-.fit-model img { height: 260px; width: auto; max-width: 100%; object-fit: contain; }
-.fit-cap { font-family: var(--font-hand); font-size: 1.3rem; color: var(--ink-dark); }
+/* photo window of the polaroid: x 16–86%, y 16–70% */
+.fit-model img {
+  position: absolute;
+  left: 51%;
+  bottom: 31%;
+  height: 52%;
+  width: auto;
+  max-width: 68%;
+  object-fit: contain;
+  object-position: bottom;
+  transform: translateX(-50%);
+}
+.fit-cap {
+  position: absolute;
+  left: 22%; right: 20%;
+  top: 74%;
+  text-align: center;
+  font-family: var(--font-hand);
+  font-size: clamp(1.1rem, 4.6vw, 1.45rem);
+  line-height: 1.1;
+  color: var(--ink-dark);
+}
 .fit-list {
   list-style: none; margin: 0; padding: 0;
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3);
 }
-.fit-item { display: grid; gap: var(--space-2); justify-items: start; }
-.fit-pick {
-  width: 100%;
-  display: grid; justify-items: center; gap: var(--space-1);
-  padding: var(--space-2);
+/* one card per piece: picture, name, button — all cards the same height */
+.fit-item {
+  display: flex; flex-direction: column; align-items: stretch; gap: var(--space-2);
+  padding: var(--space-2) var(--space-2) var(--space-3);
   border: 2px solid transparent;
   border-radius: var(--radius-md);
-  background: rgba(251, 246, 238, 0.7);
+  background: rgba(251, 246, 238, 0.85);
+}
+.fit-item.is-on { border-color: var(--sage-deep); background: var(--paper-white); }
+.fit-pick {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: var(--space-1);
+  padding: 0; border: 0; background: none;
   cursor: pointer;
-  font: inherit; font-size: var(--text-sm); color: var(--ink-dark);
+  font: inherit; font-size: var(--text-sm); font-weight: 700; color: var(--ink-dark); text-align: center;
 }
 .fit-pick img { height: 96px; width: 100%; object-fit: contain; }
-.fit-item.is-on .fit-pick { border-color: var(--sage-deep); background: var(--paper-white); }
+.fit-pick b { min-height: 2.6em; display: flex; align-items: center; }
+.fit-item .st-btn, .fit-item .st-lock-tag { align-self: center; }
 .st-btn-sm { min-height: 40px; padding: 0 var(--space-3); font-size: var(--text-xs); }
 @media (min-width: 768px) {
   .fit { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); align-items: start; }
-  .fit-model img { height: 340px; }
   .fit-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
