@@ -59,10 +59,40 @@ def background(rgb, tol=22):
     return seen
 
 
-def cut(src, tol=22):
+def holes(rgb, bg, tol=16, min_px=300):
+    """Paper showing through a hole (a basket handle, the middle of a
+    scrunchie): near-white blobs the edge flood can't reach, if big enough
+    not to be a highlight."""
+    a = np.asarray(rgb.convert('RGB')).astype(np.int16)
+    near = (a.min(axis=2) > 255 - tol - 8) & ((a.max(axis=2) - a.min(axis=2)) < tol) & ~bg
+    h, w = near.shape
+    seen = np.zeros_like(near)
+    out = bg.copy()
+    for y0 in range(h):
+        for x0 in range(w):
+            if not near[y0, x0] or seen[y0, x0]:
+                continue
+            seen[y0, x0] = True
+            stack, blob = [(y0, x0)], []
+            while stack:
+                y, x = stack.pop()
+                blob.append((y, x))
+                for yy, xx in ((y - 1, x), (y + 1, x), (y, x - 1), (y, x + 1)):
+                    if 0 <= yy < h and 0 <= xx < w and near[yy, xx] and not seen[yy, xx]:
+                        seen[yy, xx] = True
+                        stack.append((yy, xx))
+            if len(blob) >= min_px:
+                ys, xs = zip(*blob)
+                out[list(ys), list(xs)] = True
+    return out
+
+
+def cut(src, tol=22, open_holes=False):
     """RGBA with the paper removed and a soft edge, trimmed."""
     rgb = Image.open(src).convert('RGB')
     bg = background(rgb, tol)
+    if open_holes:
+        bg = holes(rgb, bg)
     alpha = Image.fromarray(np.where(bg, 0, 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(1.2))
     im = rgb.convert('RGBA')
     im.putalpha(alpha)
@@ -107,12 +137,12 @@ def swatches(src, tone):
             k += 1
 
 
-def shading(im):
+def shading(im, pct=80):
     """Grey multiply layer: the linen's own colour becomes white, shadows stay."""
     rgb = np.asarray(im.convert('RGB')).astype(np.float32)
     alpha = np.asarray(im.getchannel('A')).astype(np.float32)
     lum = rgb @ np.array([0.299, 0.587, 0.114], dtype=np.float32)
-    ref = np.percentile(lum[alpha > 200], 80) if (alpha > 200).any() else 255
+    ref = np.percentile(lum[alpha > 200], pct) if (alpha > 200).any() else 255
     g = np.clip(lum / ref, 0, 1) ** 1.15 * 255
     out = Image.fromarray(g.astype(np.uint8)).convert('RGBA')
     out.putalpha(im.getchannel('A'))
@@ -157,12 +187,12 @@ def scraps(src):
             a = Image.fromarray(np.where(keep, 255, 0).astype(np.uint8)).filter(ImageFilter.GaussianBlur(1))
             cell.putalpha(a)
             cell = cell.crop(cell.getbbox())
-            save(fit(shading(cell), 260), OUT / f'dang-{k}.webp')
+            save(fit(shading(cell, 55), 260), OUT / f'dang-{k}.webp')
             k += 1
 
 
-def piece(src, name, median=0):
-    im = cut(src)
+def piece(src, name, median=0, open_holes=False):
+    im = cut(src, open_holes=open_holes)
     # square canvas, centred: the patches are laid out on the same square
     s = max(im.size)
     sq = Image.new('RGBA', (s, s), (0, 0, 0, 0))
@@ -181,18 +211,20 @@ def piece(src, name, median=0):
 
 def main(folder, only=None):
     src = Path(folder)
-    if only == 'dang':
-        return scraps(src / 'vai-dang.png')
+    if only == 'fix':   # just the pieces touched by a fix
+        scraps(src / 'vai-dang.png')
+        save(fit(cut(src / 'ro-truoc.png', open_holes=True), 1200), OUT / 'ro-truoc.webp')
+        return piece(src / 'mon-scrunchie.png', 'scrunchie', 0, True)
     for t in TONES:
         if (src / f'vai-{t}.png').exists():
             swatches(src / f'vai-{t}.png', t)
     if (src / 'vai-dang.png').exists():
         scraps(src / 'vai-dang.png')
     if (src / 'ro-truoc.png').exists():
-        save(fit(cut(src / 'ro-truoc.png'), 1200), OUT / 'ro-truoc.webp')
-    for name, med in (('goi', 15), ('lotcoc', 0), ('scrunchie', 0)):
+        save(fit(cut(src / 'ro-truoc.png', open_holes=True), 1200), OUT / 'ro-truoc.webp')
+    for name, med, hole in (('goi', 15, False), ('lotcoc', 0, False), ('scrunchie', 0, True)):
         if (src / f'mon-{name}.png').exists():
-            piece(src / f'mon-{name}.png', name, med)
+            piece(src / f'mon-{name}.png', name, med, hole)
     for name in ('ud-may', 'ud-reo', 'kim-chi'):
         if (src / f'{name}.png').exists():
             save(fit(cut(src / f'{name}.png'), 700), ROOT / 'images/studio/udon' / f'{name}.webp')
