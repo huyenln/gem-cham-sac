@@ -1214,9 +1214,9 @@ html:has(.studio-page), .studio-page { overscroll-behavior: none; }
 .st-cargo-item { position: relative; flex: 0 0 58%; aspect-ratio: 1; margin: 0 -12%; transform: translateY(38%); }
 .st-cargo-item svg, .st-cargo-item img { width: 100%; height: 100%; display: block; object-fit: contain; }
 .st-cargo-item img.is-photo { object-fit: cover; border-radius: 4px; }
-.st-cargo-0 { transform: translateY(62%) rotate(-10deg); }
-.st-cargo-1 { transform: translateY(55%) rotate(6deg); z-index: 1; }
-.st-cargo-2 { transform: translateY(64%) rotate(-3deg); }
+.st-cargo-0 { transform: translateY(46%) rotate(-10deg); }
+.st-cargo-1 { transform: translateY(40%) rotate(6deg); z-index: 1; }
+.st-cargo-2 { transform: translateY(48%) rotate(-3deg); }
 /* the design's name: tap to rename */
 input.pt-done-name {
   width: 100%; max-width: 22ch; text-align: center; padding: 2px 8px; border: 0; border-bottom: 1.5px dashed var(--kraft);

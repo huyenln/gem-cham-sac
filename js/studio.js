@@ -749,11 +749,11 @@
 
   // (Re)build the frames for the chosen character. Each frame is a box the
   // size of its picture, so accessories can be placed in % of it.
-  // The cart's rim in each push frame (fraction of the picture's height,
-  // measured from the drawings): what is in the basket rides in the cart,
-  // its lower part hidden below the rim.
-  var CART_RIM = {"p1-cart1": 0.632, "p1-cart2": 0.626, "p1-cart3": 0.629, "p2-cart1": 0.615, "p2-cart2": 0.615, "p2-cart3": 0.617,
-    "p3-cart1": 0.625, "p3-cart2": 0.625, "p3-cart3": 0.625, "p4-cart1": 0.611, "p4-cart2": 0.613, "p4-cart3": 0.611};
+  // The top edge of the cart's FRONT liner in each push frame (fraction of
+  // the picture's height, measured from the drawings): what is in the basket
+  // is cut off there, so it sits in front of the back wall, inside the cart.
+  var CART_RIM = {"p1-cart1": 0.662, "p1-cart2": 0.657, "p1-cart3": 0.661, "p2-cart1": 0.653, "p2-cart2": 0.65, "p2-cart3": 0.652,
+    "p3-cart1": 0.653, "p3-cart2": 0.651, "p3-cart3": 0.651, "p4-cart1": 0.649, "p4-cart2": 0.648, "p4-cart3": 0.647};
 
   function renderCargo() {
     if (!bobEl || !window.GemBasket || !window.GemBasket.pieces) return;
