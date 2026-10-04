@@ -87,7 +87,20 @@ function render(m: Mail) {
       `<td style="white-space:pre-line">${esc(v)}</td></tr>`).join('') + '</table>' +
     (m.body ? `<p style="white-space:pre-line;background:#FBF6EE;padding:12px;border-radius:8px">${esc(m.body)}</p>` : '') +
     `<p><a href="${ADMIN}" style="background:#87965A;color:#fff;padding:10px 16px;border-radius:999px;text-decoration:none">Mở trang quản trị</a></p></div>`;
-  return { text, html };
+  // denomailer's quoted-printable breaks long lines in the middle of a UTF-8
+  // character ("Mở trang quản trị" arrived as "que1�£n"), so every non-ASCII
+  // character in the HTML part goes out as a numeric entity: plain ASCII
+  // can't be split wrong.
+  return { text, html: asciiHtml(html) };
+}
+
+function asciiHtml(s: string) {
+  let out = '';
+  for (const ch of s) {
+    const cp = ch.codePointAt(0)!;
+    out += cp < 128 ? ch : `&#${cp};`;
+  }
+  return out;
 }
 
 Deno.serve(async (req) => {

@@ -1400,6 +1400,29 @@ thay khi có buổi chụp.
 
 Udon ở quầy: chạm không còn câu nhắc — kéo được là để khách tự khám phá.
 
+### Góp ý đợt 3 (10/2026)
+
+- **Bàn thiết kế gọn lại:** trên cùng là các món + "Gợi ý ngẫu nhiên". Lần đầu chỉ
+  thấy 3 lựa chọn (kiểu ghép, tông, họa tiết); chất vải / tự vẽ / ảnh / lời nhắn
+  gập trong "Thêm chi tiết cho Gem (không bắt buộc)" — tự mở khi chọn "Theo hình
+  mình vẽ". Bỏ hàng "Đồ thật Gem đã may" (bảng của Udon làm việc đó) và nút "Lưu
+  ảnh"; "Chép link" thành "Chia sẻ thiết kế" (điện thoại: bảng chia sẻ của máy;
+  máy tính: chép link — link mở lại đúng thiết kế ở bàn).
+- **Vẽ:** khung vẽ to hơn (tới 440px), 3 cỡ nét + tẩy. Mã nét mới: ký tự đầu = chữ
+  B64 của (màu + 5 × cỡ); mã cũ (số 0–3) vẫn đọc được.
+- **"Tự thiết kế theo mẫu này"** trên thẻ sản phẩm có ở bàn thiết kế (gối, lót cốc,
+  dây buộc tóc): mở bàn đúng món đó, ảnh món lên bảng của Udon. Món khác (túi
+  Origami…) chưa có vì bàn chưa vẽ được dáng đó.
+- Udon gợi ý món có sẵn gần màu → có link "Xem món này" ngay trong câu nói.
+- Trình lắp: khung vùng bấm nằm **dưới** đồ vật (chọn món trong khung được), tên
+  khung nằm trên cùng và là chỗ nắm để chọn / kéo khung.
+- Giấy nhắn ghim lên chính bức tranh bảng (nếu bố cục có) thay vì khung vùng bấm,
+  và nằm trên lớp đồ vật.
+- Udon rời xe về quầy: đo vị trí trước rồi mới nhấc ra (trước đó Udon bay từ cửa vào).
+- **Mail:** nút "Mở trang quản trị" vỡ chữ — denomailer cắt dòng giữa ký tự UTF-8.
+  Phần HTML giờ gửi toàn ký tự ASCII (chữ Việt thành `&#…;`). Đã triển khai lại
+  Edge Function `notify`.
+
 ### Phụ kiện trên nhân vật (đợt 1)
 
 5 món "đồ mặc" đều là phụ kiện (túi Oxford, túi Denim, dây buộc tóc, dây đeo
