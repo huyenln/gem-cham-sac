@@ -9,7 +9,7 @@
 // A design travels as one short code (in links studio.html?d=…, the basket
 // and the order note):
 //
-//   2~goi~cabin~xanh.nau~caro.hoa~bo.dui~<other>~<sketch>~<note>
+//   2~goi~cabin~xanh.nau~caro.hoa~bo.dui~<other>~<sketch>~<note>[~<photo>]
 //   v product layout tones  prints   fabrics  free text, sketch, free text
 //
 // Everything but <other>/<note> is checked against the tables below;
@@ -106,8 +106,12 @@
   function blank(product) {
     var p = PRODUCTS[product] || PRODUCTS.goi;
     return { product: PRODUCTS[product] ? product : 'goi', layout: p.layouts[0],
-      tones: [], prints: [], fabrics: [], other: '', sketch: [], note: '' };
+      tones: [], prints: [], fabrics: [], other: '', sketch: [], note: '', img: '' };
   }
+
+  // A reference photo the customer attached (private bucket gem-design,
+  // staff-only): just its random file name, never a URL.
+  var IMG_RE = /^[a-z0-9]{20}\.jpg$/;
 
   function txt(s) { return encodeURIComponent(s || '').replace(/~/g, '%7E'); }
   function untxt(s) { try { return decodeURIComponent(s || ''); } catch (e) { return null; } }
@@ -152,13 +156,15 @@
 
   function encode(d) {
     return ['2', d.product, d.layout, d.tones.join('.'), d.prints.join('.'), d.fabrics.join('.'),
-      txt(d.other), encodeSketch(d.sketch), txt(d.note)].join('~');
+      txt(d.other), encodeSketch(d.sketch), txt(d.note)].concat(d.img ? [d.img] : []).join('~');
   }
 
   function parse(spec) {
     if (typeof spec !== 'string' || spec.length > 4000) return null;
     var f = spec.split('~');
-    if (f.length !== 9 || f[0] !== '2' || !PRODUCTS[f[1]]) return null;
+    if ((f.length !== 9 && f.length !== 10) || f[0] !== '2' || !PRODUCTS[f[1]]) return null;
+    var img = f.length === 10 ? f[9] : '';
+    if (img && !IMG_RE.test(img)) return null;
     var p = PRODUCTS[f[1]];
     if (p.layouts.indexOf(f[2]) < 0) return null;
     var tones = list(f[3], TONES, MAX_TONES), prints = list(f[4], PRINTS, PRINT_ORDER.length),
@@ -168,13 +174,13 @@
     if (other === null || note === null || sketch === null) return null;
     if (other.length > MAX_OTHER || note.length > MAX_NOTE) return null;
     return { product: f[1], layout: f[2], tones: tones.v, prints: prints.v, fabrics: fabrics.v,
-      other: other, sketch: sketch, note: note };
+      other: other, sketch: sketch, note: note, img: img };
   }
 
   // Orderable: everything has a sensible "Gem chooses" default, except a
   // "from my drawing" layout with nothing drawn.
   function isComplete(d) {
-    return !!d && (d.layout !== 'tuve' || d.sketch.length > 0);
+    return !!d && (d.layout !== 'tuve' || d.sketch.length > 0 || !!d.img);
   }
 
   function names(ids, table, l) {
@@ -196,6 +202,7 @@
     if (d.other) fab = (fab ? fab + ', ' : '') + (vi ? 'khác: ' : 'other: ') + d.other;
     bits.push((vi ? 'chất vải: ' : 'fabrics: ') + (fab || gem));
     if (d.sketch.length) bits.push(vi ? 'có hình vẽ tay' : 'with a sketch');
+    if (d.img) bits.push(vi ? 'có ảnh tham khảo' : 'with a reference photo');
     if (d.note) bits.push((vi ? 'ghi chú: ' : 'note: ') + d.note);
     return bits.join(' · ');
   }

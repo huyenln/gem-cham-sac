@@ -120,6 +120,10 @@
   ];
   var DISPLAY_H = 100;  // frame height on the shelf, strip px
 
+  // Products with a cut-out picture (images/studio/sp/<sku>.webp): they stand
+  // on the shelf as themselves instead of a framed photo.
+  var CUTOUT = { origami: 1 };
+
   var SHELVES = {
     pegboard: ['scrunchie', 'bookmark', 'bloom', 'daydeo'],
     display:  DISPLAY.map(function (d) { return d.sku; }),
@@ -173,7 +177,7 @@
      STRINGS
      ====================================================================== */
   var STRINGS = {
-    'title.studio':        { vi: `Studio Gem · Gem Chạm Sắc`, en: `Gem Studio · Gem Chạm Sắc` },
+    'title.studio':        { vi: `Gem Studio 2D · Gem Chạm Sắc`, en: `Gem Studio 2D · Gem Chạm Sắc` },
     'studio.list_view':    { vi: `Xem dạng danh sách`, en: `List view` },
     'studio.list_short':   { vi: `Danh sách`, en: `List` },
     'studio.nav_aria':     { vi: `Đi tới khu`, en: `Go to` },
@@ -281,6 +285,22 @@
     'studio.tu_set_n':     { vi: `Bạn đã có {n}/{t} món vải vụn của Gem`, en: `You have {n} of Gem's {t} fabric-scrap pieces` },
     'studio.tu_set_0':     { vi: `Gem có {t} món may từ vải vụn. Mua món nào, món đó vào tủ của bạn và được đánh dấu ở đây.`, en: `Gem makes {t} pieces from fabric scraps. Whatever you buy lands in your cabinet and is ticked off here.` },
     'studio.udon_no':      { vi: `Udon không bán đâu nha! Udon chỉ trông quầy thôi.`, en: `Udon's not for sale! Udon just minds the counter.` },
+    'studio.pt_photo':      { vi: `Ảnh tham khảo`, en: `Reference photo` },
+    'studio.pt_photo_p':    { vi: `Ảnh vải bạn thích, một món muốn may giống, hay bản vẽ trên giấy. Chỉ Gem xem được ảnh này.`, en: `A fabric you like, a piece you'd like copied, or a drawing on paper. Only Gem can see it.` },
+    'studio.pt_photo_add':  { vi: `Tải ảnh lên`, en: `Upload a photo` },
+    'studio.pt_photo_del':  { vi: `Bỏ ảnh`, en: `Remove` },
+    'studio.pt_photo_on':   { vi: `Ảnh đã gửi kèm thiết kế.`, en: `Photo attached to the design.` },
+    'studio.pt_photo_hidden': { vi: `Thiết kế này có ảnh tham khảo (chỉ Gem xem được).`, en: `This design has a reference photo (only Gem can see it).` },
+    'studio.pt_photo_wait': { vi: `Đang gửi ảnh...`, en: `Sending the photo...` },
+    'studio.pt_photo_bad':  { vi: `Chọn một file ảnh nhé.`, en: `Please pick an image file.` },
+    'studio.pt_photo_fail': { vi: `Chưa gửi được ảnh. Thử lại, hoặc gửi ảnh cho Gem qua Zalo sau khi đặt.`, en: `Couldn't send the photo. Try again, or send it to Gem on Zalo after ordering.` },
+    'studio.prod_tip':      { vi: `Mẹo: kéo thẳng món trên kệ thả vào xe đẩy hay giỏ hàng cũng được.`, en: `Tip: you can also drag a piece off the shelf into the cart or the basket.` },
+    'studio.prod_in_cart':  { vi: `Đã bỏ vào giỏ rồi nha!`, en: `In the basket!` },
+    'studio.prod_in_basket': { vi: `Đã bỏ vào giỏ rồi nha!`, en: `In the basket!` },
+    'studio.prod_out':      { vi: `Món này đang tạm hết, bạn ghé lại sau nhé.`, en: `This one's sold out for now — check back soon.` },
+    'studio.udon_drag':    { vi: `Kéo Udon thả vào xe đẩy hay giỏ hàng thử xem!`, en: `Drag Udon into the cart or the basket and see!` },
+    'studio.udon_cart':    { vi: `Udon không bán đâu nha! Cho Udon đi ké một vòng thôi.`, en: `Udon's not for sale! Just a little ride, then.` },
+    'studio.udon_basket':  { vi: `Ơ kìa, Udon vào giỏ rồi! Udon không bán đâu, nằm chút thôi nha.`, en: `Oh! Udon's in the basket. Not for sale — just a quick nap.` },
     'studio.udon_aria':    { vi: `Udon`, en: `Udon` },
     'studio.memo_h':       { vi: `Bảng lời nhắn`, en: `Message board` },
     'studio.memo_p':       { vi: `Để lại vài dòng cho Gem và cho người ghé sau. Gem đọc từng lời rồi mới ghim lên bảng.`, en: `Leave a few lines for Gem and for whoever comes by next. Gem reads each one before pinning it up.` },
@@ -392,7 +412,7 @@
     if (reduceMotion) return udonPose('ud-ngoi-a');
     udonPose(Math.floor(Date.now() / 650) % 2 ? 'ud-ngoi-b' : 'ud-ngoi-a');
   }
-  var stage, world, playerEl, bobEl, frameEls = {}, bubble, bubbleText, modal, sheetBody;
+  var stage, world, playerEl, bobEl, frameEls = {}, bubble, bubbleText, modal, sheetBody, sheetEl;
   var k = 1;           // screen px per strip px
   var cam = 0;
   var player = { x: SCENE.startX, facing: 1, moving: false, moved: false, frame: 'front' };
@@ -439,6 +459,7 @@
         el.className = 'st-item';
       }
       if (it.layer === 'front') el.classList.add('is-front');
+      if (it.sku) { el.classList.add('st-shelf-prod'); el.setAttribute('data-sku', it.sku); }
       img.src = it.src;
       img.alt = '';
       img.draggable = false;
@@ -459,15 +480,17 @@
       if (LAYOUT || !THUMB[d.sku]) return;   // a layout places its own photos
       var x0 = zoneX(3, d.x[0]), x1 = zoneX(3, d.x[1]);
       var fr = document.createElement('span');
-      fr.className = 'st-shelf-item';
+      fr.className = 'st-shelf-item st-shelf-prod' + (CUTOUT[d.sku] ? ' is-cut' : '');
+      fr.setAttribute('data-sku', d.sku);
       fr.style.left = pct((x0 + x1) / 2, SCENE.width);
       fr.style.bottom = pct(SCENE.height - d.y, SCENE.height);
-      fr.style.height = pct(DISPLAY_H, SCENE.height);
-      fr.innerHTML = '<img src="images/products/' + THUMB[d.sku] + '" alt="" loading="lazy" draggable="false">';
+      fr.style.height = pct(CUTOUT[d.sku] ? DISPLAY_H * 1.05 : DISPLAY_H, SCENE.height);
+      fr.innerHTML = '<img src="' + (CUTOUT[d.sku] ? 'images/studio/sp/' + d.sku + '.webp' : 'images/products/' + THUMB[d.sku]) +
+        '" alt="" loading="lazy" draggable="false">';
       world.appendChild(fr);
     });
 
-    HOTSPOTS.forEach(addHot);
+    HOTSPOTS.forEach(function (h) { if (!spotOff(h.id)) addHot(h); });
 
     // Udon on the counter
     var u = SCENE.udon;
@@ -487,34 +510,71 @@
     udonEl.style.width = pct(u.w, SCENE.width);
     udonEl.style.height = pct(u.h, SCENE.height);
     world.appendChild(udonEl);
+    bindUdon();
 
     // Paper notes pinned on the memo board (filled once notes load)
-    var mb = boxOf(hotById('memo'));
-    memoPins = document.createElement('div');
-    memoPins.className = 'st-pins';
-    memoPins.style.left = pct(mb.x0, SCENE.width);
-    memoPins.style.top = pct(mb.y0, SCENE.height);
-    memoPins.style.width = pct(mb.x1 - mb.x0, SCENE.width);
-    memoPins.style.height = pct(mb.y1 - mb.y0, SCENE.height);
-    world.insertBefore(memoPins, world.querySelector('.st-hot'));
+    if (!spotOff('memo')) {
+      var mb = boxOf(hotById('memo'));
+      memoPins = document.createElement('div');
+      memoPins.className = 'st-pins';
+      memoPins.style.left = pct(mb.x0, SCENE.width);
+      memoPins.style.top = pct(mb.y0, SCENE.height);
+      memoPins.style.width = pct(mb.x1 - mb.x0, SCENE.width);
+      memoPins.style.height = pct(mb.y1 - mb.y0, SCENE.height);
+      world.insertBefore(memoPins, world.querySelector('.st-hot'));
+    }
 
     addPlayer();
   }
 
+  /* ---------- owner's per-spot settings (layout.spots) ----------
+     off: not in the studio; vi / en: its label; link: opens that page
+     instead of the built-in sheet. */
+  function spotSet(id) { return (LAYOUT && LAYOUT.spots && LAYOUT.spots[id]) || {}; }
+  function spotOff(id) { return !!spotSet(id).off; }
+  function spotName(h) {
+    return spotSet(h.id)[lng()] || t(h.label);   // no English set: the built-in English
+  }
+
   function addHot(h) {
     var b = boxOf(h);
+    var custom = spotSet(h.id).vi || spotSet(h.id).en;
     var btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'st-hot';
     btn.setAttribute('data-hot', h.id);
-    btn.setAttribute('data-i18n-attr', 'aria-label:' + h.label);
-    btn.setAttribute('aria-label', t(h.label));
+    if (!custom) btn.setAttribute('data-i18n-attr', 'aria-label:' + h.label);
+    btn.setAttribute('aria-label', spotName(h));
     btn.style.left = pct(b.x0, SCENE.width);
     btn.style.top = pct(b.y0, SCENE.height);
     btn.style.width = pct(b.x1 - b.x0, SCENE.width);
     btn.style.height = pct(b.y1 - b.y0, SCENE.height);
-    btn.innerHTML = '<span class="st-hot-label" data-i18n="' + h.label + '">' + esc(t(h.label)) + '</span>';
+    var lab = document.createElement('span');
+    lab.className = 'st-hot-label';
+    if (!custom) lab.setAttribute('data-i18n', h.label);
+    lab.textContent = spotName(h);   // the owner's text: textContent only
+    btn.appendChild(lab);
     world.appendChild(btn);
+  }
+
+  // Owner-set labels follow the language switch by hand (no data-i18n key).
+  function relabelSpots() {
+    world.querySelectorAll('.st-hot').forEach(function (btn) {
+      var h = hotById(btn.getAttribute('data-hot'));
+      var c = h && spotSet(h.id);
+      if (!h || !(c.vi || c.en)) return;
+      btn.setAttribute('aria-label', spotName(h));
+      btn.querySelector('.st-hot-label').textContent = spotName(h);
+    });
+  }
+
+  // The bottom nav: a button whose spot is taken out goes too.
+  var NAV_SPOT = { door: 'door', fitting: 'fitting', shelves: 'display', sewing: 'sewing', tu: 'tu', counter: 'counter' };
+  function syncNav() {
+    document.querySelectorAll('.st-nav [data-go]').forEach(function (b) {
+      var id = NAV_SPOT[b.getAttribute('data-go')];
+      b.classList.toggle('is-off', !!id && spotOff(id));
+    });
   }
 
   // Character: one frame per pose, toggled — swapping src would flicker.
@@ -587,9 +647,15 @@
   }
 
   // Fade out, swap scenes, fade back in once the new wall has loaded.
-  function goScene(name, then) {
+  var sceneInHistory = false;
+  function goScene(name, then, fromHistory) {
     if (name === sceneName) { if (then) then(); return; }
     closeSheet();
+    if (name === 'in' && !sceneInHistory) {
+      try { history.pushState({ st: 'in' }, ''); sceneInHistory = true; } catch (e) { /* old browser */ }
+    } else if (name === 'out' && sceneInHistory && !fromHistory) {
+      sceneInHistory = false; ignorePop = true; history.back();
+    }
     var html = document.documentElement;
     html.classList.add('st-wait');
     setTimeout(function () {
@@ -816,20 +882,118 @@
   /* ======================================================================
      SHEETS (pop-ups)
      ====================================================================== */
+  // A sheet is a history step, like a dialog in an app: the phone's Back
+  // gesture / button closes it instead of leaving the studio.
+  var sheetInHistory = false;
+
   function openSheet(html) {
-    lastFocus = document.activeElement;
+    if (modal.hidden) lastFocus = document.activeElement;
     sheetBody.innerHTML = html;
+    sheetEl.scrollTop = 0;
+    if (modal.hidden && !sheetInHistory) {
+      try { history.pushState({ st: 'sheet' }, ''); sheetInHistory = true; } catch (e) { /* old browser */ }
+    }
     modal.hidden = false;
     document.body.classList.add('st-lock');
-    modal.querySelector('.st-close').focus();
+    modal.querySelector('.st-close').focus({ preventScroll: true });
   }
 
-  function closeSheet() {
+  function closeSheet(fromHistory) {
     if (modal.hidden) return;
     modal.hidden = true;
     sheetBody.innerHTML = '';
+    sheetEl.style.transform = '';
     document.body.classList.remove('st-lock');
-    if (lastFocus && lastFocus.focus) lastFocus.focus();
+    if (sheetInHistory) {
+      sheetInHistory = false;
+      if (fromHistory !== true) { ignorePop = true; history.back(); }
+    }
+    if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true });
+  }
+  var ignorePop = false;
+
+  /* ---------- sheet: drag down to close (bottom-sheet pattern) ----------
+     From the grab handle anywhere, or from the content when it is scrolled
+     to the top. Past 25% of its height, or a quick flick, it closes. */
+  function bindSheetDrag() {
+    var y0 = 0, t0 = 0, dy = 0, on = false, fromHandle = false;
+    sheetEl.addEventListener('touchstart', function (e) {
+      if (e.touches.length !== 1) return;
+      fromHandle = !!e.target.closest('.st-grab');
+      if (!fromHandle && (sheetEl.scrollTop > 0 || e.target.closest('canvas, input, textarea, select, .pt-real, .st-grid--photos'))) return;
+      y0 = e.touches[0].clientY; t0 = Date.now(); dy = 0; on = true;
+    }, { passive: true });
+    sheetEl.addEventListener('touchmove', function (e) {
+      if (!on) return;
+      dy = e.touches[0].clientY - y0;
+      if (dy <= 0 && !fromHandle) { on = false; sheetEl.style.transform = ''; return; }   // scrolling up: let it scroll
+      if (dy > 0) {
+        if (e.cancelable) e.preventDefault();
+        sheetEl.style.transition = 'none';
+        sheetEl.style.transform = 'translateY(' + dy + 'px)';
+      }
+    }, { passive: false });
+    var end = function () {
+      if (!on) return;
+      on = false;
+      var fast = dy > 60 && Date.now() - t0 < 250;
+      sheetEl.style.transition = 'transform 0.2s ease';
+      if (dy > sheetEl.offsetHeight * 0.25 || fast) {
+        sheetEl.style.transform = 'translateY(100%)';
+        setTimeout(function () { sheetEl.style.transition = ''; closeSheet(); }, 180);
+      } else {
+        sheetEl.style.transform = '';
+        setTimeout(function () { sheetEl.style.transition = ''; }, 220);
+      }
+    };
+    sheetEl.addEventListener('touchend', end);
+    sheetEl.addEventListener('touchcancel', end);
+  }
+
+  /* ---------- swipe the stage to walk ----------
+     Testers swiped instead of tapping. A sideways drag moves the world with
+     the finger (like a map) and the character walks along; letting go with
+     some speed carries them a bit further. A tap still walks to the spot. */
+  var swiped = 0;   // time of the last swipe: the click that follows is not a tap
+  function bindSwipe() {
+    var st = null;
+    stage.addEventListener('pointerdown', function (e) {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      if (e.target.closest('.st-udon, .st-shelf-prod')) return;   // those are dragged themselves
+      st = { x: e.clientX, y: e.clientY, px: player.x, t: performance.now(), lastX: e.clientX, lastT: performance.now(), v: 0, on: false, id: e.pointerId };
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (!st || e.pointerId !== st.id) return;
+      var dx = e.clientX - st.x, dy = e.clientY - st.y;
+      if (!st.on) {
+        if (Math.abs(dx) < 12 || Math.abs(dx) < Math.abs(dy)) return;
+        st.on = true;
+        walkToken++;                 // stop any walk in progress
+        try { stage.setPointerCapture(e.pointerId); } catch (x) { /* fine */ }
+      }
+      var now = performance.now();
+      st.v = (e.clientX - st.lastX) / Math.max(1, now - st.lastT);   // px per ms
+      st.lastX = e.clientX; st.lastT = now;
+      var x = Math.max(120, Math.min(SCENE.width - 120, st.px - dx / k));
+      if (Math.abs(x - player.x) > 0.5) player.facing = x > player.x ? 1 : -1;
+      player.x = x;
+      player.moving = true;
+      player.moved = true;
+      render(now);
+    });
+    var up = function (e) {
+      if (!st || e.pointerId !== st.id) return;
+      var was = st;
+      st = null;
+      if (!was.on) return;
+      swiped = Date.now();
+      player.moving = false;
+      var fling = -was.v * 260 / k;     // keep going a little in the swipe's direction
+      if (Math.abs(fling) > 40 && performance.now() - was.lastT < 80) walkTo(player.x + fling);
+      else render();
+    };
+    stage.addEventListener('pointerup', up);
+    stage.addEventListener('pointercancel', up);
   }
 
   function head(hKey, pKey) {
@@ -841,7 +1005,8 @@
     if (!info) return '';
     var out = !info.inStock;
     return '<li class="st-prod">' +
-      '<img src="images/products/' + THUMB[sku] + '" alt="" loading="lazy" width="300" height="300">' +
+      '<img src="' + (THUMB[sku] ? 'images/products/' + THUMB[sku] : CUTOUT[sku] ? 'images/studio/sp/' + sku + '.webp' : 'images/logo/gem_logo_icon_120.png') +
+        '" alt="" loading="lazy" width="300" height="300">' +
       '<b>' + esc(info.name) + '</b>' +
       '<span class="st-price">' + esc(info.price) + '</span>' +
       (out
@@ -997,6 +1162,16 @@
               '<p class="pt-small pt-draw-msg" aria-live="polite"></p>' +
             '</div>' +
           '</section>' +
+          '<section class="pt-sec">' + tr('h3', 'studio.pt_photo', ' class="pt-label"') +
+            tr('p', 'studio.pt_photo_p', ' class="pt-small"') +
+            '<div class="pt-photo">' +
+              '<label class="pt-tool pt-upload"><span data-i18n="studio.pt_photo_add">' + esc(t('studio.pt_photo_add')) + '</span>' +
+                '<input type="file" name="photo" accept="image/*" hidden></label>' +
+              '<figure class="pt-photo-prev" hidden><img alt=""><figcaption></figcaption>' +
+                '<button type="button" class="pt-tool" data-pt="photo-del" data-i18n="studio.pt_photo_del">' + esc(t('studio.pt_photo_del')) + '</button></figure>' +
+              '<p class="pt-small pt-photo-msg" aria-live="polite"></p>' +
+            '</div>' +
+          '</section>' +
           '<section class="pt-sec"><label class="pt-notefield">' + tr('span', 'studio.pt_note_label', ' class="pt-label"') +
             '<textarea name="note" rows="2" maxlength="' + P.MAX_NOTE + '" data-i18n-attr="placeholder:studio.pt_note_ph" placeholder="' + esc(t('studio.pt_note_ph')) + '"></textarea></label></section>' +
           '<div class="pt-actions">' +
@@ -1075,6 +1250,17 @@
     root.querySelector('.pt-draw-msg').textContent = d.layout === 'tuve' && !d.sketch.length
       ? t('studio.pt_draw_need')
       : pointsUsed() >= P.MAX_POINTS ? t('studio.pt_draw_full') : '';
+
+    // the attached photo: shown from this browser's own copy; a design opened
+    // from someone's link only says there is one (only Gem can see it)
+    var prev = root.querySelector('.pt-photo-prev');
+    prev.hidden = !d.img;
+    if (d.img) {
+      var im = prev.querySelector('img');
+      im.hidden = !photoUrls[d.img];
+      if (photoUrls[d.img]) im.src = photoUrls[d.img];
+      prev.querySelector('figcaption').textContent = t(photoUrls[d.img] ? 'studio.pt_photo_on' : 'studio.pt_photo_hidden');
+    }
 
     var sku = P.PRODUCTS[d.product].sku;
     var info = window.GemBasket ? window.GemBasket.info(sku) : null;
@@ -1234,7 +1420,7 @@
       D.d = P.blank(el.getAttribute('data-product'));
       // carry the taste over to the new piece
       D.d.tones = keep.tones; D.d.prints = keep.prints; D.d.fabrics = keep.fabrics;
-      D.d.other = keep.other; D.d.note = keep.note; D.d.sketch = keep.sketch;
+      D.d.other = keep.other; D.d.note = keep.note; D.d.sketch = keep.sketch; D.d.img = keep.img;
       if (keep.layout === 'tuve') D.d.layout = 'tuve';
     } else if ((el = e.target.closest('[data-layout]'))) {
       D.d.layout = el.getAttribute('data-layout');
@@ -1252,9 +1438,11 @@
         D.d.sketch.pop();
       } else if (act === 'clear') {
         D.d.sketch = [];
+      } else if (act === 'photo-del') {
+        D.d.img = '';
       } else if (act === 'random') {
         var r = P.randomFill(D.d.product);
-        r.other = D.d.other; r.note = D.d.note; r.sketch = D.d.sketch;
+        r.other = D.d.other; r.note = D.d.note; r.sketch = D.d.sketch; r.img = D.d.img;
         D.d = r;
       } else if (act === 'add') {
         var spec = specNow();
@@ -1279,6 +1467,54 @@
     }
     renderDesigner();
     return true;
+  }
+
+  /* ---------- reference photo ----------
+     Shrunk in the browser (longest side 1280 px, JPEG) so phone photos
+     upload fast, then sent to the private gem-design bucket. Only its random
+     name goes into the design code. */
+  var photoUrls = {};   // name -> blob URL of this browser's own copy
+  function shrink(file) {
+    return new Promise(function (res, rej) {
+      var url = URL.createObjectURL(file), img = new Image();
+      img.onload = function () {
+        var sc = Math.min(1, 1280 / Math.max(img.naturalWidth, img.naturalHeight));
+        var c = document.createElement('canvas');
+        c.width = Math.round(img.naturalWidth * sc); c.height = Math.round(img.naturalHeight * sc);
+        var g = c.getContext('2d');
+        g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height);   // PNG transparency → white
+        g.drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        var q = 0.85;
+        (function out() {
+          c.toBlob(function (b) {
+            if (!b) return rej(new Error('encode'));
+            if (b.size > 1400000 && q > 0.5) { q -= 0.15; return out(); }
+            res(b);
+          }, 'image/jpeg', q);
+        })();
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); rej(new Error('not an image')); };
+      img.src = url;
+    });
+  }
+
+  function designerPhoto(input) {
+    var file = input.files && input.files[0];
+    var msg = sheetBody.querySelector('.pt-photo-msg');
+    input.value = '';
+    if (!file) return;
+    if (!/^image\//.test(file.type)) { msg.textContent = t('studio.pt_photo_bad'); return; }
+    if (!window.GemDB || !window.GemDB.uploadDesignPhoto) { msg.textContent = t('studio.pt_photo_fail'); return; }
+    msg.textContent = t('studio.pt_photo_wait');
+    shrink(file).then(function (blob) {
+      return window.GemDB.uploadDesignPhoto(blob).then(function (name) {
+        photoUrls[name] = URL.createObjectURL(blob);
+        D.d.img = name;
+        msg.textContent = '';
+        renderDesigner();
+      });
+    }).catch(function () { msg.textContent = t('studio.pt_photo_fail'); });
   }
 
   function designerInput(e) {
@@ -1428,61 +1664,186 @@
     return { undo: function () { stage.appendChild(el); } };
   }
 
+  /* ---------- drag & drop: Udon, and products off the shelves ----------
+     A copy of the picture follows the finger inside the stage (not on
+     <body>: a fixed element past the screen edge made Chrome on Android zoom
+     out). Dropped on the character (the cart) or on the basket = handled by
+     opts.drop; anywhere else it glides back. */
+  function overEl(el, x, y, pad) {
+    if (!el) return false;
+    var r = el.getBoundingClientRect();
+    pad = pad || 0;
+    return r.width > 0 && x > r.left - pad && x < r.right + pad && y > r.top - pad && y < r.bottom + pad;
+  }
+  function overCart(x, y) { return overEl(frameEls[player.frame], x, y, 30); }
+  function overBasket(x, y) { return overEl(document.querySelector('.gb-widget'), x, y, 16); }
+
+  function dragFrom(e, img, opts) {
+    var sr = stage.getBoundingClientRect(), r = img.getBoundingClientRect();
+    var ghost = null, x0 = e.clientX, y0 = e.clientY, id = e.pointerId;
+    var move = function (ev) {
+      if (ev.pointerId !== id) return;
+      var dx = ev.clientX - x0, dy = ev.clientY - y0;
+      if (!ghost) {
+        if (Math.abs(dx) + Math.abs(dy) < 8) return;
+        ghost = img.cloneNode();
+        ghost.removeAttribute('hidden');
+        ghost.className = 'st-udon-ghost is-dragging';
+        ghost.style.left = (r.left - sr.left) + 'px';
+        ghost.style.top = (r.top - sr.top) + 'px';
+        ghost.style.width = r.width + 'px';
+        stage.appendChild(ghost);
+        if (opts.start) opts.start();
+      }
+      ghost.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(1.08)';
+      stage.classList.toggle('is-drop-ok', overCart(ev.clientX, ev.clientY) || overBasket(ev.clientX, ev.clientY));
+    };
+    var up = function (ev) {
+      if (ev.pointerId !== id) return;
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', up);
+      document.removeEventListener('pointercancel', up);
+      stage.classList.remove('is-drop-ok');
+      swiped = Date.now();   // the click that follows is ours, not a walk / hotspot
+      if (!ghost) { if (opts.tap) opts.tap(); return; }
+      var where = overBasket(ev.clientX, ev.clientY) ? 'basket' : overCart(ev.clientX, ev.clientY) ? 'cart' : null;
+      if (where && opts.drop(where, ghost)) return;
+      // not dropped anywhere useful: back where it came from
+      var t = ghost.style.transform;
+      ghost.animate([{ transform: t }, { transform: 'translate(0,0) scale(1)' }], { duration: 260, easing: 'ease-out' }).onfinish = function () {
+        ghost.remove();
+        if (opts.cancel) opts.cancel();
+      };
+    };
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', up);
+    document.addEventListener('pointercancel', up);
+  }
+
+  // Fly an element (in the stage) from where it is now to a screen rect.
+  function flyTo(el, rect, scale, then) {
+    var a = el.getBoundingClientRect();
+    var dx = rect.left + rect.width / 2 - (a.left + a.width / 2);
+    var dy = rect.top + rect.height / 2 - (a.top + a.height / 2);
+    var from = el.style.transform || 'none';
+    var base = new DOMMatrix(from === 'none' ? undefined : from);
+    var end = 'translate(' + (base.e + dx) + 'px,' + (base.f + dy) + 'px) scale(' + scale + ')';
+    var anim = el.animate([{ transform: from }, { transform: end }], { duration: reduceMotion ? 1 : 320, easing: 'ease-in', fill: 'forwards' });
+    anim.onfinish = function () { if (then) then(); };
+  }
+
+  /* ---------- products on the shelves: tap for the card, drag into the basket ---------- */
+  function productSheet(sku) {
+    var card = productCard(sku);
+    if (!card) return;
+    openSheet(tr('p', 'studio.prod_tip', ' class="st-lead st-prod-tip"') +
+      '<ul class="st-grid st-grid--one">' + card + '</ul>' +
+      '<p class="st-foot">' + tr('a', 'studio.all_products', ' href="san-pham.html"') + '</p>');
+  }
+
+  function bindProducts() {
+    world.addEventListener('pointerdown', function (e) {
+      var el = e.target.closest('.st-shelf-prod');
+      if (!el || (e.pointerType === 'mouse' && e.button !== 0)) return;
+      e.preventDefault();
+      var sku = el.getAttribute('data-sku');
+      var img = el.tagName === 'IMG' ? el : el.querySelector('img');
+      dragFrom(e, img, {
+        start: function () { el.classList.add('is-lifted'); },
+        cancel: function () { el.classList.remove('is-lifted'); },
+        tap: function () { productSheet(sku); },
+        drop: function (where, ghost) {
+          el.classList.remove('is-lifted');
+          var info = window.GemBasket && window.GemBasket.info(sku);
+          if (!info || !info.inStock) { say('studio.prod_out', 3000); return false; }
+          window.GemBasket.add(sku, ghost);
+          ghost.remove();
+          say(where === 'cart' ? 'studio.prod_in_cart' : 'studio.prod_in_basket', 2600);
+          return true;
+        }
+      });
+    });
+  }
+
   var udonBusy = false;
-  function udonJoke() {
-    if (udonBusy) return;
+  function bindUdon() {
+    udonEl.addEventListener('pointerdown', function (e) {
+      if (udonBusy || (e.pointerType === 'mouse' && e.button !== 0)) return;
+      e.preventDefault();
+      udonPose('ud-ngoi-a');
+      var img = udonEl.querySelector('img:not([hidden])');
+      dragFrom(e, img, {
+        start: function () { udonEl.style.visibility = 'hidden'; },
+        cancel: function () { udonEl.style.visibility = ''; say('studio.udon_drag', 3000); },
+        tap: function () { udonPose('ud-vay'); say('studio.udon_drag', 3500); },
+        drop: function (where, ghost) { udonRide(where, ghost); return true; }
+      });
+    });
+    udonEl.addEventListener('click', function (e) {
+      if (e.detail === 0) say('studio.udon_drag', 3500);   // keyboard: Enter / Space
+    });
+  }
+
+  // Udon dropped in the cart or the basket: a line, a little stay, home again.
+  function udonRide(where, ghost) {
     udonBusy = true;
-    var done = function () { udonBusy = false; };
-    say('studio.udon_no', 3600);
-    // Stop where you are (Udon aims for the cart as it is now), out comes
-    // the cart, then Udon hops in.
-    walkTo(player.x);
-    player.udon = true; render();
-    var target = frameEls[player.frame];
-    if (reduceMotion || !udonEl.animate || !target) {
-      setTimeout(function () { player.udon = false; render(); done(); }, 2600);
+    var home = function () {
+      var h = udonEl.getBoundingClientRect(), s2 = stage.getBoundingClientRect(), r = ghost.getBoundingClientRect();
+      if (ghost.parentNode !== stage) stage.appendChild(ghost);
+      ghost.getAnimations().forEach(function (an) { an.cancel(); });
+      ghost.className = 'st-udon-ghost';
+      ghost.style.left = (h.left - s2.left) + 'px';
+      ghost.style.top = (h.top - s2.top) + 'px';
+      ghost.style.width = h.width + 'px';
+      var from = 'translate(' + (r.left - h.left) + 'px,' + (r.top - h.top) + 'px) scale(' + (r.width / h.width).toFixed(2) + ')';
+      var mid = 'translate(' + ((r.left - h.left) / 2) + 'px,' + (Math.min(r.top - h.top, 0) - 90) + 'px) scale(0.8)';
+      ghost.animate([{ transform: from }, { transform: mid, offset: 0.55 }, { transform: 'translate(0,0) scale(1)' }],
+        { duration: reduceMotion ? 1 : 600, easing: 'ease-in-out', fill: 'forwards' }).onfinish = function () {
+        ghost.remove();
+        udonEl.style.visibility = '';
+        player.udon = false; render();
+        udonBusy = false;
+      };
+    };
+    if (where === 'basket') {
+      say('studio.udon_basket', 3600);
+      var w = document.querySelector('.gb-widget');
+      flyTo(ghost, w.getBoundingClientRect(), 0.42, function () {
+        // peek out of the basket, between its back and front rim
+        var g = w.getBoundingClientRect(), s2 = stage.getBoundingClientRect(), r = ghost.getBoundingClientRect();
+        var peek = ghost;
+        peek.getAnimations().forEach(function (an) { an.cancel(); });
+        peek.style.transform = 'none';
+        peek.className = 'st-udon-peek';
+        peek.style.left = ''; peek.style.top = ''; peek.style.width = '';
+        var art = w.querySelector('.gb-basket-art');
+        art.insertBefore(peek, art.querySelector('.gb-layer-front'));
+        w.classList.add('gb-wiggle');
+        setTimeout(function () { w.classList.remove('gb-wiggle'); }, 600);
+        setTimeout(function () {
+          // back into the stage at the same screen spot, then home
+          var pr = peek.getBoundingClientRect(), s3 = stage.getBoundingClientRect();
+          peek.className = 'st-udon-ghost';
+          stage.appendChild(peek);
+          peek.style.left = (pr.left - s3.left) + 'px';
+          peek.style.top = (pr.top - s3.top) + 'px';
+          peek.style.width = pr.width + 'px';
+          home();
+        }, 3200);
+      });
       return;
     }
-    var a = udonEl.getBoundingClientRect(), b = target.getBoundingClientRect();
-    var sr = stage.getBoundingClientRect();
-    udonPose('ud-ngoi-a');
-    var ghost = udonEl.querySelector('img:not([hidden])').cloneNode();
-    ghost.className = 'st-udon-ghost';
-    // Inside the stage (overflow: hidden), not on <body>: a fixed element
-    // past the screen edge made Chrome on Android zoom the whole page out.
-    ghost.style.left = (a.left - sr.left) + 'px';
-    ghost.style.top = (a.top - sr.top) + 'px';
-    ghost.style.width = a.width + 'px';
-    stage.appendChild(ghost);
-    udonEl.style.visibility = 'hidden';
-    // Land in the cart basket: front of the frame, just above half height.
-    var sc = Math.min(1, (b.height * 0.3) / a.height);
-    var dx = b.left + b.width * (player.facing > 0 ? 0.8 : 0.2) - (a.left + a.width / 2);
-    var dy = b.top + b.height * 0.6 - (a.top + a.height / 2) - a.height * sc * 0.25;
-    var mid = 'translate(' + dx * 0.5 + 'px,' + (Math.min(dy, 0) - 90) + 'px) scale(' + ((1 + sc) / 2).toFixed(2) + ')';
-    var end = 'translate(' + dx + 'px,' + dy + 'px) scale(' + sc.toFixed(2) + ')';
-    var hop = function (frames, then) {
-      ghost.animate(frames, { duration: 600, easing: 'ease-in-out', fill: 'forwards' }).onfinish = then;
-    };
-    hop([{ transform: 'translate(0,0) scale(1)' }, { transform: mid, offset: 0.45 }, { transform: end }], function () {
-      // In the cart: ride along with the character, even if they walk on.
+    // the cart: out it comes, Udon lands in the basket of it and rides along
+    say('studio.udon_cart', 3600);
+    walkToken++; player.moving = false;
+    player.udon = true; render();
+    var b = frameEls[player.frame].getBoundingClientRect();
+    var a = ghost.getBoundingClientRect();
+    var sc = Math.min(1, (b.height * 0.3) / (a.height / 1.08));
+    var spot = { left: b.left + b.width * (player.facing > 0 ? 0.8 : 0.2) - 1, top: b.top + b.height * 0.52, width: 2, height: 2 };
+    flyTo(ghost, spot, sc.toFixed(2), function () {
       var pin = pinTo(ghost, bobEl);
-      setTimeout(function () {
-        // Back on the stage, from wherever the cart is now, home to the counter.
-        var r = ghost.getBoundingClientRect(), s2 = stage.getBoundingClientRect(), h = udonEl.getBoundingClientRect();
-        pin.undo();
-        ghost.style.left = (h.left - s2.left) + 'px';
-        ghost.style.top = (h.top - s2.top) + 'px';
-        ghost.style.width = h.width + 'px';
-        var from = 'translate(' + (r.left - h.left) + 'px,' + (r.top - h.top) + 'px) scale(' + (r.width / h.width).toFixed(2) + ')';
-        var up = 'translate(' + ((r.left - h.left) / 2) + 'px,' + (Math.min(r.top - h.top, 0) - 90) + 'px) scale(0.8)';
-        hop([{ transform: from }, { transform: up, offset: 0.55 }, { transform: 'translate(0,0) scale(1)' }], function () {
-          ghost.remove();
-          udonEl.style.visibility = '';
-          player.udon = false; render();
-          done();
-        });
-      }, 2400);
+      setTimeout(function () { pin.undo(); home(); }, 3200);
     });
   }
 
@@ -1609,7 +1970,16 @@
       return;
     }
     var h = hotById(id);
-    if (!h) return;
+    if (!h || spotOff(id)) return;
+    var link = spotSet(id).link;
+    if (link && open !== false) {
+      // the owner pointed this spot at another page
+      walkTo(standX(h), function () {
+        if (/^https:/.test(link)) window.open(link, '_blank', 'noopener');
+        else location.href = link;
+      });
+      return;
+    }
     walkTo(standX(h));
     if (open !== false && ACTIONS[id]) ACTIONS[id]();
   }
@@ -1627,8 +1997,18 @@
      EVENTS
      ====================================================================== */
   function bind() {
+    bindSwipe();
+    bindProducts();
+    bindSheetDrag();
+    // Back gesture / button: closes the open sheet first, then (inside) steps
+    // back out to the street, and only then leaves the page.
+    window.addEventListener('popstate', function () {
+      if (ignorePop) { ignorePop = false; return; }
+      if (!modal.hidden) { closeSheet(true); return; }
+      if (sceneInHistory && sceneName === 'in') { sceneInHistory = false; goScene('out', null, true); }
+    });
     world.addEventListener('click', function (e) {
-      if (e.target.closest('.st-udon')) { udonJoke(); return; }
+      if (Date.now() - swiped < 350) return;   // the end of a swipe, not a tap
       var hot = e.target.closest('.st-hot');
       // A label, an object, or Enter/Space on a focused spot (detail 0):
       // open it — unless the tap lands on the character, which means walk.
@@ -1731,13 +2111,16 @@
       if (form.classList.contains('mb-form')) memoSubmit(form);
       else tuSubmit(form);
     });
+    modal.addEventListener('change', function (e) {
+      if (e.target.name === 'photo' && e.target.closest('.pt')) designerPhoto(e.target);
+    });
     modal.addEventListener('input', function (e) {
       if (e.target.closest('.pt')) { designerInput(e); return; }
       if (e.target.name !== 'body' || !e.target.closest('.mb-form')) return;
       e.target.closest('.mb-form').querySelector('.mb-count').textContent = e.target.value.length + '/280';
     });
 
-    document.addEventListener('gem:langchange', function () { renderDesigner(); renderTu(); });
+    document.addEventListener('gem:langchange', function () { renderDesigner(); renderTu(); relabelSpots(); });
     document.addEventListener('gem:tu', function () {
       // Another tab, or an order just went through: refresh what's open.
       if (sheetBody.querySelector('.tu')) renderTu();
@@ -1775,6 +2158,7 @@
     bubbleText = document.getElementById('st-bubble-text');
     modal = document.getElementById('st-modal');
     sheetBody = document.getElementById('st-sheet-body');
+    sheetEl = document.querySelector('.st-sheet');
     if (!stage || !world) return;
 
     loadLayout().then(function (L) {
@@ -1785,6 +2169,7 @@
   });
 
   function start() {
+    syncNav();
     INSIDE = { width: SCENE.width, height: SCENE.height, startX: SCENE.startX,
       bg: LAYOUT ? LAYOUT.bg.src : 'images/studio/bg/strip.webp' };
     loadWorn();

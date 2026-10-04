@@ -9,13 +9,18 @@
 //     v: 1,
 //     bg:    { src, w, h },                  background strip; w may be longer
 //            than the picture for backgrounds in EXTEND (owner's "Dài thêm")
-//     items: [{ src, x, y, w, h, rot, flip, layer, frame }],
+//     items: [{ src, x, y, w, h, rot, flip, layer, frame, sku? }],
 //            x, y = centre; rot = degrees; layer 'back' (behind the
 //            character) | 'front' (in front); frame = thin wooden frame
-//            (for product photos)
+//            (for product photos); sku = a real product: customers tap it
+//            for its card or drag it into the basket
 //     hot:   { <spot id>: { box: [x0, y0, x1, y1], stand } },
 //     udon:  { x, y, w, h },                 top-left + size
 //     start: x,                              where the character starts
+//     spots: { <spot id>: { off, vi, en, link } }   owner's settings per
+//            hotspot (both scenes): off = taken out of the studio, vi / en =
+//            its label instead of the built-in one, link = opens that page
+//            instead of the built-in sheet
 //     outside: { bg, items, hot: { enter }, start }
 //            the street in front of the studio, where studio.html opens;
 //            same fields, one hotspot (the door). Missing → OUTSIDE below.
@@ -161,7 +166,8 @@ window.GemLayout = (function () {
         rot: num(it.rot, -360, 360, 0),
         flip: !!it.flip,
         layer: it.layer === 'front' ? 'front' : 'back',
-        frame: !!it.frame
+        frame: !!it.frame,
+        sku: typeof it.sku === 'string' && /^[a-z0-9-]{1,40}$/.test(it.sku) ? it.sku : undefined
       });
     });
 
@@ -178,6 +184,33 @@ window.GemLayout = (function () {
     return out;
   }
 
+  // A hotspot's link: one of our own pages (cau-chuyen.html, san-pham.html#…)
+  // or an https:// address. Nothing else (no javascript:, no data:).
+  function linkOk(v) {
+    if (typeof v !== 'string' || !v || v.length > 300) return false;
+    if (/^[a-z0-9-]+\.html([?#][A-Za-z0-9_\-=&%.#]*)?$/.test(v)) return true;
+    return /^https:\/\/[A-Za-z0-9.-]+(\/[^\s"'<>]*)?$/.test(v);
+  }
+  function label(v) {
+    return typeof v === 'string' ? v.replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 40) : '';
+  }
+
+  function spotSettings(d) {
+    var out = {};
+    if (!d || typeof d !== 'object') return out;
+    SPOTS.concat(OUT_SPOTS).forEach(function (sp) {
+      var o = d[sp.id];
+      if (!o || typeof o !== 'object') return;
+      var c = {};
+      if (o.off === true && sp.id !== 'enter') c.off = true;   // the door in stays: it is the only way in
+      if (label(o.vi)) c.vi = label(o.vi);
+      if (label(o.en)) c.en = label(o.en);
+      if (linkOk(o.link)) c.link = o.link;
+      if (Object.keys(c).length) out[sp.id] = c;
+    });
+    return out;
+  }
+
   function sanitize(d) {
     var s = scene(d, SPOTS);
     if (!s) return null;
@@ -189,9 +222,10 @@ window.GemLayout = (function () {
         w: num(d.udon.w, 30, 600, 128), h: num(d.udon.h, 30, 600, 140) };
     }
     out.outside = scene(d.outside, OUT_SPOTS) || outsideDefault();
+    out.spots = spotSettings(d.spots);
     return out;
   }
 
   return { SPOTS: SPOTS, OUT_SPOTS: OUT_SPOTS, FEET_Y: FEET_Y, srcOk: srcOk, blank: blank, sanitize: sanitize,
-    outsideDefault: outsideDefault, EXTEND: EXTEND, bgParts: bgParts, partStyle: partStyle };
+    outsideDefault: outsideDefault, EXTEND: EXTEND, linkOk: linkOk, bgParts: bgParts, partStyle: partStyle };
 })();

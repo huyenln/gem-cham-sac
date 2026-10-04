@@ -702,11 +702,12 @@ def build_hands():
 GROUPS = [
     ('cua', 'Cửa & cửa sổ'), ('noi-that', 'Nội thất'), ('cay', 'Cây & hoa'), ('treo', 'Treo tường & trần'),
     ('de-ban', 'Đồ để bàn, kệ'), ('vai', 'Vải, gối & thảm'), ('may', 'Đồ may & len'),
-    ('wear', 'Đồ mặc'), ('ui', 'Giấy & khung'), ('udon', 'Udon'),
+    ('sp', 'Sản phẩm thật'), ('wear', 'Đồ mặc'), ('ui', 'Giấy & khung'), ('udon', 'Udon'),
 ]
 FOLDER_GROUP = {
     'props': 'noi-that', 'cay': 'cay', 'cay2': 'cay', 'chuon': 'de-ban', 'deco': 'de-ban',
     'vn': 'de-ban', 'may': 'may', 'nha': 'de-ban', 'wear': 'wear', 'ui': 'ui', 'udon': 'udon',
+    'sp': 'sp',   # cut-out real products: sp/<sku>.webp, linked to the product
 }
 
 
@@ -759,6 +760,9 @@ def build_manifest():
             group = PICK.get(f.stem, FOLDER_GROUP[folder])
             w, h = Image.open(f).size
             item = {'src': f'images/studio/{folder}/{f.name}', 'w': w, 'h': h}
+            if folder == 'sp':
+                item['sku'] = f.stem
+                item['h0'] = 120
             if f.stem in START_H:
                 item['h0'] = START_H[f.stem]
             if f.stem in START_Y:

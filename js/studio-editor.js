@@ -150,10 +150,34 @@ window.GemStudioEditor = (function () {
       status(r[1] ? 'Đang sửa bản nháp' : r[2] ? 'Bắt đầu từ bản đang chạy' : 'Bố cục mới');
       draw();
       renderPanel();
+      // product list for "Sản phẩm" on a piece (owner is signed in)
+      DB.adminProducts().then(function (rows) { prods = rows || []; renderPanel(); }, function () { prods = []; });
+      if (queued) { var q = queued; queued = null; placeProduct(q.sku, q.image); }
       return loadProfiles();
     }).catch(function (err) {
       status('Không tải được: ' + (err.message || ''), true);
     });
+  }
+
+  /* ---------- real products in the studio ----------
+     A piece with a sku is a product: customers tap it for its card or drag
+     it into the basket. The Sản phẩm tab sends one here with queueProduct. */
+  var prods = [];        // [{ sku, name_vi, image }]
+  var queued = null;     // product waiting for the editor to finish loading
+
+  function placeProduct(sku, image) {
+    if (scene !== 'in') setScene('in');
+    var cut = null;
+    lib.groups.forEach(function (g) { g.items.forEach(function (a) { if (a.sku === sku) cut = a; }); });
+    if (cut) add(cut);
+    else if (image && L.srcOk(image)) add({ src: image, w: 600, h: 600, frame: true, sku: sku });
+    else { status('Sản phẩm này chưa có ảnh — thêm ảnh ở tab Sản phẩm, hoặc ảnh cắt nền ở images/studio/sp/' + sku + '.webp', true); return; }
+    status('Đã thêm "' + sku + '" giữa màn hình — kéo lên kệ rồi Xuất bản');
+  }
+
+  function queueProduct(sku, image) {
+    if (data && lib) placeProduct(sku, image);
+    else queued = { sku: sku, image: image };
   }
 
   // Backgrounds for the scene on screen only: the street for 'Ngoài cửa',
@@ -249,7 +273,7 @@ window.GemStudioEditor = (function () {
 
     S().items.forEach(function (it, i) {
       var n = document.createElement('div');
-      n.className = 'se-el se-item' + (it.layer === 'front' ? ' is-front' : '') + (it.frame ? ' is-frame' : '') +
+      n.className = 'se-el se-item' + (it.layer === 'front' ? ' is-front' : '') + (it.frame ? ' is-frame' : '') + (it.sku ? ' is-prod' : '') +
         (isSel('item', i) ? ' is-sel' : '');
       n.dataset.kind = 'item'; n.dataset.i = i;
       place(n, it.x - it.w / 2, it.y - it.h / 2, it.w, it.h);
@@ -278,10 +302,12 @@ window.GemStudioEditor = (function () {
     if (showHot) spots().forEach(function (sp) {
       var o = S().hot[sp.id], b = o.box;
       var n = document.createElement('div');
-      n.className = 'se-el se-hot' + (isSel('hot', sp.id) ? ' is-sel' : '');
+      n.className = 'se-el se-hot' + (isSel('hot', sp.id) ? ' is-sel' : '') + (spotCfg(sp.id).off ? ' is-off' : '') +
+        (spotCfg(sp.id).link ? ' is-link' : '');
       n.dataset.kind = 'hot'; n.dataset.id = sp.id;
       place(n, b[0], b[1], b[2] - b[0], b[3] - b[1]);
-      n.innerHTML = '<span class="se-hot-label">' + esc(sp.vi) + '</span>';
+      n.innerHTML = '<span class="se-hot-label">' + esc(spotCfg(sp.id).vi || sp.vi) +
+        (spotCfg(sp.id).off ? ' (đang tắt)' : spotCfg(sp.id).link ? ' →' : '') + '</span>';
       if (isSel('hot', sp.id)) handles(n, false);
       worldEl.appendChild(n);
       var st = document.createElement('div');
@@ -509,10 +535,27 @@ window.GemStudioEditor = (function () {
         '<button type="button" class="se-tb" data-act="frame">' + (it.frame ? 'Bỏ khung' : 'Khung gỗ') + '</button>' +
         '<button type="button" class="se-tb" data-act="dup">Nhân bản</button>' +
         '<button type="button" class="se-tb danger" data-act="del">Xoá</button>' +
+        '<label class="se-size" title="Món gắn sản phẩm: khách chạm để xem, kéo vào giỏ để mua">Sản phẩm ' +
+          '<select name="se-sku"><option value="">(chỉ trang trí)</option>' +
+          prods.map(function (p) {
+            return '<option value="' + esc(p.sku) + '"' + (p.sku === it.sku ? ' selected' : '') + '>' + esc(p.name_vi) + '</option>';
+          }).join('') +
+          (it.sku && !prods.some(function (p) { return p.sku === it.sku; }) ? '<option selected value="' + esc(it.sku) + '">' + esc(it.sku) + '</option>' : '') +
+        '</select></label>' +
       '</div>';
     } else if (sel && (sel.kind === 'hot' || sel.kind === 'stand')) {
       var name = spots().filter(function (x) { return x.id === sel.id; })[0].vi;
-      tools = '<p class="se-tools se-hint"><b>' + esc(name) + '</b> — khung nét đứt là chỗ khách chạm; cột đỏ ở sàn là chỗ nhân vật dừng.</p>';
+      var c = spotCfg(sel.id);
+      // settings for this spot: on / off, its label, a page to open instead
+      tools = '<div class="se-tools se-spot">' +
+        '<b>' + esc(name) + '</b>' +
+        (sel.id === 'enter' ? '' :
+          '<label><input type="checkbox" name="sp-on"' + (c.off ? '' : ' checked') + '> Hiện trong studio</label>') +
+        '<label>Tên hiện <input name="sp-vi" maxlength="40" placeholder="' + esc(name) + '" value="' + esc(c.vi || '') + '"></label>' +
+        '<label>Tên tiếng Anh <input name="sp-en" maxlength="40" placeholder="(để trống: tên có sẵn)" value="' + esc(c.en || '') + '"></label>' +
+        '<label>Mở trang khác <input name="sp-link" maxlength="300" placeholder="vd: workshop.html hoặc https://…" value="' + esc(c.link || '') + '"></label>' +
+        '<span class="se-hint-s">Để trống "Mở trang khác" thì mở cửa sổ có sẵn. Khung nét đứt = chỗ khách chạm; cột đỏ ở sàn = chỗ nhân vật dừng.</span>' +
+      '</div>';
     } else {
       tools = '<details class="se-help"><summary>Cách dùng</summary><p>Chạm một món ở thư viện để thêm vào giữa màn hình. ' +
         'Kéo để di chuyển, kéo góc để đổi cỡ, kéo nút tròn để xoay. Điện thoại: chụm / mở hai ngón để đổi cỡ, vặn hai ngón để xoay. ' +
@@ -545,13 +588,37 @@ window.GemStudioEditor = (function () {
     if ((b = e.target.closest('[data-act]'))) act(b.dataset.act);
   }
 
+  function spotCfg(id) { return (data && data.spots && data.spots[id]) || {}; }
+
+  function spotChange(e) {
+    var n = e.target.name;
+    if (!data.spots) data.spots = {};
+    var c = data.spots[sel.id] || {};
+    remember();
+    if (n === 'sp-on') { if (e.target.checked) delete c.off; else c.off = true; }
+    if (n === 'sp-vi' || n === 'sp-en') {
+      var v = e.target.value.trim().slice(0, 40), key = n.slice(3);
+      if (v) c[key] = v; else delete c[key];
+    }
+    if (n === 'sp-link') {
+      var link = e.target.value.trim();
+      if (!link) delete c.link;
+      else if (L.linkOk(link)) c.link = link;
+      else { status('Link chưa đúng: dùng tên trang (vd workshop.html) hoặc địa chỉ bắt đầu bằng https://', true); return; }
+    }
+    if (Object.keys(c).length) data.spots[sel.id] = c; else delete data.spots[sel.id];
+    draw();
+  }
+
   function panelChange(e) {
     if (e.target.type === 'file') return upload(e.target.files && e.target.files[0]);
+    if (sel && (sel.kind === 'hot' || sel.kind === 'stand') && /^sp-/.test(e.target.name)) return spotChange(e);
     if (!sel || sel.kind !== 'item') return;
     var it = S().items[sel.i];
     remember();
     if (e.target.name === 'se-size' || e.target.name === 'se-h') resize(it, +e.target.value);
     if (e.target.name === 'se-rot') it.rot = Math.max(-180, Math.min(180, Math.round(+e.target.value || 0)));
+    if (e.target.name === 'se-sku') { if (e.target.value) it.sku = e.target.value; else delete it.sku; renderPanel(); }
     draw();
   }
 
@@ -590,8 +657,10 @@ window.GemStudioEditor = (function () {
     var h = a.h0 || (a.frame ? 110 : Math.min(420, a.h * 0.6));   // h0: doors / windows, set in the manifest
     var w = Math.round(h * a.w / a.h);
     var cx = (stageEl.scrollLeft + stageEl.clientWidth / 2) / k;
-    S().items.push({ src: a.src, x: Math.round(cx), y: Math.round(a.y0 || L.FEET_Y - h / 2 - 40), w: w, h: Math.round(h),
-      rot: 0, flip: false, layer: 'back', frame: !!a.frame });
+    var it = { src: a.src, x: Math.round(cx), y: Math.round(a.y0 || L.FEET_Y - h / 2 - 40), w: w, h: Math.round(h),
+      rot: 0, flip: false, layer: 'back', frame: !!a.frame };
+    if (a.sku) it.sku = a.sku;
+    S().items.push(it);
     sel = { kind: 'item', i: S().items.length - 1 };
     draw(); renderPanel();
   }
@@ -758,5 +827,5 @@ window.GemStudioEditor = (function () {
     }).then(function () { b.disabled = false; });
   }
 
-  return { mount: mount, unmount: unmount, isDirty: function () { return dirty; } };
+  return { mount: mount, unmount: unmount, queueProduct: queueProduct, isDirty: function () { return dirty; } };
 })();

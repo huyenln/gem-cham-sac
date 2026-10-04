@@ -1351,6 +1351,40 @@ Câu kiểm GRANT-vs-policy: không thêm dòng mới.
   khung, trình lắp: thêm / xuất bản / Xoá hết / nền theo cảnh). Supabase giả lập,
   không ghi gì thật; ảnh chụp ở `/tmp/gem-check/`.
 
+### Góp ý thử nghiệm đợt 2 (10/2026)
+
+- **Vuốt để đi:** người thử đều vuốt ngang thay vì chạm. Kéo ngang trên sân
+  khấu = kéo cả cảnh theo ngón tay, nhân vật đi theo; thả nhanh thì đi thêm
+  một đoạn. Chạm vẫn đi tới chỗ chạm. Sân khấu `touch-action: pan-y`.
+- **Sheet kiểu bottom sheet (Material):** có tay nắm, kéo xuống quá 25% hoặc
+  vuốt nhanh thì đóng; nội dung cuộn tới đỉnh mới kéo được. Mỗi sheet và việc
+  vào studio là một bước lịch sử (`history.pushState`), nên nút / cử chỉ Back
+  đóng sheet → ra mặt tiền → mới rời trang. `overscroll-behavior` chặn kéo để
+  tải lại / vuốt về trang trước ngay trong studio.
+- **Udon kéo thả:** kéo Udon thả lên nhân vật = vào xe đẩy, đi theo 3 giây;
+  thả lên giỏ góc màn hình = nằm trong giỏ 3 giây; rồi nhảy về quầy. Chạm =
+  câu gợi ý. Bộ ảnh Udon mới (`udon/`), tách nền bằng `clean-white.py --ink 5`.
+- **Ảnh tham khảo ở Bàn thiết kế:** khách tải ảnh (thu nhỏ ≤1280px JPEG trong
+  trình duyệt) lên kho **riêng** `gem-design` (migration `gem_design_uploads`):
+  khách chỉ thêm được, tên phải là 20 ký tự ngẫu nhiên + `.jpg`, tối đa 1,5 MB;
+  chỉ nhân sự xem / xoá. Đã kiểm 3 vai trong transaction: khách thêm được,
+  tên sai / sang kho khác bị chặn, khách và tài khoản thường thấy 0 dòng, nhân
+  sự thấy. Tên ảnh nằm ở cuối mã thiết kế (`…~<ghi chú>~<ảnh>`); trang Đơn hàng
+  có nút "Xem ảnh khách gửi" (tải bằng token nhân sự). Rủi ro còn lại: ai cũng
+  có thể đẩy ảnh rác vào kho (giới hạn cỡ + định dạng) — dọn tay nếu cần.
+- **Sản phẩm thật trên kệ:** món có `sku` trong bố cục (hoặc kệ khu 3 của tranh
+  vẽ sẵn) = chạm mở thẻ, kéo thả vào xe / giỏ là thêm vào giỏ hàng. Ảnh cắt nền
+  ở `images/studio/sp/<sku>.webp` (nhóm "Sản phẩm thật" trong thư viện, tự gắn
+  sku); món không có ảnh cắt nền dùng ảnh sản phẩm trong khung gỗ. Trình lắp:
+  ô "Sản phẩm" gắn bất kỳ món nào với một sản phẩm (nhãn SP). Tab Sản phẩm (owner):
+  dòng "Studio 2D: đang bày n chỗ" + nút "Đặt vào Studio".
+- **Thiết lập từng vùng bấm** (`layout.spots`): tắt (không hiện, nút dưới cũng
+  ẩn; trừ cửa vào ở mặt tiền), đổi tên VI / EN (textContent), mở trang khác
+  (trang của site hoặc `https://`, kiểm bằng `linkOk`). Chọn khung trong trình lắp
+  để chỉnh.
+- Tên trang: **Gem Studio 2D**. Giỏ góc màn hình: xe đẩy gỗ trên nút giấy tròn
+  có viền + bóng, để không lẫn với đồ trong tranh.
+
 ### Phụ kiện trên nhân vật (đợt 1)
 
 5 món "đồ mặc" đều là phụ kiện (túi Oxford, túi Denim, dây buộc tóc, dây đeo
