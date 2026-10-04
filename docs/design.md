@@ -1466,6 +1466,70 @@ Storage để bố cục đang dùng không vỡ. Ảnh cắt nền của sản 
 **Kiểm:** `tools/check-studio.py library | product | catalog` (Supabase giả lập có
 Storage giữ file tải lên, nên kiểm được cả cỡ ảnh lẫn độ trong suốt).
 
+### Bàn thiết kế — "chơi" (đợt 1, 10/2026)
+
+Góp ý: bàn thiết kế giống tờ khảo sát, bản vẽ trông rẻ, chia sẻ chỉ là link.
+Đợt 1 đổi sang *tự tay chắp*:
+
+- **Toàn màn hình** (`openSheet(html, true)`): kéo thả trong bàn nên chỉ tay
+  nắm trên cùng kéo xuống đóng được.
+- **Tâm trạng** (`GemPatch.MOODS`): 5 bộ chọn sẵn (bảng vải + kiểu ghép). Tên là
+  nháp, Anna đổi trong `js/patch.js`. Món mới mở ra đã mặc tâm trạng đầu.
+- **Vải từng ô:** danh mục 45 vải = 5 tông × 9 kiểu (`KINDS`: trơn, caro, sọc,
+  chấm bi, hoa nhí, ren, hoa to, ô nhỏ, thổ cẩm), id = tông × 9 + kiểu. Mã thiết
+  kế thêm trường thứ 11 (sau ảnh, có thể rỗng): một chữ B64 mỗi ô. Mã cũ vẫn đọc.
+  Ghi chú đơn liệt kê "vải từng mảnh: Hoa nhí hồng – đỏ ×2, …".
+- **Rổ vải:** 8 mảnh trên khay `props/gio.webp`. Chạm mảnh rồi chạm ô, hoặc kéo
+  thả; chạm ô khi chưa cầm gì = đổi sang mảnh kế tiếp trong rổ. "Lục rổ" lấy 8
+  mảnh ngẫu nhiên; "Xáo mảnh" rải lại vải trên món.
+- **May xong:** sợi chỉ chạy theo các đường may (`.pt-seam` → `.pt-thread`), món
+  phồng lên, Udon reo, rồi hiện tên (`GemPatch.title`: tên tâm trạng, hoặc hai tông
+  chính) + số mẫu (`serial`: băm từ mã, cùng thiết kế luôn cùng số) + thẻ.
+- **Thẻ 1080×1920** vẽ bằng canvas, làm sẵn trước khi bấm (trình duyệt chỉ mở bảng
+  chia sẻ ngay sau cú chạm). "Chia sẻ ảnh" gửi *file ảnh* qua bảng chia sẻ của máy;
+  máy không gửi được file thì tải ảnh về + chép link. Tên người thiết kế lưu ở
+  `localStorage['gem-designer']`, đi trong link `&by=` (không vào mã thiết kế), vẽ
+  bằng `fillText` / hiện bằng `textContent`.
+- **Link mở lại:** `studio.html?d=…&by=Linh` → "Linh đã thiết kế mẫu này" + "Đặt
+  may giống vậy" / "Tự làm bản của bạn".
+
+**Tranh đã vào (10/2026)** — `images/studio/vai/`, làm bằng
+`python3 tools/design-assets.py <thư mục ảnh gốc>` (ảnh gốc không để trong repo):
+- `vai-<tông>-<1..9>.webp`: 45 mẫu vải. Trên món, mỗi mẫu lát 2×2 có lật gương
+  (`fabricPattern` trong `js/patch.js`) nên không thấy đường nối giữa các lát.
+- `dang-1..9.webp`: khuôn mảnh vải (vừa làm mask, vừa làm lớp bóng multiply) cho rổ.
+- `ro-truoc.webp`: thành trước của rổ, vải đứng *sau* nó và ló lên khỏi vành.
+- `mon-goi|lotcoc|scrunchie-mask/-bong.webp`: gối, lót cốc, dây buộc tóc vẽ bằng
+  tranh — vải nằm trong mask, bóng của tranh nhân lên trên (`artPiece`). Gối đã lọc
+  bỏ đường may vẽ sẵn để mỗi kiểu ghép tự vẽ đường may của nó. Năm món còn lại
+  vẫn vẽ bằng code (nhưng dùng vải tranh).
+- `mood-<id>.webp` trên nút tâm trạng; `the-khung.webp` làm nền thẻ chia sẻ.
+- `udon/ud-may`, `ud-reo`, `kim-chi`: Udon ngồi may cạnh món, kim chạy theo đường
+  may, xong thì Udon nhảy reo.
+- Thẻ: ảnh trong SVG không tự tải khi vẽ vào canvas, nên `inlineImages()` đổi
+  chúng sang data URL lúc chạy rồi mới vẽ.
+- `printBody()` (họa tiết vẽ bằng code) giờ chỉ còn cho chấm tròn trong chip
+  "Tự chỉnh" và làm màu tạm cho vải màu riêng lúc chưa nhuộm xong.
+- Đợt tranh 2: túi Origami, túi áo Oxford, Bloom Charm, dây đeo, bookmark góc
+  sách (hình vuông có vạt tam giác kẹp góc trang), lót cốc vuông. Móc / khoen
+  kim loại tách ra lớp `-top` vẽ đè lên vải (`PIECES` trong `design-assets.py`).
+  Kiểu "Ghép hai vải" theo món thật: Origami xen kẽ cánh, Oxford hai nửa,
+  Bloom = cuống + nút + nụ giữa / hai nụ bên, bookmark chia theo đường chéo.
+- **Lót cốc tròn / vuông:** cùng sản phẩm (`sku lotcoc`), hai dáng `lotcoc` /
+  `lotcocv`; nút "Dáng" chỉ hiện ở lót cốc. Ghi chú đơn ghi rõ "Lót cốc tròn" /
+  "Lót cốc vuông".
+- **Màu riêng (color picker):** nút "Màu riêng" ở rổ → bảng chọn màu của máy + 8
+  màu gợi ý → "Nhuộm vào rổ": rổ thành 9 kiểu vải của màu đó. Nhuộm ngay trong
+  trình duyệt từ tranh vải xanh lam (`customSrc`): điểm xanh nhận sắc mới, độ đậm
+  so với chính tranh đó; nền kem, ren trắng, lá xanh giữ nguyên. Mã thiết kế thêm
+  trường 12: `<kiểu 0-8><hex>` cách nhau bằng dấu chấm (tối đa 19 màu); mỗi ô dùng
+  chữ 45+ trỏ vào danh sách đó. Ghi chú đơn: "Hoa nhí màu riêng #7a4fa0 ×2".
+  Tên thẻ khi phần lớn ô là màu riêng: "Sắc tím". Lời hứa kèm: Gem tìm vải gần màu
+  nhất và nhắn ảnh duyệt trước khi may.
+
+**Chưa làm (đợt 2–3):** vải thật dạng "Mảnh hiếm" (bảng `fabrics` + admin), tường
+thiết kế của khách, Thiết kế của tháng.
+
 ### Góp ý đợt 3 (10/2026)
 
 - **Bàn thiết kế gọn lại:** trên cùng là các món + "Gợi ý ngẫu nhiên". Lần đầu chỉ

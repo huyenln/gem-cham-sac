@@ -9,8 +9,15 @@
 // A design travels as one short code (in links studio.html?d=…, the basket
 // and the order note):
 //
-//   2~goi~cabin~xanh.nau~caro.hoa~bo.dui~<other>~<sketch>~<note>[~<photo>]
+//   2~goi~cabin~xanh.nau~caro.hoa~bo.dui~<other>~<sketch>~<note>[~<photo>[~<patches>]]
 //   v product layout tones  prints   fabrics  free text, sketch, free text
+//
+// <patches> (optional, may follow an empty <photo>): the fabric the customer
+// put on each patch, one B64 letter per patch = an id in the fabric
+// catalogue below (5 colour families x 9 kinds), or from 45 up, one of the
+// customer's own colours listed in an optional 12th field <colours>:
+// "<kind 0-8><hex rrggbb>" joined by "." (a kind recoloured in the browser).
+// Without <patches> the preview picks fabrics from the tones / prints.
 //
 // Everything but <other>/<note> is checked against the tables below;
 // <other> and <note> are percent-encoded, length-capped plain text and must
@@ -41,6 +48,10 @@
     goi:       { sku: 'goi',       vi: 'Gối Chắp Sắc', en: 'Patchwork cushion', shape: 'cushion', grid: 3,
                  layouts: ['vuong', 'cabin', 'sao', 'chong', 'tuve'] },
     lotcoc:    { sku: 'lotcoc',    vi: 'Lót cốc',      en: 'Coaster',           shape: 'coaster', grid: 2,
+                 layouts: ['vuong', 'cabin', 'chong', 'tuve'] },
+    // the square coaster: same product (sku), another shape — not a tab of
+    // its own, the designer offers "Tròn / Vuông" on the coaster
+    lotcocv:   { sku: 'lotcoc',    vi: 'Lót cốc vuông', en: 'Square coaster',   shape: 'coasterSq', grid: 2,
                  layouts: ['vuong', 'cabin', 'chong', 'tuve'] },
     scrunchie: { sku: 'scrunchie', vi: 'Dây buộc tóc', en: 'Scrunchie',         shape: 'scrunchie', grid: 1,
                  layouts: ['mot', 'hai', 'tuve'] },
@@ -98,6 +109,40 @@
   };
   var FABRIC_ORDER = ['cotton', 'dui', 'bo', 'nhung', 'kate', 'ren'];
 
+  /* ---------- the fabric catalogue ----------
+     45 fabrics = 5 colour families x 9 kinds, id = tone * 9 + kind. They
+     match the painted swatch sheets planned for images/studio/vai/
+     (vai-<tone>-<1..9>.webp); until those exist each is drawn below. */
+  var KINDS = ['tron', 'caro', 'soc', 'cham', 'hoa', 'ren', 'hoato', 'ono', 'tho'];
+  var KIND_NAMES = {
+    tron: { vi: 'Trơn', en: 'Plain' }, caro: { vi: 'Caro', en: 'Gingham' }, soc: { vi: 'Sọc', en: 'Stripes' },
+    cham: { vi: 'Chấm bi', en: 'Polka dot' }, hoa: { vi: 'Hoa nhí', en: 'Ditsy floral' }, ren: { vi: 'Ren', en: 'Lace' },
+    hoato: { vi: 'Hoa to', en: 'Big floral' }, ono: { vi: 'Ô nhỏ', en: 'Small check' }, tho: { vi: 'Thổ cẩm', en: 'Folk print' }
+  };
+  var N_FABRICS = 45;
+  var MAX_CUSTOM = 64 - N_FABRICS;   // own colours per design (B64 letters left)
+  function fabric(id) {
+    var tone = TONE_ORDER[Math.floor(id / 9)], k = id % 9;
+    return { id: id, tone: tone, kind: KINDS[k], color: TONES[tone].c[k % 3] };
+  }
+  function fabricId(tone, kind) { return TONE_ORDER.indexOf(tone) * 9 + KINDS.indexOf(kind); }
+
+  /* ---------- moods: a ready palette + a layout, one tap ----------
+     Names are drafts for Anna to rename. */
+  var MOODS = [
+    { id: 'hanoi', vi: 'Hà Nội mùa thu', en: 'Hanoi in autumn', layout: 'vuong',
+      f: [['nau', 'tron'], ['nau', 'caro'], ['nau', 'hoa'], ['trung', 'ren'], ['trung', 'tron'], ['xanh', 'ono'], ['nau', 'hoato'], ['trung', 'hoa']] },
+    { id: 'nhaba', vi: 'Vintage nhà bà', en: "Grandma's house", layout: 'cabin',
+      f: [['hong', 'hoa'], ['trung', 'ren'], ['hong', 'hoato'], ['nau', 'caro'], ['trung', 'tron'], ['hong', 'ono'], ['xanh', 'hoa'], ['trung', 'cham']] },
+    { id: 'bien', vi: 'Biển chiều', en: 'Seaside evening', layout: 'chong',
+      f: [['lam', 'soc'], ['lam', 'tron'], ['trung', 'tron'], ['hong', 'tron'], ['lam', 'cham'], ['lam', 'ono'], ['trung', 'soc'], ['hong', 'hoa']] },
+    { id: 'dong', vi: 'Đồng xanh', en: 'Green fields', layout: 'vuong',
+      f: [['xanh', 'tron'], ['xanh', 'caro'], ['xanh', 'hoa'], ['nau', 'tron'], ['trung', 'tho'], ['xanh', 'soc'], ['nau', 'ono'], ['xanh', 'hoato']] },
+    { id: 'tet', vi: 'Tết sum vầy', en: 'Lunar New Year', layout: 'sao',
+      f: [['hong', 'caro'], ['hong', 'tho'], ['hong', 'hoato'], ['nau', 'tho'], ['trung', 'hoa'], ['hong', 'soc'], ['nau', 'tron'], ['hong', 'cham']] }
+  ];
+  MOODS.forEach(function (m) { m.ids = m.f.map(function (x) { return fabricId(x[0], x[1]); }); });
+
   var GEM = 'gem';            // "let Gem choose" for tones / prints
   var MAX_OTHER = 40, MAX_NOTE = 200;
 
@@ -120,7 +165,7 @@
   function blank(product) {
     var p = PRODUCTS[product] || PRODUCTS.goi;
     return { product: PRODUCTS[product] ? product : 'goi', layout: p.layouts[0],
-      tones: [], prints: [], fabrics: [], other: '', sketch: [], note: '', img: '' };
+      tones: [], prints: [], fabrics: [], other: '', sketch: [], note: '', img: '', fab: '', cus: [] };
   }
 
   // A reference photo the customer attached (private bucket gem-design,
@@ -179,14 +224,32 @@
 
   function encode(d) {
     return ['2', d.product, d.layout, d.tones.join('.'), d.prints.join('.'), d.fabrics.join('.'),
-      txt(d.other), encodeSketch(d.sketch), txt(d.note)].concat(d.img ? [d.img] : []).join('~');
+      txt(d.other), encodeSketch(d.sketch), txt(d.note)]
+      .concat(d.fab ? [d.img || '', d.fab] : d.img ? [d.img] : [])
+      .concat(d.fab && d.cus && d.cus.length ? [d.cus.map(function (c) { return c.k + c.hex; }).join('.')] : []).join('~');
   }
 
   function parse(spec) {
     if (typeof spec !== 'string' || spec.length > 4000) return null;
     var f = spec.split('~');
-    if ((f.length !== 9 && f.length !== 10) || f[0] !== '2' || !PRODUCTS[f[1]]) return null;
-    var img = f.length === 10 ? f[9] : '';
+    if (f.length < 9 || f.length > 12 || f[0] !== '2' || !PRODUCTS[f[1]]) return null;
+    var img = f.length >= 10 ? f[9] : '';
+    var fab = f.length >= 11 ? f[10] : '';
+    if (f.length >= 11 && !fab) return null;
+    if (fab.length > 64) return null;
+    var cus = [];
+    if (f.length === 12) {
+      var cs = f[11].split('.');
+      if (cs.length > MAX_CUSTOM) return null;
+      for (var ci = 0; ci < cs.length; ci++) {
+        if (!/^[0-8][0-9a-f]{6}$/.test(cs[ci])) return null;
+        cus.push({ k: +cs[ci][0], hex: cs[ci].slice(1) });
+      }
+    }
+    for (var q = 0; q < fab.length; q++) {
+      var fi = B64.indexOf(fab[q]);
+      if (fi < 0 || fi >= N_FABRICS + cus.length) return null;
+    }
     if (img && !IMG_RE.test(img)) return null;
     var p = PRODUCTS[f[1]];
     if (p.layouts.indexOf(f[2]) < 0) return null;
@@ -197,7 +260,7 @@
     if (other === null || note === null || sketch === null) return null;
     if (other.length > MAX_OTHER || note.length > MAX_NOTE) return null;
     return { product: f[1], layout: f[2], tones: tones.v, prints: prints.v, fabrics: fabrics.v,
-      other: other, sketch: sketch, note: note, img: img };
+      other: other, sketch: sketch, note: note, img: img, fab: fab, cus: cus };
   }
 
   // Orderable: everything has a sensible "Gem chooses" default, except a
@@ -218,9 +281,13 @@
     l = l || lang();
     var vi = l === 'vi';
     var gem = vi ? 'Gem chọn' : 'Gem picks';
-    var bits = [PRODUCTS[d.product][l], (vi ? 'kiểu ' : 'layout: ') + LAYOUTS[d.layout][l]];
-    bits.push((vi ? 'tông: ' : 'colours: ') + (d.tones.length && d.tones[0] !== GEM ? names(d.tones, TONES, l) : gem));
-    bits.push((vi ? 'họa tiết: ' : 'prints: ') + (d.prints.length && d.prints[0] !== GEM ? names(d.prints, PRINTS, l) : gem));
+    var bits = [PRODUCTS[d.product][l] + (d.product === 'lotcoc' ? (vi ? ' tròn' : ' (round)') : ''),
+      (vi ? 'kiểu ' : 'layout: ') + LAYOUTS[d.layout][l]];
+    if (d.fab) bits.push((vi ? 'vải từng mảnh: ' : 'fabric per patch: ') + fabricList(d, l));
+    else {
+      bits.push((vi ? 'tông: ' : 'colours: ') + (d.tones.length && d.tones[0] !== GEM ? names(d.tones, TONES, l) : gem));
+      bits.push((vi ? 'họa tiết: ' : 'prints: ') + (d.prints.length && d.prints[0] !== GEM ? names(d.prints, PRINTS, l) : gem));
+    }
     var fab = names(d.fabrics, FABRICS, l);
     if (d.other) fab = (fab ? fab + ', ' : '') + (vi ? 'khác: ' : 'other: ') + d.other;
     bits.push((vi ? 'chất vải: ' : 'fabrics: ') + (fab || gem));
@@ -230,12 +297,30 @@
     return bits.join(' · ');
   }
 
+  // "Hoa nhí xanh lá ×3, Ren trung tính ×1" — the fabrics on the patches.
+  function fabricList(d, l) {
+    var count = {}, order = [];
+    for (var i = 0; i < d.fab.length; i++) {
+      var id = B64.indexOf(d.fab[i]);
+      if (!count[id]) { count[id] = 0; order.push(id); }
+      count[id]++;
+    }
+    return order.map(function (id) {
+      return keyName(keyOf(d, id), l) + (count[id] > 1 ? ' ×' + count[id] : '');
+    }).join(', ');
+  }
+
   // Colour families + print tags, for "ready-made in a similar palette".
   function tones(spec) {
     var d = typeof spec === 'string' ? parse(spec) : spec;
     var out = {};
     if (!d) return out;
     d.tones.forEach(function (t) { if (t !== GEM) out[t] = (out[t] || 0) + 2; });
+    for (var i = 0; i < (d.fab || '').length; i++) {
+      var f = info(d, B64.indexOf(d.fab[i]));
+      out[f.tone] = (out[f.tone] || 0) + 1;
+      if (PRINTS[f.kind] && f.kind !== 'tron') out[f.kind] = (out[f.kind] || 0) + 1;
+    }
     d.prints.forEach(function (p) { if (p !== GEM && p !== 'tron') out[p] = (out[p] || 0) + 1; });
     if (d.fabrics.indexOf('bo') >= 0) out.bo = (out.bo || 0) + 1;
     if (d.fabrics.indexOf('ren') >= 0) out.ren = (out.ren || 0) + 1;
@@ -304,6 +389,25 @@
             '<ellipse cx="7.6" cy="12" rx="2.6" ry="1.6"/><ellipse cx="16.4" cy="12" rx="2.6" ry="1.6"/></g>' +
           '<circle cx="12" cy="12" r="1.1" fill="' + acc + '" opacity="0.6"/>' +
           '<path d="M0 23q3-3.5 6 0t6 0t6 0t6 0" stroke="' + acc + '" stroke-width="0.8" fill="none" opacity="0.65"/>' };
+      case 'hoato':
+        // bigger roses with leaves, two per tile
+        var rose = function (x, y) {
+          return '<ellipse cx="' + (x - 7) + '" cy="' + (y + 6) + '" rx="5" ry="2.2" fill="' + C.sage + '" transform="rotate(-25 ' + (x - 7) + ' ' + (y + 6) + ')"/>' +
+            '<ellipse cx="' + (x + 7) + '" cy="' + (y + 6) + '" rx="5" ry="2.2" fill="' + C.reuNhat + '" transform="rotate(25 ' + (x + 7) + ' ' + (y + 6) + ')"/>' +
+            '<circle cx="' + x + '" cy="' + y + '" r="6.5" fill="' + acc + '"/>' +
+            '<path d="M' + (x - 3) + ' ' + y + 'a3 3 0 1 1 3 3" fill="none" stroke="' + shade(acc, -0.3) + '" stroke-width="1"/>';
+        };
+        return { size: 48, body: '<rect width="48" height="48" fill="' + base + '"/>' + rose(13, 13) + rose(37, 36) };
+      case 'ono':
+        // small woven check
+        return { size: 8, body: '<rect width="8" height="8" fill="' + base + '"/>' +
+          '<rect width="4" height="8" fill="' + acc + '" opacity="0.35"/><rect width="8" height="4" fill="' + acc + '" opacity="0.35"/>' };
+      case 'tho':
+        // folk print: zigzag bands and diamonds
+        return { size: 20, body: '<rect width="20" height="20" fill="' + base + '"/>' +
+          '<path d="M0 4l5-3l5 3l5-3l5 3" fill="none" stroke="' + acc + '" stroke-width="1.4"/>' +
+          '<path d="M10 9l3 4l-3 4l-3-4Z" fill="' + acc + '" opacity="0.8"/>' +
+          '<circle cx="2" cy="13" r="1" fill="' + acc + '"/><circle cx="18" cy="13" r="1" fill="' + acc + '"/>' };
       default: // tron — plain, with a faint weave
         return { size: 8, body: '<rect width="8" height="8" fill="' + base + '"/>' +
           '<path d="M0 4h8M4 0v8" stroke="' + shade(base, -0.06) + '" stroke-width="0.6"/>' };
@@ -569,6 +673,104 @@
   };
 
   // Build the preview SVG. Illustrative only: real scraps differ.
+  /* ---------- painted art (images/studio/vai/, tools/design-assets.py) ---------- */
+  var VAI = 'images/studio/vai/';
+
+  function toneOf(color) {
+    var tone = 'trung';
+    TONE_ORDER.forEach(function (t) { if (TONES[t].c.indexOf(color) >= 0) tone = t; });
+    return tone;
+  }
+
+  function swatchSrc(id) {
+    var f = fabric(id);
+    return VAI + 'vai-' + f.tone + '-' + (KINDS.indexOf(f.kind) + 1) + '.webp';
+  }
+
+  // A painted swatch as an SVG pattern, tiled 2 x 2 with mirrored copies so
+  // the edges of the square meet themselves (no visible tile seams).
+  function fabricPattern(id, pid, T, src) {
+    src = src || swatchSrc(id);
+    var im = function (tr) {
+      return '<image href="' + src + '" width="' + T + '" height="' + T + '" preserveAspectRatio="none"' + (tr ? ' transform="' + tr + '"' : '') + '/>';
+    };
+    return '<pattern id="' + pid + '" width="' + 2 * T + '" height="' + 2 * T + '" patternUnits="userSpaceOnUse">' +
+      im('') + im('translate(' + 2 * T + ' 0) scale(-1 1)') + im('translate(0 ' + 2 * T + ') scale(1 -1)') +
+      im('translate(' + 2 * T + ' ' + 2 * T + ') scale(-1 -1)') + '</pattern>';
+  }
+
+  // Pieces with a painting: the fabric is laid inside the piece's silhouette
+  // (mask) and the painted linen's shading multiplies over it, so the cushion
+  // puffs and the scrunchie gathers whatever fabric is on it.
+  // box: where the fabric sits in the 340 square (printed by the tool);
+  // c: the centre the petals turn round; band: the middle strip of "hai";
+  // top: rings / clasps painted over the fabric
+  var ART = {
+    cushion: { n: 'goi' }, coaster: { n: 'lotcoc' }, coasterSq: { n: 'lotcocv' }, scrunchie: { n: 'scrunchie' },
+    shirt: { n: 'oxford', box: [47, 1, 292, 339] },
+    origami: { n: 'origami', top: 1, c: [187, 201] },
+    // like the real charm: the stem, its knots and the middle bud in one
+    // fabric, the two side buds in the other
+    bloom: { n: 'bloom', top: 1, split: 'M0 0H340V172H196L214 252L170 340L126 252L144 172H0Z' },
+    strap: { n: 'daydeo', top: 1 },
+    // the corner bookmark: a square back and a triangle flap that slips over
+    // the corner of a page
+    bookmark: { n: 'bookmark', diag: 1 }
+  };
+  var SEAM = '" stroke="' + STITCH + '" stroke-width="1.8" stroke-dasharray="6 5" fill="none"/>';
+  function artPiece(d, p, fill, pre) {
+    var A = ART[p.shape], name = A.n, out = '';
+    out += '<mask id="' + pre + 'mk" maskUnits="userSpaceOnUse" x="0" y="0" width="340" height="340">' +
+      '<image href="' + VAI + 'mon-' + name + '-mask.webp" width="340" height="340"/></mask>';
+    out += '<g mask="url(#' + pre + 'mk)">';
+    // the fabric area: the painted piece fills most of its square
+    var box = [0, 0, 340];
+    if (d.layout === 'tuve') {
+      out += '<rect width="340" height="340" fill="#FBF6EE"/>' + sketchPaths(d.sketch, box[0], box[1], box[2]);
+    } else if (p.shape === 'scrunchie') {
+      if (d.layout === 'hai') {
+        for (var w = 0; w < 12; w++) {
+          var a0 = w * 30 * Math.PI / 180, a1 = (w + 1) * 30 * Math.PI / 180;
+          out += '<path class="pt-cut" d="M170 170L' + (170 + 220 * Math.cos(a0)).toFixed(1) + ' ' + (170 + 220 * Math.sin(a0)).toFixed(1) +
+            'L' + (170 + 220 * Math.cos(a1)).toFixed(1) + ' ' + (170 + 220 * Math.sin(a1)).toFixed(1) + 'Z" fill="' + fill(w % 2) + '"/>';
+        }
+      } else out += '<rect width="340" height="340" fill="' + fill(0) + '"/>';
+    } else if (d.layout === 'mot') {
+      out += '<rect width="340" height="340" fill="' + fill(0) + '"/>';
+    } else if (d.layout === 'hai' && A.c) {
+      // every other petal: six sectors round the centre, one per petal
+      var cx = A.c[0], cy = A.c[1];
+      for (var k = 0; k < 6; k++) {
+        var b0 = (-120 + k * 60) * Math.PI / 180, b1 = (-60 + k * 60) * Math.PI / 180;
+        var ex = function (a) { return (cx + 400 * Math.cos(a)).toFixed(1) + ' ' + (cy + 400 * Math.sin(a)).toFixed(1); };
+        out += '<path d="M' + cx + ' ' + cy + 'L' + ex(b0) + 'L' + ex(b1) + 'Z" fill="' + fill(k % 2) + '"/>';
+        out += '<path d="M' + cx + ' ' + cy + 'L' + ex(b0) + SEAM;
+      }
+    } else if (d.layout === 'hai' && A.diag) {
+      out += '<path d="M0 0L0 340L340 340Z" fill="' + fill(0) + '"/><path d="M0 0L340 0L340 340Z" fill="' + fill(1) + '"/>' +
+        '<path d="M0 0L340 340' + SEAM;
+    } else if (d.layout === 'hai' && A.split) {
+      out += '<rect width="340" height="340" fill="' + fill(1) + '"/>' +
+        '<path d="' + A.split + '" fill="' + fill(0) + '"/>' +
+        '<path d="M144 172L126 252L170 340L214 252L196 172' + SEAM;
+    } else if (d.layout === 'hai') {
+      // left and right halves (a shirt's placket, a strap's two sides)
+      out += '<rect width="170" height="340" fill="' + fill(0) + '"/><rect x="170" width="170" height="340" fill="' + fill(1) + '"/>' +
+        '<path d="M170 0V340' + SEAM;
+    } else {
+      var bx = A.box || [0, 0, 340, 340], sx = (bx[2] - bx[0]) / 100, sy = (bx[3] - bx[1]) / 100;
+      patches(d.layout, p.grid).forEach(function (pt, n) {
+        var i = d.layout === 'sao' || d.layout === 'chong' ? pt.i : n;
+        out += '<path d="M' + pt.pts.map(function (q) { return (bx[0] + q[0] * sx).toFixed(1) + ' ' + (bx[1] + q[1] * sy).toFixed(1); }).join('L') +
+          'Z" fill="' + fill(i) + '" stroke="' + STITCH + '" stroke-width="1.8" stroke-dasharray="6 5" stroke-linejoin="round"/>';
+      });
+    }
+    out += '</g>';
+    out += '<image href="' + VAI + 'mon-' + name + '-bong.webp" width="340" height="340" style="mix-blend-mode:multiply" pointer-events="none"/>';
+    if (A.top) out += '<image href="' + VAI + 'mon-' + name + '-top.webp" width="340" height="340" pointer-events="none"/>';
+    return out;
+  }
+
   function svg(spec, opts) {
     opts = opts || {};
     var d = typeof spec === 'string' ? parse(spec) : spec;
@@ -579,20 +781,46 @@
     var title = opts.title ? '<title>' + opts.title + '</title>' : '';
     var pick = fabricsFor(d);
     var defs = {}, defsOut = '';
+    var maxI = -1;
     var fill = function (i) {
-      var f = pick(i);
-      var id = pre + f.print + f.color.slice(1);
+      if (i > maxI) maxI = i;
+      var f;
+      if (d.fab && i < d.fab.length) {
+        var ix = B64.indexOf(d.fab[i]);
+        if (ix >= N_FABRICS && d.cus[ix - N_FABRICS]) {
+          // the customer's own colour: the recoloured painting once it is
+          // ready (gem:fabric), a drawn print of that colour until then
+          var c = d.cus[ix - N_FABRICS], cid = pre + 'c' + c.k + c.hex;
+          if (!defs[cid]) {
+            defs[cid] = 1;
+            var csrc = customSrc(c.k, c.hex);
+            if (csrc) defsOut += fabricPattern(null, cid, 110, csrc);
+            else {
+              var cb = printBody(KINDS[c.k], '#' + c.hex);
+              defsOut += '<pattern id="' + cid + '" width="' + cb.size + '" height="' + cb.size + '" patternUnits="userSpaceOnUse">' + cb.body + '</pattern>';
+            }
+          }
+          return 'url(#' + cid + ')' + (opts.hit ? '" data-i="' + i : '');
+        }
+        var fb = fabric(ix);
+        f = { color: fb.color, print: fb.kind };
+      } else f = pick(i);
+      // the painted swatch for this colour family + kind
+      var fid = fabricId(toneOf(f.color), KINDS.indexOf(f.print) >= 0 ? f.print : 'tron');
+      var id = pre + 'f' + fid;
       if (!defs[id]) {
         defs[id] = 1;
-        var b = printBody(f.print, f.color);
-        defsOut += '<pattern id="' + id + '" width="' + b.size + '" height="' + b.size +
-          '" patternUnits="userSpaceOnUse">' + b.body + '</pattern>';
+        defsOut += fabricPattern(fid, id, 110);
       }
-      return 'url(#' + id + ')';
+      // opts.hit: every patch says which fabric slot it is (the designer
+      // lets people tap a patch to change its fabric)
+      return 'url(#' + id + ')' + (opts.hit ? '" data-i="' + i : '');
     };
     var body = '';
 
-    if (SHAPES[p.shape]) {
+    if (ART[p.shape]) {
+      body += artPiece(d, p, fill, pre);
+    } else if (SHAPES[p.shape]) {
       body += SHAPES[p.shape](d, p, fill, pre);
     } else if (p.shape === 'scrunchie') {
       var pts = [];
@@ -644,6 +872,10 @@
         '" rx="' + (rx - 6) + '" fill="none" stroke="' + STITCH + '" stroke-width="1.6" stroke-dasharray="5 5"/>';
     }
 
+    if (opts.count) return d.layout === 'tuve' ? 0 : maxI + 1;
+    // the seams, so "May xong" can sew them
+    if (opts.hit) body = body.replace(/ stroke-dasharray=/g, ' class="pt-seam" stroke-dasharray=');
+
     return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 340"' + size + ' role="img">' + title +
       '<defs>' + defsOut +
       '<radialGradient id="' + pre + 'puff" cx="45%" cy="40%" r="70%">' +
@@ -673,6 +905,264 @@
       '<circle cx="12" cy="12" r="11" fill="url(#' + pre + ')" stroke="' + STITCH + '" stroke-width="1"/></svg>';
   }
 
+  // How many fabric slots a design has (0 for "from my drawing").
+  function slots(d) { return svg(d, { count: true }); }
+
+  /* ---------- fabric keys ----------
+     A fabric is a key: a number 0..44 (the painted catalogue) or a string
+     "c<kind><rrggbb>" (one of the 9 kinds recoloured to the customer's own
+     colour). On a design a patch holds one B64 letter: the number itself, or
+     45 + the colour's place in d.cus. */
+  function isCustom(key) { return typeof key === 'string' && /^c[0-8][0-9a-f]{6}$/.test(key); }
+
+  function keyOf(d, ix) {
+    if (ix < N_FABRICS) return ix;
+    var c = d.cus[ix - N_FABRICS];
+    return c ? 'c' + c.k + c.hex : 0;
+  }
+  function keyAt(d, i) { return d.fab && i < d.fab.length ? keyOf(d, B64.indexOf(d.fab[i])) : null; }
+
+  // The letter for a key on this design (adds the colour to d.cus if new).
+  function letter(d, key) {
+    if (typeof key === 'number') return key >= 0 && key < N_FABRICS ? B64[key] : null;
+    if (!isCustom(key)) return null;
+    d.cus = d.cus || [];
+    var k = +key[1], hex = key.slice(2);
+    for (var n = 0; n < d.cus.length; n++) if (d.cus[n].k === k && d.cus[n].hex === hex) return B64[N_FABRICS + n];
+    if (d.cus.length >= MAX_CUSTOM) return null;
+    d.cus.push({ k: k, hex: hex });
+    return B64[N_FABRICS + d.cus.length - 1];
+  }
+
+  // Drop colours no patch uses any more, renumbering the letters.
+  function prune(d) {
+    if (!d.cus || !d.cus.length) return;
+    var keep = [], map = {};
+    for (var i = 0; i < (d.fab || '').length; i++) {
+      var ix = B64.indexOf(d.fab[i]);
+      if (ix >= N_FABRICS && !(ix in map)) { map[ix] = N_FABRICS + keep.length; keep.push(d.cus[ix - N_FABRICS]); }
+    }
+    d.fab = (d.fab || '').split('').map(function (ch) {
+      var ix = B64.indexOf(ch);
+      return ix >= N_FABRICS ? B64[map[ix]] : ch;
+    }).join('');
+    d.cus = keep;
+  }
+
+  // What a key is, for names and colour families.
+  function hexRgb(hex) { var n = parseInt(hex, 16); return [n >> 16, (n >> 8) & 255, n & 255]; }
+  function nearestTone(hex) {
+    var rgb = hexRgb(hex), best = 'trung', bd = 1e9;
+    TONE_ORDER.forEach(function (t) {
+      TONES[t].c.forEach(function (c) {
+        var q = hexRgb(c.slice(1)), dd = Math.pow(q[0] - rgb[0], 2) + Math.pow(q[1] - rgb[1], 2) + Math.pow(q[2] - rgb[2], 2);
+        if (dd < bd) { bd = dd; best = t; }
+      });
+    });
+    return best;
+  }
+  function info(d, ix) {
+    var key = keyOf(d, ix);
+    if (typeof key === 'number') { var f = fabric(key); return { tone: f.tone, kind: f.kind, custom: false }; }
+    return { tone: nearestTone(key.slice(2)), kind: KINDS[+key[1]], custom: true, hex: key.slice(2) };
+  }
+  function keyName(key, l) {
+    l = l || lang();
+    if (typeof key === 'number') { var f = fabric(key); return KIND_NAMES[f.kind][l] + ' ' + TONES[f.tone][l].toLowerCase(); }
+    return KIND_NAMES[KINDS[+key[1]]][l] + (l === 'vi' ? ' màu riêng #' : ' own colour #') + key.slice(2);
+  }
+
+  // Put fabrics from a palette (keys) on every patch: neighbours differ when
+  // the palette allows, nothing repeats more than it must.
+  function scatter(d, keys) {
+    var n = slots(d), out = '', bag = [];
+    d.cus = [];
+    for (var i = 0; i < n; i++) {
+      if (!bag.length) bag = keys.slice().sort(function () { return Math.random() - 0.5; });
+      var prev = out.length ? keyOf(d, B64.indexOf(out[out.length - 1])) : null;
+      var k = bag.length > 1 && bag[0] === prev ? 1 : 0;
+      out += letter(d, bag.splice(k, 1)[0]) || B64[0];
+    }
+    d.fab = out;
+    prune(d);
+    return d.fab;
+  }
+
+  function setPatch(d, i, key) {
+    var n = slots(d);
+    if (i < 0 || i >= n) return;
+    var cur = d.fab && d.fab.length === n ? d.fab : '';
+    if (!cur) {   // first touch: freeze what the preview shows now
+      var pick = fabricsFor(d);
+      d.cus = [];
+      for (var k = 0; k < n; k++) {
+        var f = pick(k);
+        cur += B64[fabricId(toneOf(f.color), KINDS.indexOf(f.print) >= 0 ? f.print : 'tron')];
+      }
+    }
+    var ch = letter(d, key);
+    if (!ch) return;
+    d.fab = cur.slice(0, i) + ch + cur.slice(i + 1);
+    prune(d);
+  }
+
+  // Tones and prints follow the fabrics on the patches, so the order note,
+  // the "similar ready-made" picks and the name agree with what is drawn.
+  function syncTaste(d) {
+    if (!d.fab) return;
+    var tc = {}, kinds = [];
+    for (var i = 0; i < d.fab.length; i++) {
+      var f = info(d, B64.indexOf(d.fab[i]));
+      tc[f.tone] = (tc[f.tone] || 0) + 1;
+      if (PRINTS[f.kind] && kinds.indexOf(f.kind) < 0) kinds.push(f.kind);
+    }
+    d.tones = Object.keys(tc).sort(function (a, b) { return tc[b] - tc[a]; }).slice(0, MAX_TONES);
+    d.prints = PRINT_ORDER.filter(function (k) { return kinds.indexOf(k) >= 0; });
+  }
+
+  function moodOf(d) {
+    if (!d.fab) return null;
+    var ids = [];
+    for (var i = 0; i < d.fab.length; i++) ids.push(B64.indexOf(d.fab[i]));
+    for (var m = 0; m < MOODS.length; m++) {
+      if (ids.every(function (x) { return MOODS[m].ids.indexOf(x) >= 0; })) return MOODS[m];
+    }
+    return null;
+  }
+
+  function applyMood(d, mood) {
+    var p = PRODUCTS[d.product];
+    if (d.layout !== 'tuve') d.layout = p.layouts.indexOf(mood.layout) >= 0 ? mood.layout
+      : p.layouts.indexOf('hai') >= 0 ? 'hai' : p.layouts[0];
+    scatter(d, mood.ids);
+    syncTaste(d);
+  }
+
+  /* ---------- the customer's own colour ----------
+     The blue sheet (blue ink on cream, little else) is repainted in the
+     chosen colour, pixel by pixel: blue-ish pixels take the new hue, the
+     saturation scaled and the lightness shifted; cream, white lace and green
+     leaves stay as painted. Done once per kind + colour, kept as a blob URL. */
+  var customUrls = {}, customJobs = {};
+  function rgbHsl(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    var mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, h = 0, s = 0;
+    if (mx !== mn) {
+      var dd = mx - mn;
+      s = l > 0.5 ? dd / (2 - mx - mn) : dd / (mx + mn);
+      h = mx === r ? (g - b) / dd + (g < b ? 6 : 0) : mx === g ? (b - r) / dd + 2 : (r - g) / dd + 4;
+      h *= 60;
+    }
+    return [h, s, l];
+  }
+  function hslRgb(h, s, l) {
+    var c = (1 - Math.abs(2 * l - 1)) * s, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = l - c / 2, r, g, b;
+    if (h < 60) { r = c; g = x; b = 0; } else if (h < 120) { r = x; g = c; b = 0; } else if (h < 180) { r = 0; g = c; b = x; }
+    else if (h < 240) { r = 0; g = x; b = c; } else if (h < 300) { r = x; g = 0; b = c; } else { r = c; g = 0; b = x; }
+    return [(r + m) * 255, (g + m) * 255, (b + m) * 255];
+  }
+  function customSrc(k, hex) {
+    var id = k + hex;
+    if (customUrls[id]) return customUrls[id];
+    if (customJobs[id] || typeof document === 'undefined' || !document.createElement) return null;
+    customJobs[id] = 1;
+    var img = new Image();
+    img.onload = function () {
+      try {
+        var c = document.createElement('canvas');
+        c.width = img.naturalWidth; c.height = img.naturalHeight;
+        var g = c.getContext('2d');
+        g.drawImage(img, 0, 0);
+        var data = g.getImageData(0, 0, c.width, c.height), px = data.data;
+        var rgb = hexRgb(hex), t = rgbHsl(rgb[0], rgb[1], rgb[2]);
+        // how strong this painting's blue is (some are barely tinted): the
+        // strongest blue becomes the full chosen colour
+        var sats = [];
+        for (var q0 = 0; q0 < px.length; q0 += 4 * 7) {
+          var h0 = rgbHsl(px[q0], px[q0 + 1], px[q0 + 2]);
+          if (h0[0] >= 140 && h0[0] <= 300 && h0[1] >= 0.012) sats.push(h0[1]);
+        }
+        sats.sort(function (x, y) { return x - y; });
+        var ref = Math.max(0.08, sats.length ? sats[Math.floor(sats.length * 0.9)] : 0.3);
+        for (var q = 0; q < px.length; q += 4) {
+          var hsl = rgbHsl(px[q], px[q + 1], px[q + 2]);
+          // the blue ink, faded or strong; cream (hue ~40), white lace and
+          // green leaves (hue ~90) are left as painted
+          if (hsl[0] < 140 || hsl[0] > 300 || hsl[1] < 0.012) continue;
+          var w = Math.min(1, (hsl[1] - 0.012) / 0.03);
+          // pale blue stays pale, strong blue becomes the strong colour
+          var s2 = Math.min(1, t[1] * Math.max(0.5, Math.min(1.2, hsl[1] / ref)));
+          var l2 = Math.max(0, Math.min(1, hsl[2] + 0.85 * (t[2] - 0.55)));
+          var out = hslRgb(t[0], s2 * w + hsl[1] * (1 - w), l2 * w + hsl[2] * (1 - w));
+          px[q] = out[0]; px[q + 1] = out[1]; px[q + 2] = out[2];
+        }
+        g.putImageData(data, 0, 0);
+        c.toBlob(function (b) {
+          if (!b) return;
+          customUrls[id] = URL.createObjectURL(b);
+          document.dispatchEvent(new CustomEvent('gem:fabric', { detail: { key: 'c' + id } }));
+        }, 'image/webp', 0.85);
+      } catch (e) { /* the drawn print stays */ }
+    };
+    img.src = VAI + 'vai-lam-' + (k + 1) + '.webp';
+    return null;
+  }
+  function keySrc(key) {
+    return typeof key === 'number' ? swatchSrc(key) : customSrc(+key[1], key.slice(2));
+  }
+
+  // "Sắc tím": a name for a colour the customer picked.
+  function hueName(hex, l) {
+    var rgb = hexRgb(hex), h = rgbHsl(rgb[0], rgb[1], rgb[2]);
+    var vi = l === 'vi';
+    if (h[1] < 0.15) return h[2] > 0.7 ? (vi ? 'kem' : 'cream') : (vi ? 'xám' : 'grey');
+    var names = [[15, 'đỏ', 'red'], [40, 'cam', 'orange'], [65, 'vàng', 'yellow'], [160, 'xanh lá', 'green'],
+      [200, 'xanh ngọc', 'teal'], [255, 'xanh dương', 'blue'], [290, 'tím', 'violet'], [345, 'hồng', 'pink'], [361, 'đỏ', 'red']];
+    for (var i = 0; i < names.length; i++) if (h[0] < names[i][0]) return vi ? names[i][1] : names[i][2];
+    return vi ? 'đỏ' : 'red';
+  }
+
+  var TONE_WORDS = {
+    xanh: { vi: 'Lá non', en: 'Young leaf' }, lam: { vi: 'Biển xanh', en: 'Sea blue' },
+    hong: { vi: 'Hồng phấn', en: 'Rose' }, nau: { vi: 'Đất nâu', en: 'Earth' }, trung: { vi: 'Kem sữa', en: 'Milk cream' }
+  };
+
+  // A name worth putting on a card: the mood if the fabrics come from one,
+  // else the two main colour families.
+  function title(d, l) {
+    l = l || lang();
+    var m = moodOf(d);
+    if (m) return m[l];
+    // mostly the customer's own colour: name that colour
+    var own = {}, n = 0;
+    for (var i = 0; i < (d.fab || '').length; i++) {
+      var ix = B64.indexOf(d.fab[i]);
+      if (ix >= N_FABRICS && d.cus[ix - N_FABRICS]) { var hx = d.cus[ix - N_FABRICS].hex; own[hx] = (own[hx] || 0) + 1; n++; }
+    }
+    if (n * 2 >= (d.fab || '').length && n) {
+      var top = Object.keys(own).sort(function (a, b) { return own[b] - own[a]; })[0];
+      var hn = hueName(top, l);
+      return l === 'vi' ? 'Sắc ' + hn : hn.charAt(0).toUpperCase() + hn.slice(1) + ' shade';
+    }
+    var tones = d.tones.filter(function (t) { return t !== GEM; });
+    if (!tones.length) return l === 'vi' ? 'Gem tự chọn' : "Gem's pick";
+    return tones.map(function (t) { return TONE_WORDS[t][l]; }).join(' & ');
+  }
+
+  // "Mẫu #4271": the same design always gets the same number.
+  function serial(spec) {
+    var h = 2166136261;
+    for (var i = 0; i < spec.length; i++) { h ^= spec.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return 1000 + ((h >>> 0) % 9000);
+  }
+
+  // A small fabric swatch on its own (the basket of scraps).
+  function swatch(id, size) {
+    var f = fabric(id), b = printBody(f.kind, f.color), pid = 'gw' + (++uid);
+    return { id: pid, def: '<pattern id="' + pid + '" width="' + b.size + '" height="' + b.size +
+      '" patternUnits="userSpaceOnUse"' + (size ? ' patternTransform="scale(' + size + ')"' : '') + '>' + b.body + '</pattern>' };
+  }
+
   window.GemPatch = {
     PRODUCTS: PRODUCTS, PRODUCT_ORDER: PRODUCT_ORDER, LAYOUTS: LAYOUTS,
     TONES: TONES, TONE_ORDER: TONE_ORDER, MAX_TONES: MAX_TONES,
@@ -682,8 +1172,14 @@
     blank: blank, encode: encode, parse: parse, isComplete: isComplete, describe: describe,
     tones: tones, randomFill: randomFill, svg: svg, toneDot: toneDot, printDot: printDot,
     sketchPaths: sketchPaths,
-    url: function (spec) {
-      return location.origin + location.pathname.replace(/[^/]*$/, '') + 'studio.html?d=' + encodeURIComponent(spec);
+    KINDS: KINDS, KIND_NAMES: KIND_NAMES, N_FABRICS: N_FABRICS, MOODS: MOODS, B64: B64,
+    fabric: fabric, fabricId: fabricId, slots: slots, scatter: scatter, setPatch: setPatch, syncTaste: syncTaste,
+    moodOf: moodOf, applyMood: applyMood, title: title, serial: serial, swatch: swatch,
+    swatchSrc: swatchSrc, VAI: VAI, keySrc: keySrc, keyAt: keyAt, keyName: keyName, isCustom: isCustom, customSrc: customSrc,
+    // by: the designer's name for the card, travels in the link only
+    url: function (spec, by) {
+      return location.origin + location.pathname.replace(/[^/]*$/, '') + 'studio.html?d=' + encodeURIComponent(spec) +
+        (by ? '&by=' + encodeURIComponent(String(by).slice(0, 24)) : '');
     }
   };
 })();
