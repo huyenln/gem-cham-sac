@@ -707,16 +707,6 @@ html:has(.studio-page), .studio-page { overscroll-behavior: none; }
 .pt-notefield textarea:focus { outline: none; border-color: var(--sage-deep); }
 
 .pt-draw { display: grid; gap: var(--space-2); justify-items: start; }
-.pt-canvas {
-  width: 100%;
-  max-width: 440px;
-  aspect-ratio: 1;
-  border: 1.5px solid var(--sage-light);
-  border-radius: 10px;
-  background: #FBF6EE;
-  touch-action: none;
-  cursor: crosshair;
-}
 .pt-inks { display: flex; gap: var(--space-2); }
 .pt-ink {
   width: 44px;
@@ -1146,7 +1136,8 @@ html:has(.studio-page), .studio-page { overscroll-behavior: none; }
 .st-sheet.is-full .pt-actions {
   position: sticky; bottom: calc(-1 * var(--space-6)); z-index: 3;
   margin: 0 calc(-1 * var(--space-4)); padding: var(--space-3) var(--space-4);
-  background: rgba(251, 246, 238, 0.96); border-top: 1px solid var(--sage-light);
+  background: var(--paper-white); border-top: 1px solid var(--sage-light);
+  box-shadow: 0 -6px 14px rgba(61, 74, 46, 0.08);
 }
 .pt-sew { min-height: 48px; padding-inline: var(--space-6); }
 /* phone: "May xong!" first and wide; the floating basket keeps its corner */
@@ -1216,3 +1207,114 @@ html:has(.studio-page), .studio-page { overscroll-behavior: none; }
 .pt-shape-ic { width: 20px; height: 20px; border: 2px solid var(--kraft); background: var(--paper-cream); flex: none; }
 .pt-shape-lotcoc { border-radius: 50%; }
 .pt-shape-lotcocv { border-radius: 4px; }
+
+/* what is in the basket rides in the character's cart: above the rim,
+   the lower part hidden as if inside */
+.st-cargo { position: absolute; left: 61%; width: 35%; height: 20%; overflow: hidden; display: flex; align-items: flex-end; justify-content: center; pointer-events: none; }
+.st-cargo-item { position: relative; flex: 0 0 58%; aspect-ratio: 1; margin: 0 -12%; transform: translateY(38%); }
+.st-cargo-item svg, .st-cargo-item img { width: 100%; height: 100%; display: block; object-fit: contain; }
+.st-cargo-item img.is-photo { object-fit: cover; border-radius: 4px; }
+.st-cargo-0 { transform: translateY(38%) rotate(-10deg); }
+.st-cargo-1 { transform: translateY(30%) rotate(6deg); z-index: 1; }
+.st-cargo-2 { transform: translateY(40%) rotate(-3deg); }
+/* the design's name: tap to rename */
+input.pt-done-name {
+  width: 100%; max-width: 22ch; text-align: center; padding: 2px 8px; border: 0; border-bottom: 1.5px dashed var(--kraft);
+  background: transparent; outline: none; border-radius: 0;
+}
+input.pt-done-name:focus { border-bottom-style: solid; border-bottom-color: var(--sage-deep); }
+.pt-title-hint { margin-top: -4px; }
+
+/* ======================================================================
+   BÀN THIẾT KẾ — xếp lại (10/2026): Udon + ảnh món thật quanh món, vẽ
+   thẳng lên món, tờ nhắn giấy kraft
+   ====================================================================== */
+.pt-stage { position: relative; width: 100%; max-width: min(420px, 46svh); margin: 4px auto 0; }
+.pt-stage .pt-board, .st-sheet.is-full .pt-stage .pt-board { max-width: none; width: 100%; }
+.pt-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 3; touch-action: none; cursor: crosshair; }
+.pt-canvas[hidden] { display: none; }
+
+/* Udon sits at the piece's lower-left corner */
+.pt-stage .gv-udon {
+  position: absolute; left: -7%; bottom: -5%; width: 25%; aspect-ratio: 375 / 500; z-index: 4; pointer-events: none;
+}
+.pt-stage.is-sewing .gv-udon { visibility: hidden; }
+.pt-stage .pt-sewer { left: -8%; bottom: -5%; width: 33%; }
+
+/* the real piece: a polaroid pinned at the upper-right corner */
+.gv-polaroid {
+  position: absolute; top: -3%; right: -2%; width: 25%; z-index: 4; padding: 4% 4% 0; border: 0; cursor: zoom-in;
+  background: #fffdf8; box-shadow: 0 4px 10px rgba(61, 74, 46, 0.28); transform: rotate(6deg);
+  transition: width 0.25s ease, top 0.25s ease, right 0.25s ease, transform 0.25s ease;
+}
+.gv-polaroid .gv-photo { position: static; display: block; aspect-ratio: 1; overflow: hidden; }
+.gv-cap { display: block; padding: 2px 0 4px; font-family: var(--font-hand); font-size: clamp(13px, 3.4vw, 18px); color: var(--ink-dark); text-align: center; line-height: 1.2; }
+.gv-polaroid::before {   /* the pin */
+  content: ''; position: absolute; top: -5px; left: 50%; width: 11px; height: 11px; margin-left: -5px; border-radius: 50%;
+  background: #B5654A; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+.pt-stage.is-zoom .gv-polaroid { width: 74%; top: 6%; right: 13%; transform: rotate(-2deg); z-index: 6; cursor: zoom-out; }
+.gv-next {
+  position: absolute; right: 2%; top: 42%; z-index: 7; width: 44px; height: 44px; border-radius: 50%; border: 0;
+  background: var(--paper-white); box-shadow: 0 2px 6px rgba(61, 74, 46, 0.3); font-size: 26px; line-height: 1; color: var(--ink-dark); cursor: pointer;
+}
+.gv-next[hidden] { display: none; }
+
+/* Udon's line, a speech bubble under the piece; an instruction takes its place when there is one */
+.pt-view .gv-say {
+  position: relative; margin: 10px 0 0; max-width: 36ch; min-height: 0; padding: var(--space-2) var(--space-3);
+  background: var(--paper-white); border: 1.5px solid var(--sage-light); border-radius: 14px;
+  font-size: var(--text-sm); line-height: 1.45; color: var(--ink-dark); text-align: left;
+}
+.pt-view .gv-say::before {
+  content: ''; position: absolute; top: -8px; left: 18%; width: 14px; height: 14px; background: var(--paper-white);
+  border-left: 1.5px solid var(--sage-light); border-top: 1.5px solid var(--sage-light); transform: rotate(45deg);
+}
+.pt-view .gv-say:empty { display: none; }
+.pt-hint:empty { display: none; }
+.pt-hint:not(:empty) ~ .gv-say { display: none; }
+.pt-view .pt-hint { margin: 8px 0 0; }
+
+/* pens under the piece while drawing on it */
+.pt-drawbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; margin-top: 6px; }
+.pt-drawbar[hidden] { display: none; }
+.pt-drawbar .pt-draw-msg { flex-basis: 100%; text-align: center; margin: 0; }
+.pt-drawbar .pt-draw-msg:empty { display: none; }
+
+/* the note to Gem: kraft paper, pinned */
+.pt-letter {
+  position: relative; border-top: 0; margin-top: var(--space-4); padding: var(--space-5) var(--space-4) var(--space-4);
+  background: #E8D6B8 url("../images/studio/ui/giay-nen.webp") center / cover; background-blend-mode: multiply;
+  border-radius: 6px; box-shadow: 0 3px 10px rgba(61, 74, 46, 0.18); transform: rotate(-0.4deg);
+}
+.pt-letter::before {
+  content: ''; position: absolute; top: -7px; left: 50%; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%;
+  background: #B5654A; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+.pt-letter > summary { display: grid; gap: 2px; padding: 0; }
+.pt-letter > summary::before { display: none; }
+.pt-letter-h { font-family: var(--font-hand); font-size: 30px; line-height: 1.1; color: var(--ink-dark); font-weight: 600; }
+.pt-letter[open] > summary { margin-bottom: var(--space-2); }
+.pt-letter .pt-label { color: #6E5A3C; }
+/* fabrics as sewn-in labels */
+.pt-tags .pt-chip { border-radius: 3px; border: 1.5px dashed var(--kraft); background: #FBF4E6; min-height: 40px; padding: 4px 12px; }
+.pt-tags .pt-chip.is-on { border-style: solid; border-color: var(--sage-deep); box-shadow: none; background: #F1F0E0; }
+.pt-letter .pt-other input { background: rgba(251, 246, 238, 0.7); }
+/* the message: written on ruled paper */
+.pt-letter .pt-notefield textarea {
+  border: 0; border-radius: 0; padding: 0 4px; background: transparent; resize: vertical;
+  font-family: var(--font-hand); font-size: 22px; line-height: 32px;
+  background-image: repeating-linear-gradient(transparent 0 31px, rgba(138, 106, 68, 0.35) 31px 32px);
+}
+.pt-letter .pt-notefield textarea:focus { border: 0; }
+/* the reference photo: an empty polaroid to fill */
+.pt-polaroid-add {
+  display: inline-block; width: 120px; padding: 8px 8px 24px; background: #fffdf8; cursor: pointer;
+  box-shadow: 0 3px 8px rgba(61, 74, 46, 0.25); transform: rotate(-3deg);
+}
+.pt-polaroid-in {
+  display: grid; place-items: center; aspect-ratio: 1; padding: 6px; text-align: center; border: 1.5px dashed var(--kraft);
+  font-size: var(--text-xs); color: var(--ink-soft);
+}
+.pt-letter .pt-photo-prev img { border-radius: 0; border: 6px solid #fffdf8; border-bottom-width: 18px; transform: rotate(2deg); }
+.pt-letter .pt-note { margin-top: var(--space-3); font-size: var(--text-xs); }

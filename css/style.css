@@ -2622,3 +2622,10 @@ body.gb-lock { overflow: hidden; }
 
 .ws-page-when { margin-top: var(--space-10); padding-top: var(--space-6); border-top: 1px solid rgba(135, 150, 90, 0.22); }
 .ws-page-when h3 { font-size: var(--text-lg); margin-bottom: var(--space-4); }
+
+/* real pictures in the basket pile and in the flying ghost */
+.gb-pile-item img, .gb-ghost img { width: 100%; height: 100%; display: block; object-fit: contain; }
+.gb-pile-item img.is-photo, .gb-ghost img.is-photo { object-fit: cover; border-radius: 6px; box-shadow: 0 1px 3px rgba(61, 74, 46, 0.3); }
+.gb-row-sprite img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.gb-row-sprite img.is-photo { object-fit: cover; border-radius: 6px; }
+.gb-row-sprite svg { width: 100%; height: 100%; display: block; }

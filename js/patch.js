@@ -1020,21 +1020,24 @@
     d.prints = PRINT_ORDER.filter(function (k) { return kinds.indexOf(k) >= 0; });
   }
 
+  // The mood the fabrics come from. Few patches can fit several moods: the
+  // one the customer picked (d.moodId, not in the code) wins, then the first.
   function moodOf(d) {
     if (!d.fab) return null;
     var ids = [];
     for (var i = 0; i < d.fab.length; i++) ids.push(B64.indexOf(d.fab[i]));
-    for (var m = 0; m < MOODS.length; m++) {
-      if (ids.every(function (x) { return MOODS[m].ids.indexOf(x) >= 0; })) return MOODS[m];
-    }
-    return null;
+    var fits = MOODS.filter(function (m) { return ids.every(function (x) { return m.ids.indexOf(x) >= 0; }); });
+    return fits.filter(function (m) { return m.id === d.moodId; })[0] || fits[0] || null;
   }
 
-  function applyMood(d, mood) {
+  // keepLayout: only the fabrics change (the customer already picked a
+  // layout); otherwise the mood's own layout comes along (a fresh piece)
+  function applyMood(d, mood, keepLayout) {
     var p = PRODUCTS[d.product];
-    if (d.layout !== 'tuve') d.layout = p.layouts.indexOf(mood.layout) >= 0 ? mood.layout
+    if (d.layout !== 'tuve' && !keepLayout) d.layout = p.layouts.indexOf(mood.layout) >= 0 ? mood.layout
       : p.layouts.indexOf('hai') >= 0 ? 'hai' : p.layouts[0];
     scatter(d, mood.ids);
+    d.moodId = mood.id;
     syncTaste(d);
   }
 
@@ -1177,9 +1180,11 @@
     moodOf: moodOf, applyMood: applyMood, title: title, serial: serial, swatch: swatch,
     swatchSrc: swatchSrc, VAI: VAI, keySrc: keySrc, keyAt: keyAt, keyName: keyName, isCustom: isCustom, customSrc: customSrc,
     // by: the designer's name for the card, travels in the link only
-    url: function (spec, by) {
+    // mood: which mood the fabrics came from (several can fit few patches)
+    url: function (spec, by, mood) {
       return location.origin + location.pathname.replace(/[^/]*$/, '') + 'studio.html?d=' + encodeURIComponent(spec) +
-        (by ? '&by=' + encodeURIComponent(String(by).slice(0, 24)) : '');
+        (by ? '&by=' + encodeURIComponent(String(by).slice(0, 24)) : '') +
+        (mood && MOODS.some(function (m) { return m.id === mood; }) ? '&m=' + mood : '');
     }
   };
 })();
