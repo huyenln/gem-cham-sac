@@ -1455,7 +1455,10 @@ thẻ tạo sau vẫn mở lightbox; `GemBasket.bindCard` gắn giá + nút gi�
 (database); `THUMB` / `CUTOUT` / `SHELVES` trong `js/studio.js` chỉ dùng khi chưa có.
 
 **Trình lắp:** "+ Tải ảnh" → chọn tab (có sẵn hoặc "+ Nhóm mới…"), tên, tuỳ chọn
-Xoá nền trắng → thu nhỏ, tải lên, lưu vào `studio_assets`. "Sửa thư viện": đổi
+Xoá nền trắng → thu nhỏ, tải lên, lưu vào `studio_assets`. Chọn được nhiều ảnh một
+lượt (tối đa 20): bỏ bớt bằng ×, cả lượt chung một tab + một lựa chọn Xoá nền trắng,
+tên lấy theo tên file; xử lý lần lượt từng ảnh, ảnh lỗi ở lại trong khung để thử lại.
+Một ảnh thì đặt luôn vào cảnh; nhiều ảnh thì chỉ mở tab (đặt hết vào giữa sẽ chồng lên nhau). "Sửa thư viện": đổi
 tên / chuyển tab / bỏ ảnh đã tải lên. Bỏ chỉ xoá dòng trong thư viện, file vẫn ở
 Storage để bố cục đang dùng không vỡ. Ảnh cắt nền của sản phẩm tự hiện ở tab
 "Sản phẩm thật", đã nối sẵn sku.

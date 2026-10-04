@@ -599,3 +599,11 @@
 .se-upform-f .se-up-cut { display: flex; align-items: center; gap: var(--space-2); }
 .se-lib.is-manage .se-asset.is-own { border-style: dashed; border-color: var(--sage-deep); }
 .se-lib.is-manage .se-asset:not(.is-own) { opacity: .45; }
+/* several pictures: thumbnails on top, the form below */
+.se-upform.is-many { flex-direction: column; align-items: stretch; }
+.se-up-strip { list-style: none; margin: 0; padding: 0; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: thin; }
+.se-up-strip li { position: relative; flex: none; }
+.se-up-strip img { width: 72px; height: 72px; object-fit: contain; display: block; border-radius: 8px;
+  background: repeating-conic-gradient(#e6e1d6 0 25%, #fff 0 50%) 0 0 / 16px 16px; }
+.se-up-x { position: absolute; top: 2px; right: 2px; width: 28px; height: 28px; border: 0; border-radius: 50%;
+  background: rgba(61, 74, 46, .8); color: #fff; font-size: 16px; line-height: 1; cursor: pointer; }

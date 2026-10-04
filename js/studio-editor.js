@@ -21,7 +21,8 @@ window.GemStudioEditor = (function () {
   var lib = null;           // assets.json + the library in the database (see mergeLib)
   var baseGroups = null;    // assets.json groups as shipped
   var dbAssets = [];        // studio_assets rows: pictures the owner uploaded
-  var upForm = null;        // { file, preview, grp, newGrp, name, cut } while an upload is being set up
+  var upForm = null;        // { files: [{ file, preview }], grp, newGrp, name, cut } while an upload is being set up
+  var UP_MAX = 20;          // pictures per batch
   var manage = false;       // library in "Sửa thư viện" mode: tapping an own picture edits it
   var editAsset = null;     // studio_assets id being edited
   var data = null;          // the layout being edited
@@ -233,40 +234,79 @@ window.GemStudioEditor = (function () {
     return typed || null;
   }
 
-  function startUpload(file) {
-    if (!file) return;
+  function dropPreviews(f) {
+    (f ? f.files : []).forEach(function (x) { URL.revokeObjectURL(x.preview); });
+  }
+
+  function startUpload(list) {
+    var files = Array.prototype.slice.call(list || []);
+    if (!files.length) return;
     if (!window.GemImg) { status('Thiếu js/img-tools.js — tải lại trang.', true); return; }
-    if (upForm) URL.revokeObjectURL(upForm.preview);
+    if (files.length > UP_MAX) {
+      status('Mỗi lần tối đa ' + UP_MAX + ' ảnh — lấy ' + UP_MAX + ' ảnh đầu.', true);
+      files = files.slice(0, UP_MAX);
+    }
+    dropPreviews(upForm);
     var g = group === PROD_GROUP ? (baseGroups[0] && baseGroups[0].id) : group;
-    upForm = { file: file, preview: URL.createObjectURL(file), grp: g, newGrp: '', name: '', cut: false };
+    upForm = { files: files.map(function (f) { return { file: f, preview: URL.createObjectURL(f) }; }),
+      grp: g, newGrp: '', name: '', cut: false };
     manage = false; editAsset = null;
     renderPanel();
   }
 
+  // "binh-hoa.png" -> "binh-hoa": the name a picture gets in a batch
+  function fileTitle(file) {
+    return String(file.name || '').replace(/\.[a-z0-9]+$/i, '').slice(0, 80);
+  }
+
+  // One picture at a time (phones run out of memory decoding several big
+  // photos at once). A picture that fails doesn't stop the rest; the failed
+  // ones stay in the form so they can be tried again.
   function saveUpload() {
     var f = upForm;
     var grp = pickedGroup(f.grp, f.newGrp);
     if (!grp) { status('Đặt tên cho nhóm mới đã nhé.', true); return; }
     var btn = panelEl.querySelector('[data-up="save"]');
     if (btn) { btn.disabled = true; btn.textContent = 'Đang xử lý…'; }
-    status(f.cut ? 'Đang xoá nền trắng và thu nhỏ ảnh…' : 'Đang thu nhỏ ảnh…');
-    var IMG = window.GemImg, sz;
-    (f.cut ? IMG.removeWhite(f.file) : IMG.shrink(f.file, { alpha: true })).then(function (file) {
-      return IMG.size(file).then(function (d) { sz = d; return DB.uploadImage(file); });
-    }).then(function (url) {
-      status('Đang lưu vào thư viện…');
-      return DB.addStudioAsset({ src: url, w: sz.w, h: sz.h, grp: grp, name: String(f.name || '').trim().slice(0, 80) });
-    }).then(function (row) {
-      dbAssets.push(row);
-      mergeLib();
-      URL.revokeObjectURL(f.preview);
-      upForm = null;
-      group = grp;
-      add({ src: row.src, w: row.w, h: row.h });
-      status('Đã lưu vào thư viện, tab "' + groupLabel(grp) + '"');
-    }).catch(function (err) {
-      if (btn) { btn.disabled = false; btn.textContent = 'Lưu vào thư viện'; }
-      status('Không lưu được: ' + (err.message || ''), true);
+    var IMG = window.GemImg;
+    var n = f.files.length, done = [], failed = [];
+    var single = n === 1;
+
+    function one(x, i) {
+      var sz;
+      status((n > 1 ? 'Đang xử lý ' + (i + 1) + '/' + n + '… ' : '') +
+        (f.cut ? 'xoá nền trắng, thu nhỏ, tải lên' : 'thu nhỏ, tải lên'));
+      return (f.cut ? IMG.removeWhite(x.file) : IMG.shrink(x.file, { alpha: true })).then(function (file) {
+        return IMG.size(file).then(function (d) { sz = d; return DB.uploadImage(file); });
+      }).then(function (url) {
+        var name = single ? String(f.name || '').trim().slice(0, 80) : fileTitle(x.file);
+        return DB.addStudioAsset({ src: url, w: sz.w, h: sz.h, grp: grp, name: name });
+      }).then(function (row) {
+        dbAssets.push(row);
+        done.push(row);
+        URL.revokeObjectURL(x.preview);
+      }, function (err) {
+        failed.push({ x: x, msg: err.message || '' });
+      });
+    }
+
+    f.files.reduce(function (chain, x, i) {
+      return chain.then(function () { return one(x, i); });
+    }, Promise.resolve()).then(function () {
+      if (done.length) { mergeLib(); group = grp; }
+      if (single && done.length) add({ src: done[0].src, w: done[0].w, h: done[0].h });
+      if (!failed.length) {
+        upForm = null;
+        renderPanel();
+        status(single ? 'Đã lưu vào thư viện, tab "' + groupLabel(grp) + '"'
+          : 'Đã lưu ' + done.length + ' ảnh vào tab "' + groupLabel(grp) + '" — chạm ảnh để đặt vào cảnh');
+        return;
+      }
+      f.files = failed.map(function (y) { return y.x; });
+      renderPanel();
+      status((done.length ? 'Đã lưu ' + done.length + ' ảnh. ' : '') + failed.length + ' ảnh chưa lưu được (' +
+        failed.map(function (y) { return y.x.file.name; }).join(', ') + '): ' + failed[0].msg +
+        ' — vẫn còn trong khung để thử lại.', true);
     });
   }
 
@@ -703,16 +743,26 @@ window.GemStudioEditor = (function () {
     var g = lib.groups.filter(function (x) { return x.id === group; })[0] || lib.groups[0];
     var extra = '';
     if (upForm) {
-      extra = '<div class="se-upform">' +
-        '<img src="' + esc(upForm.preview) + '" alt="">' +
+      var many = upForm.files.length > 1;
+      extra = '<div class="se-upform' + (many ? ' is-many' : '') + '">' +
+        (many
+          ? '<ul class="se-up-strip">' + upForm.files.map(function (x, i) {
+              return '<li><img src="' + esc(x.preview) + '" alt="" title="' + esc(x.file.name) + '">' +
+                '<button type="button" class="se-up-x" data-up-drop="' + i + '" aria-label="Bỏ ảnh này">×</button></li>';
+            }).join('') + '</ul>'
+          : '<img src="' + esc(upForm.files[0].preview) + '" alt="">') +
         '<div class="se-upform-f">' +
           '<label>Vào tab <select name="up-grp">' + groupOptions(upForm.grp) + '</select></label>' +
           '<label' + (upForm.grp === '__new' ? '' : ' hidden') + ' class="se-up-new">Tên tab mới <input name="up-new" maxlength="40" value="' + esc(upForm.newGrp) + '"></label>' +
-          '<label>Tên ảnh <input name="up-name" maxlength="80" placeholder="không bắt buộc" value="' + esc(upForm.name) + '"></label>' +
-          '<label class="se-up-cut"><input type="checkbox" name="up-cut"' + (upForm.cut ? ' checked' : '') + '> Xoá nền trắng</label>' +
-          '<div class="se-row"><button type="button" class="ad-btn ad-primary" data-up="save">Lưu vào thư viện</button>' +
+          (many ? '' : '<label>Tên ảnh <input name="up-name" maxlength="80" placeholder="không bắt buộc" value="' + esc(upForm.name) + '"></label>') +
+          '<label class="se-up-cut"><input type="checkbox" name="up-cut"' + (upForm.cut ? ' checked' : '') + '> Xoá nền trắng' +
+            (many ? ' (cho cả ' + upForm.files.length + ' ảnh)' : '') + '</label>' +
+          '<div class="se-row"><button type="button" class="ad-btn ad-primary" data-up="save">' +
+            (many ? 'Lưu ' + upForm.files.length + ' ảnh vào thư viện' : 'Lưu vào thư viện') + '</button>' +
           '<button type="button" class="ad-btn" data-up="cancel">Huỷ</button></div>' +
-          '<span class="se-hint-s">Ảnh được thu nhỏ (dài nhất 1280px, WebP) trước khi tải lên.</span>' +
+          '<span class="se-hint-s">Ảnh được thu nhỏ (dài nhất 1280px, WebP) trước khi tải lên.' +
+            (many ? ' Tên ảnh lấy theo tên file, đổi sau ở "Sửa thư viện". Ảnh có nền trắng và không có nền thì tải thành hai lượt.' : '') +
+          '</span>' +
         '</div></div>';
     } else if (editAsset) {
       var row = dbAssets.filter(function (r) { return r.id === editAsset; })[0];
@@ -735,7 +785,7 @@ window.GemStudioEditor = (function () {
           return '<button type="button" class="se-chip' + (x.id === g.id ? ' is-on' : '') + '" data-group="' + esc(x.id) + '">' +
             esc(x.label) + '</button>';
         }).join('') +
-        '<label class="se-chip se-upload">+ Tải ảnh<input type="file" name="se-file" accept="image/png,image/webp,image/jpeg" hidden></label>' +
+        '<label class="se-chip se-upload">+ Tải ảnh<input type="file" name="se-file" accept="image/png,image/webp,image/jpeg" multiple hidden></label>' +
         '<button type="button" class="se-chip' + (manage ? ' is-on' : '') + '" data-manage>Sửa thư viện</button>' +
         '</div>' +
         (manage ? '<span class="se-hint-s">Chạm ảnh có viền đứt (ảnh đã tải lên) để đổi tên, chuyển tab hoặc bỏ. ' +
@@ -751,9 +801,17 @@ window.GemStudioEditor = (function () {
   function panelClick(e) {
     var b;
     if ((b = e.target.closest('[data-group]'))) { group = b.dataset.group; renderPanel(); return; }
+    if ((b = e.target.closest('[data-up-drop]'))) {
+      var k = +b.getAttribute('data-up-drop');
+      URL.revokeObjectURL(upForm.files[k].preview);
+      upForm.files.splice(k, 1);
+      if (!upForm.files.length) upForm = null;
+      renderPanel();
+      return;
+    }
     if ((b = e.target.closest('[data-up]'))) {
       if (b.dataset.up === 'save') saveUpload();
-      else { URL.revokeObjectURL(upForm.preview); upForm = null; renderPanel(); }
+      else { dropPreviews(upForm); upForm = null; renderPanel(); }
       return;
     }
     if (e.target.closest('[data-manage]')) { manage = !manage; editAsset = null; renderPanel(); return; }
@@ -809,7 +867,7 @@ window.GemStudioEditor = (function () {
 
   function panelChange(e) {
     var nm = e.target.name || '';
-    if (nm === 'se-file') { startUpload(e.target.files && e.target.files[0]); e.target.value = ''; return; }
+    if (nm === 'se-file') { startUpload(e.target.files); e.target.value = ''; return; }
     if (/^up-/.test(nm) && upForm) {
       if (nm === 'up-grp') upForm.grp = e.target.value;
       if (nm === 'up-new') upForm.newGrp = e.target.value;

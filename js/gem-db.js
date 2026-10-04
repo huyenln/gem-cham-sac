@@ -447,7 +447,11 @@ window.GemDB = (function () {
         throw e;
       }).then(function (res) {
         if (!res.ok) {
-          return res.text().then(function (txt) { throw new Error(txt || ('HTTP ' + res.status)); });
+          return res.text().then(function (txt) {
+            var msg = txt;
+            try { var j = JSON.parse(txt); msg = j.message || j.error || txt; } catch (e) { /* plain text */ }
+            throw new Error(msg || ('HTTP ' + res.status));
+          });
         }
         return URL + '/storage/v1/object/public/gem-media/' + encodeURIComponent(path);
       });
