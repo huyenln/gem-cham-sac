@@ -1385,6 +1385,21 @@ Câu kiểm GRANT-vs-policy: không thêm dòng mới.
 - Tên trang: **Gem Studio 2D**. Giỏ góc màn hình: xe đẩy gỗ trên nút giấy tròn
   có viền + bóng, để không lẫn với đồ trong tranh.
 
+### Udon giáo viên (Bàn thiết kế, 10/2026)
+
+Trên cùng bàn thiết kế: Udon đeo kính cạnh tấm bảng có **ảnh món thật** Gem đã
+may, để khách hình dung món thật chứ không chỉ bản vẽ. Mở bàn → Udon nói (dáng
+4) + ảnh món đang chọn. Đổi món → gõ que 2 nhịp (dáng 1↔2) rồi đổi ảnh. Chọn
+tông / họa tiết → nâng kính (dáng 3) rồi gợi ý món có sẵn gần màu (`similarTo`).
+Chạm bảng → ảnh món thật khác (món đó, rồi các món chắp vải trong `REAL`). Chỉ
+động khi khách đổi lựa chọn, 3 giây sau về dáng chỉ bảng; giảm chuyển động thì
+đổi dáng không gõ. Tranh: `udon/ud-gv-1..4.webp` (tờ `sheet-udgv`, tách nền
+`clean-white --ink 5`), bảng `ui/udgv-bang.webp` (ô giấy: cách mép 9% / 12% trên
+/ 26% dưới). Ảnh trên bảng là ảnh sản phẩm hiện có — vài ảnh còn chữ poster,
+thay khi có buổi chụp.
+
+Udon ở quầy: chạm không còn câu nhắc — kéo được là để khách tự khám phá.
+
 ### Phụ kiện trên nhân vật (đợt 1)
 
 5 món "đồ mặc" đều là phụ kiện (túi Oxford, túi Denim, dây buộc tóc, dây đeo

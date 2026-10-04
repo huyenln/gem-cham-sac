@@ -842,6 +842,33 @@ html:has(.studio-page), .studio-page { overscroll-behavior: none; }
 
 /* Real pieces + ready-made suggestions under the designer */
 .pt-more { display: grid; gap: var(--space-3); grid-column: 1 / -1; }
+
+/* UDON GIÁO VIÊN: Udon beside a little easel with a real sewn piece on it */
+.gv {
+  display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 5fr); align-items: end;
+  gap: 0 var(--space-2); max-width: 340px; width: 100%; justify-self: center;
+}
+.gv-udon { position: relative; aspect-ratio: 375 / 500; }
+.gv-udon img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; object-position: bottom; }
+.gv-udon img[hidden] { display: none; }
+.gv-board {
+  position: relative; display: block; aspect-ratio: 610 / 700; padding: 0; border: 0; cursor: pointer;
+  background: url("../images/studio/ui/udgv-bang.webp") center / 100% 100% no-repeat;
+}
+/* the paper of the board: 8% in from the sides, 11% from the top, 25% from the bottom */
+.gv-photo { position: absolute; left: 9%; right: 9%; top: 12%; bottom: 26%; overflow: hidden; border-radius: 2px; }
+.gv-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.gv-board:focus-visible { outline: 3px solid var(--sage-deep); outline-offset: 2px; }
+.gv-say {
+  grid-column: 1 / -1; margin: var(--space-2) 0 0; padding: var(--space-2) var(--space-3);
+  background: rgba(251, 246, 238, 0.92); border: 1.5px solid var(--sage-light); border-radius: 14px;
+  font-size: var(--text-sm); line-height: 1.45; color: var(--ink-dark); min-height: 3em;
+}
+.gv-say:empty { visibility: hidden; }
+@media (max-width: 767px) {
+  /* phone: Udon + board side by side, small, above the preview */
+  .gv { max-width: 300px; }
+}
 /* phone: one column — preview, choices, then the real pieces */
 .pt-left { display: contents; }
 .pt-left .pt-more { order: 3; }
