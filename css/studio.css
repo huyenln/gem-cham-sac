@@ -1214,9 +1214,9 @@ html:has(.studio-page), .studio-page { overscroll-behavior: none; }
 .st-cargo-item { position: relative; flex: 0 0 58%; aspect-ratio: 1; margin: 0 -12%; transform: translateY(38%); }
 .st-cargo-item svg, .st-cargo-item img { width: 100%; height: 100%; display: block; object-fit: contain; }
 .st-cargo-item img.is-photo { object-fit: cover; border-radius: 4px; }
-.st-cargo-0 { transform: translateY(38%) rotate(-10deg); }
-.st-cargo-1 { transform: translateY(30%) rotate(6deg); z-index: 1; }
-.st-cargo-2 { transform: translateY(40%) rotate(-3deg); }
+.st-cargo-0 { transform: translateY(62%) rotate(-10deg); }
+.st-cargo-1 { transform: translateY(55%) rotate(6deg); z-index: 1; }
+.st-cargo-2 { transform: translateY(64%) rotate(-3deg); }
 /* the design's name: tap to rename */
 input.pt-done-name {
   width: 100%; max-width: 22ch; text-align: center; padding: 2px 8px; border: 0; border-bottom: 1.5px dashed var(--kraft);
@@ -1318,3 +1318,7 @@ input.pt-done-name:focus { border-bottom-style: solid; border-bottom-color: var(
 }
 .pt-letter .pt-photo-prev img { border-radius: 0; border: 6px solid #fffdf8; border-bottom-width: 18px; transform: rotate(2deg); }
 .pt-letter .pt-note { margin-top: var(--space-3); font-size: var(--text-xs); }
+
+/* buy straight from the card, without scrolling back up */
+.pt-done-buy { display: flex; align-items: center; justify-content: center; gap: var(--space-3); flex-wrap: wrap; }
+.pt-done-buy .pt-price { margin: 0; }

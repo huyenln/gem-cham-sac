@@ -602,6 +602,10 @@ async def design(browser, db):
         await pg.wait_for_timeout(200)
         check(await pg.evaluate("document.querySelectorAll('.pt-board svg path[stroke-linecap=round]').length") == 1,
               f'{name}: a line drawn on the piece lands in the design')
+        await js_click(pg, '.pt-scrap:nth-child(3)')
+        await pg.wait_for_timeout(200)
+        check(await pg.evaluate("document.querySelector('.pt-board svg title').textContent.includes('vải từng mảnh')"),
+              f'{name}: while drawing, a scrap from the basket becomes the fabric under the drawing')
         await js_click(pg, '[data-pt="clear"]')
         await js_click(pg, '[data-mood="gem"]')
         await pg.wait_for_timeout(200)
@@ -646,6 +650,8 @@ async def design(browser, db):
         await pg.wait_for_timeout(300)
         await pg.screenshot(path=OUT / f'design-{name}-2done.png')
         check(await pg.evaluate("!document.querySelector('.pt-done b')"), f'{name}: the typed name never becomes HTML')
+        check(await pg.evaluate("!!document.querySelector('.pt-done [data-pt=add]') && !document.querySelector('.pt-done [data-pt=add]').disabled"),
+              f'{name}: the card has its own "Đặt Gem may"')
         top = await pg.evaluate("document.querySelector('.pt-board').getBoundingClientRect().top")
         check(True, f'{name}: board top after sewing {round(top)}')
         check(not pg.errors, f'{name}: no script errors {pg.errors}')

@@ -1554,6 +1554,11 @@ Góp ý: bàn thiết kế giống tờ khảo sát, bản vẽ trông rẻ, chi
 - "Tự chỉnh" thành **Tờ nhắn gửi Gem**: giấy kraft có ghim, chất vải dạng nhãn may,
   lời nhắn trên giấy kẻ dòng (Dancing Script), ảnh tham khảo là polaroid trống.
 
+**Góp ý tiếp (10/2026):** đường may gợi ý mờ đi (`stroke-opacity 0.4`); đồ trong xe
+chìm sâu hơn dưới vành; polaroid phóng to tự thu lại khi chạm chỗ khác; tự vẽ có
+vải nền (kiểu "tuve" có 1 ô vải: chạm / kéo mảnh trong rổ vào; tẩy vẽ lại vải nền);
+thẻ sau May xong có nút "Đặt Gem may" + giá riêng.
+
 **Chưa làm (đợt 2–3):** vải thật dạng "Mảnh hiếm" (bảng `fabrics` + admin), tường
 thiết kế của khách, Thiết kế của tháng.
 
