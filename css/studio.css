@@ -1322,3 +1322,5 @@ input.pt-done-name:focus { border-bottom-style: solid; border-bottom-color: var(
 /* buy straight from the card, without scrolling back up */
 .pt-done-buy { display: flex; align-items: center; justify-content: center; gap: var(--space-3); flex-wrap: wrap; }
 .pt-done-buy .pt-price { margin: 0; }
+/* "Ghép theo nét vẽ": cut lines have no colour or width */
+.pt-drawbar.is-net .pt-inks, .pt-drawbar.is-net .pt-sizes { display: none; }

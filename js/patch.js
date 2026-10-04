@@ -46,25 +46,25 @@
   // layouts: which piecing patterns make sense for each piece
   var PRODUCTS = {
     goi:       { sku: 'goi',       vi: 'Gối Chắp Sắc', en: 'Patchwork cushion', shape: 'cushion', grid: 3,
-                 layouts: ['vuong', 'cabin', 'sao', 'chong', 'tuve'] },
+                 layouts: ['vuong', 'cabin', 'sao', 'chong', 'net', 'tuve'] },
     lotcoc:    { sku: 'lotcoc',    vi: 'Lót cốc',      en: 'Coaster',           shape: 'coaster', grid: 2,
-                 layouts: ['vuong', 'cabin', 'chong', 'tuve'] },
+                 layouts: ['vuong', 'cabin', 'chong', 'net', 'tuve'] },
     // the square coaster: same product (sku), another shape — not a tab of
     // its own, the designer offers "Tròn / Vuông" on the coaster
     lotcocv:   { sku: 'lotcoc',    vi: 'Lót cốc vuông', en: 'Square coaster',   shape: 'coasterSq', grid: 2,
-                 layouts: ['vuong', 'cabin', 'chong', 'tuve'] },
+                 layouts: ['vuong', 'cabin', 'chong', 'net', 'tuve'] },
     scrunchie: { sku: 'scrunchie', vi: 'Dây buộc tóc', en: 'Scrunchie',         shape: 'scrunchie', grid: 1,
-                 layouts: ['mot', 'hai', 'tuve'] },
+                 layouts: ['mot', 'hai', 'net', 'tuve'] },
     origami:   { sku: 'origami',   vi: 'Túi Origami',  en: 'Origami pouch',     shape: 'origami', grid: 1,
-                 layouts: ['mot', 'hai', 'tuve'] },
+                 layouts: ['mot', 'hai', 'net', 'tuve'] },
     oxford:    { sku: 'oxford',    vi: 'Túi áo Oxford', en: 'Oxford shirt bag', shape: 'shirt', grid: 2,
-                 layouts: ['mot', 'hai', 'vuong', 'tuve'] },
+                 layouts: ['mot', 'hai', 'vuong', 'net', 'tuve'] },
     bloom:     { sku: 'bloom',     vi: 'Bloom Charm',  en: 'Bloom charm',       shape: 'bloom', grid: 1,
-                 layouts: ['mot', 'hai', 'tuve'] },
+                 layouts: ['mot', 'hai', 'net', 'tuve'] },
     bookmark:  { sku: 'bookmark',  vi: 'Bookmark',     en: 'Bookmark',          shape: 'bookmark', grid: 3,
-                 layouts: ['mot', 'hai', 'vuong', 'tuve'] },
+                 layouts: ['mot', 'hai', 'vuong', 'net', 'tuve'] },
     daydeo:    { sku: 'daydeo',    vi: 'Dây đeo cổ tay', en: 'Wrist strap',     shape: 'strap', grid: 1,
-                 layouts: ['mot', 'hai', 'tuve'] }
+                 layouts: ['mot', 'hai', 'net', 'tuve'] }
   };
   var PRODUCT_ORDER = ['goi', 'lotcoc', 'scrunchie', 'origami', 'oxford', 'bloom', 'bookmark', 'daydeo'];
 
@@ -76,6 +76,7 @@
     chong: { vi: 'Chong chóng', en: 'Pinwheel' },
     mot:   { vi: 'Một tấm vải', en: 'One fabric' },
     hai:   { vi: 'Ghép hai vải', en: 'Two fabrics' },
+    net:   { vi: 'Ghép theo nét vẽ', en: 'Pieced along my lines' },
     tuve:  { vi: 'Theo hình mình vẽ', en: 'From my drawing' }
   };
 
@@ -291,7 +292,10 @@
     var fab = names(d.fabrics, FABRICS, l);
     if (d.other) fab = (fab ? fab + ', ' : '') + (vi ? 'khác: ' : 'other: ') + d.other;
     bits.push((vi ? 'chất vải: ' : 'fabrics: ') + (fab || gem));
-    if (d.sketch.length) bits.push(vi ? 'có hình vẽ tay' : 'with a sketch');
+    if (d.layout === 'net') {
+      var nn = netRegions(d.sketch).n;
+      bits.push(vi ? 'cắt ' + nn + ' mảnh theo nét vẽ (xem hình)' : nn + ' pieces cut along the drawn lines (see picture)');
+    } else if (d.sketch.length) bits.push(vi ? 'có hình vẽ tay' : 'with a sketch');
     if (d.img) bits.push(vi ? 'có ảnh tham khảo' : 'with a reference photo');
     if (d.note) bits.push((vi ? 'ghi chú: ' : 'note: ') + d.note);
     return bits.join(' · ');
@@ -673,6 +677,176 @@
   };
 
   // Build the preview SVG. Illustrative only: real scraps differ.
+  /* ---------- "Ghép theo nét vẽ": the customer's lines cut the piece ----------
+     Strokes (64-grid) are smoothed like on screen, their loose ends snapped
+     to the edge or to a nearby line, then drawn as walls on a 160 x 160 grid.
+     Every enclosed area is a patch; areas too small to sew are merged into
+     their neighbours, and there are at most NET_MAX patches. Same strokes,
+     same patches, same order (top-left first): the code stays the drawing. */
+  var NET_R = 160, NET_MAX = 12, NET_MIN = 0.008, NET_SNAP = 3.2;
+  var netCache = {}, netKeys = [];
+
+  // the same curve smoothPath draws, as points (continuous 64-grid units)
+  function smoothPts(pts) {
+    var c = pts.map(function (q) { return [q[0] + 0.5, q[1] + 0.5]; });
+    if (c.length < 3) return c;
+    var out = [c[0]], p0 = c[0];
+    for (var i = 1; i < c.length - 1; i++) {
+      var ctl = c[i], end = [(c[i][0] + c[i + 1][0]) / 2, (c[i][1] + c[i + 1][1]) / 2];
+      for (var k = 1; k <= 8; k++) {
+        var t = k / 8, u = 1 - t;
+        out.push([u * u * p0[0] + 2 * u * t * ctl[0] + t * t * end[0], u * u * p0[1] + 2 * u * t * ctl[1] + t * t * end[1]]);
+      }
+      p0 = end;
+    }
+    out.push(c[c.length - 1]);
+    return out;
+  }
+
+  function nearOn(poly, q, skip) {
+    var best = null, bd = 1e9;
+    for (var i = 0; i < poly.length; i++) {
+      if (skip && skip(i)) continue;
+      var dd = Math.hypot(poly[i][0] - q[0], poly[i][1] - q[1]);
+      if (dd < bd) { bd = dd; best = poly[i]; }
+    }
+    return { p: best, d: bd };
+  }
+
+  // loose ends reach the edge, another line, or their own start
+  function snapLines(strokes) {
+    var lines = strokes.filter(function (s) { return s.c !== ERASER; }).map(function (s) { return smoothPts(s.pts); });
+    var G = GRID;
+    return lines.map(function (L, li) {
+      if (L.length < 2) return L;
+      var out = L.slice(), a = L[0], b = L[L.length - 1];
+      if (Math.hypot(a[0] - b[0], a[1] - b[1]) < NET_SNAP && L.length > 6) { out.push(a); return out; }
+      var fix = function (q, atStart) {
+        var de = [[q[0], [0, q[1]]], [G - q[0], [G, q[1]]], [q[1], [q[0], 0]], [G - q[1], [q[0], G]]]
+          .sort(function (x, y) { return x[0] - y[0]; })[0];
+        if (de[0] < NET_SNAP) return de[1];
+        var best = null;
+        lines.forEach(function (M, mi) {
+          var n = M.length;
+          var r = nearOn(M, q, mi === li ? function (i) { return atStart ? i < n * 0.25 + 3 : i > n * 0.75 - 3; } : null);
+          if (r.p && r.d < NET_SNAP && (!best || r.d < best.d)) best = r;
+        });
+        return best ? best.p : null;
+      };
+      var fa = fix(a, true), fb = fix(b, false);
+      if (fa) out.unshift(fa);
+      if (fb) out.push(fb);
+      return out;
+    });
+  }
+
+  function netRegions(strokes) {
+    var key = encodeSketch(strokes || []);
+    if (netCache[key]) return netCache[key];
+    var R = NET_R, N = R * R, sc = R / GRID;
+    var lines = snapLines(strokes || []);
+    var wall = new Uint8Array(N);
+    var stamp = function (x, y) {
+      for (var yy = Math.floor(y - 1.1); yy <= Math.ceil(y + 1.1); yy++) {
+        for (var xx = Math.floor(x - 1.1); xx <= Math.ceil(x + 1.1); xx++) {
+          if (xx < 0 || yy < 0 || xx >= R || yy >= R) continue;
+          if ((xx + 0.5 - x) * (xx + 0.5 - x) + (yy + 0.5 - y) * (yy + 0.5 - y) <= 1.25) wall[yy * R + xx] = 1;
+        }
+      }
+    };
+    lines.forEach(function (L) {
+      for (var i = 1; i < L.length; i++) {
+        var x0 = L[i - 1][0] * sc, y0 = L[i - 1][1] * sc, x1 = L[i][0] * sc, y1 = L[i][1] * sc;
+        var steps = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0) / 0.5));
+        for (var k = 0; k <= steps; k++) stamp(x0 + (x1 - x0) * k / steps, y0 + (y1 - y0) * k / steps);
+      }
+    });
+    // label the open areas
+    var lab = new Int32Array(N), sizes = [0], first = [0], stack = new Int32Array(N);
+    for (var c = 0; c < N; c++) {
+      if (wall[c] || lab[c]) continue;
+      var id = sizes.length, sp = 0, n = 0;
+      lab[c] = id; stack[sp++] = c;
+      while (sp) {
+        var q = stack[--sp], qx = q % R; n++;
+        if (qx > 0 && !wall[q - 1] && !lab[q - 1]) { lab[q - 1] = id; stack[sp++] = q - 1; }
+        if (qx < R - 1 && !wall[q + 1] && !lab[q + 1]) { lab[q + 1] = id; stack[sp++] = q + 1; }
+        if (q >= R && !wall[q - R] && !lab[q - R]) { lab[q - R] = id; stack[sp++] = q - R; }
+        if (q < N - R && !wall[q + R] && !lab[q + R]) { lab[q + R] = id; stack[sp++] = q + R; }
+      }
+      sizes.push(n); first.push(c);
+    }
+    // too small to sew, or too many: give the smallest to their neighbours
+    var ids = [];
+    for (var r = 1; r < sizes.length; r++) ids.push(r);
+    ids.sort(function (x, y) { return sizes[x] - sizes[y]; });
+    var keep = {}, live = ids.length, capped = false;
+    ids.forEach(function (r) {
+      if (live > 1 && (sizes[r] < N * NET_MIN || live > NET_MAX)) { if (sizes[r] >= N * NET_MIN) capped = true; live--; }
+      else keep[r] = 1;
+    });
+    // number the kept ones top-left first
+    var order = Object.keys(keep).map(Number).sort(function (x, y) { return first[x] - first[y]; });
+    var remap = {};
+    order.forEach(function (r, i) { remap[r] = i + 1; });
+    var out = new Int32Array(N), queue = new Int32Array(N), qh = 0, qt = 0;
+    for (c = 0; c < N; c++) {
+      if (lab[c] && remap[lab[c]]) { out[c] = remap[lab[c]]; queue[qt++] = c; }
+    }
+    if (!qt) { for (c = 0; c < N; c++) out[c] = 1; }
+    // walls and merged bits take the nearest kept patch
+    while (qh < qt) {
+      var v = queue[qh++], vx = v % R, nb = [vx > 0 ? v - 1 : -1, vx < R - 1 ? v + 1 : -1, v >= R ? v - R : -1, v < N - R ? v + R : -1];
+      for (var t = 0; t < 4; t++) if (nb[t] >= 0 && !out[nb[t]]) { out[nb[t]] = out[v]; queue[qt++] = nb[t]; }
+    }
+    // one path per patch, row runs (a hair wide so neighbours meet)
+    var k2 = 340 / R, paths = [];
+    for (var i2 = 0; i2 < Math.max(1, order.length); i2++) paths.push('');
+    for (var y = 0; y < R; y++) {
+      var x = 0;
+      while (x < R) {
+        var l = out[y * R + x], x2 = x;
+        while (x2 < R && out[y * R + x2] === l) x2++;
+        paths[l - 1] += 'M' + (x * k2).toFixed(1) + ' ' + (y * k2).toFixed(1) + 'h' + ((x2 - x) * k2 + 0.6).toFixed(1) +
+          'v' + (k2 + 0.6).toFixed(1) + 'h' + (-((x2 - x) * k2 + 0.6)).toFixed(1) + 'z';
+        x = x2;
+      }
+    }
+    var res = { n: paths.length, paths: paths, lines: lines, capped: capped };
+    netCache[key] = res; netKeys.push(key);
+    if (netKeys.length > 24) delete netCache[netKeys.shift()];
+    return res;
+  }
+
+  // the lines themselves, as seams on top of the fabric
+  function netSeams(res) {
+    var k = 340 / GRID;
+    return res.lines.map(function (L) {
+      if (L.length < 2) return '';
+      var d = 'M' + L.map(function (q) { return (q[0] * k).toFixed(1) + ' ' + (q[1] * k).toFixed(1); }).join('L');
+      return '<path d="' + d + '" fill="none" stroke="#3D4A2E" stroke-opacity="0.16" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<path d="' + d + '" fill="none" stroke="' + STITCH + '" stroke-width="1.8" stroke-dasharray="6 5" stroke-opacity="0.55" stroke-linecap="round"/>';
+    }).join('');
+  }
+
+  // After the lines change: keep the fabric already on the first patches,
+  // give the new ones fabrics from the palette.
+  function refit(d, keys) {
+    var n = slots(d), old = [];
+    for (var i = 0; i < (d.fab || '').length; i++) old.push(keyAt(d, i));
+    keys = keys && keys.length ? keys : old;
+    if (!keys.length) return;
+    var out = '';
+    d.cus = [];
+    for (i = 0; i < n; i++) {
+      var k = i < old.length ? old[i] : keys[(i - old.length) % keys.length];
+      if (i >= old.length && keys.length > 1 && out.length && keyOf(d, B64.indexOf(out[out.length - 1])) === k) k = keys[(i - old.length + 1) % keys.length];
+      out += letter(d, k) || B64[0];
+    }
+    d.fab = out;
+    prune(d);
+  }
+
   /* ---------- painted art (images/studio/vai/, tools/design-assets.py) ---------- */
   var VAI = 'images/studio/vai/';
 
@@ -725,7 +899,11 @@
     out += '<g mask="url(#' + pre + 'mk)">';
     // the fabric area: the painted piece fills most of its square
     var box = [0, 0, 340];
-    if (d.layout === 'tuve') {
+    if (d.layout === 'net') {
+      var nr = netRegions(d.sketch);
+      nr.paths.forEach(function (pd, i) { out += '<path d="' + pd + '" fill="' + fill(i) + '"/>'; });
+      out += netSeams(nr);
+    } else if (d.layout === 'tuve') {
       // drawn on a fabric picked from the basket (or plain paper); the
       // eraser paints that fabric back
       var bg = d.fab ? fill(0) : '#FBF6EE', bgPaint = bg.split('"')[0];
@@ -1182,7 +1360,7 @@
     KINDS: KINDS, KIND_NAMES: KIND_NAMES, N_FABRICS: N_FABRICS, MOODS: MOODS, B64: B64,
     fabric: fabric, fabricId: fabricId, slots: slots, scatter: scatter, setPatch: setPatch, syncTaste: syncTaste,
     moodOf: moodOf, applyMood: applyMood, title: title, serial: serial, swatch: swatch,
-    swatchSrc: swatchSrc, VAI: VAI, keySrc: keySrc, keyAt: keyAt, keyName: keyName, isCustom: isCustom, customSrc: customSrc,
+    swatchSrc: swatchSrc, VAI: VAI, netRegions: netRegions, refit: refit, NET_MAX: NET_MAX, keySrc: keySrc, keyAt: keyAt, keyName: keyName, isCustom: isCustom, customSrc: customSrc,
     // by: the designer's name for the card, travels in the link only
     // mood: which mood the fabrics came from (several can fit few patches)
     url: function (spec, by, mood) {

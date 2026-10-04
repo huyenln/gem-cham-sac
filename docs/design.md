@@ -1559,6 +1559,17 @@ chìm sâu hơn dưới vành; polaroid phóng to tự thu lại khi chạm ch�
 vải nền (kiểu "tuve" có 1 ô vải: chạm / kéo mảnh trong rổ vào; tẩy vẽ lại vải nền);
 thẻ sau May xong có nút "Đặt Gem may" + giá riêng.
 
+**Ghép theo nét vẽ (kiểu `net`, 10/2026):** nét vẽ của khách cắt món thành mảnh.
+`netRegions()` trong `js/patch.js`: làm mượt nét như trên màn hình, đầu nét hở
+trong 3.2 ô (lưới 64) thì "hít" vào mép / nét gần nhất / điểm đầu của chính nó,
+vẽ nét thành tường trên lưới 160×160, loang tìm vùng kín. Vùng < 0,8% diện tích
+gộp vào vùng bên cạnh; tối đa 12 mảnh (`NET_MAX`, Udon báo khi phải gộp). Mảnh
+đánh số từ trên-trái, nên cùng nét = cùng mảnh = mã thiết kế không cần lưu gì
+thêm (nét + vải từng ô đã có). Chạm (không kéo) trên canvas = chạm mảnh bên dưới;
+vẽ thêm nét thì vải cũ giữ cho các mảnh đầu, mảnh mới lấy vải từ rổ (`refit`).
+Ghi chú đơn: "cắt N mảnh theo nét vẽ (xem hình)". Chưa tính phụ phí. Lưu ý: với
+món hẹp (Bloom, dây đeo) vùng nằm ngoài hình món vẫn tính là một mảnh.
+
 **Chưa làm (đợt 2–3):** vải thật dạng "Mảnh hiếm" (bảng `fabrics` + admin), tường
 thiết kế của khách, Thiết kế của tháng.
 
