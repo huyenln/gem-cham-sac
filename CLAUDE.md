@@ -349,6 +349,20 @@ nhân vật, phụ kiện đeo thử, bàn thiết kế, tủ sưu tầm, bảng
 bố cục ở tab "Lắp studio". Chi tiết + cách đưa tranh mới vào: `docs/design.md`.
 Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
 
+**Studio — làm tiếp (ghi 10/2026, xem chi tiết ở `docs/design.md`):**
+- 🧑‍🏫 **Udon giáo viên ở Bàn thiết kế** — đã chốt ý, chờ tranh. Udon đeo kính,
+  cầm que chỉ, đứng cạnh bảng có ảnh sản phẩm thật của món đang chọn; đổi món
+  → gõ que 2 nhịp + đổi ảnh + 1 câu; chọn tông → nâng kính, gợi ý món gần màu
+  (`similarTo()` đã có). Chỉ động khi khách đổi lựa chọn; giảm chuyển động =
+  tranh tĩnh. Prompt gen: tab "Đợt 3 — Udon giáo viên" trong doc Bộ tài sản D
+  (claude.ai/code/artifact/2685881e-98b5-438c-8c84-90ba16128bd9) → file
+  `sheet-udgv.png` (4 dáng) + `pr-bang.png` (bảng trống); chạy
+  `tools/studio-assets.py --batch`.
+- 👕 Đợt 2 đồ mặc (áo) — chỉ làm nếu khách dùng nút "Đeo thử"; cần vẽ lại khung.
+- 🛍️ Thêm ảnh cắt nền cho sản phẩm khác: `images/studio/sp/<sku>.webp` (tên file
+  = sku), thêm sku vào `CUTOUT` trong `js/studio.js`, rồi `--manifest .`.
+- Ngoài studio: chưa gắn Studio lên menu (chờ Anna); Gmail secrets cho mail báo đơn.
+
 **Còn lại:**
 - 📸 **Buổi chụp ảnh** — việc chặn nhiều thứ nhất. 8/19 ảnh hiện tại là poster
   Instagram có chữ in sẵn, nên hero và grid trang chủ phải chọn theo *ảnh nào

@@ -898,6 +898,9 @@
 
   function renderProducts() {
     if (editingProduct !== null) return renderProductForm();
+    // owner only: where each product stands in Studio 2D, and a shortcut
+    // that opens the layout editor with it ready to place
+    var studioOn = !!(me && me.role === 'owner' && window.GemStudioEditor);
 
     var byCat = {}, order = [];
     products.forEach(function (p) {
@@ -928,6 +931,9 @@
                 (p.is_published ? 'Đang bán' : 'Đang ẩn') + '</button>' +
               '<button type="button" class="ad-btn ad-edit-prod">Sửa</button>' +
             '</div>' +
+            (studioOn ? '<p class="ad-prod-studio" data-sku="' + esc(p.sku) + '">' +
+              '<span class="ad-ps-where">Studio 2D: …</span> ' +
+              '<button type="button" class="ad-btn ad-ps-place">Đặt vào Studio</button></p>' : '') +
           '</div>';
         }).join('') +
       '</section>';
@@ -944,6 +950,33 @@
     el.main.querySelector('.ad-new-prod').addEventListener('click', function () {
       editingProduct = {}; renderProductForm();
     });
+
+    if (studioOn) {
+      window.GemDB.studioLayout('live').catch(function () { return null; }).then(function (live) {
+        var L = window.GemLayout && window.GemLayout.sanitize(live);
+        var where = {};
+        if (L) {
+          L.items.concat(L.outside ? L.outside.items : []).forEach(function (it) {
+            if (it.sku) where[it.sku] = (where[it.sku] || 0) + 1;
+          });
+        }
+        el.main.querySelectorAll('.ad-prod-studio').forEach(function (row) {
+          var n = where[row.getAttribute('data-sku')] || 0;
+          row.querySelector('.ad-ps-where').textContent = n
+            ? 'Studio 2D: đang bày ' + n + ' chỗ (khách kéo vào giỏ được)'
+            : 'Studio 2D: chưa bày';
+        });
+      });
+      el.main.querySelectorAll('.ad-ps-place').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var sku = b.closest('.ad-prod-studio').getAttribute('data-sku');
+          var p = products.filter(function (x) { return x.sku === sku; })[0];
+          window.GemStudioEditor.queueProduct(sku, p && p.image);
+          var tabBtn = document.querySelector('[data-tab="studio"]');
+          if (tabBtn) tabBtn.click();
+        });
+      });
+    }
 
     el.main.querySelectorAll('.ad-prod').forEach(function (d) {
       var id = d.getAttribute('data-id');

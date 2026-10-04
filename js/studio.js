@@ -120,6 +120,10 @@
   ];
   var DISPLAY_H = 100;  // frame height on the shelf, strip px
 
+  // Products with a cut-out picture (images/studio/sp/<sku>.webp): they stand
+  // on the shelf as themselves instead of a framed photo.
+  var CUTOUT = { origami: 1 };
+
   var SHELVES = {
     pegboard: ['scrunchie', 'bookmark', 'bloom', 'daydeo'],
     display:  DISPLAY.map(function (d) { return d.sku; }),
@@ -290,6 +294,10 @@
     'studio.pt_photo_wait': { vi: `Đang gửi ảnh...`, en: `Sending the photo...` },
     'studio.pt_photo_bad':  { vi: `Chọn một file ảnh nhé.`, en: `Please pick an image file.` },
     'studio.pt_photo_fail': { vi: `Chưa gửi được ảnh. Thử lại, hoặc gửi ảnh cho Gem qua Zalo sau khi đặt.`, en: `Couldn't send the photo. Try again, or send it to Gem on Zalo after ordering.` },
+    'studio.prod_tip':      { vi: `Mẹo: kéo thẳng món trên kệ thả vào xe đẩy hay giỏ hàng cũng được.`, en: `Tip: you can also drag a piece off the shelf into the cart or the basket.` },
+    'studio.prod_in_cart':  { vi: `Đã bỏ vào giỏ rồi nha!`, en: `In the basket!` },
+    'studio.prod_in_basket': { vi: `Đã bỏ vào giỏ rồi nha!`, en: `In the basket!` },
+    'studio.prod_out':      { vi: `Món này đang tạm hết, bạn ghé lại sau nhé.`, en: `This one's sold out for now — check back soon.` },
     'studio.udon_drag':    { vi: `Kéo Udon thả vào xe đẩy hay giỏ hàng thử xem!`, en: `Drag Udon into the cart or the basket and see!` },
     'studio.udon_cart':    { vi: `Udon không bán đâu nha! Cho Udon đi ké một vòng thôi.`, en: `Udon's not for sale! Just a little ride, then.` },
     'studio.udon_basket':  { vi: `Ơ kìa, Udon vào giỏ rồi! Udon không bán đâu, nằm chút thôi nha.`, en: `Oh! Udon's in the basket. Not for sale — just a quick nap.` },
@@ -451,6 +459,7 @@
         el.className = 'st-item';
       }
       if (it.layer === 'front') el.classList.add('is-front');
+      if (it.sku) { el.classList.add('st-shelf-prod'); el.setAttribute('data-sku', it.sku); }
       img.src = it.src;
       img.alt = '';
       img.draggable = false;
@@ -471,15 +480,17 @@
       if (LAYOUT || !THUMB[d.sku]) return;   // a layout places its own photos
       var x0 = zoneX(3, d.x[0]), x1 = zoneX(3, d.x[1]);
       var fr = document.createElement('span');
-      fr.className = 'st-shelf-item';
+      fr.className = 'st-shelf-item st-shelf-prod' + (CUTOUT[d.sku] ? ' is-cut' : '');
+      fr.setAttribute('data-sku', d.sku);
       fr.style.left = pct((x0 + x1) / 2, SCENE.width);
       fr.style.bottom = pct(SCENE.height - d.y, SCENE.height);
-      fr.style.height = pct(DISPLAY_H, SCENE.height);
-      fr.innerHTML = '<img src="images/products/' + THUMB[d.sku] + '" alt="" loading="lazy" draggable="false">';
+      fr.style.height = pct(CUTOUT[d.sku] ? DISPLAY_H * 1.05 : DISPLAY_H, SCENE.height);
+      fr.innerHTML = '<img src="' + (CUTOUT[d.sku] ? 'images/studio/sp/' + d.sku + '.webp' : 'images/products/' + THUMB[d.sku]) +
+        '" alt="" loading="lazy" draggable="false">';
       world.appendChild(fr);
     });
 
-    HOTSPOTS.forEach(addHot);
+    HOTSPOTS.forEach(function (h) { if (!spotOff(h.id)) addHot(h); });
 
     // Udon on the counter
     var u = SCENE.udon;
@@ -502,32 +513,68 @@
     bindUdon();
 
     // Paper notes pinned on the memo board (filled once notes load)
-    var mb = boxOf(hotById('memo'));
-    memoPins = document.createElement('div');
-    memoPins.className = 'st-pins';
-    memoPins.style.left = pct(mb.x0, SCENE.width);
-    memoPins.style.top = pct(mb.y0, SCENE.height);
-    memoPins.style.width = pct(mb.x1 - mb.x0, SCENE.width);
-    memoPins.style.height = pct(mb.y1 - mb.y0, SCENE.height);
-    world.insertBefore(memoPins, world.querySelector('.st-hot'));
+    if (!spotOff('memo')) {
+      var mb = boxOf(hotById('memo'));
+      memoPins = document.createElement('div');
+      memoPins.className = 'st-pins';
+      memoPins.style.left = pct(mb.x0, SCENE.width);
+      memoPins.style.top = pct(mb.y0, SCENE.height);
+      memoPins.style.width = pct(mb.x1 - mb.x0, SCENE.width);
+      memoPins.style.height = pct(mb.y1 - mb.y0, SCENE.height);
+      world.insertBefore(memoPins, world.querySelector('.st-hot'));
+    }
 
     addPlayer();
   }
 
+  /* ---------- owner's per-spot settings (layout.spots) ----------
+     off: not in the studio; vi / en: its label; link: opens that page
+     instead of the built-in sheet. */
+  function spotSet(id) { return (LAYOUT && LAYOUT.spots && LAYOUT.spots[id]) || {}; }
+  function spotOff(id) { return !!spotSet(id).off; }
+  function spotName(h) {
+    return spotSet(h.id)[lng()] || t(h.label);   // no English set: the built-in English
+  }
+
   function addHot(h) {
     var b = boxOf(h);
+    var custom = spotSet(h.id).vi || spotSet(h.id).en;
     var btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'st-hot';
     btn.setAttribute('data-hot', h.id);
-    btn.setAttribute('data-i18n-attr', 'aria-label:' + h.label);
-    btn.setAttribute('aria-label', t(h.label));
+    if (!custom) btn.setAttribute('data-i18n-attr', 'aria-label:' + h.label);
+    btn.setAttribute('aria-label', spotName(h));
     btn.style.left = pct(b.x0, SCENE.width);
     btn.style.top = pct(b.y0, SCENE.height);
     btn.style.width = pct(b.x1 - b.x0, SCENE.width);
     btn.style.height = pct(b.y1 - b.y0, SCENE.height);
-    btn.innerHTML = '<span class="st-hot-label" data-i18n="' + h.label + '">' + esc(t(h.label)) + '</span>';
+    var lab = document.createElement('span');
+    lab.className = 'st-hot-label';
+    if (!custom) lab.setAttribute('data-i18n', h.label);
+    lab.textContent = spotName(h);   // the owner's text: textContent only
+    btn.appendChild(lab);
     world.appendChild(btn);
+  }
+
+  // Owner-set labels follow the language switch by hand (no data-i18n key).
+  function relabelSpots() {
+    world.querySelectorAll('.st-hot').forEach(function (btn) {
+      var h = hotById(btn.getAttribute('data-hot'));
+      var c = h && spotSet(h.id);
+      if (!h || !(c.vi || c.en)) return;
+      btn.setAttribute('aria-label', spotName(h));
+      btn.querySelector('.st-hot-label').textContent = spotName(h);
+    });
+  }
+
+  // The bottom nav: a button whose spot is taken out goes too.
+  var NAV_SPOT = { door: 'door', fitting: 'fitting', shelves: 'display', sewing: 'sewing', tu: 'tu', counter: 'counter' };
+  function syncNav() {
+    document.querySelectorAll('.st-nav [data-go]').forEach(function (b) {
+      var id = NAV_SPOT[b.getAttribute('data-go')];
+      b.classList.toggle('is-off', !!id && spotOff(id));
+    });
   }
 
   // Character: one frame per pose, toggled — swapping src would flicker.
@@ -958,7 +1005,8 @@
     if (!info) return '';
     var out = !info.inStock;
     return '<li class="st-prod">' +
-      '<img src="images/products/' + THUMB[sku] + '" alt="" loading="lazy" width="300" height="300">' +
+      '<img src="' + (THUMB[sku] ? 'images/products/' + THUMB[sku] : CUTOUT[sku] ? 'images/studio/sp/' + sku + '.webp' : 'images/logo/gem_logo_icon_120.png') +
+        '" alt="" loading="lazy" width="300" height="300">' +
       '<b>' + esc(info.name) + '</b>' +
       '<span class="st-price">' + esc(info.price) + '</span>' +
       (out
@@ -1656,8 +1704,8 @@
       document.removeEventListener('pointerup', up);
       document.removeEventListener('pointercancel', up);
       stage.classList.remove('is-drop-ok');
+      swiped = Date.now();   // the click that follows is ours, not a walk / hotspot
       if (!ghost) { if (opts.tap) opts.tap(); return; }
-      swiped = Date.now();   // no click after a drag
       var where = overBasket(ev.clientX, ev.clientY) ? 'basket' : overCart(ev.clientX, ev.clientY) ? 'cart' : null;
       if (where && opts.drop(where, ghost)) return;
       // not dropped anywhere useful: back where it came from
@@ -1682,6 +1730,39 @@
     var end = 'translate(' + (base.e + dx) + 'px,' + (base.f + dy) + 'px) scale(' + scale + ')';
     var anim = el.animate([{ transform: from }, { transform: end }], { duration: reduceMotion ? 1 : 320, easing: 'ease-in', fill: 'forwards' });
     anim.onfinish = function () { if (then) then(); };
+  }
+
+  /* ---------- products on the shelves: tap for the card, drag into the basket ---------- */
+  function productSheet(sku) {
+    var card = productCard(sku);
+    if (!card) return;
+    openSheet(tr('p', 'studio.prod_tip', ' class="st-lead st-prod-tip"') +
+      '<ul class="st-grid st-grid--one">' + card + '</ul>' +
+      '<p class="st-foot">' + tr('a', 'studio.all_products', ' href="san-pham.html"') + '</p>');
+  }
+
+  function bindProducts() {
+    world.addEventListener('pointerdown', function (e) {
+      var el = e.target.closest('.st-shelf-prod');
+      if (!el || (e.pointerType === 'mouse' && e.button !== 0)) return;
+      e.preventDefault();
+      var sku = el.getAttribute('data-sku');
+      var img = el.tagName === 'IMG' ? el : el.querySelector('img');
+      dragFrom(e, img, {
+        start: function () { el.classList.add('is-lifted'); },
+        cancel: function () { el.classList.remove('is-lifted'); },
+        tap: function () { productSheet(sku); },
+        drop: function (where, ghost) {
+          el.classList.remove('is-lifted');
+          var info = window.GemBasket && window.GemBasket.info(sku);
+          if (!info || !info.inStock) { say('studio.prod_out', 3000); return false; }
+          window.GemBasket.add(sku, ghost);
+          ghost.remove();
+          say(where === 'cart' ? 'studio.prod_in_cart' : 'studio.prod_in_basket', 2600);
+          return true;
+        }
+      });
+    });
   }
 
   var udonBusy = false;
@@ -1889,7 +1970,16 @@
       return;
     }
     var h = hotById(id);
-    if (!h) return;
+    if (!h || spotOff(id)) return;
+    var link = spotSet(id).link;
+    if (link && open !== false) {
+      // the owner pointed this spot at another page
+      walkTo(standX(h), function () {
+        if (/^https:/.test(link)) window.open(link, '_blank', 'noopener');
+        else location.href = link;
+      });
+      return;
+    }
     walkTo(standX(h));
     if (open !== false && ACTIONS[id]) ACTIONS[id]();
   }
@@ -1908,6 +1998,7 @@
      ====================================================================== */
   function bind() {
     bindSwipe();
+    bindProducts();
     bindSheetDrag();
     // Back gesture / button: closes the open sheet first, then (inside) steps
     // back out to the street, and only then leaves the page.
@@ -2029,7 +2120,7 @@
       e.target.closest('.mb-form').querySelector('.mb-count').textContent = e.target.value.length + '/280';
     });
 
-    document.addEventListener('gem:langchange', function () { renderDesigner(); renderTu(); });
+    document.addEventListener('gem:langchange', function () { renderDesigner(); renderTu(); relabelSpots(); });
     document.addEventListener('gem:tu', function () {
       // Another tab, or an order just went through: refresh what's open.
       if (sheetBody.querySelector('.tu')) renderTu();
@@ -2078,6 +2169,7 @@
   });
 
   function start() {
+    syncNav();
     INSIDE = { width: SCENE.width, height: SCENE.height, startX: SCENE.startX,
       bg: LAYOUT ? LAYOUT.bg.src : 'images/studio/bg/strip.webp' };
     loadWorn();

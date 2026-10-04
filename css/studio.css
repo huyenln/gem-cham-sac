@@ -196,6 +196,15 @@
   display: block; box-sizing: border-box; width: 100%; height: 100%;
   object-fit: cover; border: 3px solid #FBF6EE;
 }
+/* products customers can pick up: tap for the card, drag to the basket */
+.st-shelf-prod { pointer-events: auto; cursor: grab; touch-action: none; z-index: 3; }
+.st-shelf-prod:hover { filter: brightness(1.06) drop-shadow(0 0 6px rgba(251, 246, 238, 0.9)); }
+.st-shelf-prod.is-lifted { opacity: 0.25; }
+/* a cut-out product stands on the shelf as itself, no frame */
+.st-shelf-item.is-cut { aspect-ratio: auto; background: none; border: 0; box-shadow: none; }
+.st-shelf-item.is-cut img { width: auto; height: 100%; object-fit: contain; border: 0; filter: drop-shadow(1px 3px 2px rgba(61, 74, 46, 0.3)); }
+.st-grid.st-grid--one { grid-template-columns: minmax(0, 260px); justify-content: center; }
+.st-prod-tip { font-size: var(--text-sm); }
 
 /* Paper notes on the memo board: a hint that people have written. */
 .st-pins { position: absolute; pointer-events: none; }
@@ -308,6 +317,7 @@
 .st-nav::-webkit-scrollbar { display: none; }
 /* street: only "Vào studio"; inside: everything but it */
 .st-nav .st-go-in { display: none; }
+.st-nav button.is-off { display: none; }
 .st-is-out .st-nav button { display: none; }
 .st-is-out .st-nav .st-go-in {
   display: inline-flex; align-items: center;

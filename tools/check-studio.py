@@ -7,6 +7,10 @@ and walks through what broke before:
   street   studio.html opens on the facade, the door leads in, the character
            picker leads back out
   wear     try-on accessories stay on the character, on all 4 x 10 frames
+  shop     shelf products: tap opens the card, drag into the basket adds it;
+           Udon dragged into the cart rides and comes home
+  spots    (owner) a spot turned off / renamed / linked shows so in the studio;
+           "Đặt vào Studio" on the Sản phẩm tab places the product
   editor   (owner) add a piece, Dài thêm, publish, studio.html shows it, Xoá hết,
            backgrounds offered per scene, the street scene saves too
 
@@ -14,7 +18,7 @@ Screenshots go to /tmp/gem-check/ — look at them, a pass only means nothing
 crashed and the counts add up.
 
     python3 tools/check-studio.py            all checks
-    python3 tools/check-studio.py wear       one check (street | wear | editor)
+    python3 tools/check-studio.py wear       one check (street | wear | shop | spots | editor)
 
 Needs: pip install playwright. Chromium: PLAYWRIGHT_BROWSERS_PATH or
 CHROMIUM=/path/to/chrome (the cloud sessions have /opt/pw-browsers/chromium).
@@ -75,6 +79,10 @@ class FakeDB:
             i = 'live' if 'id=eq.live' in u else 'draft' if 'id=eq.draft' in u else None
             rows = [{'data': self.rows[i]}] if i in self.rows else []
             return await r.fulfill(status=200, content_type='application/json', body=json.dumps(rows))
+        if '/rest/v1/products' in u and 'select=*' in u:   # the admin's product list
+            return await r.fulfill(status=200, content_type='application/json', body=json.dumps([
+                {'id': 'p1', 'sku': 'origami', 'category': 'vai-vun', 'name_vi': 'Origami Pouch', 'price': 66000,
+                 'price_max': None, 'in_stock': True, 'is_published': True, 'image': None}]))
         if '/rest/v1/' in u or '/rpc/' in u:
             return await r.fulfill(status=200, content_type='application/json', body='[]')
         await r.abort()
@@ -196,13 +204,105 @@ async def editor(browser, db):
         await pg.context.close()
 
 
+async def center(pg, sel):
+    return await pg.evaluate("s => { const r = document.querySelector(s).getBoundingClientRect(); return [r.x + r.width / 2, r.y + r.height / 2]; }", sel)
+
+
+async def drag(pg, a, b):
+    await pg.mouse.move(*a)
+    await pg.mouse.down()
+    await pg.mouse.move(a[0] + 30, a[1] + 20, steps=3)
+    await pg.mouse.move(*b, steps=10)
+    await pg.mouse.up()
+
+
+async def shop(browser, db):
+    print('shop')
+    ctx = await browser.new_context(viewport={'width': 1300, 'height': 760})
+    await ctx.route('**/*.supabase.co/**', lambda r: r.abort())   # built-in catalogue
+    await ctx.add_init_script("sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1')")
+    pg = await ctx.new_page()
+    errs = []
+    pg.on('pageerror', lambda e: errs.append(str(e)))
+    await pg.goto(f'{BASE}/studio.html')
+    await pg.wait_for_timeout(1500)
+    await pg.add_style_tag(content='.lang-hint{display:none!important}')
+    await js_click(pg, '[data-go="shelves"]')
+    await pg.wait_for_timeout(2000)
+    o = await center(pg, '.st-shelf-prod[data-sku="origami"]')
+    await pg.mouse.click(*o)
+    await pg.wait_for_timeout(600)
+    check('Origami' in (await pg.evaluate("document.getElementById('st-sheet-body').textContent")), 'tap a shelf product opens its card')
+    await pg.keyboard.press('Escape')
+    await pg.wait_for_timeout(300)
+    await drag(pg, o, await center(pg, '.gb-widget'))
+    await pg.wait_for_timeout(1200)
+    check(await pg.evaluate("window.GemBasket.count()") == 1, 'drag a shelf product into the basket adds it')
+    await js_click(pg, '[data-go="counter"]')
+    await pg.wait_for_timeout(2000)
+    await pg.keyboard.press('Escape')
+    await pg.wait_for_timeout(300)
+    await drag(pg, await center(pg, '.st-udon'), await center(pg, '.st-fr:not([hidden])'))
+    await pg.wait_for_timeout(900)
+    await pg.screenshot(path=OUT / 'shop-udon-cart.png')
+    check(await pg.evaluate("document.querySelectorAll('.st-bob .st-udon-ghost').length") == 1, 'Udon dropped on the character rides in the cart')
+    await pg.wait_for_timeout(4500)
+    check(await pg.evaluate("document.querySelector('.st-udon').style.visibility") == '', 'Udon comes home')
+    check(not errs, f'no script errors {errs}')
+    await ctx.close()
+
+
+async def spots(browser, db):
+    print('spots')
+    db.rows.clear()
+    pg = await page(browser, db, 1440, 900)
+    await pg.goto(f'{BASE}/admin.html')
+    await pg.evaluate("sessionStorage.setItem('gem-admin-token','fake')")
+    await pg.goto(f'{BASE}/admin.html')
+    await pg.wait_for_timeout(800)
+    await js_click(pg, '[data-tab="products"]')
+    await pg.wait_for_timeout(800)
+    await js_click(pg, '.ad-ps-place')
+    await pg.wait_for_timeout(1800)
+    n = await pg.evaluate("document.querySelectorAll('.se-item.is-prod').length")
+    check(n == 1, f'"Đặt vào Studio" places the product in the editor ({n})')
+    for spot, field, value in (('memo', 'sp-on', None), ('tu', 'sp-vi', 'Tủ của tôi'), ('sofa', 'sp-link', 'workshop.html')):
+        await pg.evaluate("id => { const n = document.querySelector('.se-hot[data-id=' + id + ']'); n.dispatchEvent(new PointerEvent('pointerdown', {bubbles: true})); document.dispatchEvent(new PointerEvent('pointerup', {bubbles: true})); }", spot)
+        await pg.wait_for_timeout(200)
+        if value is None:
+            await pg.click(f'[name="{field}"]')
+        else:
+            await pg.fill(f'[name="{field}"]', value)
+            await pg.press(f'[name="{field}"]', 'Tab')
+        await pg.wait_for_timeout(200)
+    await pg.screenshot(path=OUT / 'spots-editor.png')
+    await js_click(pg, '[data-se="publish"]')
+    await pg.wait_for_timeout(600)
+    live = db.rows.get('live') or {}
+    check(live.get('spots', {}).get('memo', {}).get('off') is True, f'spot settings saved ({live.get("spots")})')
+    check(any(it.get('sku') == 'origami' for it in live.get('items', [])), 'product piece saved with its sku')
+    check(not pg.errors, f'no script errors {pg.errors}')
+    st = await page(browser, db, 1300, 760, "sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1')")
+    await st.goto(f'{BASE}/studio.html')
+    await st.wait_for_timeout(1800)
+    check(await st.evaluate('!document.querySelector(".st-hot[data-hot=memo]")'), 'spot turned off is gone from the studio')
+    check(await st.evaluate('document.querySelector(".st-hot[data-hot=tu]").textContent') == 'Tủ của tôi', 'renamed spot shows its new name')
+    check(await st.evaluate('!!document.querySelector(".st-shelf-prod[data-sku=origami]")'), 'placed product is pickable in the studio')
+    await js_click(st, '.st-hot[data-hot="sofa"]')
+    await st.wait_for_timeout(3000)
+    check(st.url.endswith('workshop.html'), f'linked spot opens its page ({st.url})')
+    check(not st.errors, f'no script errors {st.errors}')
+    await st.context.close()
+    await pg.context.close()
+
+
 async def main(which):
     OUT.mkdir(exist_ok=True)
     srv = serve()
     db = FakeDB()
     async with async_playwright() as p:
         browser = await launch(p)
-        for name, fn in (('street', street), ('wear', wear), ('editor', editor)):
+        for name, fn in (('street', street), ('wear', wear), ('shop', shop), ('spots', spots), ('editor', editor)):
             if which in (None, name):
                 await fn(browser, db)
         await browser.close()

@@ -1386,6 +1386,19 @@
    ]
   },
   {
+   "id": "sp",
+   "label": "Sản phẩm thật",
+   "items": [
+    {
+     "src": "images/studio/sp/origami.webp",
+     "w": 519,
+     "h": 600,
+     "sku": "origami",
+     "h0": 120
+    }
+   ]
+  },
+  {
    "id": "wear",
    "label": "Đồ mặc",
    "items": [
@@ -1521,6 +1534,11 @@
      "h": 567
     },
     {
+     "src": "images/studio/ui/gio-hang.webp",
+     "w": 254,
+     "h": 260
+    },
+    {
      "src": "images/studio/ui/khung-hoa-1.webp",
      "w": 1080,
      "h": 1080
@@ -1613,23 +1631,23 @@
    "items": [
     {
      "src": "images/studio/udon/ud-ngoi-a.webp",
-     "w": 679,
-     "h": 771
+     "w": 445,
+     "h": 504
     },
     {
      "src": "images/studio/udon/ud-ngoi-b.webp",
-     "w": 695,
-     "h": 771
+     "w": 445,
+     "h": 504
     },
     {
      "src": "images/studio/udon/ud-ngoi.webp",
-     "w": 820,
-     "h": 900
+     "w": 697,
+     "h": 693
     },
     {
      "src": "images/studio/udon/ud-ngu.webp",
-     "w": 900,
-     "h": 571
+     "w": 700,
+     "h": 418
     },
     {
      "src": "images/studio/udon/ud-quay.webp",
@@ -1638,8 +1656,8 @@
     },
     {
      "src": "images/studio/udon/ud-vay.webp",
-     "w": 900,
-     "h": 899
+     "w": 679,
+     "h": 700
     }
    ]
   },
