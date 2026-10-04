@@ -737,7 +737,15 @@ html:has(.studio-page), .studio-page { overscroll-behavior: none; }
 
 /* top row: the pieces + "surprise me" */
 .pt-top { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
-.pt-top .pt-tabs { flex: 1 1 auto; }
+/* eight pieces: one row that scrolls sideways, not three rows of chips */
+.pt-top { flex-wrap: nowrap; min-width: 0; }
+.pt, .pt-top, .pt-side, .pt-left { min-width: 0; }
+.st-sheet { overflow-x: hidden; }
+.pt-top .pt-tabs { flex: 1 1 auto; min-width: 0; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px;
+  -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); mask-image: linear-gradient(90deg, #000 85%, transparent); }
+.pt-top .pt-tabs::-webkit-scrollbar { display: none; }
+.pt-top .pt-tab { flex: none; }
+.st-shop-h { margin: 0 0 var(--space-1); font-size: var(--text-lg); }
 .pt-random { white-space: nowrap; }
 /* optional extras, folded */
 .pt-extra { border-top: 1px dashed var(--sage-light); padding-top: var(--space-3); display: grid; gap: var(--space-4); }
@@ -746,6 +754,9 @@ html:has(.studio-page), .studio-page { overscroll-behavior: none; }
 .pt-extra > summary::before { content: '+'; display: inline-block; width: 1.4em; font-weight: 800; color: var(--sage-deep); }
 .pt-extra[open] > summary::before { content: '−'; }
 .gv-see { margin-left: 4px; padding: 0; border: 0; background: none; color: var(--sage-deep); font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; }
+.st-shop-tabs { display: flex; gap: var(--space-2); overflow-x: auto; padding: 0 2.5rem var(--space-2) 0; margin-bottom: var(--space-3); scrollbar-width: none; }
+.st-shop-tabs::-webkit-scrollbar { display: none; }
+.st-shop-tab { flex: none; }
 .st-design-from { min-height: 40px; font-size: var(--text-xs); align-self: center; }
 
 .pt-tools,

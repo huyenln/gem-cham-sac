@@ -303,7 +303,7 @@ window.GemStudioEditor = (function () {
       var o = S().hot[sp.id], b = o.box;
       var n = document.createElement('div');
       n.className = 'se-el se-hot' + (isSel('hot', sp.id) ? ' is-sel' : '') + (spotCfg(sp.id).off ? ' is-off' : '') +
-        (spotCfg(sp.id).link ? ' is-link' : '');
+        (spotCfg(sp.id).link || spotCfg(sp.id).act ? ' is-link' : '');
       n.dataset.kind = 'hot'; n.dataset.id = sp.id;
       place(n, b[0], b[1], b[2] - b[0], b[3] - b[1]);
       if (isSel('hot', sp.id)) handles(n, false);
@@ -314,7 +314,7 @@ window.GemStudioEditor = (function () {
       var tag = document.createElement('div');
       tag.className = 'se-el se-hot-tag' + (isSel('hot', sp.id) ? ' is-sel' : '');
       tag.dataset.kind = 'hot'; tag.dataset.id = sp.id;
-      tag.textContent = (spotCfg(sp.id).vi || sp.vi) + (spotCfg(sp.id).off ? ' (đang tắt)' : spotCfg(sp.id).link ? ' →' : '');
+      tag.textContent = (spotCfg(sp.id).vi || sp.vi) + (spotCfg(sp.id).off ? ' (đang tắt)' : (spotCfg(sp.id).link || spotCfg(sp.id).act) ? ' →' : '');
       tag.style.left = px((b[0] + b[2]) / 2);
       tag.style.top = px(b[1]);
       worldEl.appendChild(tag);
@@ -561,8 +561,16 @@ window.GemStudioEditor = (function () {
           '<label><input type="checkbox" name="sp-on"' + (c.off ? '' : ' checked') + '> Hiện trong studio</label>') +
         '<label>Tên hiện <input name="sp-vi" maxlength="40" placeholder="' + esc(name) + '" value="' + esc(c.vi || '') + '"></label>' +
         '<label>Tên tiếng Anh <input name="sp-en" maxlength="40" placeholder="(để trống: tên có sẵn)" value="' + esc(c.en || '') + '"></label>' +
-        '<label>Mở trang khác <input name="sp-link" maxlength="300" placeholder="vd: workshop.html hoặc https://…" value="' + esc(c.link || '') + '"></label>' +
-        '<span class="se-hint-s">Để trống "Mở trang khác" thì mở cửa sổ có sẵn. Khung nét đứt = chỗ khách chạm; cột đỏ ở sàn = chỗ nhân vật dừng.</span>' +
+        // what a tap does: its own window, another spot's, a page, or nothing
+        '<label>Khi bấm <select name="sp-act"><option value="">(mặc định của điểm này)</option>' +
+          L.ACTS.map(function (x) {
+            var cur = c.act || (c.link ? 'link' : '');
+            return '<option value="' + x.id + '"' + (x.id === cur ? ' selected' : '') + '>' + esc(x.vi) + '</option>';
+          }).join('') + '</select></label>' +
+        ((c.act || (c.link ? 'link' : '')) === 'link'
+          ? '<label>Trang <input name="sp-link" maxlength="300" placeholder="vd: workshop.html hoặc https://…" value="' + esc(c.link || '') + '"></label>'
+          : '') +
+        '<span class="se-hint-s">Khung nét đứt = chỗ khách chạm; cột đỏ ở sàn = chỗ nhân vật dừng.</span>' +
       '</div>';
     } else {
       tools = '<details class="se-help"><summary>Cách dùng</summary><p>Chạm một món ở thư viện để thêm vào giữa màn hình. ' +
@@ -608,6 +616,16 @@ window.GemStudioEditor = (function () {
       var v = e.target.value.trim().slice(0, 40), key = n.slice(3);
       if (v) c[key] = v; else delete c[key];
     }
+    if (n === 'sp-act') {
+      if (e.target.value) c.act = e.target.value; else delete c.act;
+      if (c.act !== 'link') delete c.link;
+      if (c.act === 'link' && !c.link) {
+        // the page comes next: keep the choice once a page is typed
+        if (Object.keys(c).length) data.spots[sel.id] = c;
+        draw(); renderPanel();
+        return;
+      }
+    }
     if (n === 'sp-link') {
       var link = e.target.value.trim();
       if (!link) delete c.link;
@@ -616,6 +634,7 @@ window.GemStudioEditor = (function () {
     }
     if (Object.keys(c).length) data.spots[sel.id] = c; else delete data.spots[sel.id];
     draw();
+    if (n === 'sp-act') renderPanel();
   }
 
   function panelChange(e) {

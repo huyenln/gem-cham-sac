@@ -17,10 +17,10 @@
 //     hot:   { <spot id>: { box: [x0, y0, x1, y1], stand } },
 //     udon:  { x, y, w, h },                 top-left + size
 //     start: x,                              where the character starts
-//     spots: { <spot id>: { off, vi, en, link } }   owner's settings per
+//     spots: { <spot id>: { off, vi, en, act, link } }   owner's settings per
 //            hotspot (both scenes): off = taken out of the studio, vi / en =
-//            its label instead of the built-in one, link = opens that page
-//            instead of the built-in sheet
+//            its label instead of the built-in one, act = what a tap does
+//            (ACTS; none = the spot's own), link = the page for act 'link'
 //     outside: { bg, items, hot: { enter }, start }
 //            the street in front of the studio, where studio.html opens;
 //            same fields, one hotspot (the door). Missing → OUTSIDE below.
@@ -184,6 +184,26 @@ window.GemLayout = (function () {
     return out;
   }
 
+  // What a spot can do when tapped (owner picks; none set = its own action).
+  var ACTS = [
+    { id: 'door',     vi: 'Chọn nhân vật' },
+    { id: 'sofa',     vi: 'Góc nghỉ chân (giới thiệu Gem)' },
+    { id: 'rail',     vi: 'Đồ 2hand' },
+    { id: 'fitting',  vi: 'Thử phụ kiện lên người' },
+    { id: 'shop:pegboard', vi: 'Kệ hàng — tab Phụ kiện' },
+    { id: 'shop:display',  vi: 'Kệ hàng — tab Túi, sổ & set quà' },
+    { id: 'shop:cabinet',  vi: 'Kệ hàng — tab Gối, thảm & quà' },
+    { id: 'shop:all',      vi: 'Kệ hàng — tab Tất cả' },
+    { id: 'sewing',   vi: 'Bàn thiết kế' },
+    { id: 'tu',       vi: 'Tủ sưu tầm' },
+    { id: 'counter',  vi: 'Quầy (mở giỏ hàng)' },
+    { id: 'memo',     vi: 'Bảng lời nhắn' },
+    { id: 'enter',    vi: 'Vào studio' },
+    { id: 'link',     vi: 'Mở trang khác' },
+    { id: 'none',     vi: 'Không làm gì (chỉ đi tới)' }
+  ];
+  var ACT_IDS = ACTS.map(function (a) { return a.id; });
+
   // A hotspot's link: one of our own pages (cau-chuyen.html, san-pham.html#…)
   // or an https:// address. Nothing else (no javascript:, no data:).
   function linkOk(v) {
@@ -206,6 +226,7 @@ window.GemLayout = (function () {
       if (label(o.vi)) c.vi = label(o.vi);
       if (label(o.en)) c.en = label(o.en);
       if (linkOk(o.link)) c.link = o.link;
+      if (ACT_IDS.indexOf(o.act) >= 0 && (o.act !== 'link' || c.link)) c.act = o.act;
       if (Object.keys(c).length) out[sp.id] = c;
     });
     return out;
@@ -227,5 +248,5 @@ window.GemLayout = (function () {
   }
 
   return { SPOTS: SPOTS, OUT_SPOTS: OUT_SPOTS, FEET_Y: FEET_Y, srcOk: srcOk, blank: blank, sanitize: sanitize,
-    outsideDefault: outsideDefault, EXTEND: EXTEND, linkOk: linkOk, bgParts: bgParts, partStyle: partStyle };
+    outsideDefault: outsideDefault, EXTEND: EXTEND, linkOk: linkOk, ACTS: ACTS, bgParts: bgParts, partStyle: partStyle };
 })();

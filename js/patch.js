@@ -43,9 +43,19 @@
     lotcoc:    { sku: 'lotcoc',    vi: 'Lót cốc',      en: 'Coaster',           shape: 'coaster', grid: 2,
                  layouts: ['vuong', 'cabin', 'chong', 'tuve'] },
     scrunchie: { sku: 'scrunchie', vi: 'Dây buộc tóc', en: 'Scrunchie',         shape: 'scrunchie', grid: 1,
+                 layouts: ['mot', 'hai', 'tuve'] },
+    origami:   { sku: 'origami',   vi: 'Túi Origami',  en: 'Origami pouch',     shape: 'origami', grid: 1,
+                 layouts: ['mot', 'hai', 'tuve'] },
+    oxford:    { sku: 'oxford',    vi: 'Túi áo Oxford', en: 'Oxford shirt bag', shape: 'shirt', grid: 2,
+                 layouts: ['mot', 'hai', 'vuong', 'tuve'] },
+    bloom:     { sku: 'bloom',     vi: 'Bloom Charm',  en: 'Bloom charm',       shape: 'bloom', grid: 1,
+                 layouts: ['mot', 'hai', 'tuve'] },
+    bookmark:  { sku: 'bookmark',  vi: 'Bookmark',     en: 'Bookmark',          shape: 'bookmark', grid: 3,
+                 layouts: ['mot', 'hai', 'vuong', 'tuve'] },
+    daydeo:    { sku: 'daydeo',    vi: 'Dây đeo cổ tay', en: 'Wrist strap',     shape: 'strap', grid: 1,
                  layouts: ['mot', 'hai', 'tuve'] }
   };
-  var PRODUCT_ORDER = ['goi', 'lotcoc', 'scrunchie'];
+  var PRODUCT_ORDER = ['goi', 'lotcoc', 'scrunchie', 'origami', 'oxford', 'bloom', 'bookmark', 'daydeo'];
 
   // Stand-ins until Mai's mother's real piecing samples arrive.
   var LAYOUTS = {
@@ -377,16 +387,186 @@
     return 'M' + pts.map(function (p) { return (ox + p[0] * sc).toFixed(1) + ' ' + (oy + p[1] * sc).toFixed(1); }).join('L') + 'Z';
   }
 
+  // A stroke as a smooth path: quadratic curves through the midpoints of its
+  // points, so a drawing kept on the coarse grid doesn't look like stairs.
+  function smoothPath(pts, X, Y) {
+    if (pts.length === 1) return 'M' + X(pts[0][0]) + ' ' + Y(pts[0][1]) + 'l0.01 0';
+    if (pts.length === 2) return 'M' + X(pts[0][0]) + ' ' + Y(pts[0][1]) + 'L' + X(pts[1][0]) + ' ' + Y(pts[1][1]);
+    var d = 'M' + X(pts[0][0]) + ' ' + Y(pts[0][1]);
+    for (var i = 1; i < pts.length - 1; i++) {
+      var mx = (pts[i][0] + pts[i + 1][0]) / 2, my = (pts[i][1] + pts[i + 1][1]) / 2;
+      d += 'Q' + X(pts[i][0]) + ' ' + Y(pts[i][1]) + ' ' + X(mx) + ' ' + Y(my);
+    }
+    var last = pts[pts.length - 1];
+    return d + 'L' + X(last[0]) + ' ' + Y(last[1]);
+  }
+
+  // Fewer points, same line (Ramer–Douglas–Peucker): a straight drag keeps
+  // just its two ends. Points in grid cells, eps in cells.
+  function simplify(pts, eps) {
+    if (pts.length < 3) return pts.slice();
+    var a = pts[0], b = pts[pts.length - 1], far = 0, at = 0;
+    var dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy);
+    for (var i = 1; i < pts.length - 1; i++) {
+      // a closed loop (ends meet): distance from the start point instead
+      var dist = len < 1e-6 ? Math.hypot(pts[i][0] - a[0], pts[i][1] - a[1])
+        : Math.abs(dy * pts[i][0] - dx * pts[i][1] + b[0] * a[1] - b[1] * a[0]) / len;
+      if (dist > far) { far = dist; at = i; }
+    }
+    if (far <= eps) return [a, b];
+    return simplify(pts.slice(0, at + 1), eps).slice(0, -1).concat(simplify(pts.slice(at), eps));
+  }
+
+  // The fine points of a finished stroke → what the code keeps (grid cells).
+  function settle(raw) {
+    var out = [];
+    simplify(raw, 0.55).forEach(function (q) {
+      var c = [Math.max(0, Math.min(GRID - 1, Math.round(q[0] - 0.5))), Math.max(0, Math.min(GRID - 1, Math.round(q[1] - 0.5)))];
+      var l = out[out.length - 1];
+      if (!l || l[0] !== c[0] || l[1] !== c[1]) out.push(c);
+    });
+    return out;
+  }
+
   function sketchPaths(strokes, ox, oy, size) {
     var sc = size / GRID;
+    var X = function (v) { return (ox + (v + 0.5) * sc).toFixed(1); };
+    var Y = function (v) { return (oy + (v + 0.5) * sc).toFixed(1); };
     return strokes.map(function (s) {
-      var pts = s.pts.length === 1 ? [s.pts[0], [s.pts[0][0] + 0.01, s.pts[0][1]]] : s.pts;
-      return '<path d="M' + pts.map(function (p) {
-        return (ox + (p[0] + 0.5) * sc).toFixed(1) + ' ' + (oy + (p[1] + 0.5) * sc).toFixed(1);
-      }).join('L') + '" fill="none" stroke="' + INKS[s.c] + '" stroke-width="' + (sc * WIDTHS[s.w || 0]).toFixed(1) +
+      return '<path d="' + smoothPath(s.pts, X, Y) + '" fill="none" stroke="' + INKS[s.c] + '" stroke-width="' + (sc * WIDTHS[s.w || 0]).toFixed(1) +
       '" stroke-linecap="round" stroke-linejoin="round"/>';
     }).join('');
   }
+
+  /* ---------- the newer pieces, each drawn in a 340 x 340 box ----------
+     A shape returns its SVG: the fabric (one fabric, two fabrics, squares
+     or the customer's drawing) inside its outline, then the stitching and
+     the hardware (ring, buttons, clasp, tassel) on top. */
+  var METAL = '#A8A49A';
+  function hexPts(cx, cy, r) {
+    var out = [];
+    for (var k = 0; k < 6; k++) { var a = k * Math.PI / 3; out.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]); }
+    return out;
+  }
+  function poly(pts) { return pts.map(function (q) { return q[0].toFixed(1) + ',' + q[1].toFixed(1); }).join(' '); }
+  function ring(x, y, r) {
+    return '<circle cx="' + x + '" cy="' + y + '" r="' + r + '" fill="none" stroke="' + METAL + '" stroke-width="7"/>' +
+      '<circle cx="' + x + '" cy="' + y + '" r="' + r + '" fill="none" stroke="#fff" stroke-opacity="0.5" stroke-width="2"/>';
+  }
+  // the customer's drawing inside a box, clipped to the piece
+  function drawn(d, clipId, x, y, w) {
+    return '<g clip-path="url(#' + clipId + ')"><rect width="340" height="340" fill="#FBF6EE"/>' +
+      sketchPaths(d.sketch, x, y, w) + '</g>';
+  }
+  // squares (or another patch layout) inside a box, clipped to the piece
+  function patched(d, p, fill, clipId, x, y, w, h) {
+    var out = '<g clip-path="url(#' + clipId + ')">';
+    patches('vuong', p.grid).forEach(function (pt, n) {
+      out += '<path d="M' + pt.pts.map(function (q) { return (x + q[0] * w / 100).toFixed(1) + ' ' + (y + q[1] * h / 100).toFixed(1); }).join('L') +
+        'Z" fill="' + fill(n) + '" stroke="' + STITCH + '" stroke-width="1.6" stroke-dasharray="6 5"/>';
+    });
+    return out + '</g>';
+  }
+
+  var SHAPES = {
+    // hexagon folded into six petals, key ring on top
+    origami: function (d, p, fill, pre) {
+      var cx = 175, cy = 190, R = 130, H = hexPts(cx, cy, R), out = '';
+      out += '<line x1="70" y1="88" x2="' + H[4][0].toFixed(1) + '" y2="' + H[4][1].toFixed(1) + '" stroke="' + METAL + '" stroke-width="6"/>';
+      out += '<clipPath id="' + pre + 'hex"><polygon points="' + poly(H) + '"/></clipPath>';
+      if (d.layout === 'tuve') out += drawn(d, pre + 'hex', cx - R, cy - R, 2 * R);
+      else {
+        for (var k = 0; k < 6; k++) {
+          var a = H[k], b = H[(k + 1) % 6], m1 = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+          out += '<polygon points="' + poly([[cx, cy], a, m1]) + '" fill="' + fill(d.layout === 'hai' ? k % 2 : 0) + '"/>';
+          out += '<polygon points="' + poly([[cx, cy], m1, b]) + '" fill="' + fill(d.layout === 'hai' ? (k + 1) % 2 : 0) + '"/>';
+        }
+        out += '<polygon points="' + poly(H) + '" fill="url(#' + pre + 'puff)"/>';
+        // the folds: centre to every corner and edge middle
+        for (var j = 0; j < 6; j++) {
+          var c = H[j], n = H[(j + 1) % 6];
+          out += '<path d="M' + cx + ' ' + cy + 'L' + c[0].toFixed(1) + ' ' + c[1].toFixed(1) + 'M' + cx + ' ' + cy + 'L' +
+            ((c[0] + n[0]) / 2).toFixed(1) + ' ' + ((c[1] + n[1]) / 2).toFixed(1) + '" stroke="#3D4A2E" stroke-opacity="0.22" stroke-width="2"/>';
+        }
+      }
+      out += '<polygon points="' + poly(H) + '" fill="none" stroke="' + STITCH + '" stroke-width="2.4"/>';
+      return out + ring(62, 66, 30);
+    },
+    // a little shirt: body, collar, button placket, a loop handle
+    shirt: function (d, p, fill, pre) {
+      var out = '';
+      var body = 'M78 128Q78 112 94 112L142 112L170 150L198 112L246 112Q262 112 262 128L262 296Q262 310 248 310L92 310Q78 310 78 296Z';
+      out += '<path d="M140 116Q140 34 170 34Q200 34 200 116" fill="none" stroke="' + fill(d.layout === 'hai' ? 1 : 0) + '" stroke-width="22" stroke-linecap="round"/>' +
+        '<path d="M140 116Q140 34 170 34Q200 34 200 116" fill="none" stroke="' + STITCH + '" stroke-width="1.4" stroke-dasharray="5 5"/>';
+      out += '<clipPath id="' + pre + 'shirt"><path d="' + body + '"/></clipPath>';
+      if (d.layout === 'tuve') out += drawn(d, pre + 'shirt', 70, 100, 200);
+      else if (d.layout === 'vuong') out += patched(d, p, fill, pre + 'shirt', 78, 112, 184, 198);
+      else out += '<path d="' + body + '" fill="' + fill(0) + '"/>';
+      out += '<path d="' + body + '" fill="url(#' + pre + 'puff)" stroke="' + STITCH + '" stroke-width="2.2"/>';
+      // collar points + placket + buttons
+      var col = d.layout === 'tuve' ? '#FBF6EE' : fill(d.layout === 'hai' ? 1 : 0);
+      out += '<path d="M142 112L170 150L150 168L124 120Z" fill="' + col + '" stroke="' + STITCH + '" stroke-width="2"/>' +
+        '<path d="M198 112L170 150L190 168L216 120Z" fill="' + col + '" stroke="' + STITCH + '" stroke-width="2"/>' +
+        '<path d="M170 150L170 310" stroke="' + STITCH + '" stroke-width="1.6" stroke-dasharray="5 5"/>';
+      [190, 230, 270].forEach(function (y) {
+        out += '<circle cx="170" cy="' + y + '" r="6" fill="#FBF6EE" stroke="' + STITCH + '" stroke-width="1.6"/>';
+      });
+      return out;
+    },
+    // five petals round a centre, hanging from a ring and a short chain
+    bloom: function (d, p, fill, pre) {
+      var cx = 170, cy = 200, out = '';
+      out += '<path d="M170 58L170 120" stroke="' + METAL + '" stroke-width="5" stroke-dasharray="9 5"/>' + ring(170, 42, 18);
+      var petals = [];
+      for (var k = 0; k < 5; k++) {
+        var a = -90 + k * 72;
+        petals.push('<ellipse cx="' + cx + '" cy="' + (cy - 64) + '" rx="46" ry="66" transform="rotate(' + (a + 90) + ' ' + cx + ' ' + cy + ')"');
+      }
+      out += '<clipPath id="' + pre + 'fl">' + petals.map(function (e) { return e + '/>'; }).join('') + '</clipPath>';
+      if (d.layout === 'tuve') out += drawn(d, pre + 'fl', 40, 70, 260);
+      else petals.forEach(function (e, k) { out += e + ' fill="' + fill(d.layout === 'hai' ? k % 2 : 0) + '"/>'; });
+      petals.forEach(function (e) { out += e + ' fill="url(#' + pre + 'puff)" stroke="' + STITCH + '" stroke-width="2"/>'; });
+      return out + '<circle cx="' + cx + '" cy="' + cy + '" r="30" fill="' + (d.layout === 'hai' ? fill(2) : C.kem) +
+        '" stroke="' + STITCH + '" stroke-width="2"/>';
+    },
+    // a long strip with a tassel
+    bookmark: function (d, p, fill, pre) {
+      var x = 118, y = 22, w = 104, h = 262, out = '';
+      out += '<clipPath id="' + pre + 'bm"><rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="10"/></clipPath>';
+      if (d.layout === 'tuve') out += drawn(d, pre + 'bm', 40, 22, 262);
+      else if (d.layout === 'vuong') out += patched(d, p, fill, pre + 'bm', x, y, w, h);
+      else if (d.layout === 'hai') {
+        out += '<g clip-path="url(#' + pre + 'bm)"><rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h / 2 + '" fill="' + fill(0) + '"/>' +
+          '<rect x="' + x + '" y="' + (y + h / 2) + '" width="' + w + '" height="' + h / 2 + '" fill="' + fill(1) + '"/></g>' +
+          '<path d="M' + x + ' ' + (y + h / 2) + 'h' + w + '" stroke="' + STITCH + '" stroke-width="1.6" stroke-dasharray="6 5"/>';
+      } else out += '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="10" fill="' + fill(0) + '"/>';
+      out += '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="10" fill="url(#' + pre + 'puff)" stroke="' + STITCH + '" stroke-width="2.2"/>' +
+        '<rect x="' + (x + 8) + '" y="' + (y + 8) + '" width="' + (w - 16) + '" height="' + (h - 16) + '" rx="6" fill="none" stroke="' + STITCH + '" stroke-width="1.4" stroke-dasharray="5 5"/>';
+      // tassel
+      out += '<path d="M170 ' + (y + h) + 'L170 ' + (y + h + 14) + '" stroke="' + C.kraft + '" stroke-width="3"/>' +
+        '<circle cx="170" cy="' + (y + h + 18) + '" r="6" fill="' + C.kraft + '"/>';
+      for (var t = -12; t <= 12; t += 4) {
+        out += '<path d="M170 ' + (y + h + 22) + 'L' + (170 + t) + ' ' + (y + h + 48) + '" stroke="' + C.kraft + '" stroke-width="2.2" stroke-linecap="round"/>';
+      }
+      return out;
+    },
+    // a loop of fabric with a clasp at the bottom
+    strap: function (d, p, fill, pre) {
+      var loop = 'M170 268C70 262 64 70 170 58C276 70 270 262 170 268', out = '';
+      if (d.layout === 'tuve') {
+        out += '<mask id="' + pre + 'st"><path d="' + loop + '" fill="none" stroke="#fff" stroke-width="48"/></mask>' +
+          '<g mask="url(#' + pre + 'st)"><rect width="340" height="340" fill="#FBF6EE"/>' + sketchPaths(d.sketch, 50, 40, 240) + '</g>';
+      } else if (d.layout === 'hai') {
+        out += '<path d="M170 268C70 262 64 70 170 58" fill="none" stroke="' + fill(0) + '" stroke-width="48"/>' +
+          '<path d="M170 58C276 70 270 262 170 268" fill="none" stroke="' + fill(1) + '" stroke-width="48"/>';
+      } else out += '<path d="' + loop + '" fill="none" stroke="' + fill(0) + '" stroke-width="48"/>';
+      out += '<path d="' + loop + '" fill="none" stroke="#3D4A2E" stroke-opacity="0.1" stroke-width="48"/>' +
+        '<path d="' + loop + '" fill="none" stroke="' + STITCH + '" stroke-width="1.6" stroke-dasharray="6 5"/>';
+      // clasp: a ring and a swivel hook
+      return out + '<rect x="150" y="256" width="40" height="22" rx="5" fill="' + METAL + '"/>' + ring(170, 296, 14) +
+        '<path d="M170 310L170 322Q170 332 180 332" fill="none" stroke="' + METAL + '" stroke-width="6" stroke-linecap="round"/>';
+    }
+  };
 
   // Build the preview SVG. Illustrative only: real scraps differ.
   function svg(spec, opts) {
@@ -412,7 +592,9 @@
     };
     var body = '';
 
-    if (p.shape === 'scrunchie') {
+    if (SHAPES[p.shape]) {
+      body += SHAPES[p.shape](d, p, fill, pre);
+    } else if (p.shape === 'scrunchie') {
       var pts = [];
       for (var a = 0; a <= 360; a += 10) {
         var r = a % 20 === 0 ? 150 : 138, rad = a * Math.PI / 180;
@@ -496,7 +678,7 @@
     TONES: TONES, TONE_ORDER: TONE_ORDER, MAX_TONES: MAX_TONES,
     PRINTS: PRINTS, PRINT_ORDER: PRINT_ORDER, FABRICS: FABRICS, FABRIC_ORDER: FABRIC_ORDER,
     GEM: GEM, MAX_OTHER: MAX_OTHER, MAX_NOTE: MAX_NOTE,
-    INKS: INKS, ERASER: ERASER, WIDTHS: WIDTHS, GRID: GRID, MAX_POINTS: MAX_POINTS, MAX_STROKES: MAX_STROKES,
+    INKS: INKS, ERASER: ERASER, WIDTHS: WIDTHS, GRID: GRID, settle: settle, smoothPath: smoothPath, MAX_POINTS: MAX_POINTS, MAX_STROKES: MAX_STROKES,
     blank: blank, encode: encode, parse: parse, isComplete: isComplete, describe: describe,
     tones: tones, randomFill: randomFill, svg: svg, toneDot: toneDot, printDot: printDot,
     sketchPaths: sketchPaths,

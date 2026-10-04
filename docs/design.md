@@ -1400,6 +1400,23 @@ thay khi có buổi chụp.
 
 Udon ở quầy: chạm không còn câu nhắc — kéo được là để khách tự khám phá.
 
+### Góp ý đợt 4 (10/2026)
+
+- **Nét vẽ thẳng, mượt:** trong lúc vẽ giữ toạ độ mịn (không làm tròn theo ô) và
+  vẽ bằng đường cong; nhấc tay thì nét được rút gọn (Ramer–Douglas–Peucker,
+  `GemPatch.settle`) rồi mới bám ô 64×64 để vào mã. Kéo thẳng = 2 điểm.
+- **Bàn thiết kế thêm 5 món:** Túi Origami (lục giác 6 cánh + khoen), Túi áo
+  Oxford (áo có cổ, nẹp nút, quai), Bloom Charm (5 cánh + khoen), Bookmark (dải
+  dài + tua), Dây đeo cổ tay (vòng vải + móc). Kiểu: một vải / ghép hai vải /
+  (Oxford, Bookmark thêm ô vuông) / theo hình vẽ. Vẽ trong `SHAPES` của
+  `js/patch.js`. Hàng món thành một dòng cuộn ngang.
+- **Kệ hàng một cửa sổ có tab:** Phụ kiện · Túi & sổ · Gối & quà · Tất cả. Bấm kệ
+  nào mở đúng tab đó, chuyển tab tại chỗ.
+- **Chọn hành động cho vùng bấm** (`spots.<id>.act`, danh sách `GemLayout.ACTS`):
+  chọn nhân vật, góc nghỉ, 2hand, thử phụ kiện, kệ hàng (theo tab), bàn thiết kế,
+  tủ, quầy, bảng lời nhắn, vào studio, mở trang khác, hoặc không làm gì. Để trống
+  = hành động mặc định của điểm đó.
+
 ### Góp ý đợt 3 (10/2026)
 
 - **Bàn thiết kế gọn lại:** trên cùng là các món + "Gợi ý ngẫu nhiên". Lần đầu chỉ
