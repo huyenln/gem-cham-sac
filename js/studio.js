@@ -306,6 +306,11 @@
     'studio.gv_see':       { vi: `Xem món này`, en: `See it` },
     'studio.gv_ref':       { vi: `Muốn một {mon} theo ý bạn? Chọn kiểu, tông, họa tiết bên dưới, Gem may theo mẫu này nha.`, en: `Want a {mon} your way? Pick the layout, colours and prints below and Gem sews it after this one.` },
     'studio.prod_design':  { vi: `Tự thiết kế theo mẫu này`, en: `Design one like this` },
+    'studio.shop_h':       { vi: `Kệ hàng`, en: `Shelves` },
+    'studio.shop_all':     { vi: `Tất cả`, en: `Everything` },
+    'studio.shop_pegboard': { vi: `Phụ kiện`, en: `Accessories` },
+    'studio.shop_display': { vi: `Túi & sổ`, en: `Bags & notebooks` },
+    'studio.shop_cabinet': { vi: `Gối & quà`, en: `Cushions & gifts` },
     'studio.gv_hi':        { vi: `Đây là {mon} thật Gem đã may nè. Bản vẽ chỉ là phác thôi, mỗi cái một kiểu nha!`, en: `Here's a real {mon} Gem has sewn. The drawing is just a sketch — every piece turns out its own way!` },
     'studio.gv_this':      { vi: `{mon} thật trông thế này nè.`, en: `This is what a real {mon} looks like.` },
     'studio.gv_other':     { vi: `Thêm một món chắp vải thật của Gem: {mon}.`, en: `Another real patchwork piece by Gem: {mon}.` },
@@ -1050,12 +1055,45 @@
     '</li>';
   }
 
+  // All the shelves in one sheet, one tab each (+ "Tất cả"): a shelf opens
+  // on its own tab, and the others are a tap away.
+  var SHOP_TABS = ['pegboard', 'display', 'cabinet', 'all'];
+  function shopSkus(tab) {
+    if (tab !== 'all') return SHELVES[tab] || [];
+    var seen = {}, out = [];
+    ['pegboard', 'display', 'cabinet'].forEach(function (k) {
+      SHELVES[k].forEach(function (sku) { if (!seen[sku]) { seen[sku] = 1; out.push(sku); } });
+    });
+    return out;
+  }
+
   function shelfSheet(id) {
+    if (SHOP_TABS.indexOf(id) < 0) id = 'all';
     openSheet(
-      head('studio.' + id + '_h', 'studio.' + id + '_p') +
-      '<ul class="st-grid">' + SHELVES[id].map(productCard).join('') + '</ul>' +
+      '<h2 id="st-sheet-title" class="st-sr" data-i18n="studio.shop_h">' + esc(t('studio.shop_h')) + '</h2>' +
+      '<div class="st-shop-tabs" role="tablist">' + SHOP_TABS.map(function (k) {
+        var key = 'studio.shop_' + k;   // short tab names; the heading below says more
+        return '<button type="button" role="tab" class="pt-tab st-shop-tab' + (k === id ? ' is-on' : '') + '" data-shop="' + k +
+          '" aria-selected="' + (k === id) + '" data-i18n="' + key + '">' + esc(t(key)) + '</button>';
+      }).join('') + '</div>' +
+      '<div class="st-shop-body"></div>' +
       '<p class="st-foot">' + tr('a', 'studio.all_products', ' href="san-pham.html"') + '</p>'
     );
+    shopTab(id);
+  }
+
+  function shopTab(id) {
+    var body = sheetBody.querySelector('.st-shop-body');
+    if (!body) return;
+    sheetBody.querySelectorAll('[data-shop]').forEach(function (b) {
+      var on = b.getAttribute('data-shop') === id;
+      b.classList.toggle('is-on', on);
+      b.setAttribute('aria-selected', on);
+    });
+    var lead = id === 'all' ? '' : t('studio.' + id + '_p');
+    body.innerHTML = (id === 'all' ? '' : '<h3 class="st-shop-h">' + esc(t('studio.' + id + '_h')) + '</h3>') +
+      (lead && lead !== 'studio.' + id + '_p' ? '<p class="st-lead">' + esc(lead) + '</p>' : '') +
+      '<ul class="st-grid">' + shopSkus(id).map(productCard).join('') + '</ul>';
   }
 
   function railSheet() {
@@ -1334,6 +1372,11 @@
       return '<button type="button" class="pt-tab' + (id === d.product ? ' is-on' : '') +
         '" data-product="' + id + '" aria-pressed="' + (id === d.product) + '">' + esc(P.PRODUCTS[id][l]) + '</button>';
     }).join('');
+    var onTab = root.querySelector('.pt-tab.is-on');
+    if (onTab) {   // keep the chosen piece in view in the scrolling row
+      var row = onTab.parentNode;
+      row.scrollLeft = onTab.offsetLeft - row.offsetLeft - (row.clientWidth - onTab.offsetWidth) / 2;
+    }
 
     root.querySelector('.pt-layouts').innerHTML = prod.layouts.map(function (id) {
       var preview = Object.assign({}, d, { layout: id });
@@ -1436,32 +1479,39 @@
   }
 
   /* --- sketch pad: strokes on a 64 x 64 grid --- */
+  // Drawing: the finger's path is kept fine while drawing (grid cells, not
+  // rounded) and drawn smooth; on lift it is simplified and snapped to the
+  // grid the design code keeps (P.settle), so lines come out straight.
   function bindCanvas(cv) {
-    var cell = function (e) {
+    var at = function (e) {
       var r = cv.getBoundingClientRect();
-      var x = Math.floor((e.clientX - r.left) / r.width * P.GRID);
-      var y = Math.floor((e.clientY - r.top) / r.height * P.GRID);
-      return [Math.max(0, Math.min(P.GRID - 1, x)), Math.max(0, Math.min(P.GRID - 1, y))];
+      return [Math.max(0, Math.min(P.GRID, (e.clientX - r.left) / r.width * P.GRID)),
+              Math.max(0, Math.min(P.GRID, (e.clientY - r.top) / r.height * P.GRID))];
     };
     cv.addEventListener('pointerdown', function (e) {
       if (D.d.sketch.length >= P.MAX_STROKES || pointsUsed() >= P.MAX_POINTS) { renderPreview(); return; }
       e.preventDefault();
       try { cv.setPointerCapture(e.pointerId); } catch (x) { /* ignore */ }
-      D.drawing = { c: D.ink, w: D.size || 0, pts: [cell(e)] };
+      D.drawing = { c: D.ink, w: D.size || 0, pts: [], raw: [at(e)] };
       D.d.sketch.push(D.drawing);
       drawCanvas();
     });
     cv.addEventListener('pointermove', function (e) {
       if (!D.drawing) return;
-      var p = cell(e), last = D.drawing.pts[D.drawing.pts.length - 1];
-      if (p[0] === last[0] && p[1] === last[1]) return;
-      if (pointsUsed() >= P.MAX_POINTS) return;
-      D.drawing.pts.push(p);
+      var p = at(e), last = D.drawing.raw[D.drawing.raw.length - 1];
+      if (Math.hypot(p[0] - last[0], p[1] - last[1]) < 0.35) return;
+      D.drawing.raw.push(p);
       drawCanvas();
     });
     var end = function () {
       if (!D.drawing) return;
+      var st = D.drawing;
       D.drawing = null;
+      st.pts = P.settle(st.raw);
+      delete st.raw;
+      // over the point budget: keep what fits
+      var room = P.MAX_POINTS - (pointsUsed() - st.pts.length);
+      if (st.pts.length > room) st.pts = st.pts.slice(0, Math.max(1, room));
       renderPreview();
     };
     cv.addEventListener('pointerup', end);
@@ -1483,12 +1533,10 @@
     D.d.sketch.forEach(function (st) {
       g.strokeStyle = P.INKS[st.c];
       g.lineWidth = s * P.WIDTHS[st.w || 0];
-      g.beginPath();
-      st.pts.forEach(function (p, i) {
-        var x = (p[0] + 0.5) * s, y = (p[1] + 0.5) * s;
-        if (i) g.lineTo(x, y); else { g.moveTo(x, y); g.lineTo(x + 0.01, y); }
-      });
-      g.stroke();
+      // a stroke in progress: its fine points (already in cells, no +0.5)
+      var fine = !!st.raw;
+      var X = function (v) { return (fine ? v : v + 0.5) * s; };
+      g.stroke(new Path2D(P.smoothPath(fine ? st.raw : st.pts, X, X)));
     });
   }
 
@@ -2146,7 +2194,17 @@
     }
     var h = hotById(id);
     if (!h || spotOff(id)) return;
-    var link = spotSet(id).link;
+    var cfg = spotSet(id), act = cfg.act || (cfg.link ? 'link' : id);
+    var link = act === 'link' ? cfg.link : null;
+    if (act === 'none') { walkTo(standX(h)); return; }
+    if (act !== id && act !== 'link' && open !== false) {
+      // the owner gave this spot another spot's action
+      walkTo(standX(h));
+      if (act.indexOf('shop:') === 0) shelfSheet(act.slice(5));
+      else if (act === 'enter') enterStudio();
+      else if (ACTIONS[act]) ACTIONS[act]();
+      return;
+    }
     if (link && open !== false) {
       // the owner pointed this spot at another page
       walkTo(standX(h), function () {
@@ -2228,6 +2286,8 @@
         return;
       }
       if (e.target.closest('[data-out]')) { goScene('out'); return; }
+      var sh = e.target.closest('[data-shop]');
+      if (sh) { shopTab(sh.getAttribute('data-shop')); return; }
       var df = e.target.closest('[data-design-from]');
       if (df) { designFrom(df.getAttribute('data-design-from')); return; }
       var wr = e.target.closest('[data-wear]');

@@ -275,11 +275,15 @@ async def spots(browser, db):
     await pg.wait_for_timeout(1800)
     n = await pg.evaluate("document.querySelectorAll('.se-item.is-prod').length")
     check(n == 1, f'"Đặt vào Studio" places the product in the editor ({n})')
-    for spot, field, value in (('memo', 'sp-on', None), ('tu', 'sp-vi', 'Tủ của tôi'), ('sofa', 'sp-link', 'workshop.html')):
+    steps = (('memo', 'sp-on', None), ('tu', 'sp-vi', 'Tủ của tôi'), ('sofa', 'sp-act', 'link'), ('sofa', 'sp-link', 'workshop.html'),
+             ('rail', 'sp-act', 'shop:pegboard'))
+    for spot, field, value in steps:
         await pg.evaluate("id => { const n = document.querySelector('.se-hot[data-id=' + id + ']'); n.dispatchEvent(new PointerEvent('pointerdown', {bubbles: true})); document.dispatchEvent(new PointerEvent('pointerup', {bubbles: true})); }", spot)
         await pg.wait_for_timeout(200)
         if value is None:
             await pg.click(f'[name="{field}"]')
+        elif field == 'sp-act':
+            await pg.select_option(f'[name="{field}"]', value)
         else:
             await pg.fill(f'[name="{field}"]', value)
             await pg.press(f'[name="{field}"]', 'Tab')
@@ -297,6 +301,17 @@ async def spots(browser, db):
     check(await st.evaluate('!document.querySelector(".st-hot[data-hot=memo]")'), 'spot turned off is gone from the studio')
     check(await st.evaluate('document.querySelector(".st-hot[data-hot=tu]").textContent') == 'Tủ của tôi', 'renamed spot shows its new name')
     check(await st.evaluate('!!document.querySelector(".st-shelf-prod[data-sku=origami]")'), 'placed product is pickable in the studio')
+    await js_click(st, '.st-hot[data-hot="rail"]')
+    await st.wait_for_timeout(800)
+    tab = await st.evaluate("(document.querySelector('.st-shop-tab.is-on') || {}).getAttribute ? document.querySelector('.st-shop-tab.is-on').getAttribute('data-shop') : null")
+    check(tab == 'pegboard', f'spot set to "Kệ hàng — tab Phụ kiện" opens that tab ({tab})')
+    if tab:
+        await js_click(st, '[data-shop="all"]')
+        await st.wait_for_timeout(300)
+        n_all = await st.evaluate("document.querySelectorAll('.st-shop-body .st-prod').length")
+        check(n_all >= 10, f'"Tất cả" tab lists every shelf product ({n_all})')
+    await st.keyboard.press('Escape')
+    await st.wait_for_timeout(300)
     await js_click(st, '.st-hot[data-hot="sofa"]')
     await st.wait_for_timeout(3000)
     check(st.url.endswith('workshop.html'), f'linked spot opens its page ({st.url})')
