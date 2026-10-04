@@ -795,14 +795,43 @@
             '<input type="number" name="price_max" min="0" step="1000" placeholder="—"></label>' +
         '</div>' +
         '<div class="ad-f">' +
-          '<span>Ảnh</span>' +
+          '<span>Ảnh chính (thẻ sản phẩm)</span>' +
           '<div class="ad-img-row">' +
             (p.image
               ? '<img class="ad-cover-prev" src="' + esc(p.image) + '" alt="">'
               : '<img class="ad-cover-prev" alt="" hidden>') +
-            '<label class="ad-btn ad-upload">Chọn ảnh<input type="file" accept="image/*" hidden data-target="cover"></label>' +
+            '<label class="ad-btn ad-upload">Chọn ảnh<input type="file" accept="image/*" hidden data-up="cover"></label>' +
           '</div>' +
+          '<p class="ad-hint">Ảnh được thu nhỏ ngay trên máy (dài nhất 1280px, khoảng 100–150 KB) ' +
+            'và cắt thêm một ảnh vuông 600px cho thẻ. Ảnh lớn cũng thêm vào đầu thư viện ảnh.</p>' +
         '</div>' +
+        '<div class="ad-f">' +
+          '<span>Thư viện ảnh (khách bấm thẻ để xem)</span>' +
+          '<ul class="ad-gal"></ul>' +
+          '<label class="ad-btn ad-upload">Thêm ảnh<input type="file" accept="image/*" multiple hidden data-up="gallery"></label>' +
+        '</div>' +
+        '<div class="ad-f">' +
+          '<span>Ảnh cắt nền (đứng trên kệ Studio 2D)</span>' +
+          '<div class="ad-img-row">' +
+            '<div class="ad-cut-prev"><img alt=""' + (p.cutout ? ' src="' + esc(p.cutout) + '"' : ' hidden') + '></div>' +
+            '<div class="ad-cut-acts">' +
+              '<button type="button" class="ad-btn ad-cut-go">Xoá nền trắng</button>' +
+              '<label class="ad-cut-tol">Mức xoá <input type="range" min="8" max="80" value="28"></label>' +
+              '<label class="ad-btn ad-upload">Chọn ảnh đã tách nền<input type="file" accept="image/png,image/webp" hidden data-up="cutout"></label>' +
+              '<button type="button" class="ad-btn ad-cut-clear">Bỏ ảnh cắt</button>' +
+            '</div>' +
+          '</div>' +
+          '<p class="ad-hint">“Xoá nền trắng” dùng ảnh chính vừa chọn (hoặc ảnh đầu thư viện). Chụp ' +
+            'trên giấy / tường trắng là xoá sạch nhất. Chỉ phần nền nối ra mép ảnh bị xoá, ' +
+            'nên chỗ trắng nằm trong món (hoa trắng, nhãn) vẫn giữ. Còn sót nền: kéo “Mức xoá” lên ' +
+            'rồi bấm lại; ăn vào món: kéo xuống.</p>' +
+        '</div>' +
+        '<label class="ad-f"><span>Kệ trong Studio 2D</span><select name="shelf">' +
+          '<option value="">Không bày</option>' +
+          '<option value="pegboard">Bảng treo — Phụ kiện</option>' +
+          '<option value="display">Kệ trưng bày — Túi &amp; sổ</option>' +
+          '<option value="cabinet">Tủ — Gối &amp; quà</option>' +
+        '</select></label>' +
         '<label class="ad-check"><input type="checkbox" name="in_stock"' +
           (p.in_stock === false ? '' : ' checked') + '><span>Còn hàng</span></label>' +
         '<label class="ad-check"><input type="checkbox" name="is_published"' +
@@ -822,20 +851,113 @@
     form.elements['price_max'].value = p.price_max == null ? '' : p.price_max;
     if (p.category) form.elements['category'].value = p.category;
 
+    form.elements['shelf'].value = p.shelf || '';
     var image = p.image || null;
-    form.querySelector('input[type="file"]').addEventListener('change', function (e) {
+    var gallery = (p.gallery || []).slice();
+    var cutout = p.cutout || null;
+    var pendingCut = null;          // File made by "Xoá nền trắng", uploaded on Lưu
+    var cutSrc = null;              // original photo picked in this form: best source for the cut
+    var IMG = window.GemImg;
+
+    function galSrc(tk) {
+      if (tk.indexOf('/') >= 0) return tk;
+      return 'images/products/' + tk + (/\.[a-z0-9]+$/i.test(tk) ? '' : '.jpg');
+    }
+
+    function renderGal() {
+      var ul = form.querySelector('.ad-gal');
+      ul.innerHTML = gallery.map(function (tk, i) {
+        return '<li><img src="' + esc(galSrc(tk)) + '" alt="" loading="lazy">' +
+          (i ? '<button type="button" class="ad-gal-b" data-gal-up="' + i + '" aria-label="Lên trước">‹</button>' : '') +
+          '<button type="button" class="ad-gal-b" data-gal-del="' + i + '" aria-label="Bỏ ảnh này">×</button></li>';
+      }).join('') || '<li class="ad-hint">Chưa có ảnh.</li>';
+    }
+    renderGal();
+    form.querySelector('.ad-gal').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-gal-up],[data-gal-del]');
+      if (!b) return;
+      var mv = b.getAttribute('data-gal-up'), del = b.getAttribute('data-gal-del');
+      if (mv != null) { var i = +mv; gallery.splice(i - 1, 0, gallery.splice(i, 1)[0]); }
+      else gallery.splice(+del, 1);
+      renderGal();
+    });
+
+    function busy(input, on) {
+      var lbl = input.closest('.ad-upload');
+      if (!lbl.getAttribute('data-was')) lbl.setAttribute('data-was', lbl.firstChild.nodeValue);
+      lbl.firstChild.nodeValue = on ? 'Đang xử lý…' : lbl.getAttribute('data-was');
+      input.disabled = on;
+    }
+    var up = window.GemDB.uploadImage;
+
+    form.querySelector('[data-up="cover"]').addEventListener('change', function (e) {
       var file = (e.target.files || [])[0];
       if (!file) return;
-      var lbl = e.target.closest('.ad-upload');
-      var was = lbl.firstChild.nodeValue;
-      lbl.firstChild.nodeValue = 'Đang tải…';
-      window.GemDB.uploadImage(file).then(function (url) {
-        image = url;
+      busy(e.target, true);
+      Promise.all([IMG.shrink(file), IMG.thumb(file, 600)]).then(function (f) {
+        return Promise.all([up(f[0]), up(f[1])]);
+      }).then(function (urls) {
+        image = urls[1];
+        cutSrc = file;
+        gallery.unshift(urls[0]);
+        renderGal();
         var prev = form.querySelector('.ad-cover-prev');
-        prev.src = url; prev.hidden = false;
+        prev.src = image; prev.hidden = false;
         toast('Đã tải ảnh lên');
       }).catch(function (err) { toast('Tải ảnh không được: ' + (err.message || ''), true); })
-        .then(function () { lbl.firstChild.nodeValue = was; e.target.value = ''; });
+        .then(function () { busy(e.target, false); e.target.value = ''; });
+    });
+
+    form.querySelector('[data-up="gallery"]').addEventListener('change', function (e) {
+      var files = Array.prototype.slice.call(e.target.files || []);
+      if (!files.length) return;
+      busy(e.target, true);
+      // one at a time: phones run out of memory decoding several big photos at once
+      files.reduce(function (chain, file) {
+        return chain.then(function () {
+          return IMG.shrink(file).then(up).then(function (url) { gallery.push(url); renderGal(); });
+        });
+      }, Promise.resolve()).then(function () { toast('Đã thêm ' + files.length + ' ảnh'); })
+        .catch(function (err) { toast('Có ảnh không tải được: ' + (err.message || ''), true); })
+        .then(function () { busy(e.target, false); e.target.value = ''; });
+    });
+
+    var cutImg = form.querySelector('.ad-cut-prev img');
+    function showCut(src) {
+      if (cutImg.src.indexOf('blob:') === 0) URL.revokeObjectURL(cutImg.src);
+      if (src) { cutImg.src = src; cutImg.hidden = false; } else { cutImg.removeAttribute('src'); cutImg.hidden = true; }
+    }
+
+    form.querySelector('.ad-cut-go').addEventListener('click', function (e) {
+      var src = cutSrc || (gallery[0] && galSrc(gallery[0])) || image;
+      if (!src) return toast('Chọn ảnh chính trước đã', true);
+      var b = e.target;
+      b.disabled = true; b.textContent = 'Đang xoá nền…';
+      var tol = +form.querySelector('.ad-cut-tol input').value;
+      // let the button repaint before the heavy loop
+      setTimeout(function () {
+        IMG.removeWhite(src, { tol: tol, max: 1024 }).then(function (file) {
+          pendingCut = file;
+          showCut(URL.createObjectURL(file));
+          toast('Xem thử bên trái — bấm Lưu để giữ');
+        }).catch(function (err) { toast(err.message || 'Không xoá được nền', true); })
+          .then(function () { b.disabled = false; b.textContent = 'Xoá nền trắng'; });
+      }, 30);
+    });
+
+    form.querySelector('[data-up="cutout"]').addEventListener('change', function (e) {
+      var file = (e.target.files || [])[0];
+      if (!file) return;
+      busy(e.target, true);
+      IMG.shrink(file, { max: 1024, alpha: true }).then(function (f) {
+        pendingCut = f;
+        showCut(URL.createObjectURL(f));
+      }).catch(function (err) { toast(err.message || 'Không đọc được ảnh', true); })
+        .then(function () { busy(e.target, false); e.target.value = ''; });
+    });
+
+    form.querySelector('.ad-cut-clear').addEventListener('click', function () {
+      pendingCut = null; cutout = null; showCut(null);
     });
 
     el.main.querySelector('.ad-cancel').addEventListener('click', function () {
@@ -873,17 +995,21 @@
         desc_vi: f['desc_vi'].value.trim() || null,
         desc_en: f['desc_en'].value.trim() || null,
         price: min, price_max: max, image: image,
+        gallery: gallery,
+        shelf: f['shelf'].value || null,
         in_stock: f['in_stock'].checked,
         is_published: f['is_published'].checked
       };
-      if (!p.id) row.sort_order = products.length * 10;
+      if (!p.id) row.sort_order = (products.reduce(function (m, x) { return Math.max(m, x.sort_order || 0); }, 0)) + 10;
 
       var btn = form.querySelector('[type="submit"]');
       btn.disabled = true; btn.textContent = 'Đang lưu…';
-      var job = p.id ? window.GemDB.updateProduct(p.id, row) : window.GemDB.createProduct(row);
+      var job = (pendingCut ? up(pendingCut) : Promise.resolve(cutout)).then(function (cut) {
+        row.cutout = cut || null;
+        return p.id ? window.GemDB.updateProduct(p.id, row) : window.GemDB.createProduct(row);
+      });
       job.then(function () {
         toast('Đã lưu');
-        if (!p.id) toast('Món mới chưa có thẻ trên trang Sản phẩm — xem ghi chú ở danh sách');
         editingProduct = null; return load();
       }).catch(function (e2) {
         btn.disabled = false; btn.textContent = 'Lưu';
@@ -943,9 +1069,8 @@
       '<div class="ad-filters"><button type="button" class="ad-filter active ad-new-prod">+ Thêm sản phẩm</button></div>' +
       '<p class="ad-hint">Để trống ô giá là web hiện “Liên hệ”. Ô “đến” chỉ ' +
       'điền khi bán theo khoảng giá.<br>' +
-      '<b>Lưu ý về món mới:</b> món thêm ở đây vào được giỏ hàng và đơn hàng, ' +
-      'nhưng <b>chưa có thẻ riêng trên trang Sản phẩm</b> — thẻ đó nằm trong ' +
-      'HTML cùng ảnh và thư viện ảnh. Nhắn mình khi cần thêm thẻ.</p>' + groups;
+      'Món mới tự có thẻ trên trang Sản phẩm (đúng danh mục, theo thứ tự ở đây), ' +
+      'và có trên kệ Studio 2D nếu chọn “Kệ”.</p>' + groups;
 
     el.main.querySelector('.ad-new-prod').addEventListener('click', function () {
       editingProduct = {}; renderProductForm();

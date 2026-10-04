@@ -28,6 +28,8 @@ window.GemDB = (function () {
     return h;
   }
 
+  var productsP = null;
+
   function req(path, opts) {
     opts = opts || {};
     return fetch(URL + path, {
@@ -65,8 +67,14 @@ window.GemDB = (function () {
     },
 
     // Sản phẩm đang bán. RLS lọc sẵn hàng chưa đăng nên khách không thấy.
+    // One request per page: basket.js, catalog.js and studio.js all ask,
+    // and share the answer. A failed request is forgotten so a retry can work.
     products: function () {
-      return req('/rest/v1/products?select=*&order=sort_order.asc');
+      if (!productsP) {
+        productsP = req('/rest/v1/products?select=*&order=sort_order.asc');
+        productsP.catch(function () { productsP = null; });
+      }
+      return productsP;
     },
 
     // Cấu hình thanh toán: ngân hàng, số tài khoản, ngưỡng bắt buộc chuyển
@@ -342,6 +350,31 @@ window.GemDB = (function () {
       return req('/rest/v1/studio_layout?id=eq.' + encodeURIComponent(id), { method: 'DELETE' });
     },
 
+    // Thư viện asset của trình lắp (chỉ owner): ảnh đã tải lên, xếp theo nhóm.
+    studioAssets: function () {
+      return req('/rest/v1/studio_assets?select=*&order=created_at.asc');
+    },
+
+    addStudioAsset: function (row) {
+      return req('/rest/v1/studio_assets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+        body: JSON.stringify(row)
+      }).then(function (rows) { return rows && rows[0]; });
+    },
+
+    updateStudioAsset: function (id, patch) {
+      return req('/rest/v1/studio_assets?id=eq.' + encodeURIComponent(id), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(patch)
+      });
+    },
+
+    deleteStudioAsset: function (id) {
+      return req('/rest/v1/studio_assets?id=eq.' + encodeURIComponent(id), { method: 'DELETE' });
+    },
+
     adminNotes: function () {
       return req('/rest/v1/notes?select=*&order=created_at.desc&limit=200');
     },
@@ -393,14 +426,25 @@ window.GemDB = (function () {
         .toLowerCase().replace(/[^a-z0-9.]+/g, '-').replace(/^-+|-+$/g, '');
       var path = Date.now() + '-' + Math.random().toString(36).slice(2, 7) + '-' + clean;
 
-      return fetch(URL + '/storage/v1/object/gem-media/' + encodeURIComponent(path), {
-        method: 'POST',
-        headers: {
+      function send(cache) {
+        var h = {
           'apikey': KEY,
           'Authorization': 'Bearer ' + (token || KEY),
           'Content-Type': file.type || 'application/octet-stream'
-        },
-        body: file
+        };
+        // Every upload gets a fresh name, so a file never changes after it
+        // lands: browsers and the CDN may keep it for a year.
+        if (cache) h['cache-control'] = 'max-age=31536000';
+        return fetch(URL + '/storage/v1/object/gem-media/' + encodeURIComponent(path), {
+          method: 'POST', headers: h, body: file
+        });
+      }
+
+      // A TypeError means the request never went out (network, or the browser
+      // refusing the extra header): try once more the plain way.
+      return send(true).catch(function (e) {
+        if (e instanceof TypeError) return send(false);
+        throw e;
       }).then(function (res) {
         if (!res.ok) {
           return res.text().then(function (txt) { throw new Error(txt || ('HTTP ' + res.status)); });

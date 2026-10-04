@@ -1136,8 +1136,8 @@ lại danh sách), database chặn (toast đỏ đúng câu của database, nút
 - **Nén ảnh sản phẩm.** `loading="lazy"` đã thêm, nhưng ảnh gốc vẫn nặng
   (`gom-1.jpg` 3 MB, vài ảnh 1,5–2,3 MB). Nén thật cần chạy công cụ trên ảnh
   gốc — nên làm cùng lúc với ảnh mới từ buổi chụp.
-- **Thêm sản phẩm mới qua admin** (Sprint 4 để lại) — cần cả ảnh, thư viện
-  ảnh, vị trí trong danh mục.
+- ~~Thêm sản phẩm mới qua admin~~ — xong 10/2026, xem "Sản phẩm + thư viện ảnh
+  từ database". Còn thiếu: tạo **danh mục** mới vẫn cần HTML + `CATEGORIES`.
 
 ---
 
@@ -1416,6 +1416,52 @@ Udon ở quầy: chạm không còn câu nhắc — kéo được là để khá
   chọn nhân vật, góc nghỉ, 2hand, thử phụ kiện, kệ hàng (theo tab), bàn thiết kế,
   tủ, quầy, bảng lời nhắn, vào studio, mở trang khác, hoặc không làm gì. Để trống
   = hành động mặc định của điểm đó.
+
+### Sản phẩm + thư viện ảnh từ database (10/2026)
+
+Mục tiêu: thêm / sửa sản phẩm **không cần sửa code**.
+
+**Migration** `gem_studio_assets_and_product_media` + `gem_products_shelf_seed`:
+- `products.cutout` (ảnh tách nền, đứng trên kệ Studio) và `products.shelf`
+  (`pegboard` / `display` / `cabinet` / null = không bày). Đã điền kệ cho 16 món
+  theo `SHELVES` cũ; `set-qua` trước nằm ở cả hai kệ, giờ chỉ ở `cabinet` (mỗi món một kệ).
+- Bảng `studio_assets` (src, w, h, grp, name): policy `sa_owner_all` (`is_owner()`) +
+  `GRANT select, insert, update, delete` cho `authenticated`, không gì cho `anon`.
+  Đã kiểm ba vai: anon → `permission denied`; đăng nhập không phải owner →
+  `violates row-level security policy`; owner → ghi + đọc được. Câu kiểm
+  GRANT-vs-policy không có dòng nào của `studio_assets`. (Câu kiểm hiện ra 3 dòng:
+  `orders`/`order_items` INSERT như đã ghi, thêm `notes` UPDATE — có từ trước, chưa xem lại.)
+
+**Ảnh** (`js/img-tools.js`, chạy trong trình duyệt, không cần công cụ ngoài):
+- Thu nhỏ: dài nhất 1280px, WebP chất lượng 0.82 (Safari cũ không xuất WebP →
+  JPEG, hoặc PNG nếu có trong suốt). Ảnh thẻ: vuông 600px cắt giữa.
+- "Xoá nền trắng": lấy màu nền từ viền ảnh, loang từ mép vào những điểm gần màu đó
+  (chỉ phần nối ra mép — trắng nằm trong món được giữ), viền mờ dần, cắt sát món.
+  Ô "Mức xoá" chỉnh độ rộng.
+- Tải lên kèm `cache-control: max-age=31536000` (tên file luôn mới nên không bao giờ đổi nội dung).
+
+**Admin → Sản phẩm → Sửa:** ảnh chính (→ ảnh thẻ 600px + ảnh lớn đứng đầu thư viện),
+thư viện ảnh (thêm nhiều, đổi thứ tự, bỏ), ảnh cắt nền (Xoá nền trắng hoặc chọn
+ảnh đã tách; chỉ tải lên khi bấm Lưu), Kệ trong Studio.
+
+**Trang Sản phẩm** (`js/catalog.js`): HTML tĩnh là bản dự phòng. Khi database trả lời
+(sự kiện `gem:products` do `basket.js` phát), thẻ có sẵn lấy tên / mô tả / ảnh /
+thư viện từ database, món mới được tạo thẻ trong `.product-grid[data-cat=…]` của
+danh mục, tất cả xếp theo `sort_order`. `gallery.js` bắt click trên document nên
+thẻ tạo sau vẫn mở lightbox; `GemBasket.bindCard` gắn giá + nút giỏ.
+`GemDB.products()` chỉ gọi mạng một lần mỗi trang.
+
+**Studio:** ảnh thẻ, ảnh cắt nền, các tab kệ đọc từ `GemBasket.info()` / `skus()`
+(database); `THUMB` / `CUTOUT` / `SHELVES` trong `js/studio.js` chỉ dùng khi chưa có.
+
+**Trình lắp:** "+ Tải ảnh" → chọn tab (có sẵn hoặc "+ Nhóm mới…"), tên, tuỳ chọn
+Xoá nền trắng → thu nhỏ, tải lên, lưu vào `studio_assets`. "Sửa thư viện": đổi
+tên / chuyển tab / bỏ ảnh đã tải lên. Bỏ chỉ xoá dòng trong thư viện, file vẫn ở
+Storage để bố cục đang dùng không vỡ. Ảnh cắt nền của sản phẩm tự hiện ở tab
+"Sản phẩm thật", đã nối sẵn sku.
+
+**Kiểm:** `tools/check-studio.py library | product | catalog` (Supabase giả lập có
+Storage giữ file tải lên, nên kiểm được cả cỡ ảnh lẫn độ trong suốt).
 
 ### Góp ý đợt 3 (10/2026)
 

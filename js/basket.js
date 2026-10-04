@@ -254,6 +254,7 @@
      ====================================================================== */
   var STORAGE_KEY = 'gem-basket';
   var items = [];   // [{ sku, qty, spec? }]  spec = design code from js/patch.js
+  var liveSkus = null;   // skus the database sells, in its order; null until it answers
 
   // A custom design is its own line even when the product is the same.
   function keyOf(it) { return it.sku + (it.spec ? '|' + it.spec : ''); }
@@ -318,9 +319,13 @@
       p.nameVi   = r.name_vi;
       p.nameEn   = r.name_en;
       p.inStock  = r.in_stock !== false;
+      p.image    = r.image || null;
+      p.cutout   = r.cutout || null;
+      p.shelf    = r.shelf || null;
       if (r.sprite) p.sprite = r.sprite;
       changed = true;
     });
+    liveSkus = rows.map(function (r) { return r.sku; });
     return changed;
   }
 
@@ -1188,10 +1193,12 @@
     buildPanel();
     renderWidget();
 
-    cards.forEach(function (card) {
+    // Also called by catalog.js for cards it builds from the database.
+    function bindCard(card) {
       var sku = card.getAttribute('data-sku');
       var product = bySku(sku);
       if (!product) return;
+      if (cards.indexOf(card) < 0) cards.push(card);
 
       // Price line + add button, so the page markup stays free of prototype bits
       var slot = card.querySelector('.gb-slot');
@@ -1220,7 +1227,36 @@
           btn.textContent = t('basket.add', 'Thêm vào giỏ');
         }, 1100);
       });
-    });
+      if (liveSkus) refreshCard(card);
+    }
+
+    // Price and stock from the database; hide a card the shop no longer sells.
+    function refreshCard(card) {
+      var sku = card.getAttribute('data-sku');
+      var p = bySku(sku);
+      var slot = card.querySelector('.gb-slot');
+      if (!p || !slot) return;
+
+      // Món bị gỡ khỏi bảng, hoặc bị ẩn đi: giấu luôn thẻ, đừng để khách
+      // đặt thứ cửa hàng không còn bán.
+      if (liveSkus.indexOf(sku) < 0) { card.hidden = true; return; }
+
+      var priceEl = slot.querySelector('.gb-price');
+      if (priceEl) priceEl.textContent = priceLabel(p);
+
+      var addBtn = slot.querySelector('.gb-add');
+      if (addBtn) {
+        var out = p.inStock === false;
+        addBtn.disabled = out;
+        addBtn.classList.toggle('is-out', out);
+        if (out) {
+          addBtn.removeAttribute('data-i18n');
+          addBtn.textContent = t('basket.out_of_stock', 'Tạm hết hàng');
+        }
+      }
+    }
+
+    cards.slice().forEach(bindCard);
 
     /* ---------- for other scripts (studio.js) ----------
        Same basket, same checkout: the studio never keeps a cart of its own. */
@@ -1229,8 +1265,12 @@
       info: function (sku) {
         var p = bySku(sku);
         if (!p) return null;
-        return { sku: sku, name: pName(p), price: priceLabel(p), inStock: p.inStock !== false };
+        return { sku: sku, name: pName(p), price: priceLabel(p), inStock: p.inStock !== false,
+                 image: p.image || null, cutout: p.cutout || null, shelf: p.shelf || null };
       },
+      // Skus on sale, in the shop's order — null until the database answers.
+      skus: function () { return liveSkus ? liveSkus.slice() : null; },
+      bindCard: bindCard,
       add: function (sku, sourceEl, spec) {
         var p = bySku(sku);
         if (!p || p.inStock === false) return false;
@@ -1263,30 +1303,8 @@
         var live = {};
         (rows || []).forEach(function (r) { live[r.sku] = r; });
 
-        cards.forEach(function (card) {
-          var sku = card.getAttribute('data-sku');
-          var p = bySku(sku);
-          var slot = card.querySelector('.gb-slot');
-          if (!p || !slot) return;
-
-          // Món bị gỡ khỏi bảng, hoặc bị ẩn đi: giấu luôn thẻ, đừng để khách
-          // đặt thứ cửa hàng không còn bán.
-          if (!live[sku]) { card.hidden = true; return; }
-
-          var priceEl = slot.querySelector('.gb-price');
-          if (priceEl) priceEl.textContent = priceLabel(p);
-
-          var addBtn = slot.querySelector('.gb-add');
-          if (addBtn) {
-            var out = p.inStock === false;
-            addBtn.disabled = out;
-            addBtn.classList.toggle('is-out', out);
-            if (out) {
-              addBtn.removeAttribute('data-i18n');
-              addBtn.textContent = t('basket.out_of_stock', 'Tạm hết hàng');
-            }
-          }
-        });
+        cards.forEach(refreshCard);
+        document.dispatchEvent(new CustomEvent('gem:products', { detail: { rows: rows } }));
 
         // Giỏ đang có món vừa bị gỡ/ẩn thì bỏ ra, kẻo đặt đơn sẽ lỗi sku.
         var before = items.length;

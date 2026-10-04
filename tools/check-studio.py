@@ -13,18 +13,27 @@ and walks through what broke before:
            "Đặt vào Studio" on the Sản phẩm tab places the product
   editor   (owner) add a piece, Dài thêm, publish, studio.html shows it, Xoá hết,
            backgrounds offered per scene, the street scene saves too
+  library  (owner) upload into a new tab with "Xoá nền trắng", rename / move /
+           remove it; product cut-outs show under "Sản phẩm thật"
+  product  (owner) product form: photo -> shrunk + 600px thumb, gallery,
+           "Xoá nền trắng" cut-out, Kệ; all saved in one PATCH
+  catalog  san-pham.html builds a card for a product only the database knows,
+           in its category and order, and the lightbox opens on it
 
 Screenshots go to /tmp/gem-check/ — look at them, a pass only means nothing
 crashed and the counts add up.
 
     python3 tools/check-studio.py            all checks
-    python3 tools/check-studio.py wear       one check (street | wear | shop | spots | editor)
+    python3 tools/check-studio.py wear       one check (street | wear | shop | spots | editor |
+                                             library | product | catalog)
 
 Needs: pip install playwright. Chromium: PLAYWRIGHT_BROWSERS_PATH or
 CHROMIUM=/path/to/chrome (the cloud sessions have /opt/pw-browsers/chromium).
 """
 import asyncio
 import functools
+import io
+import re
 import http.server
 import json
 import os
@@ -60,11 +69,49 @@ def serve():
     return srv
 
 
+# The shop as the database has it (names / shelves as on the live site),
+# plus one product only the database knows: catalog.js must build its card.
+SHELF = {'pegboard': 'scrunchie bookmark bloom daydeo', 'display': 'origami oxford denim tuibut biaso so-kraft so-khau',
+         'cabinet': 'goi tham lotcoc set-qua'}
+SHELF = {sku: k for k, v in SHELF.items() for sku in v.split()}
+PRODUCTS = [
+    ('origami', 'vai-vun', 'Origami Pouch', 'vai-vun-tui-1-thumb.jpg', ['vai-vun-tui-1.png', 'vai-vun-tui-2.png']),
+    ('oxford', 'vai-vun', 'Oxford Shirt', 'vai-vun-tui-3-thumb.jpg', ['vai-vun-tui-3.png']),
+    ('denim', 'vai-vun', 'Reimagine the Denim', 'vai-vun-tui-7-thumb.jpg', ['vai-vun-tui-7.png']),
+    ('bloom', 'vai-vun', 'Bloom Charm', 'vai-vun-bloom-charm-thumb.jpg', ['vai-vun-bloom-charm-1.png']),
+    ('tuibut', 'vai-vun', 'Túi bút kẹp sổ', 'vai-vun-tui-but-thumb.jpg', ['vai-vun-tui-but.png']),
+    ('bookmark', 'vai-vun', 'Bookmark', 'vai-vun-bookmark-vai-thumb.jpg', ['vai-vun-bookmark-1.png']),
+    ('biaso', 'vai-vun', 'Bìa sổ vải ghép', 'vai-vun-bia-so-thumb.jpg', ['vai-vun-bia-so.jpg']),
+    ('daydeo', 'vai-vun', 'Dây đeo cổ tay', 'vai-vun-day-deo-hong-thumb.jpg', ['vai-vun-day-deo-hong.jpg']),
+    ('scrunchie', 'vai-vun', 'Dây buộc tóc', 'vai-vun-scrunchie-thumb.jpg', ['vai-vun-scrunchie.jpg']),
+    ('lotcoc', 'vai-vun', 'Lót Cốc', 'vai-vun-lot-ly-hoa-thumb.jpg', ['vai-vun-lot-ly.png']),
+    ('goi', 'vai-vun', 'Gối Chắp Sắc', 'vai-vun-goi-patchwork-thumb.jpg', ['vai-vun-goi-patchwork.png']),
+    ('tham', 'vai-vun', 'Thảm Chắp Sắc', 'vai-vun-tham-tron-thumb.jpg', ['vai-vun-tham-1.png']),
+    ('tui-moi', 'vai-vun', 'Túi mới thử', 'vai-vun-tui-9.jpg', ['vai-vun-tui-9.jpg', 'vai-vun-tui-8.jpg']),
+    ('so-kraft', 'vpp', 'Sổ kraft spiral', 'vpp-so-kraft-thumb.jpg', ['vpp-so-kraft']),
+    ('so-khau', 'vpp', 'Sổ khâu tay tái chế', 'vpp-so-khau-thumb.jpg', ['vpp-so-khau.png']),
+    ('gom', 'gom', 'Gốm sứ Nhật chọn lọc', 'gom-thumb.jpg', ['gom-1.jpg']),
+    ('set-qua', 'set-qua', 'Set quà tặng', 'set-qua-tang-thumb.jpg', ['set-qua-tang-1.png']),
+]
+
+
+def product_rows():
+    return [{'id': f'p{i}', 'sku': sku, 'category': cat, 'name_vi': name, 'name_en': name, 'desc_vi': 'Mô tả ' + name,
+             'desc_en': None, 'price': 50000, 'price_max': None, 'in_stock': True, 'is_published': True,
+             'image': 'images/products/' + img, 'gallery': gal, 'sort_order': i * 10, 'shelf': SHELF.get(sku),
+             'cutout': 'images/studio/sp/origami.webp' if sku == 'origami' else None, 'sprite': None}
+            for i, (sku, cat, name, img, gal) in enumerate(PRODUCTS)]
+
+
 class FakeDB:
-    """Just enough of Supabase: the owner's profile and studio_layout rows."""
+    """Just enough of Supabase: the owner's profile, studio_layout + studio_assets
+    rows, products, and a storage bucket that keeps what is uploaded."""
 
     def __init__(self):
         self.rows = {}
+        self.assets = []
+        self.files = {}
+        self.patches = []
 
     async def route(self, r):
         u, m = r.request.url, r.request.method
@@ -79,10 +126,36 @@ class FakeDB:
             i = 'live' if 'id=eq.live' in u else 'draft' if 'id=eq.draft' in u else None
             rows = [{'data': self.rows[i]}] if i in self.rows else []
             return await r.fulfill(status=200, content_type='application/json', body=json.dumps(rows))
-        if '/rest/v1/products' in u and 'select=*' in u:   # the admin's product list
-            return await r.fulfill(status=200, content_type='application/json', body=json.dumps([
-                {'id': 'p1', 'sku': 'origami', 'category': 'vai-vun', 'name_vi': 'Origami Pouch', 'price': 66000,
-                 'price_max': None, 'in_stock': True, 'is_published': True, 'image': None}]))
+        if '/rest/v1/products' in u:
+            if m == 'PATCH':
+                self.patches.append(json.loads(r.request.post_data))
+                return await r.fulfill(status=200, content_type='application/json', body='[{}]')
+            return await r.fulfill(status=200, content_type='application/json', body=json.dumps(product_rows()))
+        if '/rest/v1/studio_assets' in u:
+            i = (re.search(r'id=eq\.([^&]+)', u) or [None, None])[1]
+            if m == 'POST':
+                b = json.loads(r.request.post_data)
+                b['id'] = f'a{len(self.assets) + 1}'
+                self.assets.append(b)
+                return await r.fulfill(status=201, content_type='application/json', body=json.dumps([b]))
+            if m == 'PATCH':
+                for a in self.assets:
+                    if a['id'] == i:
+                        a.update(json.loads(r.request.post_data))
+                return await r.fulfill(status=204, body='')
+            if m == 'DELETE':
+                self.assets = [a for a in self.assets if a['id'] != i]
+                return await r.fulfill(status=204, body='')
+            return await r.fulfill(status=200, content_type='application/json', body=json.dumps(self.assets))
+        if '/storage/v1/object/public/gem-media/' in u:
+            f = self.files.get(u.split('/gem-media/')[1])
+            if f:
+                return await r.fulfill(status=200, content_type=f[0], body=f[1],
+                                       headers={'Access-Control-Allow-Origin': '*'})
+            return await r.fulfill(status=404, body='')
+        if '/storage/v1/object/gem-media/' in u and m == 'POST':
+            self.files[u.split('/gem-media/')[1]] = (r.request.headers.get('content-type'), r.request.post_data_buffer)
+            return await r.fulfill(status=200, content_type='application/json', body='{}')
         if '/rest/v1/' in u or '/rpc/' in u:
             return await r.fulfill(status=200, content_type='application/json', body='[]')
         await r.abort()
@@ -320,13 +393,165 @@ async def spots(browser, db):
     await pg.context.close()
 
 
+def test_photo(path, w=2000, h=1500):
+    """A product shot on white paper: off-white background, a red ring with a
+    white middle (must survive "Xoá nền trắng": it doesn't touch the edge)."""
+    from PIL import Image, ImageDraw
+    im = Image.new('RGB', (w, h), (247, 245, 240))
+    d = ImageDraw.Draw(im)
+    d.ellipse((w * .3, h * .25, w * .7, h * .75), fill=(180, 60, 50))
+    d.ellipse((w * .42, h * .4, w * .58, h * .6), fill=(250, 250, 250))
+    im.save(path, quality=92)
+    return str(path)
+
+
+def decode(blob):
+    from PIL import Image
+    return Image.open(io.BytesIO(blob))
+
+
+async def admin_page(browser, db, w, h):
+    pg = await page(browser, db, w, h)
+    await pg.goto(f'{BASE}/admin.html')
+    await pg.evaluate("sessionStorage.setItem('gem-admin-token','fake')")
+    await pg.goto(f'{BASE}/admin.html')
+    await pg.wait_for_timeout(800)
+    return pg
+
+
+async def library(browser, db):
+    print('library')
+    db.rows.clear(); db.assets.clear(); db.files.clear()
+    photo = test_photo(OUT / 'lib-photo.jpg', 1600, 1200)
+    for name, w, h in (('mobile', 412, 900), ('desktop', 1440, 900)):
+        db.assets.clear()
+        pg = await admin_page(browser, db, w, h)
+        await js_click(pg, '[data-tab="studio"]')
+        await pg.wait_for_timeout(1500)
+        tabs = await pg.evaluate("[...document.querySelectorAll('.se-tabs [data-group]')].map(b => b.textContent)")
+        check(tabs.count('Sản phẩm thật') == 1, f'{name}: one "Sản phẩm thật" tab (shipped + database cut-outs)')
+        await pg.set_input_files('[name="se-file"]', photo)
+        await pg.wait_for_timeout(300)
+        check(await pg.evaluate("!!document.querySelector('.se-upform')"), f'{name}: picking a file asks where it goes')
+        await pg.select_option('[name="up-grp"]', '__new')
+        await pg.fill('[name="up-new"]', 'Đồ thử')
+        await pg.dispatch_event('[name="up-new"]', 'change')
+        await js_click(pg, '[name="up-cut"]')
+        await pg.screenshot(path=OUT / f'library-{name}-1.png')
+        await js_click(pg, '[data-up="save"]')
+        await pg.wait_for_timeout(2500)
+        a = db.assets[0] if db.assets else {}
+        check(a.get('grp') == 'Đồ thử', f'{name}: saved to the new tab ({a.get("grp")})')
+        f = db.files.get(a.get('src', '').split('/gem-media/')[-1])
+        if f:
+            im = decode(f[1]).convert('RGBA')
+            check(im.getpixel((0, 0))[3] == 0, f'{name}: white background removed ({f[0]}, {im.size})')
+            cx, cy = im.size[0] // 2, im.size[1] // 2
+            check(im.getpixel((cx, cy))[3] == 255, f'{name}: white inside the product kept')
+            check(max(im.size) <= 1280 and len(f[1]) < 300_000, f'{name}: shrunk ({im.size}, {len(f[1]) // 1024} KB)')
+        else:
+            check(False, f'{name}: file uploaded')
+        check(await pg.evaluate("document.querySelector('.se-chip.is-on[data-group]').textContent") == 'Đồ thử',
+              f'{name}: library shows the new tab')
+        check(await pg.evaluate("document.querySelectorAll('.se-item').length") == 1, f'{name}: and puts the picture in the scene')
+        await pg.screenshot(path=OUT / f'library-{name}-2.png')
+        await js_click(pg, '[data-manage]')
+        await js_click(pg, '.se-asset.is-own')
+        await pg.wait_for_timeout(200)
+        await pg.fill('[name="as-name"]', 'Bình hoa')
+        await pg.select_option('[name="as-grp"]', 'cua')
+        await js_click(pg, '[data-asset-save]')
+        await pg.wait_for_timeout(500)
+        check(db.assets and db.assets[0]['grp'] == 'cua' and db.assets[0]['name'] == 'Bình hoa', f'{name}: rename + move saved')
+        check(await pg.evaluate("[...document.querySelectorAll('.se-tabs [data-group]')].every(b => b.textContent !== 'Đồ thử')"),
+              f'{name}: emptied tab disappears')
+        await js_click(pg, '.se-asset.is-own')
+        await pg.wait_for_timeout(200)
+        await js_click(pg, '[data-asset-del]')
+        await pg.wait_for_timeout(500)
+        check(not db.assets, f'{name}: removed from the library')
+        check(not pg.errors, f'{name}: no script errors {pg.errors}')
+        await pg.context.close()
+
+
+async def product(browser, db):
+    print('product')
+    db.patches.clear(); db.files.clear()
+    photo = test_photo(OUT / 'prod-photo.jpg')
+    pg = await admin_page(browser, db, 412, 900)
+    await js_click(pg, '[data-tab="products"]')
+    await pg.wait_for_timeout(800)
+    await js_click(pg, '.ad-edit-prod')
+    await pg.wait_for_timeout(300)
+    n0 = await pg.evaluate("document.querySelectorAll('.ad-gal img').length")
+    await pg.set_input_files('[data-up="cover"]', photo)
+    await pg.wait_for_timeout(2500)
+    check(await pg.evaluate("document.querySelectorAll('.ad-gal img').length") == n0 + 1, 'main photo also goes first in the gallery')
+    await pg.set_input_files('[data-up="gallery"]', [photo, photo])
+    await pg.wait_for_timeout(3000)
+    check(await pg.evaluate("document.querySelectorAll('.ad-gal img').length") == n0 + 3, 'two more gallery photos')
+    await js_click(pg, '[data-gal-del="1"]')
+    await js_click(pg, '.ad-cut-go')
+    await pg.wait_for_timeout(2500)
+    check((await pg.evaluate("document.querySelector('.ad-cut-prev img').src")).startswith('blob:'), '"Xoá nền trắng" shows a preview')
+    await pg.select_option('[name="shelf"]', 'pegboard')
+    await pg.screenshot(path=OUT / 'product-form.png', full_page=True)
+    await js_click(pg, '.ad-post-form [type="submit"]')
+    await pg.wait_for_timeout(1500)
+    body = db.patches[-1] if db.patches else {}
+    check(body.get('shelf') == 'pegboard', f'Kệ saved ({body.get("shelf")})')
+    check(len(body.get('gallery') or []) == n0 + 2 and '/gem-media/' in body['gallery'][0], f'gallery saved, new photo first')
+    sizes = {}
+    for key in ('image', 'cutout'):
+        f = db.files.get((body.get(key) or '').split('/gem-media/')[-1])
+        sizes[key] = (decode(f[1]).size, len(f[1]) // 1024, f[0]) if f else None
+    big = db.files.get(body['gallery'][0].split('/gem-media/')[-1]) if body.get('gallery') else None
+    check(sizes['image'] and sizes['image'][0] == (600, 600), f'card photo is a 600px square {sizes["image"]}')
+    check(big and max(decode(big[1]).size) == 1280, f'gallery photo shrunk to 1280px ({len(big[1]) // 1024 if big else "?"} KB)')
+    check(sizes['cutout'] and sizes['cutout'][0][0] < 1024, f'cut-out uploaded on Lưu, trimmed {sizes["cutout"]}')
+    check(not pg.errors, f'no script errors {pg.errors}')
+    await pg.context.close()
+
+
+async def catalog(browser, db):
+    print('catalog')
+    for name, w, h in (('mobile', 375, 844), ('desktop', 1440, 900)):
+        pg = await page(browser, db, w, h)
+        await pg.goto(f'{BASE}/san-pham.html')
+        await pg.wait_for_timeout(1500)
+        info = await pg.evaluate("""() => {
+          const c = document.querySelector('.product-grid[data-cat="vai-vun"] .product-card[data-sku="tui-moi"]');
+          const skus = [...document.querySelectorAll('.product-grid[data-cat="vai-vun"] .product-card')].map(x => x.dataset.sku);
+          return c && { h: c.querySelector('h4').textContent, add: !!c.querySelector('.gb-add'), hidden: c.hidden, skus };
+        }""")
+        check(bool(info) and info['h'] == 'Túi mới thử' and info['add'] and not info['hidden'],
+              f'{name}: new product gets its card with a basket button ({info and info["h"]})')
+        if info:
+            check(info['skus'].index('tui-moi') == 12, f'{name}: in the shop\'s order ({info["skus"]})')
+        await pg.evaluate("document.querySelector('[data-sku=\"tui-moi\"]').scrollIntoView({block: 'center'})")
+        await pg.wait_for_timeout(400)
+        await pg.screenshot(path=OUT / f'catalog-{name}.png')
+        await pg.click('[data-sku="tui-moi"] h4')
+        await pg.wait_for_timeout(500)
+        check(await pg.evaluate("document.querySelector('.pg-modal').classList.contains('open') && document.querySelector('.pg-title').textContent") == 'Túi mới thử',
+              f'{name}: its lightbox opens')
+        await pg.keyboard.press('Escape')
+        await pg.click('[data-sku="tui-moi"] .gb-add')
+        await pg.wait_for_timeout(1200)
+        check(await pg.evaluate("window.GemBasket.count()") == 1, f'{name}: basket button adds it, without opening the lightbox')
+        check(await pg.evaluate("!document.querySelector('.pg-modal').classList.contains('open')"), f'{name}: lightbox stays shut')
+        check(not pg.errors, f'{name}: no script errors {pg.errors}')
+        await pg.context.close()
+
+
 async def main(which):
     OUT.mkdir(exist_ok=True)
     srv = serve()
     db = FakeDB()
     async with async_playwright() as p:
         browser = await launch(p)
-        for name, fn in (('street', street), ('wear', wear), ('shop', shop), ('spots', spots), ('editor', editor)):
+        for name, fn in (('street', street), ('wear', wear), ('shop', shop), ('spots', spots), ('editor', editor),
+                         ('library', library), ('product', product), ('catalog', catalog)):
             if which in (None, name):
                 await fn(browser, db)
         await browser.close()

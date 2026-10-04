@@ -18,7 +18,12 @@ window.GemStudioEditor = (function () {
   var DB = window.GemDB;
 
   var root, stageEl, worldEl, panelEl, statusEl;
-  var lib = null;           // assets.json
+  var lib = null;           // assets.json + the library in the database (see mergeLib)
+  var baseGroups = null;    // assets.json groups as shipped
+  var dbAssets = [];        // studio_assets rows: pictures the owner uploaded
+  var upForm = null;        // { file, preview, grp, newGrp, name, cut } while an upload is being set up
+  var manage = false;       // library in "Sửa thư viện" mode: tapping an own picture edits it
+  var editAsset = null;     // studio_assets id being edited
   var data = null;          // the layout being edited
   var sel = null;           // { kind: 'item'|'hot'|'udon'|'stand'|'start', i | id }
   var undo = [];
@@ -142,16 +147,20 @@ window.GemStudioEditor = (function () {
     return Promise.all([
       fetch('images/studio/assets.json', { cache: 'no-cache' }).then(function (r) { return r.json(); }),
       DB.studioLayout('draft').catch(function () { return null; }),
-      DB.studioLayout('live').catch(function () { return null; })
+      DB.studioLayout('live').catch(function () { return null; }),
+      DB.studioAssets().catch(function () { return []; })
     ]).then(function (r) {
       lib = r[0];
+      baseGroups = lib.groups;
+      dbAssets = r[3] || [];
+      mergeLib();
       data = L.sanitize(r[1]) || L.sanitize(r[2]) || L.blank(lib.backgrounds[0]);
       syncBg();
       status(r[1] ? 'Đang sửa bản nháp' : r[2] ? 'Bắt đầu từ bản đang chạy' : 'Bố cục mới');
       draw();
       renderPanel();
       // product list for "Sản phẩm" on a piece (owner is signed in)
-      DB.adminProducts().then(function (rows) { prods = rows || []; renderPanel(); }, function () { prods = []; });
+      DB.adminProducts().then(function (rows) { prods = rows || []; mergeLib(); renderPanel(); }, function () { prods = []; });
       if (queued) { var q = queued; queued = null; placeProduct(q.sku, q.image); }
       return loadProfiles();
     }).catch(function (err) {
@@ -162,7 +171,7 @@ window.GemStudioEditor = (function () {
   /* ---------- real products in the studio ----------
      A piece with a sku is a product: customers tap it for its card or drag
      it into the basket. The Sản phẩm tab sends one here with queueProduct. */
-  var prods = [];        // [{ sku, name_vi, image }]
+  var prods = [];        // products rows: sku, name_vi, image, cutout…
   var queued = null;     // product waiting for the editor to finish loading
 
   function placeProduct(sku, image) {
@@ -171,8 +180,122 @@ window.GemStudioEditor = (function () {
     lib.groups.forEach(function (g) { g.items.forEach(function (a) { if (a.sku === sku) cut = a; }); });
     if (cut) add(cut);
     else if (image && L.srcOk(image)) add({ src: image, w: 600, h: 600, frame: true, sku: sku });
-    else { status('Sản phẩm này chưa có ảnh — thêm ảnh ở tab Sản phẩm, hoặc ảnh cắt nền ở images/studio/sp/' + sku + '.webp', true); return; }
+    else { status('Sản phẩm này chưa có ảnh — thêm ảnh hoặc ảnh cắt nền ở tab Sản phẩm.', true); return; }
     status('Đã thêm "' + sku + '" giữa màn hình — kéo lên kệ rồi Xuất bản');
+  }
+
+  /* ---------- the library ----------
+     Three sources, one list of tabs:
+       - images/studio/assets.json  pictures shipped with the site (not editable here)
+       - studio_assets              pictures uploaded here, each in the tab picked on upload
+       - products.cutout            "Sản phẩm thật": the cut-out set in the Sản phẩm form,
+                                    already linked to its sku */
+  var PROD_GROUP = 'sp';   // the shipped "Sản phẩm thật" tab: cut-outs linked to a sku
+
+  function mergeLib() {
+    if (!baseGroups) return;
+    var groups = baseGroups.map(function (g) { return { id: g.id, label: g.label, items: g.items.slice() }; });
+    var byId = {}, seen = {};
+    groups.forEach(function (g) { byId[g.id] = g; g.items.forEach(function (a) { seen[a.src] = 1; }); });
+    var pg = byId[PROD_GROUP];
+    if (!pg) { pg = byId[PROD_GROUP] = { id: PROD_GROUP, label: 'Sản phẩm thật', items: [] }; groups.push(pg); }
+    prods.forEach(function (p) {
+      if (p.cutout && L.srcOk(p.cutout) && !seen[p.cutout]) {
+        seen[p.cutout] = 1;
+        pg.items.push({ src: p.cutout, sku: p.sku, name: p.name_vi });
+      }
+    });
+    if (!pg.items.length) groups.splice(groups.indexOf(pg), 1);
+    dbAssets.forEach(function (r) {
+      if (!L.srcOk(r.src)) return;
+      var g = byId[r.grp];
+      if (!g) { g = byId[r.grp] = { id: r.grp, label: r.grp, items: [] }; groups.push(g); }
+      g.items.push({ src: r.src, w: r.w, h: r.h, name: r.name, db: r.id });
+    });
+    lib.groups = groups;
+  }
+
+  function groupOptions(cur) {
+    return lib.groups.filter(function (g) { return g.id !== PROD_GROUP; }).map(function (g) {
+      return '<option value="' + esc(g.id) + '"' + (g.id === cur ? ' selected' : '') + '>' + esc(g.label) + '</option>';
+    }).join('') + '<option value="__new"' + (cur === '__new' ? ' selected' : '') + '>+ Nhóm mới…</option>';
+  }
+
+  function groupLabel(id) {
+    var g = lib.groups.filter(function (x) { return x.id === id; })[0];
+    return g ? g.label : id;
+  }
+
+  // The tab the owner picked: an existing id, or the typed name of a new one.
+  function pickedGroup(val, typed) {
+    if (val !== '__new') return val;
+    typed = String(typed || '').trim().slice(0, 40);
+    return typed || null;
+  }
+
+  function startUpload(file) {
+    if (!file) return;
+    if (!window.GemImg) { status('Thiếu js/img-tools.js — tải lại trang.', true); return; }
+    if (upForm) URL.revokeObjectURL(upForm.preview);
+    var g = group === PROD_GROUP ? (baseGroups[0] && baseGroups[0].id) : group;
+    upForm = { file: file, preview: URL.createObjectURL(file), grp: g, newGrp: '', name: '', cut: false };
+    manage = false; editAsset = null;
+    renderPanel();
+  }
+
+  function saveUpload() {
+    var f = upForm;
+    var grp = pickedGroup(f.grp, f.newGrp);
+    if (!grp) { status('Đặt tên cho nhóm mới đã nhé.', true); return; }
+    var btn = panelEl.querySelector('[data-up="save"]');
+    if (btn) { btn.disabled = true; btn.textContent = 'Đang xử lý…'; }
+    status(f.cut ? 'Đang xoá nền trắng và thu nhỏ ảnh…' : 'Đang thu nhỏ ảnh…');
+    var IMG = window.GemImg, sz;
+    (f.cut ? IMG.removeWhite(f.file) : IMG.shrink(f.file, { alpha: true })).then(function (file) {
+      return IMG.size(file).then(function (d) { sz = d; return DB.uploadImage(file); });
+    }).then(function (url) {
+      status('Đang lưu vào thư viện…');
+      return DB.addStudioAsset({ src: url, w: sz.w, h: sz.h, grp: grp, name: String(f.name || '').trim().slice(0, 80) });
+    }).then(function (row) {
+      dbAssets.push(row);
+      mergeLib();
+      URL.revokeObjectURL(f.preview);
+      upForm = null;
+      group = grp;
+      add({ src: row.src, w: row.w, h: row.h });
+      status('Đã lưu vào thư viện, tab "' + groupLabel(grp) + '"');
+    }).catch(function (err) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Lưu vào thư viện'; }
+      status('Không lưu được: ' + (err.message || ''), true);
+    });
+  }
+
+  function saveAsset(id) {
+    var box = panelEl.querySelector('.se-asset-edit');
+    var grp = pickedGroup(box.querySelector('[name="as-grp"]').value, box.querySelector('[name="as-new"]').value);
+    if (!grp) { status('Đặt tên cho nhóm mới đã nhé.', true); return; }
+    var patch = { grp: grp, name: box.querySelector('[name="as-name"]').value.trim().slice(0, 80) };
+    DB.updateStudioAsset(id, patch).then(function () {
+      dbAssets.forEach(function (r) { if (r.id === id) { r.grp = patch.grp; r.name = patch.name; } });
+      mergeLib();
+      editAsset = null; group = grp;
+      renderPanel();
+      status('Đã lưu');
+    }).catch(function (err) { status('Không lưu được: ' + (err.message || ''), true); });
+  }
+
+  // Only the library entry goes: the file stays in storage, so layouts
+  // already using the picture keep showing it.
+  function deleteAsset(id) {
+    if (!window.confirm('Bỏ ảnh này khỏi thư viện? Bố cục nào đang dùng nó vẫn hiện bình thường.')) return;
+    DB.deleteStudioAsset(id).then(function () {
+      dbAssets = dbAssets.filter(function (r) { return r.id !== id; });
+      mergeLib();
+      editAsset = null;
+      if (!lib.groups.some(function (g) { return g.id === group; })) group = lib.groups[0].id;
+      renderPanel();
+      status('Đã bỏ khỏi thư viện');
+    }).catch(function (err) { status('Không xoá được: ' + (err.message || ''), true); });
   }
 
   function queueProduct(sku, image) {
@@ -578,16 +701,48 @@ window.GemStudioEditor = (function () {
         'Phím mũi tên dịch từng chút, Ctrl+Z hoàn tác. "Khung bấm" ẩn các khung xanh khi xếp đồ.</p></details>';
     }
     var g = lib.groups.filter(function (x) { return x.id === group; })[0] || lib.groups[0];
-    panelEl.innerHTML = tools +
-      '<div class="se-lib">' +
+    var extra = '';
+    if (upForm) {
+      extra = '<div class="se-upform">' +
+        '<img src="' + esc(upForm.preview) + '" alt="">' +
+        '<div class="se-upform-f">' +
+          '<label>Vào tab <select name="up-grp">' + groupOptions(upForm.grp) + '</select></label>' +
+          '<label' + (upForm.grp === '__new' ? '' : ' hidden') + ' class="se-up-new">Tên tab mới <input name="up-new" maxlength="40" value="' + esc(upForm.newGrp) + '"></label>' +
+          '<label>Tên ảnh <input name="up-name" maxlength="80" placeholder="không bắt buộc" value="' + esc(upForm.name) + '"></label>' +
+          '<label class="se-up-cut"><input type="checkbox" name="up-cut"' + (upForm.cut ? ' checked' : '') + '> Xoá nền trắng</label>' +
+          '<div class="se-row"><button type="button" class="ad-btn ad-primary" data-up="save">Lưu vào thư viện</button>' +
+          '<button type="button" class="ad-btn" data-up="cancel">Huỷ</button></div>' +
+          '<span class="se-hint-s">Ảnh được thu nhỏ (dài nhất 1280px, WebP) trước khi tải lên.</span>' +
+        '</div></div>';
+    } else if (editAsset) {
+      var row = dbAssets.filter(function (r) { return r.id === editAsset; })[0];
+      if (row) {
+        extra = '<div class="se-upform se-asset-edit">' +
+          '<img src="' + esc(row.src) + '" alt="">' +
+          '<div class="se-upform-f">' +
+            '<label>Tab <select name="as-grp">' + groupOptions(row.grp) + '</select></label>' +
+            '<label hidden class="se-up-new">Tên tab mới <input name="as-new" maxlength="40"></label>' +
+            '<label>Tên ảnh <input name="as-name" maxlength="80" value="' + esc(row.name) + '"></label>' +
+            '<div class="se-row"><button type="button" class="ad-btn ad-primary" data-asset-save="' + esc(row.id) + '">Lưu</button>' +
+            '<button type="button" class="ad-btn ad-danger" data-asset-del="' + esc(row.id) + '">Bỏ khỏi thư viện</button>' +
+            '<button type="button" class="ad-btn" data-asset-close>Đóng</button></div>' +
+          '</div></div>';
+      }
+    }
+    panelEl.innerHTML = tools + extra +
+      '<div class="se-lib' + (manage ? ' is-manage' : '') + '">' +
         '<div class="se-tabs">' + lib.groups.map(function (x) {
           return '<button type="button" class="se-chip' + (x.id === g.id ? ' is-on' : '') + '" data-group="' + esc(x.id) + '">' +
             esc(x.label) + '</button>';
         }).join('') +
-        '<label class="se-chip se-upload">+ Tải ảnh<input type="file" accept="image/png,image/webp,image/jpeg" hidden></label>' +
+        '<label class="se-chip se-upload">+ Tải ảnh<input type="file" name="se-file" accept="image/png,image/webp,image/jpeg" hidden></label>' +
+        '<button type="button" class="se-chip' + (manage ? ' is-on' : '') + '" data-manage>Sửa thư viện</button>' +
         '</div>' +
+        (manage ? '<span class="se-hint-s">Chạm ảnh có viền đứt (ảnh đã tải lên) để đổi tên, chuyển tab hoặc bỏ. ' +
+          'Ảnh có sẵn trong code và ảnh “Sản phẩm thật” sửa ở chỗ khác (tab Sản phẩm).</span>' : '') +
         '<div class="se-grid">' + g.items.map(function (a, i) {
-          return '<button type="button" class="se-asset" data-asset="' + i + '" title="' + esc(a.src.split('/').pop()) + '">' +
+          return '<button type="button" class="se-asset' + (a.db ? ' is-own' : '') + '" data-asset="' + i + '" title="' +
+            esc(a.name || a.src.split('/').pop()) + '">' +
             '<img src="' + esc(a.src) + '" alt="" loading="lazy"></button>';
         }).join('') + '</div>' +
       '</div>';
@@ -596,9 +751,24 @@ window.GemStudioEditor = (function () {
   function panelClick(e) {
     var b;
     if ((b = e.target.closest('[data-group]'))) { group = b.dataset.group; renderPanel(); return; }
+    if ((b = e.target.closest('[data-up]'))) {
+      if (b.dataset.up === 'save') saveUpload();
+      else { URL.revokeObjectURL(upForm.preview); upForm = null; renderPanel(); }
+      return;
+    }
+    if (e.target.closest('[data-manage]')) { manage = !manage; editAsset = null; renderPanel(); return; }
+    if ((b = e.target.closest('[data-asset-save]'))) { saveAsset(b.getAttribute('data-asset-save')); return; }
+    if ((b = e.target.closest('[data-asset-del]'))) { deleteAsset(b.getAttribute('data-asset-del')); return; }
+    if (e.target.closest('[data-asset-close]')) { editAsset = null; renderPanel(); return; }
     if ((b = e.target.closest('[data-asset]'))) {
       var g = lib.groups.filter(function (x) { return x.id === group; })[0] || lib.groups[0];
-      add(g.items[+b.dataset.asset]);
+      var a = g.items[+b.dataset.asset];
+      if (manage) {
+        if (a.db) { editAsset = a.db; upForm = null; renderPanel(); }
+        else status('Ảnh này có sẵn trong code (hoặc là ảnh sản phẩm) — không sửa ở đây.', true);
+        return;
+      }
+      add(a);
       return;
     }
     if ((b = e.target.closest('[data-act]'))) act(b.dataset.act);
@@ -638,7 +808,20 @@ window.GemStudioEditor = (function () {
   }
 
   function panelChange(e) {
-    if (e.target.type === 'file') return upload(e.target.files && e.target.files[0]);
+    var nm = e.target.name || '';
+    if (nm === 'se-file') { startUpload(e.target.files && e.target.files[0]); e.target.value = ''; return; }
+    if (/^up-/.test(nm) && upForm) {
+      if (nm === 'up-grp') upForm.grp = e.target.value;
+      if (nm === 'up-new') upForm.newGrp = e.target.value;
+      if (nm === 'up-name') upForm.name = e.target.value;
+      if (nm === 'up-cut') upForm.cut = e.target.checked;
+      if (nm === 'up-grp') panelEl.querySelector('.se-up-new').hidden = e.target.value !== '__new';
+      return;
+    }
+    if (/^as-/.test(nm)) {
+      if (nm === 'as-grp') panelEl.querySelector('.se-asset-edit .se-up-new').hidden = e.target.value !== '__new';
+      return;
+    }
     if (sel && (sel.kind === 'hot' || sel.kind === 'stand') && /^sp-/.test(e.target.name)) return spotChange(e);
     if (!sel || sel.kind !== 'item') return;
     var it = S().items[sel.i];
@@ -680,6 +863,13 @@ window.GemStudioEditor = (function () {
   // New piece in the middle of what's on screen, a sensible size.
   function add(a) {
     if (!a || !L.srcOk(a.src)) return;
+    if (!a.w || !a.h) {
+      var im = new Image();
+      im.onload = function () { a.w = im.naturalWidth; a.h = im.naturalHeight; add(a); };
+      im.onerror = function () { status('Không mở được ảnh này.', true); };
+      im.src = a.src;
+      return;
+    }
     remember();
     var h = a.h0 || (a.frame ? 110 : Math.min(420, a.h * 0.6));   // h0: doors / windows, set in the manifest
     var w = Math.round(h * a.w / a.h);
@@ -690,26 +880,6 @@ window.GemStudioEditor = (function () {
     S().items.push(it);
     sel = { kind: 'item', i: S().items.length - 1 };
     draw(); renderPanel();
-  }
-
-  function upload(file) {
-    if (!file) return;
-    if (file.size > 3 * 1024 * 1024) { status('Ảnh quá 3 MB — nén bớt (squoosh.app, WebP) rồi tải lại.', true); return; }
-    status('Đang tải ảnh lên...');
-    DB.uploadImage(file).then(function (url) {
-      var img = new Image();
-      img.onload = function () {
-        var a = { src: url, w: img.naturalWidth, h: img.naturalHeight };
-        var g = lib.groups.filter(function (x) { return x.id === 'uploads'; })[0];
-        if (!g) { g = { id: 'uploads', label: 'Đã tải lên', items: [] }; lib.groups.push(g); }
-        g.items.unshift(a);
-        group = 'uploads';
-        add(a);
-        status('Đã tải ảnh lên');
-      };
-      img.onerror = function () { status('Ảnh tải lên nhưng không mở được.', true); };
-      img.src = url;
-    }).catch(function (err) { status('Không tải được ảnh: ' + (err.message || ''), true); });
   }
 
   /* ---------- profiles: named layouts to switch between quickly ---------- */
