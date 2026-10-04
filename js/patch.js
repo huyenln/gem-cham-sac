@@ -92,7 +92,11 @@
   var MAX_OTHER = 40, MAX_NOTE = 200;
 
   // Sketch: strokes on a 64 x 64 grid, 4 inks.
-  var INKS = ['#3D4A2E', C.sage, C.gach, C.kraft];
+  // the last ink is the eraser: paper colour, drawn over the other strokes
+  var INKS = ['#3D4A2E', C.sage, C.gach, C.kraft, '#FBF6EE'];
+  var ERASER = INKS.length - 1;
+  // brush widths in grid cells: thin, medium, thick
+  var WIDTHS = [1.3, 3, 6];
   var GRID = 64, MAX_POINTS = 700, MAX_STROKES = 60;
   var B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
 
@@ -126,9 +130,11 @@
     return { ok: true, v: parts };
   }
 
+  // A stroke = one head char + points. Head: B64 letter of (ink + 5 × width);
+  // old codes used a digit 0–3 (ink only, thin) and still read the same.
   function encodeSketch(strokes) {
     return strokes.map(function (s) {
-      return s.c + s.pts.map(function (p) { return B64[p[0]] + B64[p[1]]; }).join('');
+      return B64[s.c + INKS.length * (s.w || 0)] + s.pts.map(function (p) { return B64[p[0]] + B64[p[1]]; }).join('');
     }).join('.');
   }
 
@@ -140,7 +146,14 @@
     if (strokes.length > MAX_STROKES) return null;
     for (var i = 0; i < strokes.length; i++) {
       var s = strokes[i];
-      if (s.length < 3 || (s.length - 1) % 2 || !/[0-3]/.test(s[0])) return null;
+      if (s.length < 3 || (s.length - 1) % 2) return null;
+      var c, w;
+      if (/^[0-3]$/.test(s[0])) { c = +s[0]; w = 0; }                 // old code
+      else {
+        var hd = B64.indexOf(s[0]);
+        if (hd < 0 || hd >= INKS.length * WIDTHS.length) return null;
+        c = hd % INKS.length; w = Math.floor(hd / INKS.length);
+      }
       var pts = [];
       for (var j = 1; j < s.length; j += 2) {
         var x = B64.indexOf(s[j]), y = B64.indexOf(s[j + 1]);
@@ -149,7 +162,7 @@
       }
       total += pts.length;
       if (total > MAX_POINTS) return null;
-      out.push({ c: +s[0], pts: pts });
+      out.push({ c: c, w: w, pts: pts });
     }
     return out;
   }
@@ -370,7 +383,7 @@
       var pts = s.pts.length === 1 ? [s.pts[0], [s.pts[0][0] + 0.01, s.pts[0][1]]] : s.pts;
       return '<path d="M' + pts.map(function (p) {
         return (ox + (p[0] + 0.5) * sc).toFixed(1) + ' ' + (oy + (p[1] + 0.5) * sc).toFixed(1);
-      }).join('L') + '" fill="none" stroke="' + INKS[s.c] + '" stroke-width="' + (sc * 1.3).toFixed(1) +
+      }).join('L') + '" fill="none" stroke="' + INKS[s.c] + '" stroke-width="' + (sc * WIDTHS[s.w || 0]).toFixed(1) +
       '" stroke-linecap="round" stroke-linejoin="round"/>';
     }).join('');
   }
@@ -483,7 +496,7 @@
     TONES: TONES, TONE_ORDER: TONE_ORDER, MAX_TONES: MAX_TONES,
     PRINTS: PRINTS, PRINT_ORDER: PRINT_ORDER, FABRICS: FABRICS, FABRIC_ORDER: FABRIC_ORDER,
     GEM: GEM, MAX_OTHER: MAX_OTHER, MAX_NOTE: MAX_NOTE,
-    INKS: INKS, GRID: GRID, MAX_POINTS: MAX_POINTS, MAX_STROKES: MAX_STROKES,
+    INKS: INKS, ERASER: ERASER, WIDTHS: WIDTHS, GRID: GRID, MAX_POINTS: MAX_POINTS, MAX_STROKES: MAX_STROKES,
     blank: blank, encode: encode, parse: parse, isComplete: isComplete, describe: describe,
     tones: tones, randomFill: randomFill, svg: svg, toneDot: toneDot, printDot: printDot,
     sketchPaths: sketchPaths,

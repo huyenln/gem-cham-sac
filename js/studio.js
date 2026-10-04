@@ -298,6 +298,14 @@
     'studio.prod_in_cart':  { vi: `Đã bỏ vào giỏ rồi nha!`, en: `In the basket!` },
     'studio.prod_in_basket': { vi: `Đã bỏ vào giỏ rồi nha!`, en: `In the basket!` },
     'studio.prod_out':      { vi: `Món này đang tạm hết, bạn ghé lại sau nhé.`, en: `This one's sold out for now — check back soon.` },
+    'studio.pt_extra':     { vi: `Thêm chi tiết cho Gem (không bắt buộc): chất vải, tự vẽ, ảnh, lời nhắn`, en: `More for Gem (optional): fabrics, a drawing, a photo, a note` },
+    'studio.pt_size':      { vi: `Cỡ nét`, en: `Brush size` },
+    'studio.pt_eraser':    { vi: `Tẩy`, en: `Eraser` },
+    'studio.pt_share':     { vi: `Chia sẻ thiết kế`, en: `Share the design` },
+    'studio.pt_share_title': { vi: `Thiết kế của mình ở Gem Studio`, en: `My design at Gem Studio` },
+    'studio.gv_see':       { vi: `Xem món này`, en: `See it` },
+    'studio.gv_ref':       { vi: `Muốn một {mon} theo ý bạn? Chọn kiểu, tông, họa tiết bên dưới, Gem may theo mẫu này nha.`, en: `Want a {mon} your way? Pick the layout, colours and prints below and Gem sews it after this one.` },
+    'studio.prod_design':  { vi: `Tự thiết kế theo mẫu này`, en: `Design one like this` },
     'studio.gv_hi':        { vi: `Đây là {mon} thật Gem đã may nè. Bản vẽ chỉ là phác thôi, mỗi cái một kiểu nha!`, en: `Here's a real {mon} Gem has sewn. The drawing is just a sketch — every piece turns out its own way!` },
     'studio.gv_this':      { vi: `{mon} thật trông thế này nè.`, en: `This is what a real {mon} looks like.` },
     'studio.gv_other':     { vi: `Thêm một món chắp vải thật của Gem: {mon}.`, en: `Another real patchwork piece by Gem: {mon}.` },
@@ -518,7 +526,7 @@
 
     // Paper notes pinned on the memo board (filled once notes load)
     if (!spotOff('memo')) {
-      var mb = boxOf(hotById('memo'));
+      var mb = memoBoard();
       memoPins = document.createElement('div');
       memoPins.className = 'st-pins';
       memoPins.style.left = pct(mb.x0, SCENE.width);
@@ -529,6 +537,25 @@
     }
 
     addPlayer();
+  }
+
+  // Where the notes are pinned: on the board picture itself when the owner's
+  // layout has one inside the memo spot (the spot's box is usually drawn
+  // bigger than the board, and notes landed on its frame), else the box.
+  function memoBoard() {
+    var h0 = boxOf(hotById('memo')), w0 = h0.x1 - h0.x0, t0 = h0.y1 - h0.y0;
+    var hb = { x0: h0.x0 + w0 * 0.1, x1: h0.x1 - w0 * 0.1, y0: h0.y0 + t0 * 0.18, y1: h0.y1 - t0 * 0.12 };
+    if (!LAYOUT) return hb;
+    var best = null;
+    LAYOUT.items.forEach(function (it) {
+      if (it.sku || it.x < h0.x0 || it.x > h0.x1 || it.y < h0.y0 || it.y > h0.y1) return;
+      var score = it.w * it.h * (/bang|khung|board/.test(it.src) ? 4 : 1);
+      if (!best || score > best.score) best = { it: it, score: score };
+    });
+    if (!best) return hb;
+    var b = best.it;
+    // inside the frame: clear of the wooden edge and the hanging bar on top
+    return { x0: b.x - b.w * 0.4, x1: b.x + b.w * 0.4, y0: b.y - b.h * 0.3, y1: b.y + b.h * 0.38 };
   }
 
   /* ---------- owner's per-spot settings (layout.spots) ----------
@@ -924,7 +951,7 @@
     sheetEl.addEventListener('touchstart', function (e) {
       if (e.touches.length !== 1) return;
       fromHandle = !!e.target.closest('.st-grab');
-      if (!fromHandle && (sheetEl.scrollTop > 0 || e.target.closest('canvas, input, textarea, select, .pt-real, .st-grid--photos'))) return;
+      if (!fromHandle && (sheetEl.scrollTop > 0 || e.target.closest('canvas, input, textarea, select, .st-grid--photos'))) return;
       y0 = e.touches[0].clientY; t0 = Date.now(); dy = 0; on = true;
     }, { passive: true });
     sheetEl.addEventListener('touchmove', function (e) {
@@ -1016,6 +1043,10 @@
       (out
         ? '<button type="button" class="st-btn" disabled>' + esc(t('studio.out')) + '</button>'
         : '<button type="button" class="st-btn" data-add="' + esc(sku) + '" data-i18n="studio.add">' + esc(t('studio.add')) + '</button>') +
+      (designable(sku) && !spotOff('sewing')
+        ? '<button type="button" class="st-link st-design-from" data-design-from="' + esc(sku) + '" data-i18n="studio.prod_design">' +
+          esc(t('studio.prod_design')) + '</button>'
+        : '') +
     '</li>';
   }
 
@@ -1117,7 +1148,7 @@
      note / "other fabric" are the customer's words: textContent / esc()
      only, and they also travel in the share link. */
   var P = window.GemPatch;
-  var D = { d: P ? P.blank('goi') : null, drawing: null, ink: 0 };
+  var D = { d: P ? P.blank('goi') : null, drawing: null, ink: 0, size: 0 };
 
   function specNow() { return P.encode(D.d); }
 
@@ -1134,7 +1165,10 @@
     openSheet(
       head('studio.sewing_h', 'studio.sewing_p') +
       '<div class="pt">' +
-        '<div class="pt-tabs" role="group" data-i18n-attr="aria-label:studio.pt_products" aria-label="' + esc(t('studio.pt_products')) + '"></div>' +
+        '<div class="pt-top">' +
+          '<div class="pt-tabs" role="group" data-i18n-attr="aria-label:studio.pt_products" aria-label="' + esc(t('studio.pt_products')) + '"></div>' +
+          '<button type="button" class="pt-tool pt-random" data-pt="random" data-i18n="studio.pt_random">' + esc(t('studio.pt_random')) + '</button>' +
+        '</div>' +
         '<div class="pt-left">' +
         // Udon the teacher: points at a board with a real piece Gem has sewn
         '<div class="gv" aria-live="polite">' +
@@ -1150,16 +1184,13 @@
           '<div class="pt-board"></div>' +
           tr('p', 'studio.pt_preview', ' class="pt-small"') +
         '</div>' +
-        '<div class="pt-more">' +
-          tr('h3', 'studio.pt_real') +
-          '<ul class="pt-real"></ul>' +
-          '<div class="pt-similar"></div>' +
-        '</div>' +
         '</div>' +
         '<div class="pt-side">' +
           '<section class="pt-sec">' + tr('h3', 'studio.pt_layout', ' class="pt-label"') + '<div class="pt-layouts pt-chips"></div></section>' +
           '<section class="pt-sec">' + tr('h3', 'studio.pt_tones', ' class="pt-label"') + '<div class="pt-tones pt-chips"></div></section>' +
           '<section class="pt-sec">' + tr('h3', 'studio.pt_prints', ' class="pt-label"') + '<div class="pt-prints pt-chips"></div></section>' +
+          // the rest is optional: folded away so the first look is three choices
+          '<details class="pt-extra"><summary data-i18n="studio.pt_extra">' + esc(t('studio.pt_extra')) + '</summary>' +
           '<section class="pt-sec">' + tr('h3', 'studio.pt_fabrics', ' class="pt-label"') + '<div class="pt-fabrics pt-chips"></div>' +
             '<label class="pt-other">' + tr('span', 'studio.pt_other') +
               '<input name="other" maxlength="' + P.MAX_OTHER + '" autocomplete="off" data-i18n-attr="placeholder:studio.pt_other_ph" placeholder="' + esc(t('studio.pt_other_ph')) + '"></label>' +
@@ -1169,6 +1200,7 @@
             '<div class="pt-draw">' +
               '<canvas class="pt-canvas" width="512" height="512" data-i18n-attr="aria-label:studio.pt_draw" aria-label="' + esc(t('studio.pt_draw')) + '"></canvas>' +
               '<div class="pt-inks" role="group"></div>' +
+              '<div class="pt-sizes" role="group" data-i18n-attr="aria-label:studio.pt_size" aria-label="' + esc(t('studio.pt_size')) + '"></div>' +
               '<div class="pt-tools">' +
                 '<button type="button" class="pt-tool" data-pt="undo" data-i18n="studio.pt_undo">' + esc(t('studio.pt_undo')) + '</button>' +
                 '<button type="button" class="pt-tool" data-pt="clear" data-i18n="studio.pt_clear">' + esc(t('studio.pt_clear')) + '</button>' +
@@ -1188,13 +1220,13 @@
           '</section>' +
           '<section class="pt-sec"><label class="pt-notefield">' + tr('span', 'studio.pt_note_label', ' class="pt-label"') +
             '<textarea name="note" rows="2" maxlength="' + P.MAX_NOTE + '" data-i18n-attr="placeholder:studio.pt_note_ph" placeholder="' + esc(t('studio.pt_note_ph')) + '"></textarea></label></section>' +
+          '</details>' +
           '<div class="pt-actions">' +
             '<span class="pt-price"></span>' +
             '<button type="button" class="st-btn" data-pt="add" data-i18n="studio.pt_add">' + esc(t('studio.pt_add')) + '</button>' +
             (window.GemTu ? '<button type="button" class="pt-tool" data-pt="keep" data-i18n="studio.pt_keep">' + esc(t('studio.pt_keep')) + '</button>' : '') +
-            '<button type="button" class="pt-tool" data-pt="save" data-i18n="studio.pt_save">' + esc(t('studio.pt_save')) + '</button>' +
-            '<button type="button" class="pt-tool" data-pt="link" data-i18n="studio.pt_link">' + esc(t('studio.pt_link')) + '</button>' +
-            '<button type="button" class="pt-tool" data-pt="random" data-i18n="studio.pt_random">' + esc(t('studio.pt_random')) + '</button>' +
+            // one share button: the phone's share sheet, or the link copied
+            '<button type="button" class="pt-tool" data-pt="link" data-i18n="studio.pt_share">' + esc(t('studio.pt_share')) + '</button>' +
           '</div>' +
           tr('p', 'studio.pt_note', ' class="pt-note"') +
         '</div>' +
@@ -1205,7 +1237,7 @@
     root.querySelector('[name="note"]').value = D.d.note;
     bindCanvas(root.querySelector('.pt-canvas'));
     renderDesigner();
-    teach('hi');
+    teach(gvRef ? 'ref' : 'hi');
   }
 
   /* ---------- Udon the teacher (Bàn thiết kế) ----------
@@ -1215,6 +1247,7 @@
      colours, and talks. Moves only when the customer changes something. */
   var GV_POSES = [1, 2, 3, 4];   // 1 point · 2 tap the board · 3 glasses · 4 talk
   var gvTimer = null, gvShow = null, gvPick = 0;
+  var gvRef = null;   // a product the customer came from ("design one like this")
 
   function gvPose(n) {
     var box = sheetBody.querySelector('.gv-udon');
@@ -1230,6 +1263,16 @@
     im.alt = info ? info.name : '';
     gvShow = sku;
     root.querySelector('.gv-say').textContent = line;
+    // a ready-made piece (not the one being designed): offer its card
+    if (sku !== P.PRODUCTS[D.d.product].sku && sku !== gvRef) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'gv-see';
+      b.setAttribute('data-gv-see', sku);
+      b.textContent = t('studio.gv_see');
+      root.querySelector('.gv-say').appendChild(document.createTextNode(' '));
+      root.querySelector('.gv-say').appendChild(b);
+    }
   }
 
   function nameOf(sku) {
@@ -1256,6 +1299,7 @@
       gvTimer = setTimeout(function () { talk(like[0], 'studio.gv_like'); }, reduceMotion ? 0 : 650);
       return;
     }
+    if (why === 'ref') { var ref = gvRef; gvRef = null; talk(ref, 'studio.gv_ref'); return; }
     var show = sku, key = why === 'hi' ? 'studio.gv_hi' : 'studio.gv_this';
     if (why === 'next') {
       // the piece itself, then other real patchwork Gem has made
@@ -1313,9 +1357,17 @@
 
     root.querySelector('.pt-inks').innerHTML = P.INKS.map(function (c, i) {
       return '<button type="button" class="pt-ink' + (i === D.ink ? ' is-on' : '') + '" data-ink="' + i +
-        '" aria-pressed="' + (i === D.ink) + '" aria-label="' + esc(t('studio.pt_ink')) + ' ' + (i + 1) +
+        '" aria-pressed="' + (i === D.ink) + '" aria-label="' + esc(i === P.ERASER ? t('studio.pt_eraser') : t('studio.pt_ink') + ' ' + (i + 1)) +
+        '"' + (i === P.ERASER ? ' title="' + esc(t('studio.pt_eraser')) + '"' : '') + ' data-eraser="' + (i === P.ERASER) +
         '"><span style="background:' + c + '"></span></button>';
     }).join('');
+    root.querySelector('.pt-sizes').innerHTML = P.WIDTHS.map(function (w, i) {
+      return '<button type="button" class="pt-size' + (i === D.size ? ' is-on' : '') + '" data-size="' + i +
+        '" aria-pressed="' + (i === D.size) + '" aria-label="' + esc(t('studio.pt_size')) + ' ' + (i + 1) + '">' +
+        '<span style="width:' + Math.round(4 + w * 3.4) + 'px;height:' + Math.round(4 + w * 3.4) + 'px"></span></button>';
+    }).join('');
+    // "from my drawing" needs the drawing: unfold the extras for it
+    if (d.layout === 'tuve') root.querySelector('.pt-extra').open = true;
 
     renderPreview();
   }
@@ -1352,18 +1404,6 @@
     var keep = root.querySelector('[data-pt="keep"]');
     if (keep) keep.disabled = !ok;
 
-    root.querySelector('.pt-real').innerHTML = [sku].concat(REAL.filter(function (s) { return s !== sku; }))
-      .map(function (s) {
-        var i = window.GemBasket ? window.GemBasket.info(s) : null;
-        if (!i || !THUMB[s]) return '';
-        return '<li' + (s === sku ? ' class="is-this"' : '') + '><img src="images/products/' + THUMB[s] +
-          '" alt="" loading="lazy" width="112" height="112">' + esc(i.name) + '</li>';
-      }).join('');
-
-    var similar = ok ? similarTo(spec) : [];
-    root.querySelector('.pt-similar').innerHTML = similar.length
-      ? tr('h3', 'studio.pt_similar') + '<ul class="st-grid">' + similar.map(productCard).join('') + '</ul>'
-      : '';
   }
 
   // Ready-made pieces that share the design's colour families and prints,
@@ -1407,7 +1447,7 @@
       if (D.d.sketch.length >= P.MAX_STROKES || pointsUsed() >= P.MAX_POINTS) { renderPreview(); return; }
       e.preventDefault();
       try { cv.setPointerCapture(e.pointerId); } catch (x) { /* ignore */ }
-      D.drawing = { c: D.ink, pts: [cell(e)] };
+      D.drawing = { c: D.ink, w: D.size || 0, pts: [cell(e)] };
       D.d.sketch.push(D.drawing);
       drawCanvas();
     });
@@ -1439,9 +1479,10 @@
     for (var k = 8; k < P.GRID; k += 8) {
       g.beginPath(); g.moveTo(k * s, 0); g.lineTo(k * s, cv.height); g.moveTo(0, k * s); g.lineTo(cv.width, k * s); g.stroke();
     }
-    g.lineCap = 'round'; g.lineJoin = 'round'; g.lineWidth = s * 1.3;
+    g.lineCap = 'round'; g.lineJoin = 'round';
     D.d.sketch.forEach(function (st) {
       g.strokeStyle = P.INKS[st.c];
+      g.lineWidth = s * P.WIDTHS[st.w || 0];
       g.beginPath();
       st.pts.forEach(function (p, i) {
         var x = (p[0] + 0.5) * s, y = (p[1] + 0.5) * s;
@@ -1487,7 +1528,12 @@
 
   function copyLink(btn) {
     var url = P.url(specNow());
-    var done = function () { flash(btn, 'studio.pt_copied', 'studio.pt_link'); };
+    var done = function () { flash(btn, 'studio.pt_copied', 'studio.pt_share'); };
+    // phones: the share sheet (Zalo, Messenger…); else copy the link
+    if (navigator.share && matchMedia('(pointer: coarse)').matches) {
+      navigator.share({ title: t('studio.pt_share_title'), url: url }).catch(function () { /* closed */ });
+      return;
+    }
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(url).then(done, function () { window.prompt('', url); });
     } else {
@@ -1498,6 +1544,8 @@
   function designerClick(e) {
     var el, teachAfter = null;
     if (e.target.closest('[data-gv-next]')) { teach('next'); return true; }
+    var see = e.target.closest('[data-gv-see]');
+    if (see) { productSheet(see.getAttribute('data-gv-see')); return true; }
     if ((el = e.target.closest('[data-product]'))) {
       teachAfter = 'product';
       var keep = D.d;
@@ -1518,6 +1566,8 @@
       toggle('fabrics', el.getAttribute('data-fabric'));
     } else if ((el = e.target.closest('[data-ink]'))) {
       D.ink = +el.getAttribute('data-ink');
+    } else if ((el = e.target.closest('[data-size]'))) {
+      D.size = +el.getAttribute('data-size');
     } else if ((el = e.target.closest('[data-pt]'))) {
       var act = el.getAttribute('data-pt');
       if (act === 'undo') {
@@ -1820,11 +1870,34 @@
   }
 
   /* ---------- products on the shelves: tap for the card, drag into the basket ---------- */
+  // The design-table piece made from this product, if there is one.
+  function designable(sku) {
+    if (!P) return null;
+    var id = null;
+    Object.keys(P.PRODUCTS).forEach(function (k) { if (P.PRODUCTS[k].sku === sku) id = k; });
+    return id;
+  }
+
+  // "Design one like this": the design table on that piece, the product's
+  // photo on Udon's board.
+  function designFrom(sku) {
+    var id = designable(sku);
+    if (!id) return;
+    var keep = D.d;
+    D.d = P.blank(id);
+    D.d.tones = keep.tones; D.d.prints = keep.prints; D.d.fabrics = keep.fabrics;
+    gvRef = sku;
+    var h = hotById('sewing');
+    if (h && !spotOff('sewing')) walkTo(standX(h));
+    designerSheet();
+  }
+
   function productSheet(sku) {
     var card = productCard(sku);
     if (!card) return;
     openSheet(tr('p', 'studio.prod_tip', ' class="st-lead st-prod-tip"') +
       '<ul class="st-grid st-grid--one">' + card + '</ul>' +
+
       '<p class="st-foot">' + tr('a', 'studio.all_products', ' href="san-pham.html"') + '</p>');
   }
 
@@ -1885,8 +1958,12 @@
   // Udon dropped in the cart or the basket: a line, a little stay, home again.
   function udonRide(where, ghost) {
     udonBusy = true;
-    var home = function () {
+    // Measure where Udon is on screen FIRST, then take him out of the cart:
+    // re-parenting first left him at the cart's own coordinates on the
+    // stage, so he seemed to fly in from the door.
+    var home = function (pin) {
       var h = udonEl.getBoundingClientRect(), s2 = stage.getBoundingClientRect(), r = ghost.getBoundingClientRect();
+      if (pin) pin.undo();
       if (ghost.parentNode !== stage) stage.appendChild(ghost);
       ghost.getAnimations().forEach(function (an) { an.cancel(); });
       ghost.className = 'st-udon-ghost';
@@ -1941,7 +2018,7 @@
     var spot = { left: b.left + b.width * (player.facing > 0 ? 0.8 : 0.2) - 1, top: b.top + b.height * 0.52, width: 2, height: 2 };
     flyTo(ghost, spot, sc.toFixed(2), function () {
       var pin = pinTo(ghost, bobEl);
-      setTimeout(function () { pin.undo(); home(); }, 3200);
+      setTimeout(function () { home(pin); }, 3200);
     });
   }
 
@@ -2151,6 +2228,8 @@
         return;
       }
       if (e.target.closest('[data-out]')) { goScene('out'); return; }
+      var df = e.target.closest('[data-design-from]');
+      if (df) { designFrom(df.getAttribute('data-design-from')); return; }
       var wr = e.target.closest('[data-wear]');
       if (wr) {
         if (toggleWear(wr.getAttribute('data-wear'))) {

@@ -306,10 +306,18 @@ window.GemStudioEditor = (function () {
         (spotCfg(sp.id).link ? ' is-link' : '');
       n.dataset.kind = 'hot'; n.dataset.id = sp.id;
       place(n, b[0], b[1], b[2] - b[0], b[3] - b[1]);
-      n.innerHTML = '<span class="se-hot-label">' + esc(spotCfg(sp.id).vi || sp.vi) +
-        (spotCfg(sp.id).off ? ' (đang tắt)' : spotCfg(sp.id).link ? ' →' : '') + '</span>';
       if (isSel('hot', sp.id)) handles(n, false);
       worldEl.appendChild(n);
+      // The box sits BEHIND the pieces (so a product on a shelf inside it can
+      // still be picked and moved); its name tag stays on top and is the
+      // handle that selects the box. Selected, the box comes up front.
+      var tag = document.createElement('div');
+      tag.className = 'se-el se-hot-tag' + (isSel('hot', sp.id) ? ' is-sel' : '');
+      tag.dataset.kind = 'hot'; tag.dataset.id = sp.id;
+      tag.textContent = (spotCfg(sp.id).vi || sp.vi) + (spotCfg(sp.id).off ? ' (đang tắt)' : spotCfg(sp.id).link ? ' →' : '');
+      tag.style.left = px((b[0] + b[2]) / 2);
+      tag.style.top = px(b[1]);
+      worldEl.appendChild(tag);
       var st = document.createElement('div');
       st.className = 'se-el se-stand' + (isSel('stand', sp.id) ? ' is-sel' : '');
       st.dataset.kind = 'stand'; st.dataset.id = sp.id;
