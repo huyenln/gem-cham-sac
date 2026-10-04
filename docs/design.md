@@ -1527,6 +1527,19 @@ Góp ý: bàn thiết kế giống tờ khảo sát, bản vẽ trông rẻ, chi
   Tên thẻ khi phần lớn ô là màu riêng: "Sắc tím". Lời hứa kèm: Gem tìm vải gần màu
   nhất và nhắn ảnh duyệt trước khi may.
 
+**Sửa theo góp ý (10/2026):**
+- Chọn tâm trạng chỉ đổi vải, giữ kiểu ghép đang chọn (`applyMood(d, mood, true)`).
+  Ít ô thì vải có thể khớp nhiều tâm trạng: tâm trạng khách bấm được nhớ
+  (`d.moodId`) và đi trong link (`&m=`).
+- May xong: trang cuộn lên món trước rồi mới may (thấy Udon may + reo), cuộn
+  xuống thẻ sau khi reo xong.
+- Tên mẫu sửa được (ô nhập ngay trên thẻ); tên riêng vẽ lên thẻ và đi trong link
+  (`&t=`, tối đa 40 ký tự, chỉ hiện bằng `value` / `fillText`).
+- Giỏ hàng (góc + danh sách + hình bay vào giỏ) dùng hình thật: thiết kế riêng
+  → SVG của thiết kế, món có sẵn → ảnh cắt nền hoặc ảnh sản phẩm; sprite cũ chỉ
+  còn làm dự phòng. Đồ trong giỏ cũng nằm trong xe nhân vật đẩy (`.st-cargo`, vành
+  xe đo từ tranh: `CART_RIM`).
+
 **Chưa làm (đợt 2–3):** vải thật dạng "Mảnh hiếm" (bảng `fabrics` + admin), tường
 thiết kế của khách, Thiết kế của tháng.
 

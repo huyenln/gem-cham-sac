@@ -441,10 +441,23 @@
   function spriteQueue() {
     var out = [];
     items.forEach(function (it) {
-      var p = bySku(it.sku);
-      for (var i = 0; i < it.qty; i++) out.push(p);
+      for (var i = 0; i < it.qty; i++) out.push(it);
     });
     return out;
+  }
+
+  // A picture of what is in the basket: the customer's own design, else the
+  // product's cut-out or photo, else the little drawn sprite.
+  function pic(it) {
+    var p = bySku(it.sku);
+    if (it.spec && window.GemPatch) {
+      var svg = window.GemPatch.svg(it.spec, {});
+      if (svg) return svg;
+    }
+    if (p && (p.cutout || p.image)) {
+      return '<img src="' + esc(p.cutout || p.image) + '" alt="" draggable="false" class="' + (p.cutout ? 'is-cut' : 'is-photo') + '">';
+    }
+    return (p && SPRITES[p.sprite]) || '';
   }
 
   var reduceMotion = window.matchMedia &&
@@ -568,7 +581,7 @@
       var s = document.createElement('span');
       s.className = 'gb-pile-item' +
         (grew && i === shown.length - 1 ? ' is-new' : '');
-      s.innerHTML = SPRITES[p.sprite] || '';
+      s.innerHTML = pic(p);
       // 3 across, stacking upward, nudged off-grid so the pile looks hand-tossed
       var col = i % 3, row = Math.floor(i / 3);
       s.style.left = (col * 29 + jitter(i, 12.9898) * 4) + '%';
@@ -605,7 +618,7 @@
   }
 
   /* ---------- fly-to-basket ---------- */
-  function fly(sourceEl, spriteKey, done) {
+  function fly(sourceEl, it, done) {
     if (reduceMotion || !sourceEl || typeof Element.prototype.animate !== 'function') {
       done();
       return;
@@ -617,7 +630,7 @@
 
     var ghost = document.createElement('span');
     ghost.className = 'gb-ghost';
-    ghost.innerHTML = SPRITES[spriteKey] || '';
+    ghost.innerHTML = pic(it);
     ghost.style.width = ghost.style.height = size + 'px';
     ghost.style.left = (from.left + from.width / 2 - size / 2) + 'px';
     ghost.style.top = (from.top + from.height / 2 - size / 2) + 'px';
@@ -688,8 +701,7 @@
       var p = bySku(it.sku);
       var custom = it.spec && window.GemPatch;
       return '<li class="gb-row" data-key="' + esc(keyOf(it)) + '">' +
-        '<span class="gb-row-sprite">' +
-          (custom ? window.GemPatch.svg(it.spec, { size: 44 }) : (SPRITES[p.sprite] || '')) + '</span>' +
+        '<span class="gb-row-sprite">' + pic(it) + '</span>' +
         '<span class="gb-row-text">' +
           '<span class="gb-row-name"' + nameAttr(p) + '>' +
             (isKey(p) ? '' : esc(pName(p))) + '</span>' +
@@ -1213,7 +1225,7 @@
         e.stopPropagation();   // don't trigger the product lightbox behind it
 
         var source = card.querySelector('.product-card-image') || card;
-        fly(source, product.sprite, function () {
+        fly(source, { sku: sku }, function () {
           addItem(sku);
           renderWidget();
           wiggle();
@@ -1271,11 +1283,14 @@
       // Skus on sale, in the shop's order — null until the database answers.
       skus: function () { return liveSkus ? liveSkus.slice() : null; },
       bindCard: bindCard,
+      // what is in the basket, one entry per piece, with its picture (studio:
+      // the things riding in the character's cart)
+      pieces: function () { return spriteQueue().map(function (it) { return { sku: it.sku, spec: it.spec || null, html: pic(it) }; }); },
       add: function (sku, sourceEl, spec) {
         var p = bySku(sku);
         if (!p || p.inStock === false) return false;
         if (spec && !validSpec(spec)) return false;
-        fly(sourceEl, p.sprite, function () {
+        fly(sourceEl, { sku: sku, spec: spec }, function () {
           addItem(sku, spec);
           renderWidget();
           wiggle();

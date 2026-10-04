@@ -265,6 +265,8 @@
     'studio.pt_hint_held': { vi: `Giờ chạm vào ô muốn đắp mảnh {vai} lên.`, en: `Now tap the patch you want the {vai} on.` },
     'studio.pt_hint_draw': { vi: `Kiểu "theo hình mình vẽ": vẽ trong mục Tự chỉnh bên dưới.`, en: `"From my drawing": draw it under Fine-tune below.` },
     'studio.pt_sew':       { vi: `May xong!`, en: `Sew it!` },
+    'studio.pt_title_label': { vi: `Tên mẫu`, en: `Design name` },
+    'studio.pt_title_hint': { vi: `Chạm vào tên để đặt tên riêng cho mẫu.`, en: `Tap the name to give it your own.` },
     'studio.pt_sewing':    { vi: `Đang may...`, en: `Sewing...` },
     'studio.pt_serial':    { vi: `Mẫu #{n}`, en: `Design #{n}` },
     'studio.pt_by_label':  { vi: `Tên bạn trên thẻ`, en: `Your name on the card` },
@@ -742,6 +744,22 @@
 
   // (Re)build the frames for the chosen character. Each frame is a box the
   // size of its picture, so accessories can be placed in % of it.
+  // The cart's rim in each push frame (fraction of the picture's height,
+  // measured from the drawings): what is in the basket rides in the cart,
+  // its lower part hidden below the rim.
+  var CART_RIM = {"p1-cart1": 0.632, "p1-cart2": 0.626, "p1-cart3": 0.629, "p2-cart1": 0.615, "p2-cart2": 0.615, "p2-cart3": 0.617,
+    "p3-cart1": 0.625, "p3-cart2": 0.625, "p3-cart3": 0.625, "p4-cart1": 0.611, "p4-cart2": 0.613, "p4-cart3": 0.611};
+
+  function renderCargo() {
+    if (!bobEl || !window.GemBasket || !window.GemBasket.pieces) return;
+    bobEl.querySelectorAll('.st-cargo').forEach(function (box) {
+      var pieces = window.GemBasket.pieces().slice(-3);   // fresh SVG ids per frame
+      box.innerHTML = pieces.map(function (pc, i) {
+        return '<span class="st-cargo-item st-cargo-' + i + '">' + pc.html + '</span>';
+      }).join('');
+    });
+  }
+
   function dress() {
     bobEl.textContent = '';
     frameEls = {};
@@ -757,10 +775,17 @@
       img.alt = '';
       img.draggable = false;
       fr.appendChild(img);
+      if (CART_RIM[key]) {
+        var cargo = document.createElement('span');
+        cargo.className = 'st-cargo';
+        cargo.style.top = ((CART_RIM[key] - 0.2) * 100).toFixed(1) + '%';
+        fr.appendChild(cargo);
+      }
       frameEls[name] = fr;
       bobEl.appendChild(fr);
     });
     dressWear();
+    renderCargo();
     player.frame = null;
   }
 
@@ -1242,7 +1267,7 @@
      only, and they also travel in the share link. */
   var P = window.GemPatch;
   var D = { d: P ? P.blank('goi') : null, drawing: null, ink: 0, size: 0,
-    held: null, basket: [], sewn: false, card: null, from: false, by: '' };
+    held: null, basket: [], sewn: false, card: null, from: false, by: '', title: '' };
 
   function specNow() { return P.encode(D.d); }
 
@@ -1312,7 +1337,8 @@
           '</div>' +
           // after "May xong": the name, the number and the card to share
           '<section class="pt-done" hidden aria-live="polite">' +
-            '<p class="pt-done-name"></p>' +
+            '<input class="pt-done-name" name="title" maxlength="40" autocomplete="off" data-i18n-attr="aria-label:studio.pt_title_label" aria-label="' + esc(t('studio.pt_title_label')) + '">' +
+            tr('p', 'studio.pt_title_hint', ' class="pt-small pt-title-hint"') +
             '<p class="pt-done-sub"></p>' +
             '<div class="pt-done-card"><img alt=""><span class="pt-small pt-card-wait" data-i18n="studio.pt_card_wait">' + esc(t('studio.pt_card_wait')) + '</span></div>' +
             '<label class="pt-byfield">' + tr('span', 'studio.pt_by_label', ' class="pt-label"') +
@@ -1634,8 +1660,20 @@
   // cheers, then the name, the number and the card appear.
   function sew(btn) {
     var board = sheetBody.querySelector('.pt-board');
-    var svgEl = board && board.querySelector('svg');
-    if (!svgEl) return;
+    if (!board || !board.querySelector('svg')) return;
+    // the button sits low on the page: bring the piece (and Udon) into view
+    // first, so the sewing and the cheer are seen
+    var r = board.getBoundingClientRect(), sr = sheetEl.getBoundingClientRect();
+    var off = r.top - sr.top - 24;
+    if (Math.abs(off) > 40) {
+      btn.disabled = true;
+      sheetEl.scrollBy({ top: off, behavior: 'smooth' });
+      setTimeout(function () { sewNow(btn, board); }, 450);
+    } else sewNow(btn, board);
+  }
+
+  function sewNow(btn, board) {
+    var svgEl = board.querySelector('svg');
     var reduce = false;
     try { reduce = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (x) { /* old browser */ }
     btn.disabled = true;
@@ -1662,6 +1700,10 @@
         sewer.className = 'pt-sewer is-cheer';
         setTimeout(function () { sewer.hidden = true; }, 2600);
       }
+      setTimeout(function () {
+        var done = sheetBody.querySelector('.pt-done');
+        if (done && !done.hidden) done.scrollIntoView({ block: 'start', behavior: reduce ? 'auto' : 'smooth' });
+      }, reduce ? 0 : 1700);
       board.classList.remove('is-puff');
       void board.offsetWidth;   // restart the animation
       board.classList.add('is-puff');
@@ -1707,12 +1749,21 @@
     if (!box) return;
     var spec = specNow(), l = lng();
     box.hidden = false;
-    box.querySelector('.pt-done-name').textContent = P.title(D.d, l);
+    var nm = box.querySelector('.pt-done-name');
+    if (document.activeElement !== nm) nm.value = titleNow();
     box.querySelector('.pt-done-sub').textContent = P.PRODUCTS[D.d.product][l] + ' · ' +
       t('studio.pt_serial').replace('{n}', P.serial(spec)) + (myName() ? ' · ' + t('studio.pt_by').replace('{by}', myName()) : '');
     makeCard();
-    box.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
+
+  // The design's name: the customer's own if they renamed it, else the mood's.
+  function shareUrl() {
+    var u = P.url(specNow(), myName(), (P.moodOf(D.d) || {}).id);
+    var own = (D.title || '').trim();
+    return own ? u + '&t=' + encodeURIComponent(own.slice(0, 40)) : u;
+  }
+
+  function titleNow() { return (D.title || '').trim() || P.title(D.d, lng()); }
 
   function myName() {
     try { return (localStorage.getItem('gem-designer') || '').slice(0, 24); } catch (e) { return ''; }
@@ -1797,7 +1848,7 @@
       // the paper band
       g.fillStyle = '#3D4A2E';
       g.font = '600 104px "Dancing Script", cursive';
-      fitText(g, P.title(d, l), 530, 1560, 760);
+      fitText(g, titleNow(), 530, 1560, 760);
       g.font = '500 36px "Be Vietnam Pro", sans-serif';
       g.fillStyle = '#5B6447';
       fitText(g, P.PRODUCTS[d.product][l] + ' · ' + t('studio.pt_serial').replace('{n}', P.serial(spec)), 530, 1630, 760);
@@ -1835,7 +1886,7 @@
   // The picture itself to the share sheet (Instagram / Zalo take files);
   // where files can't be shared, the image is saved and the link copied.
   function shareCard(btn) {
-    var url = P.url(specNow(), myName(), (P.moodOf(D.d) || {}).id);
+    var url = shareUrl();
     var file = D.card;
     if (!file) return;
     var canFiles = false;
@@ -2080,7 +2131,7 @@
   }
 
   function copyLink(btn) {
-    var url = P.url(specNow(), myName(), (P.moodOf(D.d) || {}).id);
+    var url = shareUrl();
     var done = function () { flash(btn, 'studio.pt_copied', 'studio.pt_share'); };
     // phones: the share sheet (Zalo, Messenger…); else copy the link
     if (navigator.share && matchMedia('(pointer: coarse)').matches) {
@@ -2317,6 +2368,12 @@
   var byTimer = null;
   function designerInput(e) {
     var n = e.target.name;
+    if (n === 'title') {
+      D.title = e.target.value.slice(0, 40);
+      clearTimeout(byTimer);
+      byTimer = setTimeout(function () { if (D.sewn) makeCard(); }, 500);
+      return;
+    }
     if (n === 'by') {
       try { localStorage.setItem('gem-designer', e.target.value.trim().slice(0, 24)); } catch (x) { /* private mode */ }
       clearTimeout(byTimer);
@@ -2992,6 +3049,7 @@
 
     document.addEventListener('gem:basket', function (e) {
       cartCount = (e.detail && e.detail.count) || 0;
+      renderCargo();
       render();
     });
 
@@ -3051,6 +3109,7 @@
         var qs = new URLSearchParams(location.search);
         D.by = (qs.get('by') || '').trim().slice(0, 24);
         D.d.moodId = qs.get('m') || '';
+        D.title = (qs.get('t') || '').trim().slice(0, 40);
       } catch (e) { D.by = ''; }
       try { localStorage.setItem('gem-studio-intro', '1'); } catch (e) { /* ignore */ }
       setScene('in');
