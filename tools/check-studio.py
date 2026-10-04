@@ -18,6 +18,9 @@ and walks through what broke before:
            at once, one dropped before saving, one refused by storage
   product  (owner) product form: photo -> shrunk + 600px thumb, gallery,
            "Xoá nền trắng" cut-out, Kệ; all saved in one PATCH
+  design   the design table: a mood dresses the piece, tap a scrap then a patch,
+           drag a scrap onto a patch, "May xong" sews and makes the 9:16 card,
+           the share link (with a name) opens the same design for a friend
   catalog  san-pham.html builds a card for a product only the database knows,
            in its category and order, and the lightbox opens on it
 
@@ -26,7 +29,7 @@ crashed and the counts add up.
 
     python3 tools/check-studio.py            all checks
     python3 tools/check-studio.py wear       one check (street | wear | shop | spots | editor |
-                                             library | product | catalog)
+                                             library | product | design | catalog)
 
 Needs: pip install playwright. Chromium: PLAYWRIGHT_BROWSERS_PATH or
 CHROMIUM=/path/to/chrome (the cloud sessions have /opt/pw-browsers/chromium).
@@ -542,6 +545,84 @@ async def product(browser, db):
     await pg.context.close()
 
 
+async def design(browser, db):
+    print('design')
+    for name, w, h in (('mobile', 393, 852), ('desktop', 1440, 900)):
+        pg = await page(browser, db, w, h, "sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1');localStorage.removeItem('gem-designer')")
+        await pg.goto(f'{BASE}/studio.html')
+        await pg.wait_for_timeout(1500)
+        await pg.add_style_tag(content='.lang-hint{display:none!important}')
+        await js_click(pg, '[data-go="sewing"]')
+        await pg.wait_for_timeout(2500)
+        check(await pg.evaluate("document.querySelector('.st-sheet').classList.contains('is-full')"), f'{name}: the table opens full screen')
+        check(await pg.evaluate("!!document.querySelector('.pt-mood.is-on')"), f'{name}: a fresh piece starts in a mood')
+        n = await pg.evaluate("document.querySelectorAll('.pt-board path[data-i]').length")
+        check(n == 9, f'{name}: every patch of the cushion is tappable ({n})')
+        check(await pg.evaluate("document.querySelectorAll('.pt-scrap').length") == 8, f'{name}: eight scraps in the basket')
+        # tap a scrap, then a patch
+        sid = await pg.evaluate("document.querySelectorAll('.pt-scrap')[5].getAttribute('data-scrap')")
+        await pg.click('.pt-scrap >> nth=5')
+        await pg.click('.pt-board [data-i="4"]')
+        await pg.wait_for_timeout(300)
+        cell = await pg.evaluate("document.querySelector('.pt-board [data-i=\"4\"]').getAttribute('fill')")
+        want = await pg.evaluate(f"(() => {{ const f = window.GemPatch.fabric({sid}); return f.kind; }})()")
+        check(want in cell, f'{name}: tap scrap, tap patch puts that fabric there ({want} in {cell})')
+        # drag another scrap onto patch 0
+        sid2 = await pg.evaluate("document.querySelectorAll('.pt-scrap')[2].getAttribute('data-scrap')")
+        await pg.evaluate("document.querySelector('.pt-board').scrollIntoView({block: 'start'})")
+        await pg.wait_for_timeout(200)
+        bx = await center(pg, '.pt-board [data-i="0"]')
+        a = await center(pg, '.pt-scrap:nth-child(3)')
+        await drag(pg, a, bx)
+        await pg.wait_for_timeout(300)
+        cell0 = await pg.evaluate("document.querySelector('.pt-board [data-i=\"0\"]').getAttribute('fill')")
+        want2 = await pg.evaluate(f"window.GemPatch.fabric({sid2}).kind")
+        check(want2 in cell0, f'{name}: drag a scrap onto a patch ({want2} in {cell0})')
+        await pg.screenshot(path=OUT / f'design-{name}-1.png')
+        # sew
+        await js_click(pg, '[data-pt="sew"]')
+        await pg.wait_for_timeout(600)
+        check(await pg.evaluate("document.querySelectorAll('.pt-thread').length") > 0, f'{name}: a thread runs along the seams')
+        await pg.wait_for_timeout(2600)
+        check(await pg.evaluate("!document.querySelector('.pt-done').hidden"), f'{name}: name + number appear after sewing')
+        title = await pg.evaluate("document.querySelector('.pt-done-name').textContent")
+        sub = await pg.evaluate("document.querySelector('.pt-done-sub').textContent")
+        check(bool(title) and '#' in sub, f'{name}: "{title}" / {sub}')
+        await pg.fill('[name="by"]', 'Linh <b>')
+        await pg.wait_for_timeout(2500)
+        size = await pg.evaluate("(() => { const i = document.querySelector('.pt-done-card img'); return [i.naturalWidth, i.naturalHeight]; })()")
+        check(size == [1080, 1920], f'{name}: the share card is 1080x1920 ({size})')
+        card = await pg.evaluate("document.querySelector('.pt-done-card img').src")
+        import base64
+        data = await pg.evaluate("(async u => { const b = await (await fetch(u)).blob(); return await new Promise(r => { const f = new FileReader(); f.onload = () => r(f.result); f.readAsDataURL(b); }); })(arguments[0])".replace('arguments[0]', repr(card)))
+        (OUT / f'design-{name}-card.png').write_bytes(base64.b64decode(data.split(',', 1)[1]))
+        await pg.evaluate("document.querySelector('.pt-done').scrollIntoView({block: 'center'})")
+        await pg.wait_for_timeout(300)
+        await pg.screenshot(path=OUT / f'design-{name}-2done.png')
+        check(await pg.evaluate("!document.querySelector('.pt-done b')"), f'{name}: the typed name never becomes HTML')
+        check(not pg.errors, f'{name}: no script errors {pg.errors}')
+        await pg.context.close()
+
+    # a friend opens the shared link
+    pg = await page(browser, db, 393, 852, "localStorage.setItem('gem-studio-intro','1')")
+    await pg.goto(f'{BASE}/studio.html')
+    await pg.wait_for_timeout(800)
+    spec = await pg.evaluate("(() => { const P = window.GemPatch, d = P.blank('goi'); P.applyMood(d, P.MOODS[2]); return P.encode(d); })()")
+    url = await pg.evaluate("s => window.GemPatch.url(s, 'Linh')", spec)
+    await pg.goto(url)
+    await pg.wait_for_timeout(3500)
+    hdr = await pg.evaluate("(document.querySelector('.pt-shared-h') || {}).textContent || ''")
+    check('Linh' in hdr, f'shared link greets with the designer\'s name ({hdr})')
+    same = await pg.evaluate("s => window.GemPatch.encode(window.GemPatch.parse(s)) === s && document.querySelector('.pt-mood.is-on') && document.querySelector('.pt-mood.is-on').dataset.mood", spec)
+    check(same == 'bien', f'the friend sees the same design ({same})')
+    await pg.screenshot(path=OUT / 'design-shared.png')
+    await js_click(pg, '.pt-shared [data-pt="add"]')
+    await pg.wait_for_timeout(1200)
+    check(await pg.evaluate("window.GemBasket.count()") == 1, '"Đặt may giống vậy" puts it in the basket')
+    check(not pg.errors, f'no script errors {pg.errors}')
+    await pg.context.close()
+
+
 async def catalog(browser, db):
     print('catalog')
     for name, w, h in (('mobile', 375, 844), ('desktop', 1440, 900)):
@@ -580,7 +661,7 @@ async def main(which):
     async with async_playwright() as p:
         browser = await launch(p)
         for name, fn in (('street', street), ('wear', wear), ('shop', shop), ('spots', spots), ('editor', editor),
-                         ('library', library), ('product', product), ('catalog', catalog)):
+                         ('library', library), ('product', product), ('design', design), ('catalog', catalog)):
             if which in (None, name):
                 await fn(browser, db)
         await browser.close()

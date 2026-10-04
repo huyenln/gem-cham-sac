@@ -354,6 +354,9 @@ Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
 **Studio — làm tiếp (ghi 10/2026, xem chi tiết ở `docs/design.md`):**
 - ✅ Udon giáo viên ở Bàn thiết kế (xong 10/2026): `udon/ud-gv-1..4`, `ui/udgv-bang`.
   Thêm câu / dáng: `teach()` trong `js/studio.js`.
+- 🎨 Bàn thiết kế "chơi" đợt 1 (10/2026): toàn màn hình, tâm trạng, rổ vải, May xong,
+  thẻ chia sẻ 9:16. Vải đang vẽ bằng code — khi có tranh thì thay theo
+  `docs/design.md` → "Bàn thiết kế — chơi". Đợt 2: Mảnh hiếm (vải thật).
 - 👕 Đợt 2 đồ mặc (áo) — chỉ làm nếu khách dùng nút "Đeo thử"; cần vẽ lại khung.
 - 🛍️ Ảnh cắt nền sản phẩm: giờ làm trong admin → Sản phẩm → Sửa → "Ảnh cắt nền"
   (nút "Xoá nền trắng"). `CUTOUT`/`THUMB`/`SHELVES` trong `js/studio.js` chỉ còn là

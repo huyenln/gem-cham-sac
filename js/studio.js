@@ -248,8 +248,29 @@
     'studio.sofa_news':    { vi: `Bản tin — chuyện ở studio`, en: `Newsletter — studio notes` },
 
     'studio.sewing_h':     { vi: `Bàn thiết kế`, en: `Design table` },
-    'studio.sewing_p':     { vi: `Kể cho Gem bạn muốn món thế nào. Chỗ nào chưa chắc, cứ để Gem chọn.`, en: `Tell Gem what you'd like. Anything you're unsure of, leave to Gem.` },
-    'studio.pt_random':    { vi: `Gợi ý ngẫu nhiên`, en: `Surprise me` },
+    'studio.sewing_p':     { vi: `Chọn một tâm trạng, lấy vải trong rổ đắp lên từng mảnh, rồi bấm May xong.`, en: `Pick a mood, lay scraps from the basket on each patch, then hit Sew it.` },
+    'studio.pt_random':    { vi: `Ngẫu nhiên`, en: `Surprise me` },
+    'studio.pt_moods':     { vi: `Tâm trạng`, en: `Mood` },
+    'studio.pt_basket':    { vi: `Rổ vải vụn`, en: `Scrap basket` },
+    'studio.pt_rummage':   { vi: `Lục rổ`, en: `Rummage` },
+    'studio.pt_shuffle':   { vi: `Xáo mảnh`, en: `Shuffle` },
+    'studio.pt_hint':      { vi: `Chạm một mảnh vải trong rổ rồi chạm vào ô trên món, hoặc kéo thả vào ô.`, en: `Tap a scrap in the basket, then tap a patch. Or drag it there.` },
+    'studio.pt_hint_held': { vi: `Giờ chạm vào ô muốn đắp mảnh {vai} lên.`, en: `Now tap the patch you want the {vai} on.` },
+    'studio.pt_hint_draw': { vi: `Kiểu "theo hình mình vẽ": vẽ trong mục Tự chỉnh bên dưới.`, en: `"From my drawing": draw it under Fine-tune below.` },
+    'studio.pt_sew':       { vi: `May xong!`, en: `Sew it!` },
+    'studio.pt_sewing':    { vi: `Đang may...`, en: `Sewing...` },
+    'studio.pt_serial':    { vi: `Mẫu #{n}`, en: `Design #{n}` },
+    'studio.pt_by_label':  { vi: `Tên bạn trên thẻ`, en: `Your name on the card` },
+    'studio.pt_by_ph':     { vi: `vd: Linh`, en: `e.g. Linh` },
+    'studio.pt_by':        { vi: `thiết kế bởi {by}`, en: `designed by {by}` },
+    'studio.pt_share_img': { vi: `Chia sẻ ảnh`, en: `Share the picture` },
+    'studio.pt_card_wait': { vi: `Đang làm thẻ...`, en: `Making the card...` },
+    'studio.pt_done_say':  { vi: `May xong rồi! Đẹp ghê, khoe bạn bè đi nè.`, en: `All sewn! It's lovely — show your friends.` },
+    'studio.pt_shared_by': { vi: `{by} đã thiết kế mẫu này`, en: `{by} designed this` },
+    'studio.pt_shared_anon': { vi: `Một bạn đã thiết kế mẫu này`, en: `Someone designed this` },
+    'studio.pt_shared_order': { vi: `Đặt may giống vậy`, en: `Get one sewn like this` },
+    'studio.pt_shared_mine': { vi: `Tự làm bản của bạn`, en: `Make your own` },
+    'studio.pt_card_foot': { vi: `Tự thiết kế ở Gem Studio · gemchamsac.com/studio`, en: `Designed at Gem Studio · gemchamsac.com/studio` },
     'studio.pt_preview':   { vi: `Hình minh họa. Vải vụn thật sẽ khác một chút.`, en: `An illustration. The real scraps will differ a little.` },
     'studio.pt_layout':    { vi: `Kiểu ghép`, en: `Piecing` },
     'studio.pt_tones':     { vi: `Tông màu (tối đa 2)`, en: `Colours (up to 2)` },
@@ -298,7 +319,7 @@
     'studio.prod_in_cart':  { vi: `Đã bỏ vào giỏ rồi nha!`, en: `In the basket!` },
     'studio.prod_in_basket': { vi: `Đã bỏ vào giỏ rồi nha!`, en: `In the basket!` },
     'studio.prod_out':      { vi: `Món này đang tạm hết, bạn ghé lại sau nhé.`, en: `This one's sold out for now — check back soon.` },
-    'studio.pt_extra':     { vi: `Thêm chi tiết cho Gem (không bắt buộc): chất vải, tự vẽ, ảnh, lời nhắn`, en: `More for Gem (optional): fabrics, a drawing, a photo, a note` },
+    'studio.pt_extra':     { vi: `Tự chỉnh: tông màu, họa tiết, chất vải, tự vẽ, ảnh, lời nhắn`, en: `Fine-tune: colours, prints, fabrics, a drawing, a photo, a note` },
     'studio.pt_size':      { vi: `Cỡ nét`, en: `Brush size` },
     'studio.pt_eraser':    { vi: `Tẩy`, en: `Eraser` },
     'studio.pt_share':     { vi: `Chia sẻ thiết kế`, en: `Share the design` },
@@ -922,8 +943,12 @@
   // gesture / button closes it instead of leaving the studio.
   var sheetInHistory = false;
 
-  function openSheet(html) {
+  // full: the sheet takes the whole screen (the design table: things are
+  // dragged inside it, so only the grab handle pulls it down)
+  function openSheet(html, full) {
     if (modal.hidden) lastFocus = document.activeElement;
+    sheetEl.classList.toggle('is-full', !!full);
+    modal.classList.toggle('is-full', !!full);
     sheetBody.innerHTML = html;
     sheetEl.scrollTop = 0;
     if (modal.hidden && !sheetInHistory) {
@@ -938,6 +963,8 @@
     if (modal.hidden) return;
     modal.hidden = true;
     sheetBody.innerHTML = '';
+    sheetEl.classList.remove('is-full');
+    modal.classList.remove('is-full');
     sheetEl.style.transform = '';
     document.body.classList.remove('st-lock');
     if (sheetInHistory) {
@@ -956,7 +983,8 @@
     sheetEl.addEventListener('touchstart', function (e) {
       if (e.touches.length !== 1) return;
       fromHandle = !!e.target.closest('.st-grab');
-      if (!fromHandle && (sheetEl.scrollTop > 0 || e.target.closest('canvas, input, textarea, select, .st-grid--photos'))) return;
+      if (!fromHandle && (sheetEl.scrollTop > 0 || sheetEl.classList.contains('is-full') ||
+        e.target.closest('canvas, input, textarea, select, .st-grid--photos'))) return;
       y0 = e.touches[0].clientY; t0 = Date.now(); dy = 0; on = true;
     }, { passive: true });
     sheetEl.addEventListener('touchmove', function (e) {
@@ -1206,7 +1234,8 @@
      note / "other fabric" are the customer's words: textContent / esc()
      only, and they also travel in the share link. */
   var P = window.GemPatch;
-  var D = { d: P ? P.blank('goi') : null, drawing: null, ink: 0, size: 0 };
+  var D = { d: P ? P.blank('goi') : null, drawing: null, ink: 0, size: 0,
+    held: null, basket: [], sewn: false, card: null, from: false, by: '' };
 
   function specNow() { return P.encode(D.d); }
 
@@ -1220,35 +1249,59 @@
 
   function designerSheet() {
     if (!P) return;
+    // A fresh piece starts dressed in a mood rather than grey "Gem picks".
+    if (!D.d.fab && !D.d.tones.length && !D.d.prints.length && D.d.layout !== 'tuve') P.applyMood(D.d, P.MOODS[0]);
+    D.held = null; D.sewn = false; D.card = null;
+    D.basket = basketFor(D.d);
     openSheet(
       head('studio.sewing_h', 'studio.sewing_p') +
       '<div class="pt">' +
         '<div class="pt-top">' +
           '<div class="pt-tabs" role="group" data-i18n-attr="aria-label:studio.pt_products" aria-label="' + esc(t('studio.pt_products')) + '"></div>' +
-          '<button type="button" class="pt-tool pt-random" data-pt="random" data-i18n="studio.pt_random">' + esc(t('studio.pt_random')) + '</button>' +
         '</div>' +
         '<div class="pt-left">' +
-        // Udon the teacher: points at a board with a real piece Gem has sewn
-        '<div class="gv" aria-live="polite">' +
-          '<div class="gv-udon">' + GV_POSES.map(function (n, i) {
-            return '<img src="images/studio/udon/ud-gv-' + n + '.webp" alt="" draggable="false" data-gv="' + n + '"' + (i ? ' hidden' : '') + '>';
-          }).join('') + '</div>' +
-          '<button type="button" class="gv-board" data-gv-next data-i18n-attr="aria-label:studio.gv_next" aria-label="' + esc(t('studio.gv_next')) + '">' +
-            '<span class="gv-photo"><img alt="" draggable="false"></span>' +
-          '</button>' +
-          '<p class="gv-say"></p>' +
-        '</div>' +
-        '<div class="pt-view">' +
-          '<div class="pt-board"></div>' +
-          tr('p', 'studio.pt_preview', ' class="pt-small"') +
-        '</div>' +
+          '<div class="pt-shared" hidden></div>' +
+          '<div class="pt-view">' +
+            '<div class="pt-board"></div>' +
+            '<p class="pt-small pt-hint" aria-live="polite"></p>' +
+          '</div>' +
         '</div>' +
         '<div class="pt-side">' +
-          '<section class="pt-sec">' + tr('h3', 'studio.pt_layout', ' class="pt-label"') + '<div class="pt-layouts pt-chips"></div></section>' +
+          '<section class="pt-sec">' + tr('h3', 'studio.pt_moods', ' class="pt-label"') + '<div class="pt-moods" role="group"></div></section>' +
+          '<section class="pt-sec">' +
+            '<div class="pt-sec-row">' + tr('h3', 'studio.pt_basket', ' class="pt-label"') +
+              '<button type="button" class="pt-tool pt-mini" data-pt="rummage" data-i18n="studio.pt_rummage">' + esc(t('studio.pt_rummage')) + '</button></div>' +
+            '<div class="pt-basket"><div class="pt-scraps"></div></div>' +
+          '</section>' +
+          '<section class="pt-sec">' +
+            '<div class="pt-sec-row">' + tr('h3', 'studio.pt_layout', ' class="pt-label"') +
+              '<span class="pt-sec-acts">' +
+                '<button type="button" class="pt-tool pt-mini" data-pt="shuffle" data-i18n="studio.pt_shuffle">' + esc(t('studio.pt_shuffle')) + '</button>' +
+                '<button type="button" class="pt-tool pt-mini" data-pt="random" data-i18n="studio.pt_random">' + esc(t('studio.pt_random')) + '</button>' +
+              '</span></div>' +
+            '<div class="pt-layouts pt-chips"></div></section>' +
+          '<div class="pt-actions">' +
+            '<span class="pt-price"></span>' +
+            '<button type="button" class="pt-tool pt-add" data-pt="add" data-i18n="studio.pt_add">' + esc(t('studio.pt_add')) + '</button>' +
+            '<button type="button" class="st-btn pt-sew" data-pt="sew" data-i18n="studio.pt_sew">' + esc(t('studio.pt_sew')) + '</button>' +
+          '</div>' +
+          // after "May xong": the name, the number and the card to share
+          '<section class="pt-done" hidden aria-live="polite">' +
+            '<p class="pt-done-name"></p>' +
+            '<p class="pt-done-sub"></p>' +
+            '<div class="pt-done-card"><img alt=""><span class="pt-small pt-card-wait" data-i18n="studio.pt_card_wait">' + esc(t('studio.pt_card_wait')) + '</span></div>' +
+            '<label class="pt-byfield">' + tr('span', 'studio.pt_by_label', ' class="pt-label"') +
+              '<input name="by" maxlength="24" autocomplete="nickname" data-i18n-attr="placeholder:studio.pt_by_ph" placeholder="' + esc(t('studio.pt_by_ph')) + '"></label>' +
+            '<div class="pt-done-acts">' +
+              '<button type="button" class="st-btn" data-pt="share-img" data-i18n="studio.pt_share_img">' + esc(t('studio.pt_share_img')) + '</button>' +
+              '<button type="button" class="pt-tool" data-pt="link" data-i18n="studio.pt_share">' + esc(t('studio.pt_share')) + '</button>' +
+              (window.GemTu ? '<button type="button" class="pt-tool" data-pt="keep" data-i18n="studio.pt_keep">' + esc(t('studio.pt_keep')) + '</button>' : '') +
+            '</div>' +
+          '</section>' +
+          // the rest is optional: folded away so the first look is the play
+          '<details class="pt-extra"><summary data-i18n="studio.pt_extra">' + esc(t('studio.pt_extra')) + '</summary>' +
           '<section class="pt-sec">' + tr('h3', 'studio.pt_tones', ' class="pt-label"') + '<div class="pt-tones pt-chips"></div></section>' +
           '<section class="pt-sec">' + tr('h3', 'studio.pt_prints', ' class="pt-label"') + '<div class="pt-prints pt-chips"></div></section>' +
-          // the rest is optional: folded away so the first look is three choices
-          '<details class="pt-extra"><summary data-i18n="studio.pt_extra">' + esc(t('studio.pt_extra')) + '</summary>' +
           '<section class="pt-sec">' + tr('h3', 'studio.pt_fabrics', ' class="pt-label"') + '<div class="pt-fabrics pt-chips"></div>' +
             '<label class="pt-other">' + tr('span', 'studio.pt_other') +
               '<input name="other" maxlength="' + P.MAX_OTHER + '" autocomplete="off" data-i18n-attr="placeholder:studio.pt_other_ph" placeholder="' + esc(t('studio.pt_other_ph')) + '"></label>' +
@@ -1279,21 +1332,27 @@
           '<section class="pt-sec"><label class="pt-notefield">' + tr('span', 'studio.pt_note_label', ' class="pt-label"') +
             '<textarea name="note" rows="2" maxlength="' + P.MAX_NOTE + '" data-i18n-attr="placeholder:studio.pt_note_ph" placeholder="' + esc(t('studio.pt_note_ph')) + '"></textarea></label></section>' +
           '</details>' +
-          '<div class="pt-actions">' +
-            '<span class="pt-price"></span>' +
-            '<button type="button" class="st-btn" data-pt="add" data-i18n="studio.pt_add">' + esc(t('studio.pt_add')) + '</button>' +
-            (window.GemTu ? '<button type="button" class="pt-tool" data-pt="keep" data-i18n="studio.pt_keep">' + esc(t('studio.pt_keep')) + '</button>' : '') +
-            // one share button: the phone's share sheet, or the link copied
-            '<button type="button" class="pt-tool" data-pt="link" data-i18n="studio.pt_share">' + esc(t('studio.pt_share')) + '</button>' +
+          // Udon the teacher: points at a board with a real piece Gem has sewn
+          '<div class="gv" aria-live="polite">' +
+            '<div class="gv-udon">' + GV_POSES.map(function (n, i) {
+              return '<img src="images/studio/udon/ud-gv-' + n + '.webp" alt="" draggable="false" data-gv="' + n + '"' + (i ? ' hidden' : '') + '>';
+            }).join('') + '</div>' +
+            '<button type="button" class="gv-board" data-gv-next data-i18n-attr="aria-label:studio.gv_next" aria-label="' + esc(t('studio.gv_next')) + '">' +
+              '<span class="gv-photo"><img alt="" draggable="false"></span>' +
+            '</button>' +
+            '<p class="gv-say"></p>' +
           '</div>' +
           tr('p', 'studio.pt_note', ' class="pt-note"') +
         '</div>' +
-      '</div>'
+      '</div>',
+      true
     );
     var root = sheetBody.querySelector('.pt');
     root.querySelector('[name="other"]').value = D.d.other;
     root.querySelector('[name="note"]').value = D.d.note;
+    root.querySelector('[name="by"]').value = myName();
     bindCanvas(root.querySelector('.pt-canvas'));
+    bindScrapDrag(root.querySelector('.pt-scraps'));
     renderDesigner();
     teach(gvRef ? 'ref' : 'hi');
   }
@@ -1382,6 +1441,335 @@
       '" aria-pressed="' + on + '">' + (icon || '') + '<span>' + esc(label) + '</span></button>';
   }
 
+  /* ---------- the scrap basket + fabric on each patch ----------
+     The basket holds 8 scraps: the mood's palette, or what is on the piece
+     topped up at random. Tap one to pick it up, then tap a patch; or drag
+     it onto a patch. Tapping a patch with nothing picked up cycles it
+     through the basket. Scraps are drawn in code until the painted fabric
+     sheets arrive (see docs/design.md). */
+  var BASKET_N = 8;
+  var SCRAP_SHAPES = [
+    'M9 15L53 7L58 49L12 57Z', 'M6 19L57 11L54 45L5 51Z', 'M11 8L56 13L49 56L6 44Z',
+    'M4 22L60 15L60 37L6 43Z', 'M9 10L57 9L31 58Z', 'M7 12L50 6L58 42L30 58L8 46Z'
+  ];
+
+  function basketFor(d) {
+    var m = P.moodOf(d);
+    if (m) return m.ids.slice(0, BASKET_N);
+    var have = [];
+    for (var i = 0; i < (d.fab || '').length; i++) {
+      var id = P.B64.indexOf(d.fab[i]);
+      if (have.indexOf(id) < 0) have.push(id);
+    }
+    return fillBasket(have.slice(0, BASKET_N));
+  }
+
+  function fillBasket(ids) {
+    var out = ids.slice();
+    var tries = 0;
+    while (out.length < BASKET_N && tries++ < 200) {
+      var r = Math.floor(Math.random() * P.N_FABRICS);
+      if (out.indexOf(r) < 0) out.push(r);
+    }
+    return out;
+  }
+
+  function fabricName(id) {
+    var f = P.fabric(id), l = lng();
+    return P.KIND_NAMES[f.kind][l] + ' ' + P.TONES[f.tone][l].toLowerCase();
+  }
+
+  function scrapSvg(id, k) {
+    var w = P.swatch(id, 0.75), shape = SCRAP_SHAPES[k % SCRAP_SHAPES.length];
+    // a fold: the lower-right half a little darker
+    return '<svg viewBox="0 0 64 64" aria-hidden="true"><defs>' + w.def + '</defs>' +
+      '<path d="' + shape + '" fill="url(#' + w.id + ')"/>' +
+      '<path d="' + shape + '" fill="#3D4A2E" opacity="0.07" style="clip-path:polygon(100% 0,100% 100%,0 100%)"/>' +
+      '<path d="' + shape + '" fill="none" stroke="#8A6A44" stroke-width="1.1" stroke-dasharray="3 2.4" stroke-linejoin="round"/></svg>';
+  }
+
+  function renderBasket() {
+    var box = sheetBody.querySelector('.pt-scraps');
+    if (!box) return;
+    box.innerHTML = D.basket.map(function (id, k) {
+      // a loose pile: each scrap a little turned and shifted
+      var rot = ((k * 37) % 30) - 15, dy = (k % 2) * 10 - 4;
+      return '<button type="button" class="pt-scrap' + (D.held === id ? ' is-held' : '') + '" data-scrap="' + id +
+        '" style="--r:' + rot + 'deg;--dy:' + dy + 'px" aria-pressed="' + (D.held === id) + '" aria-label="' + esc(fabricName(id)) + '">' +
+        scrapSvg(id, k) + '</button>';
+    }).join('');
+  }
+
+  function renderMoods() {
+    var box = sheetBody.querySelector('.pt-moods');
+    if (!box) return;
+    var cur = P.moodOf(D.d), l = lng();
+    box.innerHTML = P.MOODS.map(function (m) {
+      var on = cur === m;
+      // until the mood pictures are painted: a fan of three of its fabrics
+      var fan = m.ids.slice(0, 3).map(function (id, k) {
+        var w = P.swatch(id, 0.5);
+        return '<svg viewBox="0 0 20 20" class="pt-fan pt-fan-' + k + '" aria-hidden="true"><defs>' + w.def + '</defs>' +
+          '<rect x="1" y="1" width="18" height="18" rx="4" fill="url(#' + w.id + ')" stroke="#8A6A44" stroke-width="0.8"/></svg>';
+      }).join('');
+      return '<button type="button" class="pt-mood' + (on ? ' is-on' : '') + '" data-mood="' + m.id + '" aria-pressed="' + on + '">' +
+        '<span class="pt-fans">' + fan + '</span><span>' + esc(m[l]) + '</span></button>';
+    }).join('');
+  }
+
+  function renderShared() {
+    var box = sheetBody.querySelector('.pt-shared');
+    if (!box) return;
+    box.hidden = !D.from;
+    if (!D.from) return;
+    box.innerHTML = '<p class="pt-shared-h"></p><div class="pt-done-acts">' +
+      '<button type="button" class="st-btn" data-pt="add" data-i18n="studio.pt_shared_order">' + esc(t('studio.pt_shared_order')) + '</button>' +
+      '<button type="button" class="pt-tool" data-pt="mine" data-i18n="studio.pt_shared_mine">' + esc(t('studio.pt_shared_mine')) + '</button></div>';
+    box.querySelector('.pt-shared-h').textContent = D.by
+      ? t('studio.pt_shared_by').replace('{by}', D.by) : t('studio.pt_shared_anon');
+  }
+
+  // Something changed: the "sewn" card no longer matches.
+  function unsew() {
+    D.sewn = false; D.card = null;
+    var done = sheetBody.querySelector('.pt-done');
+    if (done) done.hidden = true;
+  }
+
+  function putFabric(i, id) {
+    P.setPatch(D.d, i, id);
+    P.syncTaste(D.d);
+    unsew();
+    renderDesigner();
+    var hit = sheetBody.querySelectorAll('.pt-board [data-i="' + i + '"]');
+    hit.forEach(function (el) { el.classList.add('pt-pop'); });
+  }
+
+  function tapPatch(i) {
+    var id;
+    if (D.held != null) id = D.held;
+    else {
+      // nothing picked up: the next scrap in the basket
+      var cur = D.d.fab ? P.B64.indexOf(D.d.fab[i]) : -1;
+      var at = D.basket.indexOf(cur);
+      id = D.basket[(at + 1) % D.basket.length];
+    }
+    putFabric(i, id);
+  }
+
+  // Drag a scrap onto a patch. A short press without moving stays a tap.
+  var scrapDragged = 0;
+  function bindScrapDrag(box) {
+    var st = null;
+    box.addEventListener('pointerdown', function (e) {
+      var b = e.target.closest('[data-scrap]');
+      if (!b || (e.pointerType === 'mouse' && e.button !== 0)) return;
+      st = { b: b, id: +b.getAttribute('data-scrap'), x: e.clientX, y: e.clientY, ghost: null, pid: e.pointerId };
+    });
+    document.addEventListener('pointermove', function (e) {
+      if (!st || e.pointerId !== st.pid) return;
+      if (!st.ghost) {
+        if (Math.hypot(e.clientX - st.x, e.clientY - st.y) < 8) return;
+        st.ghost = st.b.cloneNode(true);
+        st.ghost.className = 'pt-scrap pt-ghost';
+        document.body.appendChild(st.ghost);
+        try { st.b.setPointerCapture(e.pointerId); } catch (x) { /* ignore */ }
+      }
+      st.ghost.style.left = e.clientX + 'px';
+      st.ghost.style.top = e.clientY + 'px';
+      if (e.cancelable) e.preventDefault();
+    }, { passive: false });
+    var end = function (e) {
+      if (!st || e.pointerId !== st.pid) return;
+      var s0 = st; st = null;
+      if (!s0.ghost) return;
+      s0.ghost.remove();
+      scrapDragged = Date.now();
+      var under = document.elementFromPoint(e.clientX, e.clientY);
+      var patch = under && under.closest && under.closest('.pt-board [data-i]');
+      if (patch) putFabric(+patch.getAttribute('data-i'), s0.id);
+    };
+    document.addEventListener('pointerup', end);
+    document.addEventListener('pointercancel', end);
+  }
+
+  // "May xong": a thread runs along every seam, the piece puffs up, Udon
+  // cheers, then the name, the number and the card appear.
+  function sew(btn) {
+    var board = sheetBody.querySelector('.pt-board');
+    var svgEl = board && board.querySelector('svg');
+    if (!svgEl) return;
+    var reduce = false;
+    try { reduce = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (x) { /* old browser */ }
+    btn.disabled = true;
+    btn.textContent = t('studio.pt_sewing');
+    var seams = Array.prototype.slice.call(svgEl.querySelectorAll('.pt-seam'));
+    var total = reduce ? 0 : 1500, n = Math.max(1, seams.length);
+    if (!reduce) {
+      seams.forEach(function (el, k) {
+        var th = el.cloneNode(false);
+        th.removeAttribute('stroke-dasharray');
+        th.setAttribute('class', 'pt-thread');
+        th.setAttribute('pathLength', '1');
+        th.setAttribute('fill', 'none');
+        th.style.animationDelay = Math.round(k * (total * 0.6) / n) + 'ms';
+        el.parentNode.appendChild(th);
+      });
+    }
+    setTimeout(function () {
+      board.classList.remove('is-puff');
+      void board.offsetWidth;   // restart the animation
+      board.classList.add('is-puff');
+      svgEl.querySelectorAll('.pt-thread').forEach(function (th) { th.remove(); });
+      btn.disabled = false;
+      btn.textContent = t('studio.pt_sew');
+      D.sewn = true;
+      showDone();
+      gvPose(2);
+      var say = sheetBody.querySelector('.gv-say');
+      if (say) say.textContent = t('studio.pt_done_say');
+    }, total + (reduce ? 0 : 400));
+  }
+
+  function showDone() {
+    var box = sheetBody.querySelector('.pt-done');
+    if (!box) return;
+    var spec = specNow(), l = lng();
+    box.hidden = false;
+    box.querySelector('.pt-done-name').textContent = P.title(D.d, l);
+    box.querySelector('.pt-done-sub').textContent = P.PRODUCTS[D.d.product][l] + ' · ' +
+      t('studio.pt_serial').replace('{n}', P.serial(spec)) + (myName() ? ' · ' + t('studio.pt_by').replace('{by}', myName()) : '');
+    makeCard();
+    box.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+
+  function myName() {
+    try { return (localStorage.getItem('gem-designer') || '').slice(0, 24); } catch (e) { return ''; }
+  }
+
+  /* ---------- the card people share (1080 x 1920, story size) ----------
+     Paper, the piece, its name and number, Udon, the link. Drawn ahead of
+     the tap so the share sheet opens straight away (browsers only allow it
+     right after a tap). Every text is drawn with fillText: nothing the
+     customer typed reaches the page as HTML. */
+  var cardJob = 0;
+  function loadImg(src) {
+    return new Promise(function (res) {
+      var im = new Image();
+      im.onload = function () { res(im); };
+      im.onerror = function () { res(null); };
+      im.src = src;
+    });
+  }
+
+  function makeCard() {
+    var job = ++cardJob;
+    var box = sheetBody.querySelector('.pt-done-card');
+    if (box) { box.classList.add('is-wait'); }
+    var spec = specNow(), d = D.d, l = lng();
+    var fonts = document.fonts && document.fonts.load
+      ? Promise.all(['600 120px "Dancing Script"', '800 44px Nunito', '500 36px "Be Vietnam Pro"'].map(function (f) {
+          return document.fonts.load(f).catch(function () { return null; });
+        }))
+      : Promise.resolve();
+    Promise.all([
+      loadImg('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(P.svg(d, { size: 880 }))),
+      loadImg('images/studio/ui/giay-nen.webp'),
+      loadImg('images/studio/udon/ud-gv-4.webp'),
+      fonts
+    ]).then(function (r) {
+      if (job !== cardJob) return;
+      var c = document.createElement('canvas');
+      c.width = 1080; c.height = 1920;
+      var g = c.getContext('2d');
+      g.fillStyle = '#F0E1D2'; g.fillRect(0, 0, 1080, 1920);
+      if (r[1]) {   // paper texture, cover
+        var k = Math.max(1080 / r[1].naturalWidth, 1920 / r[1].naturalHeight);
+        g.drawImage(r[1], (1080 - r[1].naturalWidth * k) / 2, (1920 - r[1].naturalHeight * k) / 2, r[1].naturalWidth * k, r[1].naturalHeight * k);
+      }
+      // a hand-stitched frame
+      g.strokeStyle = '#8A6A44'; g.lineWidth = 4; g.setLineDash([22, 16]);
+      g.strokeRect(54, 54, 972, 1812);
+      g.setLineDash([]);
+      g.fillStyle = '#87965A'; g.textAlign = 'center';
+      g.font = '800 40px Nunito, sans-serif';
+      g.fillText('GEM STUDIO', 540, 160);
+      g.fillStyle = '#5B6447';
+      g.font = '500 30px "Be Vietnam Pro", sans-serif';
+      g.fillText(t('studio.pt_card_foot'), 540, 210);
+      if (r[0]) {
+        g.save();
+        g.shadowColor = 'rgba(61,74,46,0.28)'; g.shadowBlur = 40; g.shadowOffsetY = 18;
+        g.drawImage(r[0], 100, 250, 880, 880);
+        g.restore();
+      }
+      g.fillStyle = '#3D4A2E';
+      g.font = '600 118px "Dancing Script", cursive';
+      fitText(g, P.title(d, l), 540, 1290, 940);
+      g.font = '500 40px "Be Vietnam Pro", sans-serif';
+      g.fillStyle = '#5B6447';
+      g.fillText(P.PRODUCTS[d.product][l] + ' · ' + t('studio.pt_serial').replace('{n}', P.serial(spec)), 540, 1380);
+      var by = myName();
+      if (by) {
+        g.font = '600 64px "Dancing Script", cursive';
+        g.fillStyle = '#B5654A';
+        fitText(g, t('studio.pt_by').replace('{by}', by), 540, 1470, 900);
+      }
+      if (r[2]) g.drawImage(r[2], 90, 1500, 300, 300 * r[2].naturalHeight / r[2].naturalWidth);
+      // the stamp
+      g.save();
+      g.translate(850, 1640); g.rotate(-0.18);
+      g.strokeStyle = '#B5654A'; g.lineWidth = 6;
+      g.beginPath(); g.arc(0, 0, 110, 0, Math.PI * 2); g.stroke();
+      g.lineWidth = 2; g.beginPath(); g.arc(0, 0, 94, 0, Math.PI * 2); g.stroke();
+      g.fillStyle = '#B5654A'; g.font = '800 34px Nunito, sans-serif';
+      g.fillText('Gem', 0, -12);
+      g.font = '600 26px "Be Vietnam Pro", sans-serif';
+      g.fillText('#' + P.serial(spec), 0, 30);
+      g.restore();
+      c.toBlob(function (blob) {
+        if (job !== cardJob || !blob) return;
+        D.card = new File([blob], 'gem-mau-' + P.serial(spec) + '.png', { type: 'image/png' });
+        var b2 = sheetBody.querySelector('.pt-done-card');
+        if (!b2) return;
+        var im = b2.querySelector('img');
+        if (im.src && im.src.indexOf('blob:') === 0) URL.revokeObjectURL(im.src);
+        im.src = URL.createObjectURL(blob);
+        b2.classList.remove('is-wait');
+      }, 'image/png');
+    });
+  }
+
+  function fitText(g, text, x, y, max) {
+    var size = parseInt(g.font.match(/(\d+)px/)[1], 10);
+    while (g.measureText(text).width > max && size > 24) {
+      size -= 4;
+      g.font = g.font.replace(/\d+px/, size + 'px');
+    }
+    g.fillText(text, x, y);
+  }
+
+  // The picture itself to the share sheet (Instagram / Zalo take files);
+  // where files can't be shared, the image is saved and the link copied.
+  function shareCard(btn) {
+    var url = P.url(specNow(), myName());
+    var file = D.card;
+    if (!file) return;
+    var canFiles = false;
+    try { canFiles = !!(navigator.canShare && navigator.canShare({ files: [file] })); } catch (x) { /* old browser */ }
+    if (canFiles) {
+      navigator.share({ files: [file], title: t('studio.pt_share_title'), text: url }).catch(function () { /* closed */ });
+      return;
+    }
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(file);
+    a.download = file.name;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).catch(function () { /* fine */ });
+    flash(btn, 'studio.pt_copied', 'studio.pt_share_img');
+  }
+
   function renderDesigner() {
     var root = sheetBody.querySelector('.pt');
     if (!root || !P) return;
@@ -1432,6 +1820,9 @@
     // "from my drawing" needs the drawing: unfold the extras for it
     if (d.layout === 'tuve') root.querySelector('.pt-extra').open = true;
 
+    renderMoods();
+    renderBasket();
+    renderShared();
     renderPreview();
   }
 
@@ -1440,7 +1831,9 @@
     var root = sheetBody.querySelector('.pt');
     if (!root) return;
     var d = D.d, spec = specNow(), ok = P.isComplete(d);
-    root.querySelector('.pt-board').innerHTML = P.svg(d, { title: esc(P.describe(d)) });
+    root.querySelector('.pt-board').innerHTML = P.svg(d, { title: esc(P.describe(d)), hit: true });
+    root.querySelector('.pt-hint').textContent = d.layout === 'tuve' ? t('studio.pt_hint_draw')
+      : D.held != null ? t('studio.pt_hint_held').replace('{vai}', fabricName(D.held).toLowerCase()) : t('studio.pt_hint');
     drawCanvas();
     root.querySelector('[data-pt="undo"]').disabled = !d.sketch.length;
     root.querySelector('[data-pt="clear"]').disabled = !d.sketch.length;
@@ -1462,10 +1855,10 @@
     var sku = P.PRODUCTS[d.product].sku;
     var info = window.GemBasket ? window.GemBasket.info(sku) : null;
     root.querySelector('.pt-price').textContent = info ? info.price : '';
-    var add = root.querySelector('[data-pt="add"]');
-    add.disabled = !ok || (info && !info.inStock);
+    root.querySelectorAll('[data-pt="add"]').forEach(function (add) { add.disabled = !ok || (info && !info.inStock); });
     var keep = root.querySelector('[data-pt="keep"]');
     if (keep) keep.disabled = !ok;
+    root.querySelector('[data-pt="sew"]').disabled = !ok;
 
   }
 
@@ -1595,7 +1988,7 @@
   }
 
   function copyLink(btn) {
-    var url = P.url(specNow());
+    var url = P.url(specNow(), myName());
     var done = function () { flash(btn, 'studio.pt_copied', 'studio.pt_share'); };
     // phones: the share sheet (Zalo, Messenger…); else copy the link
     if (navigator.share && matchMedia('(pointer: coarse)').matches) {
@@ -1609,26 +2002,69 @@
     }
   }
 
+  // The fabrics on the piece, as a palette to re-spread after the layout or
+  // the piece changes (the number of patches changes with them).
+  function paletteNow() {
+    var ids = [];
+    for (var i = 0; i < (D.d.fab || '').length; i++) {
+      var id = P.B64.indexOf(D.d.fab[i]);
+      if (ids.indexOf(id) < 0) ids.push(id);
+    }
+    return ids.length ? ids : D.basket;
+  }
+
   function designerClick(e) {
-    var el, teachAfter = null;
+    var el, teachAfter = null, shuffled = false;
     if (e.target.closest('[data-gv-next]')) { teach('next'); return true; }
+    if ((el = e.target.closest('[data-scrap]'))) {
+      if (Date.now() - scrapDragged < 350) return true;   // the end of a drag
+      var sid = +el.getAttribute('data-scrap');
+      D.held = D.held === sid ? null : sid;
+      renderBasket();
+      renderPreview();
+      return true;
+    }
+    if ((el = e.target.closest('.pt-board [data-i]'))) {
+      tapPatch(+el.getAttribute('data-i'));
+      return true;
+    }
+    if ((el = e.target.closest('[data-mood]'))) {
+      var mood = P.MOODS.filter(function (m) { return m.id === el.getAttribute('data-mood'); })[0];
+      if (!mood) return true;
+      P.applyMood(D.d, mood);
+      D.basket = mood.ids.slice(0, BASKET_N);
+      D.held = null;
+      unsew();
+      renderDesigner();
+      teach('taste');
+      return true;
+    }
     var see = e.target.closest('[data-gv-see]');
     if (see) { productSheet(see.getAttribute('data-gv-see')); return true; }
     if ((el = e.target.closest('[data-product]'))) {
       teachAfter = 'product';
-      var keep = D.d;
+      var keep = D.d, pal = paletteNow();
       D.d = P.blank(el.getAttribute('data-product'));
       // carry the taste over to the new piece
       D.d.tones = keep.tones; D.d.prints = keep.prints; D.d.fabrics = keep.fabrics;
       D.d.other = keep.other; D.d.note = keep.note; D.d.sketch = keep.sketch; D.d.img = keep.img;
       if (keep.layout === 'tuve') D.d.layout = 'tuve';
+      var km = P.moodOf(keep);
+      if (km) P.applyMood(D.d, km);
+      else if (keep.fab) { D.d.fab = P.scatter(D.d, pal); P.syncTaste(D.d); }
     } else if ((el = e.target.closest('[data-layout]'))) {
+      var pal2 = paletteNow();
       D.d.layout = el.getAttribute('data-layout');
+      if (D.d.fab) D.d.fab = D.d.layout === 'tuve' ? '' : P.scatter(D.d, pal2);
     } else if ((el = e.target.closest('[data-tone]'))) {
       toggle('tones', el.getAttribute('data-tone'), P.MAX_TONES);
+      D.d.fab = '';   // the chips decide again
+      D.basket = basketFor(D.d);
       teachAfter = 'taste';
     } else if ((el = e.target.closest('[data-print]'))) {
       toggle('prints', el.getAttribute('data-print'));
+      D.d.fab = '';
+      D.basket = basketFor(D.d);
       teachAfter = 'taste';
     } else if ((el = e.target.closest('[data-fabric]'))) {
       toggle('fabrics', el.getAttribute('data-fabric'));
@@ -1645,9 +2081,38 @@
       } else if (act === 'photo-del') {
         D.d.img = '';
       } else if (act === 'random') {
-        var r = P.randomFill(D.d.product);
-        r.other = D.d.other; r.note = D.d.note; r.sketch = D.d.sketch; r.img = D.d.img;
-        D.d = r;
+        var rm = P.MOODS[Math.floor(Math.random() * P.MOODS.length)];
+        var lays = P.PRODUCTS[D.d.product].layouts.filter(function (x) { return x !== 'tuve'; });
+        D.d.layout = lays[Math.floor(Math.random() * lays.length)];
+        D.d.fab = P.scatter(D.d, rm.ids);
+        P.syncTaste(D.d);
+        D.basket = rm.ids.slice(0, BASKET_N);
+        D.held = null;
+        shuffled = true;
+        teachAfter = 'taste';
+      } else if (act === 'shuffle') {
+        if (D.d.layout === 'tuve') return true;
+        D.d.fab = P.scatter(D.d, D.basket);
+        P.syncTaste(D.d);
+        shuffled = true;
+      } else if (act === 'rummage') {
+        D.basket = fillBasket([]);
+        D.held = null;
+        renderBasket();
+        renderPreview();
+        var sc = sheetBody.querySelector('.pt-scraps');
+        if (sc) { sc.classList.remove('is-rummage'); void sc.offsetWidth; sc.classList.add('is-rummage'); }
+        return true;
+      } else if (act === 'sew') {
+        sew(el);
+        return true;
+      } else if (act === 'share-img') {
+        shareCard(el);
+        return true;
+      } else if (act === 'mine') {
+        D.from = false;
+        renderShared();
+        return true;
       } else if (act === 'add') {
         var spec = specNow();
         var board = sheetBody.querySelector('.pt-board svg');
@@ -1669,7 +2134,12 @@
     } else {
       return false;
     }
+    unsew();
     renderDesigner();
+    if (shuffled) {
+      var bd = sheetBody.querySelector('.pt-board');
+      if (bd) { bd.classList.remove('is-shuffle'); void bd.offsetWidth; bd.classList.add('is-shuffle'); }
+    }
     if (teachAfter) teach(teachAfter);
     return true;
   }
@@ -1722,10 +2192,18 @@
     }).catch(function () { msg.textContent = t('studio.pt_photo_fail'); });
   }
 
+  var byTimer = null;
   function designerInput(e) {
     var n = e.target.name;
+    if (n === 'by') {
+      try { localStorage.setItem('gem-designer', e.target.value.trim().slice(0, 24)); } catch (x) { /* private mode */ }
+      clearTimeout(byTimer);
+      byTimer = setTimeout(function () { if (D.sewn) showDone(); }, 500);
+      return;
+    }
     if (n !== 'other' && n !== 'note') return;
     D.d[n] = e.target.value.slice(0, n === 'other' ? P.MAX_OTHER : P.MAX_NOTE);
+    unsew();
     renderPreview();
   }
 
@@ -2440,6 +2918,8 @@
     if (shared) {
       try { sessionStorage.setItem('gem-src', 'link-chia-se'); } catch (e) { /* private mode */ }
       D.d = shared;
+      D.from = true;
+      try { D.by = (new URLSearchParams(location.search).get('by') || '').trim().slice(0, 24); } catch (e) { D.by = ''; }
       try { localStorage.setItem('gem-studio-intro', '1'); } catch (e) { /* ignore */ }
       setScene('in');
       setTimeout(function () { visit('sewing'); }, 400);

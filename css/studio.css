@@ -1061,3 +1061,127 @@ html:has(.studio-page), .studio-page { overscroll-behavior: none; }
   .fit { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); align-items: start; }
   .fit-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
+
+/* ======================================================================
+   BÀN THIẾT KẾ — chơi (đợt 1): toàn màn hình, tâm trạng, rổ vải,
+   chạm / kéo vải vào từng ô, "May xong", thẻ chia sẻ
+   ====================================================================== */
+.st-modal.is-full { padding: 0; align-items: stretch; }
+.st-sheet.is-full {
+  max-height: none; height: 100svh; max-width: none; border-radius: 0;
+  padding-bottom: calc(env(safe-area-inset-bottom) + var(--space-6));
+}
+@media (min-width: 768px) {
+  .st-modal.is-full { padding: var(--space-4); align-items: center; }
+  .st-sheet.is-full { height: min(940px, 96vh); max-width: 1080px; border-radius: var(--radius-lg); }
+}
+
+.pt-sec-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); flex-wrap: wrap; }
+.pt-sec-acts { display: flex; gap: var(--space-2); }
+.pt-tool.pt-mini { min-height: 36px; padding: 4px 12px; font-size: var(--text-xs); }
+
+/* the piece: big, every patch tappable */
+.pt-view { gap: var(--space-2); }
+.st-sheet.is-full .pt-board { max-width: min(420px, 46svh); }
+/* only the patches take taps: shading, seams and hardware drawn on top let them through */
+.pt-board svg * { pointer-events: none; }
+.pt-board svg [data-i] { pointer-events: auto; cursor: pointer; }
+.pt-board [data-i]:hover { filter: brightness(1.06); }
+.pt-hint { text-align: center; min-height: 3em; max-width: 34ch; }
+@keyframes pt-pop { 0% { transform: scale(0.8); } 60% { transform: scale(1.06); } 100% { transform: none; } }
+.pt-board .pt-pop, .pt-board.is-shuffle [data-i] { transform-box: fill-box; transform-origin: center; animation: pt-pop 0.38s ease-out; }
+@keyframes pt-puff { 0% { transform: none; } 40% { transform: scale(1.05); } 70% { transform: scale(0.985); } 100% { transform: none; } }
+.pt-board.is-puff svg { animation: pt-puff 0.6s ease-out; }
+@keyframes pt-sew { to { stroke-dashoffset: 0; } }
+.pt-thread {
+  stroke: #B5654A !important; stroke-width: 2.6 !important; stroke-linecap: round;
+  stroke-dasharray: 1; stroke-dashoffset: 1; animation: pt-sew 0.7s ease-in-out forwards;
+}
+
+/* moods: one sideways row */
+.pt-moods { display: flex; gap: var(--space-2); overflow-x: auto; scrollbar-width: none; padding: 2px; margin: -2px; }
+.pt-moods::-webkit-scrollbar { display: none; }
+.pt-mood {
+  flex: none; display: inline-flex; align-items: center; gap: var(--space-2); min-height: 44px; padding: 4px 14px 4px 8px;
+  border: 1.5px solid var(--sage-light); border-radius: 999px; background: var(--paper-white);
+  font: 600 var(--text-sm) var(--font-body); color: var(--ink-dark); cursor: pointer; white-space: nowrap;
+}
+.pt-mood.is-on { border-color: var(--sage-deep); box-shadow: 0 0 0 2px var(--sage-deep) inset; background: #F3F1E4; }
+.pt-fans { position: relative; width: 40px; height: 28px; flex: none; }
+.pt-fan { position: absolute; top: 4px; width: 20px; height: 20px; }
+.pt-fan-0 { left: 0; transform: rotate(-14deg); }
+.pt-fan-1 { left: 10px; top: 2px; }
+.pt-fan-2 { left: 20px; transform: rotate(14deg); }
+
+/* the basket: scraps piled on a wicker tray */
+.pt-basket {
+  position: relative; padding: 0 6% 8%;
+  background: url("../images/studio/props/gio.webp") center bottom / 100% auto no-repeat;
+}
+.pt-scraps { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 2px; padding-top: 14px; }
+.pt-scrap {
+  width: clamp(56px, 15vw, 76px); aspect-ratio: 1; padding: 0; margin: -14px -5px; border: 0; background: none; cursor: grab;
+  transform: translateY(var(--dy, 0)) rotate(var(--r, 0deg)); transition: transform 0.18s ease, filter 0.18s ease;
+  filter: drop-shadow(0 2px 2px rgba(61, 74, 46, 0.25)); touch-action: none; -webkit-tap-highlight-color: transparent;
+}
+.pt-scrap svg { width: 100%; height: 100%; display: block; }
+.pt-scrap.is-held {
+  transform: translateY(calc(var(--dy, 0) - 12px)) rotate(var(--r, 0deg)) scale(1.12);
+  filter: drop-shadow(0 10px 8px rgba(61, 74, 46, 0.35));
+  z-index: 2;
+}
+.pt-scrap:focus-visible { outline: 3px solid var(--sage-deep); outline-offset: 2px; border-radius: 8px; }
+.pt-ghost {
+  position: fixed; z-index: 1000; width: 72px; margin: 0; pointer-events: none;
+  transform: translate(-50%, -60%) rotate(-8deg) scale(1.1); filter: drop-shadow(0 12px 10px rgba(61, 74, 46, 0.35));
+}
+@keyframes pt-rummage { 0%, 100% { transform: none; } 25% { transform: translateX(-6px) rotate(-2deg); } 75% { transform: translateX(6px) rotate(2deg); } }
+.pt-scraps.is-rummage { animation: pt-rummage 0.35s ease-in-out; }
+
+/* actions stay at hand while the page scrolls */
+.st-sheet.is-full .pt-actions {
+  position: sticky; bottom: calc(-1 * var(--space-6)); z-index: 3;
+  margin: 0 calc(-1 * var(--space-4)); padding: var(--space-3) var(--space-4);
+  background: rgba(251, 246, 238, 0.96); border-top: 1px solid var(--sage-light);
+}
+.pt-sew { min-height: 48px; padding-inline: var(--space-6); }
+/* phone: "May xong!" first and wide; the floating basket keeps its corner */
+@media (max-width: 767px) {
+  .st-sheet.is-full .pt-actions { padding-right: 84px; }
+  .st-sheet.is-full .pt-sew { order: -1; flex: 1 1 100%; }
+}
+
+/* after "May xong" */
+.pt-done {
+  display: grid; gap: var(--space-2); justify-items: center; text-align: center;
+  padding: var(--space-4); border: 1.5px dashed var(--kraft); border-radius: var(--radius-lg); background: rgba(251, 246, 238, 0.85);
+}
+.pt-done[hidden] { display: none; }
+.pt-done-name { margin: 0; font-family: var(--font-hand); font-size: clamp(34px, 9vw, 48px); line-height: 1.1; color: var(--ink-dark); }
+.pt-done-sub { margin: 0; font-size: var(--text-sm); color: var(--ink-soft); }
+.pt-done-card { position: relative; width: 150px; aspect-ratio: 9 / 16; border-radius: 10px; overflow: hidden; box-shadow: 0 8px 22px rgba(61, 74, 46, 0.25); background: var(--paper-cream); }
+.pt-done-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pt-done-card img:not([src]) { visibility: hidden; }
+.pt-card-wait { position: absolute; inset: 0; display: none; place-items: center; padding: var(--space-2); }
+.pt-done-card.is-wait .pt-card-wait { display: grid; }
+.pt-done-card.is-wait img { opacity: 0.3; }
+.pt-byfield { display: grid; gap: var(--space-1); justify-items: center; width: 100%; max-width: 260px; }
+.pt-byfield input {
+  width: 100%; min-height: 44px; padding: 8px 12px; text-align: center;
+  border: 1.5px solid var(--sage-light); border-radius: 10px; background: var(--paper-white); font: inherit; color: var(--ink-dark);
+}
+.pt-byfield input:focus { outline: none; border-color: var(--sage-deep); }
+.pt-done-acts { display: flex; flex-wrap: wrap; gap: var(--space-2); justify-content: center; }
+
+/* a design opened from someone's link */
+.pt-shared {
+  display: grid; gap: var(--space-2); justify-items: center; text-align: center;
+  padding: var(--space-3); border-radius: var(--radius-md); background: #F3F1E4; border: 1.5px solid var(--sage-light);
+}
+.pt-shared[hidden] { display: none; }
+.pt-shared-h { margin: 0; font-family: var(--font-hand); font-size: 28px; color: var(--ink-dark); }
+
+@media (prefers-reduced-motion: reduce) {
+  .pt-board .pt-pop, .pt-board.is-shuffle [data-i], .pt-board.is-puff svg, .pt-scraps.is-rummage { animation: none; }
+  .pt-scrap { transition: none; }
+}

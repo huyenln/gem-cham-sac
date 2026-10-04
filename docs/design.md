@@ -1466,6 +1466,41 @@ Storage để bố cục đang dùng không vỡ. Ảnh cắt nền của sản 
 **Kiểm:** `tools/check-studio.py library | product | catalog` (Supabase giả lập có
 Storage giữ file tải lên, nên kiểm được cả cỡ ảnh lẫn độ trong suốt).
 
+### Bàn thiết kế — "chơi" (đợt 1, 10/2026)
+
+Góp ý: bàn thiết kế giống tờ khảo sát, bản vẽ trông rẻ, chia sẻ chỉ là link.
+Đợt 1 đổi sang *tự tay chắp*:
+
+- **Toàn màn hình** (`openSheet(html, true)`): kéo thả trong bàn nên chỉ tay
+  nắm trên cùng kéo xuống đóng được.
+- **Tâm trạng** (`GemPatch.MOODS`): 5 bộ chọn sẵn (bảng vải + kiểu ghép). Tên là
+  nháp, Anna đổi trong `js/patch.js`. Món mới mở ra đã mặc tâm trạng đầu.
+- **Vải từng ô:** danh mục 45 vải = 5 tông × 9 kiểu (`KINDS`: trơn, caro, sọc,
+  chấm bi, hoa nhí, ren, hoa to, ô nhỏ, thổ cẩm), id = tông × 9 + kiểu. Mã thiết
+  kế thêm trường thứ 11 (sau ảnh, có thể rỗng): một chữ B64 mỗi ô. Mã cũ vẫn đọc.
+  Ghi chú đơn liệt kê "vải từng mảnh: Hoa nhí hồng – đỏ ×2, …".
+- **Rổ vải:** 8 mảnh trên khay `props/gio.webp`. Chạm mảnh rồi chạm ô, hoặc kéo
+  thả; chạm ô khi chưa cầm gì = đổi sang mảnh kế tiếp trong rổ. "Lục rổ" lấy 8
+  mảnh ngẫu nhiên; "Xáo mảnh" rải lại vải trên món.
+- **May xong:** sợi chỉ chạy theo các đường may (`.pt-seam` → `.pt-thread`), món
+  phồng lên, Udon reo, rồi hiện tên (`GemPatch.title`: tên tâm trạng, hoặc hai tông
+  chính) + số mẫu (`serial`: băm từ mã, cùng thiết kế luôn cùng số) + thẻ.
+- **Thẻ 1080×1920** vẽ bằng canvas, làm sẵn trước khi bấm (trình duyệt chỉ mở bảng
+  chia sẻ ngay sau cú chạm). "Chia sẻ ảnh" gửi *file ảnh* qua bảng chia sẻ của máy;
+  máy không gửi được file thì tải ảnh về + chép link. Tên người thiết kế lưu ở
+  `localStorage['gem-designer']`, đi trong link `&by=` (không vào mã thiết kế), vẽ
+  bằng `fillText` / hiện bằng `textContent`.
+- **Link mở lại:** `studio.html?d=…&by=Linh` → "Linh đã thiết kế mẫu này" + "Đặt
+  may giống vậy" / "Tự làm bản của bạn".
+
+**Vải đang vẽ bằng code.** Khi có tranh (bộ prompt: artifact "Prompt vẽ cho Bàn
+thiết kế"), thay ở hai chỗ: `printBody()` trong `js/patch.js` (mỗi id ↔
+`images/studio/vai/vai-<tông>-<1..9>.webp`) và `scrapSvg()` trong `js/studio.js`
+(khuôn `vai-dang-*` + họa tiết). Rổ đổi sang `ro-truoc` (vải nằm *sau* thành rổ).
+
+**Chưa làm (đợt 2–3):** vải thật dạng "Mảnh hiếm" (bảng `fabrics` + admin), tường
+thiết kế của khách, Thiết kế của tháng.
+
 ### Góp ý đợt 3 (10/2026)
 
 - **Bàn thiết kế gọn lại:** trên cùng là các món + "Gợi ý ngẫu nhiên". Lần đầu chỉ
