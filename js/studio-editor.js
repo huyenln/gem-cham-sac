@@ -119,6 +119,7 @@ window.GemStudioEditor = (function () {
     root.querySelector('.se-prof').addEventListener('click', profClick);
     // the Lưu menu closes when you tap elsewhere
     document.addEventListener('click', menuAway);
+    root.querySelector('.se-menu').addEventListener('toggle', placeMenu);
     root.querySelector('.se-bgsel').addEventListener('change', function (e) {
       var b = lib.backgrounds[e.target.value === '' ? -1 : +e.target.value];
       if (!b) return;
@@ -393,6 +394,19 @@ window.GemStudioEditor = (function () {
     syncBg();
     stageEl.scrollLeft = 0;
     draw(); renderPanel();
+  }
+
+  // The menu hangs from the right edge of "Lưu"; on a phone that button can
+  // wrap to the middle of a row and the menu would run off the left side.
+  // Nudge it back inside the screen each time it opens.
+  function placeMenu() {
+    var m = root.querySelector('.se-menu'), pop = m.querySelector('.se-pop');
+    pop.style.transform = '';
+    if (!m.open) return;
+    var r = pop.getBoundingClientRect(), vw = document.documentElement.clientWidth, pad = 8, dx = 0;
+    if (r.left < pad) dx = pad - r.left;
+    else if (r.right > vw - pad) dx = vw - pad - r.right;
+    if (dx) pop.style.transform = 'translateX(' + Math.round(dx) + 'px)';
   }
 
   function menuAway(e) {
