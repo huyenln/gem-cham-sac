@@ -565,8 +565,8 @@ async def design(browser, db):
         await pg.click('.pt-board [data-i="4"]')
         await pg.wait_for_timeout(300)
         cell = await pg.evaluate("document.querySelector('.pt-board [data-i=\"4\"]').getAttribute('fill')")
-        want = await pg.evaluate(f"(() => {{ const f = window.GemPatch.fabric({sid}); return f.kind; }})()")
-        check(want in cell, f'{name}: tap scrap, tap patch puts that fabric there ({want} in {cell})')
+        want = f'-f{sid})'
+        check(cell.endswith(want), f'{name}: tap scrap, tap patch puts that fabric there ({want} in {cell})')
         # drag another scrap onto patch 0
         sid2 = await pg.evaluate("document.querySelectorAll('.pt-scrap')[2].getAttribute('data-scrap')")
         await pg.evaluate("document.querySelector('.pt-board').scrollIntoView({block: 'start'})")
@@ -576,8 +576,8 @@ async def design(browser, db):
         await drag(pg, a, bx)
         await pg.wait_for_timeout(300)
         cell0 = await pg.evaluate("document.querySelector('.pt-board [data-i=\"0\"]').getAttribute('fill')")
-        want2 = await pg.evaluate(f"window.GemPatch.fabric({sid2}).kind")
-        check(want2 in cell0, f'{name}: drag a scrap onto a patch ({want2} in {cell0})')
+        want2 = f'-f{sid2})'
+        check(cell0.endswith(want2), f'{name}: drag a scrap onto a patch ({want2} in {cell0})')
         await pg.screenshot(path=OUT / f'design-{name}-1.png')
         # sew
         await js_click(pg, '[data-pt="sew"]')

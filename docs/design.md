@@ -1493,10 +1493,23 @@ Góp ý: bàn thiết kế giống tờ khảo sát, bản vẽ trông rẻ, chi
 - **Link mở lại:** `studio.html?d=…&by=Linh` → "Linh đã thiết kế mẫu này" + "Đặt
   may giống vậy" / "Tự làm bản của bạn".
 
-**Vải đang vẽ bằng code.** Khi có tranh (bộ prompt: artifact "Prompt vẽ cho Bàn
-thiết kế"), thay ở hai chỗ: `printBody()` trong `js/patch.js` (mỗi id ↔
-`images/studio/vai/vai-<tông>-<1..9>.webp`) và `scrapSvg()` trong `js/studio.js`
-(khuôn `vai-dang-*` + họa tiết). Rổ đổi sang `ro-truoc` (vải nằm *sau* thành rổ).
+**Tranh đã vào (10/2026)** — `images/studio/vai/`, làm bằng
+`python3 tools/design-assets.py <thư mục ảnh gốc>` (ảnh gốc không để trong repo):
+- `vai-<tông>-<1..9>.webp`: 45 mẫu vải. Trên món, mỗi mẫu lát 2×2 có lật gương
+  (`fabricPattern` trong `js/patch.js`) nên không thấy đường nối giữa các lát.
+- `dang-1..9.webp`: khuôn mảnh vải (vừa làm mask, vừa làm lớp bóng multiply) cho rổ.
+- `ro-truoc.webp`: thành trước của rổ, vải đứng *sau* nó và ló lên khỏi vành.
+- `mon-goi|lotcoc|scrunchie-mask/-bong.webp`: gối, lót cốc, dây buộc tóc vẽ bằng
+  tranh — vải nằm trong mask, bóng của tranh nhân lên trên (`artPiece`). Gối đã lọc
+  bỏ đường may vẽ sẵn để mỗi kiểu ghép tự vẽ đường may của nó. Năm món còn lại
+  vẫn vẽ bằng code (nhưng dùng vải tranh).
+- `mood-<id>.webp` trên nút tâm trạng; `the-khung.webp` làm nền thẻ chia sẻ.
+- `udon/ud-may`, `ud-reo`, `kim-chi`: Udon ngồi may cạnh món, kim chạy theo đường
+  may, xong thì Udon nhảy reo.
+- Thẻ: ảnh trong SVG không tự tải khi vẽ vào canvas, nên `inlineImages()` đổi
+  chúng sang data URL lúc chạy rồi mới vẽ.
+- `printBody()` (họa tiết vẽ bằng code) giờ chỉ còn cho chấm tròn trong chip
+  "Tự chỉnh".
 
 **Chưa làm (đợt 2–3):** vải thật dạng "Mảnh hiếm" (bảng `fabrics` + admin), tường
 thiết kế của khách, Thiết kế của tháng.

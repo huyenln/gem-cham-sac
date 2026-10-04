@@ -1263,6 +1263,7 @@
           '<div class="pt-shared" hidden></div>' +
           '<div class="pt-view">' +
             '<div class="pt-board"></div>' +
+            '<img class="pt-sewer" alt="" draggable="false" hidden>' +
             '<p class="pt-small pt-hint" aria-live="polite"></p>' +
           '</div>' +
         '</div>' +
@@ -1271,7 +1272,8 @@
           '<section class="pt-sec">' +
             '<div class="pt-sec-row">' + tr('h3', 'studio.pt_basket', ' class="pt-label"') +
               '<button type="button" class="pt-tool pt-mini" data-pt="rummage" data-i18n="studio.pt_rummage">' + esc(t('studio.pt_rummage')) + '</button></div>' +
-            '<div class="pt-basket"><div class="pt-scraps"></div></div>' +
+            '<div class="pt-basket"><div class="pt-scraps"></div>' +
+              '<img class="pt-ro" src="' + P.VAI + 'ro-truoc.webp" alt="" draggable="false"></div>' +
           '</section>' +
           '<section class="pt-sec">' +
             '<div class="pt-sec-row">' + tr('h3', 'studio.pt_layout', ' class="pt-label"') +
@@ -1448,10 +1450,9 @@
      through the basket. Scraps are drawn in code until the painted fabric
      sheets arrive (see docs/design.md). */
   var BASKET_N = 8;
-  var SCRAP_SHAPES = [
-    'M9 15L53 7L58 49L12 57Z', 'M6 19L57 11L54 45L5 51Z', 'M11 8L56 13L49 56L6 44Z',
-    'M4 22L60 15L60 37L6 43Z', 'M9 10L57 9L31 58Z', 'M7 12L50 6L58 42L30 58L8 46Z'
-  ];
+  // the painted scrap shapes (images/studio/vai/dang-1..9): a mask for the
+  // fabric and a shading layer for the folds
+  var SCRAP_SHAPES = 9;
 
   function basketFor(d) {
     var m = P.moodOf(d);
@@ -1479,24 +1480,22 @@
     return P.KIND_NAMES[f.kind][l] + ' ' + P.TONES[f.tone][l].toLowerCase();
   }
 
-  function scrapSvg(id, k) {
-    var w = P.swatch(id, 0.75), shape = SCRAP_SHAPES[k % SCRAP_SHAPES.length];
-    // a fold: the lower-right half a little darker
-    return '<svg viewBox="0 0 64 64" aria-hidden="true"><defs>' + w.def + '</defs>' +
-      '<path d="' + shape + '" fill="url(#' + w.id + ')"/>' +
-      '<path d="' + shape + '" fill="#3D4A2E" opacity="0.07" style="clip-path:polygon(100% 0,100% 100%,0 100%)"/>' +
-      '<path d="' + shape + '" fill="none" stroke="#8A6A44" stroke-width="1.1" stroke-dasharray="3 2.4" stroke-linejoin="round"/></svg>';
+  function scrapHtml(id, k) {
+    var shape = P.VAI + 'dang-' + (k % SCRAP_SHAPES + 1) + '.webp';
+    return '<span class="pt-sf" aria-hidden="true" style="background-image:url(' + P.swatchSrc(id) +
+      ');-webkit-mask-image:url(' + shape + ');mask-image:url(' + shape + ')"></span>' +
+      '<img class="pt-ss" src="' + shape + '" alt="" draggable="false">';
   }
 
   function renderBasket() {
     var box = sheetBody.querySelector('.pt-scraps');
     if (!box) return;
     box.innerHTML = D.basket.map(function (id, k) {
-      // a loose pile: each scrap a little turned and shifted
-      var rot = ((k * 37) % 30) - 15, dy = (k % 2) * 10 - 4;
+      // standing loose in the basket: each a little turned and shifted
+      var rot = ((k * 37) % 20) - 10, dy = (k % 3) * 4;
       return '<button type="button" class="pt-scrap' + (D.held === id ? ' is-held' : '') + '" data-scrap="' + id +
         '" style="--r:' + rot + 'deg;--dy:' + dy + 'px" aria-pressed="' + (D.held === id) + '" aria-label="' + esc(fabricName(id)) + '">' +
-        scrapSvg(id, k) + '</button>';
+        scrapHtml(id, k) + '</button>';
     }).join('');
   }
 
@@ -1506,14 +1505,8 @@
     var cur = P.moodOf(D.d), l = lng();
     box.innerHTML = P.MOODS.map(function (m) {
       var on = cur === m;
-      // until the mood pictures are painted: a fan of three of its fabrics
-      var fan = m.ids.slice(0, 3).map(function (id, k) {
-        var w = P.swatch(id, 0.5);
-        return '<svg viewBox="0 0 20 20" class="pt-fan pt-fan-' + k + '" aria-hidden="true"><defs>' + w.def + '</defs>' +
-          '<rect x="1" y="1" width="18" height="18" rx="4" fill="url(#' + w.id + ')" stroke="#8A6A44" stroke-width="0.8"/></svg>';
-      }).join('');
       return '<button type="button" class="pt-mood' + (on ? ' is-on' : '') + '" data-mood="' + m.id + '" aria-pressed="' + on + '">' +
-        '<span class="pt-fans">' + fan + '</span><span>' + esc(m[l]) + '</span></button>';
+        '<img src="' + P.VAI + 'mood-' + m.id + '.webp" alt="" draggable="false"><span>' + esc(m[l]) + '</span></button>';
     }).join('');
   }
 
@@ -1604,7 +1597,8 @@
     btn.disabled = true;
     btn.textContent = t('studio.pt_sewing');
     var seams = Array.prototype.slice.call(svgEl.querySelectorAll('.pt-seam'));
-    var total = reduce ? 0 : 1500, n = Math.max(1, seams.length);
+    var total = reduce ? 0 : 1800, n = Math.max(1, seams.length), step = total * 0.6 / n, each = 700;
+    var sewer = sheetBody.querySelector('.pt-sewer');
     if (!reduce) {
       seams.forEach(function (el, k) {
         var th = el.cloneNode(false);
@@ -1612,11 +1606,18 @@
         th.setAttribute('class', 'pt-thread');
         th.setAttribute('pathLength', '1');
         th.setAttribute('fill', 'none');
-        th.style.animationDelay = Math.round(k * (total * 0.6) / n) + 'ms';
+        th.style.animationDelay = Math.round(k * step) + 'ms';
         el.parentNode.appendChild(th);
       });
+      if (sewer) { sewer.src = 'images/studio/udon/ud-may.webp'; sewer.className = 'pt-sewer is-sewing'; sewer.hidden = false; }
+      needleRun(svgEl, seams, step, each, total);
     }
     setTimeout(function () {
+      if (sewer && !reduce) {
+        sewer.src = 'images/studio/udon/ud-reo.webp';
+        sewer.className = 'pt-sewer is-cheer';
+        setTimeout(function () { sewer.hidden = true; }, 2600);
+      }
       board.classList.remove('is-puff');
       void board.offsetWidth;   // restart the animation
       board.classList.add('is-puff');
@@ -1629,6 +1630,32 @@
       var say = sheetBody.querySelector('.gv-say');
       if (say) say.textContent = t('studio.pt_done_say');
     }, total + (reduce ? 0 : 400));
+  }
+
+  // The needle rides along the seam being sewn (where the browser can
+  // measure the shape; otherwise the thread alone is enough).
+  function needleRun(svgEl, seams, step, each, total) {
+    if (!seams.length) return;
+    var nd = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+    nd.setAttribute('href', 'images/studio/udon/kim-chi.webp');
+    nd.setAttribute('width', '44'); nd.setAttribute('height', '50');
+    nd.setAttribute('class', 'pt-needle');
+    svgEl.appendChild(nd);
+    var lens = seams.map(function (el) { try { return el.getTotalLength(); } catch (e) { return 0; } });
+    var t0 = performance.now();
+    (function frame(now) {
+      var t = now - t0;
+      if (t > total || !nd.isConnected) { nd.remove(); return; }
+      var k = Math.min(seams.length - 1, Math.floor(t / step));
+      var p = Math.min(1, (t - k * step) / each);
+      try {
+        var pt = seams[k].getPointAtLength(p * lens[k]);
+        // the tip sits at the bottom-left of the picture
+        nd.setAttribute('x', (pt.x - 5).toFixed(1));
+        nd.setAttribute('y', (pt.y - 46).toFixed(1));
+      } catch (e) { nd.remove(); return; }
+      requestAnimationFrame(frame);
+    })(t0);
   }
 
   function showDone() {
@@ -1662,6 +1689,25 @@
     });
   }
 
+  // An SVG drawn into a canvas can't fetch its own images: put them inline
+  // (as data: URLs, made here at run time) before drawing.
+  var dataUrls = {};
+  function toDataUrl(src) {
+    if (dataUrls[src]) return dataUrls[src];
+    dataUrls[src] = fetch(src).then(function (r) { return r.blob(); }).then(function (b) {
+      return new Promise(function (res) { var f = new FileReader(); f.onload = function () { res(f.result); }; f.readAsDataURL(b); });
+    }).catch(function () { delete dataUrls[src]; return src; });
+    return dataUrls[src];
+  }
+  function inlineImages(svgText) {
+    var srcs = [];
+    svgText.replace(/href="([^"]+)"/g, function (m, u) { if (srcs.indexOf(u) < 0 && !/^(data:|#)/.test(u)) srcs.push(u); return m; });
+    return Promise.all(srcs.map(toDataUrl)).then(function (urls) {
+      srcs.forEach(function (u, k) { svgText = svgText.split('href="' + u + '"').join('href="' + urls[k] + '"'); });
+      return svgText;
+    });
+  }
+
   function makeCard() {
     var job = ++cardJob;
     var box = sheetBody.querySelector('.pt-done-card');
@@ -1673,9 +1719,10 @@
         }))
       : Promise.resolve();
     Promise.all([
-      loadImg('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(P.svg(d, { size: 880 }))),
-      loadImg('images/studio/ui/giay-nen.webp'),
-      loadImg('images/studio/udon/ud-gv-4.webp'),
+      inlineImages(P.svg(d, { size: 820 })).then(function (txt) {
+        return loadImg('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(txt));
+      }),
+      loadImg(P.VAI + 'the-khung.webp'),
       fonts
     ]).then(function (r) {
       if (job !== cardJob) return;
@@ -1683,49 +1730,41 @@
       c.width = 1080; c.height = 1920;
       var g = c.getContext('2d');
       g.fillStyle = '#F0E1D2'; g.fillRect(0, 0, 1080, 1920);
-      if (r[1]) {   // paper texture, cover
-        var k = Math.max(1080 / r[1].naturalWidth, 1920 / r[1].naturalHeight);
-        g.drawImage(r[1], (1080 - r[1].naturalWidth * k) / 2, (1920 - r[1].naturalHeight * k) / 2, r[1].naturalWidth * k, r[1].naturalHeight * k);
-      }
-      // a hand-stitched frame
-      g.strokeStyle = '#8A6A44'; g.lineWidth = 4; g.setLineDash([22, 16]);
-      g.strokeRect(54, 54, 972, 1812);
-      g.setLineDash([]);
-      g.fillStyle = '#87965A'; g.textAlign = 'center';
-      g.font = '800 40px Nunito, sans-serif';
-      g.fillText('GEM STUDIO', 540, 160);
+      if (r[1]) g.drawImage(r[1], 0, 0, 1080, 1920);   // painted frame: corners, text band, stamp
+      g.textAlign = 'center';
+      g.fillStyle = '#87965A';
+      g.font = '800 38px Nunito, sans-serif';
+      g.fillText('GEM STUDIO', 540, 150);
       g.fillStyle = '#5B6447';
-      g.font = '500 30px "Be Vietnam Pro", sans-serif';
-      g.fillText(t('studio.pt_card_foot'), 540, 210);
+      g.font = '500 26px "Be Vietnam Pro", sans-serif';
+      fitText(g, t('studio.pt_card_foot'), 540, 194, 560);
       if (r[0]) {
         g.save();
         g.shadowColor = 'rgba(61,74,46,0.28)'; g.shadowBlur = 40; g.shadowOffsetY = 18;
-        g.drawImage(r[0], 100, 250, 880, 880);
+        g.drawImage(r[0], 130, 300, 820, 820);
         g.restore();
       }
-      g.fillStyle = '#3D4A2E';
-      g.font = '600 118px "Dancing Script", cursive';
-      fitText(g, P.title(d, l), 540, 1290, 940);
-      g.font = '500 40px "Be Vietnam Pro", sans-serif';
-      g.fillStyle = '#5B6447';
-      g.fillText(P.PRODUCTS[d.product][l] + ' · ' + t('studio.pt_serial').replace('{n}', P.serial(spec)), 540, 1380);
       var by = myName();
       if (by) {
-        g.font = '600 64px "Dancing Script", cursive';
+        g.font = '600 66px "Dancing Script", cursive';
         g.fillStyle = '#B5654A';
-        fitText(g, t('studio.pt_by').replace('{by}', by), 540, 1470, 900);
+        fitText(g, t('studio.pt_by').replace('{by}', by), 540, 1290, 860);
       }
-      if (r[2]) g.drawImage(r[2], 90, 1500, 300, 300 * r[2].naturalHeight / r[2].naturalWidth);
+      // the paper band
+      g.fillStyle = '#3D4A2E';
+      g.font = '600 104px "Dancing Script", cursive';
+      fitText(g, P.title(d, l), 530, 1560, 760);
+      g.font = '500 36px "Be Vietnam Pro", sans-serif';
+      g.fillStyle = '#5B6447';
+      fitText(g, P.PRODUCTS[d.product][l] + ' · ' + t('studio.pt_serial').replace('{n}', P.serial(spec)), 530, 1630, 760);
       // the stamp
       g.save();
-      g.translate(850, 1640); g.rotate(-0.18);
-      g.strokeStyle = '#B5654A'; g.lineWidth = 6;
-      g.beginPath(); g.arc(0, 0, 110, 0, Math.PI * 2); g.stroke();
-      g.lineWidth = 2; g.beginPath(); g.arc(0, 0, 94, 0, Math.PI * 2); g.stroke();
-      g.fillStyle = '#B5654A'; g.font = '800 34px Nunito, sans-serif';
-      g.fillText('Gem', 0, -12);
-      g.font = '600 26px "Be Vietnam Pro", sans-serif';
-      g.fillText('#' + P.serial(spec), 0, 30);
+      g.translate(962, 1738); g.rotate(-0.16);
+      g.fillStyle = '#B5654A';
+      g.font = '800 30px Nunito, sans-serif';
+      g.fillText('Gem', 0, -6);
+      g.font = '600 24px "Be Vietnam Pro", sans-serif';
+      g.fillText('#' + P.serial(spec), 0, 26);
       g.restore();
       c.toBlob(function (blob) {
         if (job !== cardJob || !blob) return;

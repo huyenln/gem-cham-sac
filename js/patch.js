@@ -656,6 +656,66 @@
   };
 
   // Build the preview SVG. Illustrative only: real scraps differ.
+  /* ---------- painted art (images/studio/vai/, tools/design-assets.py) ---------- */
+  var VAI = 'images/studio/vai/';
+
+  function toneOf(color) {
+    var tone = 'trung';
+    TONE_ORDER.forEach(function (t) { if (TONES[t].c.indexOf(color) >= 0) tone = t; });
+    return tone;
+  }
+
+  function swatchSrc(id) {
+    var f = fabric(id);
+    return VAI + 'vai-' + f.tone + '-' + (KINDS.indexOf(f.kind) + 1) + '.webp';
+  }
+
+  // A painted swatch as an SVG pattern, tiled 2 x 2 with mirrored copies so
+  // the edges of the square meet themselves (no visible tile seams).
+  function fabricPattern(id, pid, T) {
+    var src = swatchSrc(id);
+    var im = function (tr) {
+      return '<image href="' + src + '" width="' + T + '" height="' + T + '" preserveAspectRatio="none"' + (tr ? ' transform="' + tr + '"' : '') + '/>';
+    };
+    return '<pattern id="' + pid + '" width="' + 2 * T + '" height="' + 2 * T + '" patternUnits="userSpaceOnUse">' +
+      im('') + im('translate(' + 2 * T + ' 0) scale(-1 1)') + im('translate(0 ' + 2 * T + ') scale(1 -1)') +
+      im('translate(' + 2 * T + ' ' + 2 * T + ') scale(-1 -1)') + '</pattern>';
+  }
+
+  // Pieces with a painting: the fabric is laid inside the piece's silhouette
+  // (mask) and the painted linen's shading multiplies over it, so the cushion
+  // puffs and the scrunchie gathers whatever fabric is on it.
+  var ART = { cushion: 'goi', coaster: 'lotcoc', scrunchie: 'scrunchie' };
+  function artPiece(d, p, fill, pre) {
+    var name = ART[p.shape], out = '';
+    out += '<mask id="' + pre + 'mk" maskUnits="userSpaceOnUse" x="0" y="0" width="340" height="340">' +
+      '<image href="' + VAI + 'mon-' + name + '-mask.webp" width="340" height="340"/></mask>';
+    out += '<g mask="url(#' + pre + 'mk)">';
+    // the fabric area: the painted piece fills most of its square
+    var box = [0, 0, 340];
+    if (d.layout === 'tuve') {
+      out += '<rect width="340" height="340" fill="#FBF6EE"/>' + sketchPaths(d.sketch, box[0], box[1], box[2]);
+    } else if (p.shape === 'scrunchie') {
+      if (d.layout === 'hai') {
+        for (var w = 0; w < 12; w++) {
+          var a0 = w * 30 * Math.PI / 180, a1 = (w + 1) * 30 * Math.PI / 180;
+          out += '<path class="pt-cut" d="M170 170L' + (170 + 220 * Math.cos(a0)).toFixed(1) + ' ' + (170 + 220 * Math.sin(a0)).toFixed(1) +
+            'L' + (170 + 220 * Math.cos(a1)).toFixed(1) + ' ' + (170 + 220 * Math.sin(a1)).toFixed(1) + 'Z" fill="' + fill(w % 2) + '"/>';
+        }
+      } else out += '<rect width="340" height="340" fill="' + fill(0) + '"/>';
+    } else {
+      var sc = box[2] / 100;
+      patches(d.layout, p.grid).forEach(function (pt, n) {
+        var i = d.layout === 'sao' || d.layout === 'chong' ? pt.i : n;
+        out += '<path d="' + pathOf(pt.pts, box[0], box[1], sc) + '" fill="' + fill(i) + '" stroke="' + STITCH +
+          '" stroke-width="1.8" stroke-dasharray="6 5" stroke-linejoin="round"/>';
+      });
+    }
+    out += '</g>';
+    out += '<image href="' + VAI + 'mon-' + name + '-bong.webp" width="340" height="340" style="mix-blend-mode:multiply" pointer-events="none"/>';
+    return out;
+  }
+
   function svg(spec, opts) {
     opts = opts || {};
     var d = typeof spec === 'string' ? parse(spec) : spec;
@@ -674,12 +734,12 @@
         var fb = fabric(B64.indexOf(d.fab[i]));
         f = { color: fb.color, print: fb.kind };
       } else f = pick(i);
-      var id = pre + f.print + f.color.slice(1);
+      // the painted swatch for this colour family + kind
+      var fid = fabricId(toneOf(f.color), KINDS.indexOf(f.print) >= 0 ? f.print : 'tron');
+      var id = pre + 'f' + fid;
       if (!defs[id]) {
         defs[id] = 1;
-        var b = printBody(f.print, f.color);
-        defsOut += '<pattern id="' + id + '" width="' + b.size + '" height="' + b.size +
-          '" patternUnits="userSpaceOnUse">' + b.body + '</pattern>';
+        defsOut += fabricPattern(fid, id, 110);
       }
       // opts.hit: every patch says which fabric slot it is (the designer
       // lets people tap a patch to change its fabric)
@@ -687,7 +747,9 @@
     };
     var body = '';
 
-    if (SHAPES[p.shape]) {
+    if (ART[p.shape]) {
+      body += artPiece(d, p, fill, pre);
+    } else if (SHAPES[p.shape]) {
       body += SHAPES[p.shape](d, p, fill, pre);
     } else if (p.shape === 'scrunchie') {
       var pts = [];
@@ -878,6 +940,7 @@
     KINDS: KINDS, KIND_NAMES: KIND_NAMES, N_FABRICS: N_FABRICS, MOODS: MOODS, B64: B64,
     fabric: fabric, fabricId: fabricId, slots: slots, scatter: scatter, setPatch: setPatch, syncTaste: syncTaste,
     moodOf: moodOf, applyMood: applyMood, title: title, serial: serial, swatch: swatch,
+    swatchSrc: swatchSrc, VAI: VAI,
     // by: the designer's name for the card, travels in the link only
     url: function (spec, by) {
       return location.origin + location.pathname.replace(/[^/]*$/, '') + 'studio.html?d=' + encodeURIComponent(spec) +

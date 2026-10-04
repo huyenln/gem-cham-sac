@@ -50,6 +50,7 @@ Static website cho cửa hàng **Gem Chạm Sắc** — pop-up store sustainabil
 ├── supabase/functions/notify/ Edge Function báo mail cho nhân sự (đơn / workshop / lời nhắn) — xem docs/design.md
 ├── tools/studio-assets.py    Chạy tay khi có tranh mới: ghép dải studio, tách nền nhân vật → images/studio/
 ├── tools/clean-white.py      Xoá phần giấy trắng còn sót trong asset đã tách nền
+├── tools/design-assets.py    Chạy tay khi có tranh bàn thiết kế mới: cắt vải, khuôn mảnh, rổ, món → images/studio/vai/
 ├── tools/check-studio.py     Kiểm tra studio + trình lắp bằng Playwright (Supabase giả lập)
 ├── images/
 │   ├── logo/                 Logo Gem variants
@@ -355,8 +356,8 @@ Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
 - ✅ Udon giáo viên ở Bàn thiết kế (xong 10/2026): `udon/ud-gv-1..4`, `ui/udgv-bang`.
   Thêm câu / dáng: `teach()` trong `js/studio.js`.
 - 🎨 Bàn thiết kế "chơi" đợt 1 (10/2026): toàn màn hình, tâm trạng, rổ vải, May xong,
-  thẻ chia sẻ 9:16. Vải đang vẽ bằng code — khi có tranh thì thay theo
-  `docs/design.md` → "Bàn thiết kế — chơi". Đợt 2: Mảnh hiếm (vải thật).
+  thẻ chia sẻ 9:16, vải + rổ + món + Udon may bằng tranh (`tools/design-assets.py`).
+  Chi tiết: `docs/design.md` → "Bàn thiết kế — chơi". Đợt 2: Mảnh hiếm (vải thật).
 - 👕 Đợt 2 đồ mặc (áo) — chỉ làm nếu khách dùng nút "Đeo thử"; cần vẽ lại khung.
 - 🛍️ Ảnh cắt nền sản phẩm: giờ làm trong admin → Sản phẩm → Sửa → "Ảnh cắt nền"
   (nút "Xoá nền trắng"). `CUTOUT`/`THUMB`/`SHELVES` trong `js/studio.js` chỉ còn là
