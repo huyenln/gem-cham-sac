@@ -298,7 +298,11 @@
     'studio.prod_in_cart':  { vi: `Đã bỏ vào giỏ rồi nha!`, en: `In the basket!` },
     'studio.prod_in_basket': { vi: `Đã bỏ vào giỏ rồi nha!`, en: `In the basket!` },
     'studio.prod_out':      { vi: `Món này đang tạm hết, bạn ghé lại sau nhé.`, en: `This one's sold out for now — check back soon.` },
-    'studio.udon_drag':    { vi: `Kéo Udon thả vào xe đẩy hay giỏ hàng thử xem!`, en: `Drag Udon into the cart or the basket and see!` },
+    'studio.gv_hi':        { vi: `Đây là {mon} thật Gem đã may nè. Bản vẽ chỉ là phác thôi, mỗi cái một kiểu nha!`, en: `Here's a real {mon} Gem has sewn. The drawing is just a sketch — every piece turns out its own way!` },
+    'studio.gv_this':      { vi: `{mon} thật trông thế này nè.`, en: `This is what a real {mon} looks like.` },
+    'studio.gv_other':     { vi: `Thêm một món chắp vải thật của Gem: {mon}.`, en: `Another real patchwork piece by Gem: {mon}.` },
+    'studio.gv_like':      { vi: `Tông này hợp {mon} có sẵn đó, xem thử không?`, en: `These colours match the ready-made {mon} — have a look?` },
+    'studio.gv_next':      { vi: `Xem ảnh món thật khác`, en: `Show another real piece` },
     'studio.udon_cart':    { vi: `Udon không bán đâu nha! Cho Udon đi ké một vòng thôi.`, en: `Udon's not for sale! Just a little ride, then.` },
     'studio.udon_basket':  { vi: `Ơ kìa, Udon vào giỏ rồi! Udon không bán đâu, nằm chút thôi nha.`, en: `Oh! Udon's in the basket. Not for sale — just a quick nap.` },
     'studio.udon_aria':    { vi: `Udon`, en: `Udon` },
@@ -1132,6 +1136,16 @@
       '<div class="pt">' +
         '<div class="pt-tabs" role="group" data-i18n-attr="aria-label:studio.pt_products" aria-label="' + esc(t('studio.pt_products')) + '"></div>' +
         '<div class="pt-left">' +
+        // Udon the teacher: points at a board with a real piece Gem has sewn
+        '<div class="gv" aria-live="polite">' +
+          '<div class="gv-udon">' + GV_POSES.map(function (n, i) {
+            return '<img src="images/studio/udon/ud-gv-' + n + '.webp" alt="" draggable="false" data-gv="' + n + '"' + (i ? ' hidden' : '') + '>';
+          }).join('') + '</div>' +
+          '<button type="button" class="gv-board" data-gv-next data-i18n-attr="aria-label:studio.gv_next" aria-label="' + esc(t('studio.gv_next')) + '">' +
+            '<span class="gv-photo"><img alt="" draggable="false"></span>' +
+          '</button>' +
+          '<p class="gv-say"></p>' +
+        '</div>' +
         '<div class="pt-view">' +
           '<div class="pt-board"></div>' +
           tr('p', 'studio.pt_preview', ' class="pt-small"') +
@@ -1191,6 +1205,74 @@
     root.querySelector('[name="note"]').value = D.d.note;
     bindCanvas(root.querySelector('.pt-canvas'));
     renderDesigner();
+    teach('hi');
+  }
+
+  /* ---------- Udon the teacher (Bàn thiết kế) ----------
+     A board with a real piece Gem has sewn, so people picture the real
+     thing, not just the drawing. Udon taps the board when the piece
+     changes, pushes up the glasses to suggest a ready-made one in the same
+     colours, and talks. Moves only when the customer changes something. */
+  var GV_POSES = [1, 2, 3, 4];   // 1 point · 2 tap the board · 3 glasses · 4 talk
+  var gvTimer = null, gvShow = null, gvPick = 0;
+
+  function gvPose(n) {
+    var box = sheetBody.querySelector('.gv-udon');
+    if (box) box.querySelectorAll('img').forEach(function (im) { im.hidden = +im.getAttribute('data-gv') !== n; });
+  }
+
+  function gvBoard(sku, line) {
+    var root = sheetBody.querySelector('.gv');
+    if (!root || !THUMB[sku]) return;
+    var im = root.querySelector('.gv-photo img');
+    im.src = 'images/products/' + THUMB[sku];
+    var info = window.GemBasket && window.GemBasket.info(sku);
+    im.alt = info ? info.name : '';
+    gvShow = sku;
+    root.querySelector('.gv-say').textContent = line;
+  }
+
+  function nameOf(sku) {
+    var i = window.GemBasket && window.GemBasket.info(sku);
+    return i ? i.name : sku;
+  }
+
+  // why: 'hi' (opened), 'product' (another piece), 'taste' (colours /
+  // prints changed), 'next' (board tapped: next real photo)
+  function teach(why) {
+    var root = sheetBody.querySelector('.gv');
+    if (!root) return;
+    clearTimeout(gvTimer);
+    var sku = P.PRODUCTS[D.d.product].sku;
+    var talk = function (show, key, other) {
+      gvPose(4);
+      gvBoard(show, t(key).replace('{mon}', nameOf(other || show)));
+      gvTimer = setTimeout(function () { gvPose(1); }, 3200);
+    };
+    if (why === 'taste') {
+      var like = similarTo(specNow()).filter(function (s) { return THUMB[s]; });
+      if (!like.length) return;
+      gvPose(3);
+      gvTimer = setTimeout(function () { talk(like[0], 'studio.gv_like'); }, reduceMotion ? 0 : 650);
+      return;
+    }
+    var show = sku, key = why === 'hi' ? 'studio.gv_hi' : 'studio.gv_this';
+    if (why === 'next') {
+      // the piece itself, then other real patchwork Gem has made
+      var all = [sku].concat(REAL.filter(function (s) { return s !== sku && THUMB[s]; }));
+      gvPick = (gvPick + 1) % all.length;
+      show = all[gvPick];
+      key = show === sku ? 'studio.gv_this' : 'studio.gv_other';
+    } else {
+      gvPick = 0;
+    }
+    if (reduceMotion || why === 'hi') { talk(show, key); return; }
+    // two taps on the board, then the new photo
+    var beats = [2, 1, 2], i = 0;
+    (function beat() {
+      if (i < beats.length) { gvPose(beats[i++]); gvTimer = setTimeout(beat, 170); return; }
+      talk(show, key);
+    })();
   }
 
   function chip(attr, id, on, label, icon) {
@@ -1414,8 +1496,10 @@
   }
 
   function designerClick(e) {
-    var el;
+    var el, teachAfter = null;
+    if (e.target.closest('[data-gv-next]')) { teach('next'); return true; }
     if ((el = e.target.closest('[data-product]'))) {
+      teachAfter = 'product';
       var keep = D.d;
       D.d = P.blank(el.getAttribute('data-product'));
       // carry the taste over to the new piece
@@ -1426,8 +1510,10 @@
       D.d.layout = el.getAttribute('data-layout');
     } else if ((el = e.target.closest('[data-tone]'))) {
       toggle('tones', el.getAttribute('data-tone'), P.MAX_TONES);
+      teachAfter = 'taste';
     } else if ((el = e.target.closest('[data-print]'))) {
       toggle('prints', el.getAttribute('data-print'));
+      teachAfter = 'taste';
     } else if ((el = e.target.closest('[data-fabric]'))) {
       toggle('fabrics', el.getAttribute('data-fabric'));
     } else if ((el = e.target.closest('[data-ink]'))) {
@@ -1466,6 +1552,7 @@
       return false;
     }
     renderDesigner();
+    if (teachAfter) teach(teachAfter);
     return true;
   }
 
@@ -1774,13 +1861,24 @@
       var img = udonEl.querySelector('img:not([hidden])');
       dragFrom(e, img, {
         start: function () { udonEl.style.visibility = 'hidden'; },
-        cancel: function () { udonEl.style.visibility = ''; say('studio.udon_drag', 3000); },
-        tap: function () { udonPose('ud-vay'); say('studio.udon_drag', 3500); },
+        // no hint on a tap: finding out Udon can be dragged is the fun part
+        cancel: function () { udonEl.style.visibility = ''; },
+        tap: function () { udonPose('ud-vay'); },
         drop: function (where, ghost) { udonRide(where, ghost); return true; }
       });
     });
+    // keyboard (Enter / Space): the same surprise, Udon hops into the cart
     udonEl.addEventListener('click', function (e) {
-      if (e.detail === 0) say('studio.udon_drag', 3500);   // keyboard: Enter / Space
+      if (e.detail !== 0 || udonBusy) return;
+      var img = udonEl.querySelector('img:not([hidden])'), r = img.getBoundingClientRect(), sr = stage.getBoundingClientRect();
+      var ghost = img.cloneNode();
+      ghost.className = 'st-udon-ghost';
+      ghost.style.left = (r.left - sr.left) + 'px';
+      ghost.style.top = (r.top - sr.top) + 'px';
+      ghost.style.width = r.width + 'px';
+      stage.appendChild(ghost);
+      udonEl.style.visibility = 'hidden';
+      udonRide('cart', ghost);
     });
   }
 
