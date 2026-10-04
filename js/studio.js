@@ -1036,12 +1036,23 @@
     return tr('h2', hKey, ' id="st-sheet-title"') + (pKey ? tr('p', pKey, ' class="st-lead"') : '');
   }
 
+  // Product pictures: the database first (photo + cut-out set in admin's
+  // Sản phẩm form), the maps above until it answers.
+  function thumbOf(sku) {
+    var i = window.GemBasket && window.GemBasket.info(sku);
+    return (i && i.image) || (THUMB[sku] ? 'images/products/' + THUMB[sku] : null);
+  }
+  function cutoutOf(sku) {
+    var i = window.GemBasket && window.GemBasket.info(sku);
+    return (i && i.cutout) || (CUTOUT[sku] ? 'images/studio/sp/' + sku + '.webp' : null);
+  }
+
   function productCard(sku) {
     var info = window.GemBasket ? window.GemBasket.info(sku) : null;
     if (!info) return '';
     var out = !info.inStock;
     return '<li class="st-prod">' +
-      '<img src="' + (THUMB[sku] ? 'images/products/' + THUMB[sku] : CUTOUT[sku] ? 'images/studio/sp/' + sku + '.webp' : 'images/logo/gem_logo_icon_120.png') +
+      '<img src="' + esc(thumbOf(sku) || cutoutOf(sku) || 'images/logo/gem_logo_icon_120.png') +
         '" alt="" loading="lazy" width="300" height="300">' +
       '<b>' + esc(info.name) + '</b>' +
       '<span class="st-price">' + esc(info.price) + '</span>' +
@@ -1058,7 +1069,16 @@
   // All the shelves in one sheet, one tab each (+ "Tất cả"): a shelf opens
   // on its own tab, and the others are a tap away.
   var SHOP_TABS = ['pegboard', 'display', 'cabinet', 'all'];
+  // Which shelf a product stands on is set per product in admin (Kệ);
+  // SHELVES above only covers the moment before the database answers.
   function shopSkus(tab) {
+    var live = window.GemBasket && window.GemBasket.skus && window.GemBasket.skus();
+    if (live) {
+      return live.filter(function (sku) {
+        var i = window.GemBasket.info(sku);
+        return i && i.shelf && (tab === 'all' || i.shelf === tab);
+      });
+    }
     if (tab !== 'all') return SHELVES[tab] || [];
     var seen = {}, out = [];
     ['pegboard', 'display', 'cabinet'].forEach(function (k) {
@@ -1294,9 +1314,9 @@
 
   function gvBoard(sku, line) {
     var root = sheetBody.querySelector('.gv');
-    if (!root || !THUMB[sku]) return;
+    if (!root || !thumbOf(sku)) return;
     var im = root.querySelector('.gv-photo img');
-    im.src = 'images/products/' + THUMB[sku];
+    im.src = thumbOf(sku);
     var info = window.GemBasket && window.GemBasket.info(sku);
     im.alt = info ? info.name : '';
     gvShow = sku;
@@ -1331,7 +1351,7 @@
       gvTimer = setTimeout(function () { gvPose(1); }, 3200);
     };
     if (why === 'taste') {
-      var like = similarTo(specNow()).filter(function (s) { return THUMB[s]; });
+      var like = similarTo(specNow()).filter(thumbOf);
       if (!like.length) return;
       gvPose(3);
       gvTimer = setTimeout(function () { talk(like[0], 'studio.gv_like'); }, reduceMotion ? 0 : 650);
@@ -1341,7 +1361,7 @@
     var show = sku, key = why === 'hi' ? 'studio.gv_hi' : 'studio.gv_this';
     if (why === 'next') {
       // the piece itself, then other real patchwork Gem has made
-      var all = [sku].concat(REAL.filter(function (s) { return s !== sku && THUMB[s]; }));
+      var all = [sku].concat(REAL.filter(function (s) { return s !== sku && thumbOf(s); }));
       gvPick = (gvPick + 1) % all.length;
       show = all[gvPick];
       key = show === sku ? 'studio.gv_this' : 'studio.gv_other';
@@ -1773,7 +1793,7 @@
       if (!info) return '';
       var spec = o.spec && P ? P.parse(o.spec) : null;
       var pic = spec ? P.svg(spec, { size: 160 })
-        : THUMB[o.sku] ? '<img src="images/products/' + THUMB[o.sku] + '" alt="" loading="lazy" width="160" height="160">'
+        : thumbOf(o.sku) ? '<img src="' + esc(thumbOf(o.sku)) + '" alt="" loading="lazy" width="160" height="160">'
         : '<span class="tu-noimg"></span>';
       return '<li class="tu-item">' + pic +
         '<b>' + esc(info.name) + '</b>' +

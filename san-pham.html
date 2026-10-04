@@ -107,7 +107,7 @@
           Túi, ví, móc khóa, dây buộc tóc, bookmark, gối, thảm... được làm từ vải vụn thu gom từ các nhà may địa phương và quần áo secondhand. Mỗi sản phẩm là một câu chuyện vải riêng.
         </p>
 
-        <div class="product-grid">
+        <div class="product-grid" data-cat="vai-vun">
           <div class="product-card" data-sku="origami" data-gallery="vai-vun-tui-1.png,vai-vun-tui-2.png,vai-vun-tui-8.jpg,vai-vun-tui-9.jpg">
             <div class="product-card-image">
               <img src="images/products/vai-vun-tui-1-thumb.jpg" data-i18n-attr="alt:products.origami_h" alt="Origami Pouch" loading="lazy">
@@ -221,7 +221,7 @@
           Sổ, bookmark, giấy kraft, bút bi... sử dụng giấy tái chế và công nghệ in thân thiện môi trường. Các mẫu sổ Gem độc đáo: Sổ lên ý tưởng, Sổ quản lý công việc & quản lý stress.
         </p>
 
-        <div class="product-grid">
+        <div class="product-grid" data-cat="vpp">
           <div class="product-card" data-sku="so-kraft" data-gallery="vpp-so-kraft">
             <div class="product-card-image">
               <img src="images/products/vpp-so-kraft-thumb.jpg" data-i18n-attr="alt:products.pv1_h" alt="Sổ kraft spiral" loading="lazy">
@@ -276,7 +276,7 @@
           Gốm sứ Nhật được chọn lọc, làm sạch, mang sắc màu của thời gian. Bấm vào ảnh để xem thêm.
         </p>
 
-        <div class="product-grid">
+        <div class="product-grid" data-cat="gom">
           <div class="product-card" data-sku="gom" data-gallery="gom-2.jpg,gom-1.jpg,gom-3.jpg">
             <div class="product-card-image">
               <img src="images/products/gom-thumb.jpg" data-i18n-attr="alt:products.cgom_h" alt="Gốm sứ Nhật chọn lọc" loading="lazy">
@@ -298,7 +298,7 @@
           Những set quà nhỏ gói ghém từ đồ Gem — Bloom Charm, thiệp hoa, bookmark, scrunchie… cho dịp tốt nghiệp, sinh nhật, hay chỉ để tặng nhau.
         </p>
 
-        <div class="product-grid">
+        <div class="product-grid" data-cat="set-qua">
           <div class="product-card" data-sku="set-qua" data-gallery="set-qua-tang-2.png,set-qua-tang-1.png,set-qua-tang-3.png,set-qua-tang-4.jpg">
             <div class="product-card-image">
               <img src="images/products/set-qua-tang-thumb.jpg" data-i18n-attr="alt:products.setqua_h" alt="Set quà tặng" loading="lazy">
@@ -409,5 +409,7 @@
   <script src="js/patch.js" defer></script>
   <script src="js/collection.js" defer></script>
   <script src="js/basket.js" defer></script>
+  <!-- catalog.js: thẻ sản phẩm theo database (món mới thêm trong admin tự có thẻ) -->
+  <script src="js/catalog.js" defer></script>
 </body>
 </html>

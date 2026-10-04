@@ -5,7 +5,11 @@
 // data-gallery is a comma-separated list of image base names living in
 // images/products/ (no extension, no path), e.g.
 //   data-gallery="vai-vun-tui-deo-cheo,vai-vun-tui-deo-cheo-2"
-// A full path (containing "/" ) or a name with an extension is used as-is.
+// A full path or URL (containing "/") is used as-is; a name with an extension
+// gets the images/products/ folder in front.
+// Cards added later (js/catalog.js builds them from the database) work too:
+// clicks are caught on the document, and GemGallery.bind(card) adds the
+// keyboard/ARIA bits.
 
 (function () {
   'use strict';
@@ -26,9 +30,16 @@
     return fallback;
   }
 
+  function bind(card) {
+    card.classList.add('is-clickable');
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('role', 'button');
+  }
+  window.GemGallery = { bind: bind };
+
   document.addEventListener('DOMContentLoaded', function () {
     var cards = Array.prototype.slice.call(document.querySelectorAll('.product-card[data-gallery]'));
-    if (!cards.length) return;
+    if (!cards.length && !document.querySelector('.product-grid')) return;
 
     // ---- Build the modal once ----
     var modal = document.createElement('div');
@@ -136,15 +147,21 @@
     function next() { if (images.length) { index = (index + 1) % images.length; render(); } }
     function prev() { if (images.length) { index = (index - 1 + images.length) % images.length; render(); } }
 
-    // Wire each card
-    cards.forEach(function (card) {
-      card.classList.add('is-clickable');
-      card.setAttribute('tabindex', '0');
-      card.setAttribute('role', 'button');
-      card.addEventListener('click', function () { open(card); });
-      card.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(card); }
-      });
+    // Wire every card, now and later: one listener on the document
+    cards.forEach(bind);
+    function cardOf(e) {
+      var c = e.target.closest && e.target.closest('.product-card[data-gallery]');
+      if (!c || e.target.closest('.gb-slot')) return null;   // the basket button has its own job
+      return c.getAttribute('data-gallery') ? c : null;
+    }
+    document.addEventListener('click', function (e) {
+      var c = cardOf(e);
+      if (c) open(c);
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      var c = cardOf(e);
+      if (c && e.target === c) { e.preventDefault(); open(c); }
     });
 
     nextBtn.addEventListener('click', next);

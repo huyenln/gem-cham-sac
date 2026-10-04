@@ -32,7 +32,9 @@ Static website cho cửa hàng **Gem Chạm Sắc** — pop-up store sustainabil
 ├── css/studio.css            Chỉ dùng cho studio.html
 ├── js/main.js                Mobile menu toggle, product TOC scroll, Udon popup
 ├── js/i18n.js                Song ngữ VI/EN: engine + STRINGS dictionary (data-i18n)
-├── js/gallery.js             Carousel/lightbox ảnh sản phẩm (data-gallery)
+├── js/gallery.js             Carousel/lightbox ảnh sản phẩm (data-gallery, bắt click cả thẻ tạo sau)
+├── js/catalog.js             san-pham.html: thẻ sản phẩm theo database (món mới tự có thẻ, đúng danh mục + thứ tự)
+├── js/img-tools.js           Thu nhỏ ảnh (1280px WebP + thumb 600px) và "Xoá nền trắng" ngay trong trình duyệt
 ├── js/mailerlite.js          Email subscribe handler (fetch no-cors → inline success)
 ├── js/gem-db.js              Client Supabase tự viết bằng fetch (KHÔNG dùng supabase-js)
 ├── js/basket.js              Giỏ hàng + đặt đơn + chọn cách trả tiền
@@ -61,7 +63,7 @@ Static website cho cửa hàng **Gem Chạm Sắc** — pop-up store sustainabil
 
 **Backend (từ Sprint 3):** Supabase (project `dxdovvqsfjeizsoprrfn`, Singapore,
 Postgres 17). Bảng: `products`, `orders`, `order_items`, `sessions`, `bookings`,
-`workshop_types`, `staff`, `settings`, `posts`, `notes` (bảng lời nhắn Studio), `studio_layout` (bố cục studio, chỉ owner ghi). Kho ảnh: Storage bucket
+`workshop_types`, `staff`, `settings`, `posts`, `notes` (bảng lời nhắn Studio), `studio_layout` (bố cục studio, chỉ owner ghi), `studio_assets` (thư viện ảnh của trình lắp, chỉ owner). Kho ảnh: Storage bucket
 `gem-media` (đọc công khai, tải lên chỉ nhân sự). Chi tiết ở `docs/design.md`.
 
 > ⚠️ **Hai luật bảo mật, đọc trước khi đụng vào database:**
@@ -353,8 +355,9 @@ Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
 - ✅ Udon giáo viên ở Bàn thiết kế (xong 10/2026): `udon/ud-gv-1..4`, `ui/udgv-bang`.
   Thêm câu / dáng: `teach()` trong `js/studio.js`.
 - 👕 Đợt 2 đồ mặc (áo) — chỉ làm nếu khách dùng nút "Đeo thử"; cần vẽ lại khung.
-- 🛍️ Thêm ảnh cắt nền cho sản phẩm khác: `images/studio/sp/<sku>.webp` (tên file
-  = sku), thêm sku vào `CUTOUT` trong `js/studio.js`, rồi `--manifest .`.
+- 🛍️ Ảnh cắt nền sản phẩm: giờ làm trong admin → Sản phẩm → Sửa → "Ảnh cắt nền"
+  (nút "Xoá nền trắng"). `CUTOUT`/`THUMB`/`SHELVES` trong `js/studio.js` chỉ còn là
+  bản dự phòng khi database chưa trả lời.
 - Ngoài studio: chưa gắn Studio lên menu (chờ Anna); Gmail secrets cho mail báo đơn
   (các bước: `docs/design.md` → "Bật gửi mail thật").
 
@@ -363,7 +366,9 @@ Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
   Instagram có chữ in sẵn, nên hero và grid trang chủ phải chọn theo *ảnh nào
   sạch* chứ không theo *sản phẩm nào đẹp*. Cũng chặn trang Câu chuyện (U6).
 - 📦 Nén ảnh sản phẩm (`gom-1.jpg` 3 MB) — nên làm cùng lúc với ảnh mới
-- ➕ Thêm sản phẩm mới qua trang quản trị (giờ chỉ sửa giá / ẩn hiện được)
+- ✅ Thêm / sửa sản phẩm hoàn toàn trong admin (ảnh, thư viện ảnh, ảnh cắt nền, kệ
+  Studio) — thẻ trên `san-pham.html` và kệ Studio tự theo. Danh mục mới thì vẫn cần
+  thêm khối HTML (`<div class="product-grid" data-cat="…">`) + `CATEGORIES` trong `js/admin.js`.
 - 📝 Bản dịch EN là first-pass — Anna review & chỉnh trong `STRINGS` (`js/i18n.js`)
 - 🚚 Chọn đối tác giao hàng cho COD
 - 💳 Quyết định ngưỡng bắt buộc chuyển khoản (hiện đang tắt)
