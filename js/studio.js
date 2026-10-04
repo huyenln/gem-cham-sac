@@ -1835,7 +1835,7 @@
   // The picture itself to the share sheet (Instagram / Zalo take files);
   // where files can't be shared, the image is saved and the link copied.
   function shareCard(btn) {
-    var url = P.url(specNow(), myName());
+    var url = P.url(specNow(), myName(), (P.moodOf(D.d) || {}).id);
     var file = D.card;
     if (!file) return;
     var canFiles = false;
@@ -2080,7 +2080,7 @@
   }
 
   function copyLink(btn) {
-    var url = P.url(specNow(), myName());
+    var url = P.url(specNow(), myName(), (P.moodOf(D.d) || {}).id);
     var done = function () { flash(btn, 'studio.pt_copied', 'studio.pt_share'); };
     // phones: the share sheet (Zalo, Messenger…); else copy the link
     if (navigator.share && matchMedia('(pointer: coarse)').matches) {
@@ -2148,7 +2148,7 @@
     if ((el = e.target.closest('[data-mood]'))) {
       var mood = P.MOODS.filter(function (m) { return m.id === el.getAttribute('data-mood'); })[0];
       if (!mood) return true;
-      P.applyMood(D.d, mood);
+      P.applyMood(D.d, mood, true);
       D.basket = mood.ids.slice(0, BASKET_N);
       D.held = null;
       unsew();
@@ -2167,7 +2167,7 @@
       D.d.other = keep.other; D.d.note = keep.note; D.d.sketch = keep.sketch; D.d.img = keep.img;
       if (keep.layout === 'tuve') D.d.layout = 'tuve';
       var km = P.moodOf(keep);
-      if (km) P.applyMood(D.d, km);
+      if (km) P.applyMood(D.d, km, true);
       else if (keep.fab) { D.d.fab = P.scatter(D.d, pal); P.syncTaste(D.d); }
     } else if ((el = e.target.closest('[data-layout]'))) {
       var pal2 = paletteNow();
@@ -3047,7 +3047,11 @@
       try { sessionStorage.setItem('gem-src', 'link-chia-se'); } catch (e) { /* private mode */ }
       D.d = shared;
       D.from = true;
-      try { D.by = (new URLSearchParams(location.search).get('by') || '').trim().slice(0, 24); } catch (e) { D.by = ''; }
+      try {
+        var qs = new URLSearchParams(location.search);
+        D.by = (qs.get('by') || '').trim().slice(0, 24);
+        D.d.moodId = qs.get('m') || '';
+      } catch (e) { D.by = ''; }
       try { localStorage.setItem('gem-studio-intro', '1'); } catch (e) { /* ignore */ }
       setScene('in');
       setTimeout(function () { visit('sewing'); }, 400);

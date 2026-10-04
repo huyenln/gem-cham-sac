@@ -579,6 +579,14 @@ async def design(browser, db):
         want2 = f'-f{sid2})'
         check(cell0.endswith(want2), f'{name}: drag a scrap onto a patch ({want2} in {cell0})')
         await pg.screenshot(path=OUT / f'design-{name}-1.png')
+        # a mood changes the fabrics, not the layout the customer picked
+        await js_click(pg, '[data-layout="chong"]')
+        await js_click(pg, '[data-mood="tet"]')
+        await pg.wait_for_timeout(200)
+        lay = await pg.evaluate("document.querySelector('[data-layout].is-on').dataset.layout")
+        mood = await pg.evaluate("(document.querySelector('.pt-mood.is-on') || {dataset: {}}).dataset.mood")
+        check(lay == 'chong' and mood == 'tet', f'{name}: picking a mood keeps the layout ({lay}, {mood})')
+        await js_click(pg, '[data-layout="vuong"]')
         # own colour: dye the basket, put one on a patch, it travels in the code
         await js_click(pg, '[data-pt="own"]')
         await pg.evaluate("document.querySelector('[name=own]').value = '#7a4fa0'")
@@ -643,7 +651,7 @@ async def design(browser, db):
     await pg.goto(f'{BASE}/studio.html')
     await pg.wait_for_timeout(800)
     spec = await pg.evaluate("(() => { const P = window.GemPatch, d = P.blank('goi'); P.applyMood(d, P.MOODS[2]); return P.encode(d); })()")
-    url = await pg.evaluate("s => window.GemPatch.url(s, 'Linh')", spec)
+    url = await pg.evaluate("s => window.GemPatch.url(s, 'Linh', 'bien')", spec)
     await pg.goto(url)
     await pg.wait_for_timeout(3500)
     hdr = await pg.evaluate("(document.querySelector('.pt-shared-h') || {}).textContent || ''")
