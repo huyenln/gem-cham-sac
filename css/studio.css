@@ -1200,3 +1200,19 @@ html:has(.studio-page), .studio-page { overscroll-behavior: none; }
 .pt-sewer.is-cheer { animation: pt-hop 0.7s ease-out 2; }
 .pt-needle { pointer-events: none; }
 @media (prefers-reduced-motion: reduce) { .pt-sewer { animation: none !important; } }
+
+/* own colour: the browser's picker + a few starting points */
+.pt-own { display: grid; gap: var(--space-2); padding: var(--space-3); border: 1.5px dashed var(--kraft); border-radius: var(--radius-md); background: rgba(251, 246, 238, 0.9); }
+.pt-own[hidden] { display: none; }
+.pt-own-h { margin: 0; font-weight: 600; font-size: var(--text-sm); color: var(--ink-dark); }
+.pt-own-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.pt-own-row input[type="color"] { width: 52px; height: 44px; padding: 2px; border: 1.5px solid var(--sage-light); border-radius: 10px; background: var(--paper-white); cursor: pointer; }
+.pt-own-dot { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--paper-white); box-shadow: 0 0 0 1.5px var(--sage-light); cursor: pointer; padding: 0; }
+.pt-own-go { justify-self: start; }
+/* round / square coaster */
+.pt-shapes { align-items: center; }
+.pt-shapes[hidden] { display: none; }
+.pt-shapes .pt-label { margin-right: var(--space-1); }
+.pt-shape-ic { width: 20px; height: 20px; border: 2px solid var(--kraft); background: var(--paper-cream); flex: none; }
+.pt-shape-lotcoc { border-radius: 50%; }
+.pt-shape-lotcocv { border-radius: 4px; }

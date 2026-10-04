@@ -579,6 +579,21 @@ async def design(browser, db):
         want2 = f'-f{sid2})'
         check(cell0.endswith(want2), f'{name}: drag a scrap onto a patch ({want2} in {cell0})')
         await pg.screenshot(path=OUT / f'design-{name}-1.png')
+        # own colour: dye the basket, put one on a patch, it travels in the code
+        await js_click(pg, '[data-pt="own"]')
+        await pg.evaluate("document.querySelector('[name=own]').value = '#7a4fa0'")
+        await js_click(pg, '[data-own-go]')
+        await pg.wait_for_timeout(1500)
+        keys = await pg.evaluate("[...document.querySelectorAll('.pt-scrap')].map(b => b.dataset.scrap)")
+        check(len(keys) == 9 and all(k.endswith('7a4fa0') for k in keys), f'{name}: own colour fills the basket with 9 kinds ({keys[:2]}…)')
+        dyed = await pg.evaluate("getComputedStyle(document.querySelector('.pt-scrap .pt-sf')).backgroundImage")
+        check('blob:' in dyed, f'{name}: the painted fabric is dyed in the browser ({dyed[:40]})')
+        await pg.click('.pt-scrap >> nth=4')
+        await pg.click('.pt-board [data-i="8"]')
+        await pg.wait_for_timeout(300)
+        spec = await pg.evaluate("(() => { const t = document.querySelector('.pt-board svg title').textContent; return t; })()")
+        check('#7a4fa0' in spec, f'{name}: the order note names the own colour ({spec[-60:]})')
+        await pg.screenshot(path=OUT / f'design-{name}-own.png')
         # sew
         await js_click(pg, '[data-pt="sew"]')
         await pg.wait_for_timeout(600)
@@ -602,6 +617,26 @@ async def design(browser, db):
         check(await pg.evaluate("!document.querySelector('.pt-done b')"), f'{name}: the typed name never becomes HTML')
         check(not pg.errors, f'{name}: no script errors {pg.errors}')
         await pg.context.close()
+
+    # round / square coaster
+    pg = await page(browser, db, 393, 852, "sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1')")
+    await pg.goto(f'{BASE}/studio.html')
+    await pg.wait_for_timeout(1500)
+    await js_click(pg, '[data-go="sewing"]')
+    await pg.wait_for_timeout(2500)
+    await js_click(pg, '[data-product="lotcoc"]')
+    await pg.wait_for_timeout(300)
+    check(await pg.evaluate("!document.querySelector('.pt-shapes').hidden"), 'coaster offers Tròn / Vuông')
+    await js_click(pg, '[data-shape="lotcocv"]')
+    await pg.wait_for_timeout(400)
+    sq = await pg.evaluate("document.querySelector('.pt-board svg').innerHTML.includes('mon-lotcocv')")
+    tab = await pg.evaluate("document.querySelector('.pt-tab.is-on').dataset.product")
+    check(sq and tab == 'lotcoc', f'square coaster drawn, "Lót cốc" tab stays on ({tab})')
+    await js_click(pg, '[data-product="goi"]')
+    await pg.wait_for_timeout(300)
+    check(await pg.evaluate("document.querySelector('.pt-shapes').hidden"), 'no shape choice on other pieces')
+    check(not pg.errors, f'no script errors {pg.errors}')
+    await pg.context.close()
 
     # a friend opens the shared link
     pg = await page(browser, db, 393, 852, "localStorage.setItem('gem-studio-intro','1')")

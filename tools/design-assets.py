@@ -13,9 +13,12 @@ Source names (as listed in the "Prompt vẽ cho Bàn thiết kế" prompt pack):
                       -> images/studio/vai/dang-<1..9>.webp: grey shading with
                          the scrap's outline as alpha (mask + multiply layer)
   ro-truoc.png        the basket's front wall -> images/studio/vai/ro-truoc.webp
-  mon-<piece>.png     plain linen piece (goi, lotcoc, scrunchie)
+  mon-<piece>.png     plain linen piece (see PIECES)
                       -> images/studio/vai/mon-<piece>-bong.webp (shading, alpha)
                          images/studio/vai/mon-<piece>-mask.webp (white on black)
+                         images/studio/vai/mon-<piece>-top.webp (rings, clasps:
+                         drawn as painted over the fabric)
+                      and prints where the fabric sits (box / centre) for js/patch.js
   ud-may.png, ud-reo.png, kim-chi.png -> images/studio/udon/ (cut out)
   mood-<id>.png       -> images/studio/vai/mood-<id>.webp (square, 240 px)
   the-khung.png       -> images/studio/vai/the-khung.webp (1080 x 1920)
@@ -191,26 +194,69 @@ def scraps(src):
             k += 1
 
 
-def piece(src, name, median=0, open_holes=False):
+def metal(rgba, box):
+    """Hardware (rings, clasps) inside box (fractions of the image): what
+    isn't linen there. It is drawn as painted, on top of the fabric."""
+    w, h = rgba.size
+    x0, y0, x1, y1 = int(box[0] * w), int(box[1] * h), int(box[2] * w), int(box[3] * h)
+    hsv = np.asarray(rgba.convert('RGB').convert('HSV')).astype(np.float32) / 255
+    a = np.asarray(rgba.getchannel('A')) > 128
+    sat, val = hsv[..., 1], hsv[..., 2]
+    linen = (sat > 0.10) & (sat < 0.42) & (val > 0.62)
+    m = np.zeros(a.shape, bool)
+    m[y0:y1, x0:x1] = (a & ~linen)[y0:y1, x0:x1]
+    img = Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.MaxFilter(5)).filter(ImageFilter.MinFilter(3))
+    return np.asarray(img) > 128
+
+
+def piece(src, name, median=0, open_holes=False, hw=None):
     im = cut(src, open_holes=open_holes)
     # square canvas, centred: the patches are laid out on the same square
     s = max(im.size)
     sq = Image.new('RGBA', (s, s), (0, 0, 0, 0))
     sq.paste(im, ((s - im.size[0]) // 2, (s - im.size[1]) // 2))
+    if hw:   # the box was given on the source image: move it onto the square
+        ox, oy = (s - im.size[0]) / s, (s - im.size[1]) / s
+        k0, k1 = im.size[0] / s, im.size[1] / s
+        hw = (ox / 2 + hw[0] * k0, oy / 2 + hw[1] * k1, ox / 2 + hw[2] * k0, oy / 2 + hw[3] * k1)
     sq = fit(sq, 900)
+    fab_alpha = np.asarray(sq.getchannel('A')).copy()
+    if hw:
+        m = metal(sq, hw)
+        top = sq.copy()
+        top.putalpha(Image.fromarray(np.where(m, fab_alpha, 0).astype(np.uint8)))
+        save(top, OUT / f'mon-{name}-top.webp')
+        fab_alpha[m] = 0
     shade = shading(sq)
     if median:   # seams of the drawing out; the page draws its own seams
         g = shade.convert('L').filter(ImageFilter.MedianFilter(median))
         shade = g.convert('RGBA')
-        shade.putalpha(sq.getchannel('A'))
+    shade.putalpha(Image.fromarray(fab_alpha))
     save(shade, OUT / f'mon-{name}-bong.webp')
-    mask = Image.new('L', sq.size, 0)
-    mask.paste(255, (0, 0), sq.getchannel('A'))
+    mask = Image.fromarray(np.where(fab_alpha > 0, fab_alpha, 0).astype(np.uint8))
     save(mask.convert('RGB'), OUT / f'mon-{name}-mask.webp', q=70)
+    # where the fabric is, in the page's 340-unit square (for patch layouts)
+    ys, xs = np.nonzero(fab_alpha > 128)
+    k = 340 / sq.size[0]
+    print(f'    {name}: box [{xs.min() * k:.0f}, {ys.min() * k:.0f}, {xs.max() * k:.0f}, {ys.max() * k:.0f}]'
+          f'  centre [{xs.mean() * k:.0f}, {ys.mean() * k:.0f}]')
+
+
+# name, median filter (removes painted seams), open enclosed holes, hardware box
+PIECES = [
+    ('goi', 15, False, None), ('lotcoc', 0, False, None), ('scrunchie', 0, True, None),
+    ('lotcocv', 0, False, None), ('bookmark', 0, False, None), ('oxford', 0, True, None),
+    ('origami', 0, True, (0, 0, 0.32, 0.28)), ('bloom', 0, True, (0, 0, 1, 0.17)),
+    ('daydeo', 0, True, (0, 0.69, 1, 1)),
+]
 
 
 def main(folder, only=None):
     src = Path(folder)
+    if only == 'pieces':
+        for name, med, hole, hw in PIECES[3:]:
+            piece(src / f'mon-{name}.png', name, med, hole, hw)
+        return
     if only == 'fix':   # just the pieces touched by a fix
         scraps(src / 'vai-dang.png')
         save(fit(cut(src / 'ro-truoc.png', open_holes=True), 1200), OUT / 'ro-truoc.webp')
@@ -222,9 +268,9 @@ def main(folder, only=None):
         scraps(src / 'vai-dang.png')
     if (src / 'ro-truoc.png').exists():
         save(fit(cut(src / 'ro-truoc.png', open_holes=True), 1200), OUT / 'ro-truoc.webp')
-    for name, med, hole in (('goi', 15, False), ('lotcoc', 0, False), ('scrunchie', 0, True)):
+    for name, med, hole, hw in PIECES:
         if (src / f'mon-{name}.png').exists():
-            piece(src / f'mon-{name}.png', name, med, hole)
+            piece(src / f'mon-{name}.png', name, med, hole, hw)
     for name in ('ud-may', 'ud-reo', 'kim-chi'):
         if (src / f'{name}.png').exists():
             save(fit(cut(src / f'{name}.png'), 700), ROOT / 'images/studio/udon' / f'{name}.webp')

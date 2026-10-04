@@ -253,6 +253,13 @@
     'studio.pt_moods':     { vi: `Tâm trạng`, en: `Mood` },
     'studio.pt_basket':    { vi: `Rổ vải vụn`, en: `Scrap basket` },
     'studio.pt_rummage':   { vi: `Lục rổ`, en: `Rummage` },
+    'studio.pt_own':       { vi: `Màu riêng`, en: `Own colour` },
+    'studio.pt_own_h':     { vi: `Chọn màu vải bạn muốn`, en: `Pick the fabric colour you want` },
+    'studio.pt_own_go':    { vi: `Nhuộm vào rổ`, en: `Dye the basket` },
+    'studio.pt_own_note':  { vi: `Gem tìm vải vụn gần màu này nhất và nhắn ảnh cho bạn duyệt trước khi may.`, en: `Gem finds the scraps closest to this colour and sends you a photo to approve before sewing.` },
+    'studio.pt_shape':     { vi: `Dáng`, en: `Shape` },
+    'studio.pt_round':     { vi: `Tròn`, en: `Round` },
+    'studio.pt_square':    { vi: `Vuông`, en: `Square` },
     'studio.pt_shuffle':   { vi: `Xáo mảnh`, en: `Shuffle` },
     'studio.pt_hint':      { vi: `Chạm một mảnh vải trong rổ rồi chạm vào ô trên món, hoặc kéo thả vào ô.`, en: `Tap a scrap in the basket, then tap a patch. Or drag it there.` },
     'studio.pt_hint_held': { vi: `Giờ chạm vào ô muốn đắp mảnh {vai} lên.`, en: `Now tap the patch you want the {vai} on.` },
@@ -1271,10 +1278,26 @@
           '<section class="pt-sec">' + tr('h3', 'studio.pt_moods', ' class="pt-label"') + '<div class="pt-moods" role="group"></div></section>' +
           '<section class="pt-sec">' +
             '<div class="pt-sec-row">' + tr('h3', 'studio.pt_basket', ' class="pt-label"') +
-              '<button type="button" class="pt-tool pt-mini" data-pt="rummage" data-i18n="studio.pt_rummage">' + esc(t('studio.pt_rummage')) + '</button></div>' +
+              '<span class="pt-sec-acts">' +
+                '<button type="button" class="pt-tool pt-mini" data-pt="own" aria-expanded="false" data-i18n="studio.pt_own">' + esc(t('studio.pt_own')) + '</button>' +
+                '<button type="button" class="pt-tool pt-mini" data-pt="rummage" data-i18n="studio.pt_rummage">' + esc(t('studio.pt_rummage')) + '</button>' +
+              '</span></div>' +
+            // own colour: the browser's colour picker + a few starting points
+            '<div class="pt-own" hidden>' +
+              tr('p', 'studio.pt_own_h', ' class="pt-own-h"') +
+              '<div class="pt-own-row">' +
+                '<input type="color" name="own" value="#' + ownColour() + '" data-i18n-attr="aria-label:studio.pt_own_h" aria-label="' + esc(t('studio.pt_own_h')) + '">' +
+                OWN_PICKS.map(function (h) {
+                  return '<button type="button" class="pt-own-dot" data-own-pick="' + h + '" style="background:#' + h + '" aria-label="#' + h + '"></button>';
+                }).join('') +
+              '</div>' +
+              '<button type="button" class="st-btn pt-own-go" data-own-go data-i18n="studio.pt_own_go">' + esc(t('studio.pt_own_go')) + '</button>' +
+              tr('p', 'studio.pt_own_note', ' class="pt-small"') +
+            '</div>' +
             '<div class="pt-basket"><div class="pt-scraps"></div>' +
               '<img class="pt-ro" src="' + P.VAI + 'ro-truoc.webp" alt="" draggable="false"></div>' +
           '</section>' +
+          '<div class="pt-shapes pt-chips" role="group" hidden></div>' +
           '<section class="pt-sec">' +
             '<div class="pt-sec-row">' + tr('h3', 'studio.pt_layout', ' class="pt-label"') +
               '<span class="pt-sec-acts">' +
@@ -1454,15 +1477,36 @@
   // fabric and a shading layer for the folds
   var SCRAP_SHAPES = 9;
 
+  // A fabric key: 0..44 (the painted catalogue) or "c<kind><hex>" (own colour).
+  function parseKey(str) { return /^\d+$/.test(str) ? +str : P.isCustom(str) ? str : null; }
+
+  function keysOn(d) {
+    var out = [];
+    for (var i = 0; i < (d.fab || '').length; i++) {
+      var k = P.keyAt(d, i);
+      if (out.indexOf(k) < 0) out.push(k);
+    }
+    return out;
+  }
+
   function basketFor(d) {
     var m = P.moodOf(d);
     if (m) return m.ids.slice(0, BASKET_N);
-    var have = [];
-    for (var i = 0; i < (d.fab || '').length; i++) {
-      var id = P.B64.indexOf(d.fab[i]);
-      if (have.indexOf(id) < 0) have.push(id);
-    }
-    return fillBasket(have.slice(0, BASKET_N));
+    return fillBasket(keysOn(d).slice(0, BASKET_N));
+  }
+
+  // The 9 kinds in the customer's own colour: the whole basket.
+  // starting points next to the picker: colours Gem's fabrics don't cover
+  var OWN_PICKS = ['7a4fa0', 'c2577f', 'e08a3c', 'e3c04a', '2f7f77', '1f3f6b', '5b3a29', '2e2c29'];
+  function ownColour() {
+    try { var h = localStorage.getItem('gem-own-colour'); if (/^[0-9a-f]{6}$/.test(h || '')) return h; } catch (e) { /* private mode */ }
+    return OWN_PICKS[0];
+  }
+
+  function ownBasket(hex) {
+    var out = [];
+    for (var k = 0; k < 9; k++) out.push('c' + k + hex);
+    return out;
   }
 
   function fillBasket(ids) {
@@ -1475,15 +1519,15 @@
     return out;
   }
 
-  function fabricName(id) {
-    var f = P.fabric(id), l = lng();
-    return P.KIND_NAMES[f.kind][l] + ' ' + P.TONES[f.tone][l].toLowerCase();
-  }
+  function fabricName(key) { return P.keyName(key, lng()); }
 
-  function scrapHtml(id, k) {
+  function scrapHtml(key, k) {
     var shape = P.VAI + 'dang-' + (k % SCRAP_SHAPES + 1) + '.webp';
-    return '<span class="pt-sf" aria-hidden="true" style="background-image:url(' + P.swatchSrc(id) +
-      ');-webkit-mask-image:url(' + shape + ');mask-image:url(' + shape + ')"></span>' +
+    // an own colour not dyed yet: plain colour until gem:fabric says it's ready
+    var src = P.keySrc(key);
+    var bg = src ? 'background-image:url(' + src + ')' : 'background-color:#' + String(key).slice(2);
+    return '<span class="pt-sf" aria-hidden="true" style="' + bg +
+      ';-webkit-mask-image:url(' + shape + ');mask-image:url(' + shape + ')"></span>' +
       '<img class="pt-ss" src="' + shape + '" alt="" draggable="false">';
   }
 
@@ -1543,7 +1587,7 @@
     if (D.held != null) id = D.held;
     else {
       // nothing picked up: the next scrap in the basket
-      var cur = D.d.fab ? P.B64.indexOf(D.d.fab[i]) : -1;
+      var cur = P.keyAt(D.d, i);
       var at = D.basket.indexOf(cur);
       id = D.basket[(at + 1) % D.basket.length];
     }
@@ -1557,7 +1601,7 @@
     box.addEventListener('pointerdown', function (e) {
       var b = e.target.closest('[data-scrap]');
       if (!b || (e.pointerType === 'mouse' && e.button !== 0)) return;
-      st = { b: b, id: +b.getAttribute('data-scrap'), x: e.clientX, y: e.clientY, ghost: null, pid: e.pointerId };
+      st = { b: b, id: parseKey(b.getAttribute('data-scrap')), x: e.clientX, y: e.clientY, ghost: null, pid: e.pointerId };
     });
     document.addEventListener('pointermove', function (e) {
       if (!st || e.pointerId !== st.pid) return;
@@ -1815,10 +1859,19 @@
     var l = lng(), d = D.d, prod = P.PRODUCTS[d.product];
     var gemTones = d.tones[0] === P.GEM, gemPrints = d.prints[0] === P.GEM;
 
+    var tab = d.product === 'lotcocv' ? 'lotcoc' : d.product;   // the square coaster lives under "Lót cốc"
     root.querySelector('.pt-tabs').innerHTML = P.PRODUCT_ORDER.map(function (id) {
-      return '<button type="button" class="pt-tab' + (id === d.product ? ' is-on' : '') +
-        '" data-product="' + id + '" aria-pressed="' + (id === d.product) + '">' + esc(P.PRODUCTS[id][l]) + '</button>';
+      return '<button type="button" class="pt-tab' + (id === tab ? ' is-on' : '') +
+        '" data-product="' + id + '" aria-pressed="' + (id === tab) + '">' + esc(P.PRODUCTS[id][l]) + '</button>';
     }).join('');
+    var shapes = root.querySelector('.pt-shapes');
+    shapes.hidden = tab !== 'lotcoc';
+    shapes.innerHTML = tab !== 'lotcoc' ? '' : '<span class="pt-label">' + esc(t('studio.pt_shape')) + '</span>' +
+      [['lotcoc', 'studio.pt_round'], ['lotcocv', 'studio.pt_square']].map(function (x) {
+        var on = d.product === x[0];
+        return '<button type="button" class="pt-chip' + (on ? ' is-on' : '') + '" data-shape="' + x[0] + '" aria-pressed="' + on + '">' +
+          '<span class="pt-shape-ic pt-shape-' + x[0] + '" aria-hidden="true"></span><span>' + esc(t(x[1])) + '</span></button>';
+      }).join('');
     var onTab = root.querySelector('.pt-tab.is-on');
     if (onTab) {   // keep the chosen piece in view in the scrolling row
       var row = onTab.parentNode;
@@ -2044,12 +2097,17 @@
   // The fabrics on the piece, as a palette to re-spread after the layout or
   // the piece changes (the number of patches changes with them).
   function paletteNow() {
-    var ids = [];
-    for (var i = 0; i < (D.d.fab || '').length; i++) {
-      var id = P.B64.indexOf(D.d.fab[i]);
-      if (ids.indexOf(id) < 0) ids.push(id);
-    }
+    var ids = keysOn(D.d);
     return ids.length ? ids : D.basket;
+  }
+
+  // Round / square coaster: the same product, another shape.
+  function setShape(product) {
+    var pal = paletteNow(), keep = D.d;
+    D.d = P.blank(product);
+    ['tones', 'prints', 'fabrics', 'other', 'note', 'sketch', 'img'].forEach(function (k) { D.d[k] = keep[k]; });
+    D.d.layout = P.PRODUCTS[product].layouts.indexOf(keep.layout) >= 0 ? keep.layout : D.d.layout;
+    if (keep.fab && D.d.layout !== 'tuve') { P.scatter(D.d, pal); P.syncTaste(D.d); }
   }
 
   function designerClick(e) {
@@ -2057,7 +2115,7 @@
     if (e.target.closest('[data-gv-next]')) { teach('next'); return true; }
     if ((el = e.target.closest('[data-scrap]'))) {
       if (Date.now() - scrapDragged < 350) return true;   // the end of a drag
-      var sid = +el.getAttribute('data-scrap');
+      var sid = parseKey(el.getAttribute('data-scrap'));
       D.held = D.held === sid ? null : sid;
       renderBasket();
       renderPreview();
@@ -2065,6 +2123,26 @@
     }
     if ((el = e.target.closest('.pt-board [data-i]'))) {
       tapPatch(+el.getAttribute('data-i'));
+      return true;
+    }
+    if ((el = e.target.closest('[data-shape]'))) {
+      setShape(el.getAttribute('data-shape'));
+      unsew(); renderDesigner();
+      return true;
+    }
+    if ((el = e.target.closest('[data-own-go]'))) {
+      var hex = (sheetBody.querySelector('[name="own"]').value || '').replace('#', '').toLowerCase();
+      if (!/^[0-9a-f]{6}$/.test(hex)) return true;
+      D.basket = ownBasket(hex);
+      D.held = null;
+      try { localStorage.setItem('gem-own-colour', hex); } catch (x) { /* private mode */ }
+      renderBasket(); renderPreview();
+      var scr = sheetBody.querySelector('.pt-scraps');
+      if (scr) { scr.classList.remove('is-rummage'); void scr.offsetWidth; scr.classList.add('is-rummage'); }
+      return true;
+    }
+    if ((el = e.target.closest('[data-own-pick]'))) {
+      sheetBody.querySelector('[name="own"]').value = '#' + el.getAttribute('data-own-pick');
       return true;
     }
     if ((el = e.target.closest('[data-mood]'))) {
@@ -2134,6 +2212,11 @@
         D.d.fab = P.scatter(D.d, D.basket);
         P.syncTaste(D.d);
         shuffled = true;
+      } else if (act === 'own') {
+        var box = sheetBody.querySelector('.pt-own');
+        box.hidden = !box.hidden;
+        el.setAttribute('aria-expanded', String(!box.hidden));
+        return true;
       } else if (act === 'rummage') {
         D.basket = fillBasket([]);
         D.held = null;
@@ -2459,7 +2542,7 @@
   function designable(sku) {
     if (!P) return null;
     var id = null;
-    Object.keys(P.PRODUCTS).forEach(function (k) { if (P.PRODUCTS[k].sku === sku) id = k; });
+    Object.keys(P.PRODUCTS).forEach(function (k) { if (P.PRODUCTS[k].sku === sku && !id) id = k; });
     return id;
   }
 
@@ -2895,6 +2978,12 @@
     });
 
     document.addEventListener('gem:langchange', function () { renderDesigner(); renderTu(); relabelSpots(); });
+    // an own-colour fabric finished dyeing: swap the plain colour for it
+    var fabricTimer = null;
+    document.addEventListener('gem:fabric', function () {
+      clearTimeout(fabricTimer);
+      fabricTimer = setTimeout(function () { if (sheetBody.querySelector('.pt')) { renderBasket(); renderPreview(); } }, 60);
+    });
     document.addEventListener('gem:tu', function () {
       // Another tab, or an order just went through: refresh what's open.
       if (sheetBody.querySelector('.tu')) renderTu();

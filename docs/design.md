@@ -1509,7 +1509,23 @@ Góp ý: bàn thiết kế giống tờ khảo sát, bản vẽ trông rẻ, chi
 - Thẻ: ảnh trong SVG không tự tải khi vẽ vào canvas, nên `inlineImages()` đổi
   chúng sang data URL lúc chạy rồi mới vẽ.
 - `printBody()` (họa tiết vẽ bằng code) giờ chỉ còn cho chấm tròn trong chip
-  "Tự chỉnh".
+  "Tự chỉnh" và làm màu tạm cho vải màu riêng lúc chưa nhuộm xong.
+- Đợt tranh 2: túi Origami, túi áo Oxford, Bloom Charm, dây đeo, bookmark góc
+  sách (hình vuông có vạt tam giác kẹp góc trang), lót cốc vuông. Móc / khoen
+  kim loại tách ra lớp `-top` vẽ đè lên vải (`PIECES` trong `design-assets.py`).
+  Kiểu "Ghép hai vải" theo món thật: Origami xen kẽ cánh, Oxford hai nửa,
+  Bloom = cuống + nút + nụ giữa / hai nụ bên, bookmark chia theo đường chéo.
+- **Lót cốc tròn / vuông:** cùng sản phẩm (`sku lotcoc`), hai dáng `lotcoc` /
+  `lotcocv`; nút "Dáng" chỉ hiện ở lót cốc. Ghi chú đơn ghi rõ "Lót cốc tròn" /
+  "Lót cốc vuông".
+- **Màu riêng (color picker):** nút "Màu riêng" ở rổ → bảng chọn màu của máy + 8
+  màu gợi ý → "Nhuộm vào rổ": rổ thành 9 kiểu vải của màu đó. Nhuộm ngay trong
+  trình duyệt từ tranh vải xanh lam (`customSrc`): điểm xanh nhận sắc mới, độ đậm
+  so với chính tranh đó; nền kem, ren trắng, lá xanh giữ nguyên. Mã thiết kế thêm
+  trường 12: `<kiểu 0-8><hex>` cách nhau bằng dấu chấm (tối đa 19 màu); mỗi ô dùng
+  chữ 45+ trỏ vào danh sách đó. Ghi chú đơn: "Hoa nhí màu riêng #7a4fa0 ×2".
+  Tên thẻ khi phần lớn ô là màu riêng: "Sắc tím". Lời hứa kèm: Gem tìm vải gần màu
+  nhất và nhắn ảnh duyệt trước khi may.
 
 **Chưa làm (đợt 2–3):** vải thật dạng "Mảnh hiếm" (bảng `fabrics` + admin), tường
 thiết kế của khách, Thiết kế của tháng.
