@@ -265,6 +265,11 @@
     'studio.pt_hint_held': { vi: `Giờ chạm vào ô muốn đắp mảnh {vai} lên.`, en: `Now tap the patch you want the {vai} on.` },
     'studio.pt_hint_draw': { vi: `Kiểu "theo hình mình vẽ": vẽ trong mục Tự chỉnh bên dưới.`, en: `"From my drawing": draw it under Fine-tune below.` },
     'studio.pt_sew':       { vi: `May xong!`, en: `Sew it!` },
+    'studio.pt_letter':    { vi: `Tờ nhắn gửi Gem`, en: `A note to Gem` },
+    'studio.pt_letter_p':  { vi: `Không bắt buộc: chất vải, lời nhắn, ảnh tham khảo`, en: `Optional: fabrics, a message, a reference photo` },
+    'studio.pt_real_cap':  { vi: `Đồ thật`, en: `The real one` },
+    'studio.pt_mood_gem':  { vi: `Gem chọn giúp`, en: `Gem picks` },
+    'studio.pt_draw_on':   { vi: `Vẽ thẳng lên món bằng ngón tay. Gem may theo tinh thần hình vẽ.`, en: `Draw right on the piece with your finger. Gem sews in its spirit.` },
     'studio.pt_title_label': { vi: `Tên mẫu`, en: `Design name` },
     'studio.pt_title_hint': { vi: `Chạm vào tên để đặt tên riêng cho mẫu.`, en: `Tap the name to give it your own.` },
     'studio.pt_sewing':    { vi: `Đang may...`, en: `Sewing...` },
@@ -303,7 +308,7 @@
     'studio.pt_kept':      { vi: `Đã lưu`, en: `Kept` },
     'studio.pt_link':      { vi: `Chép link`, en: `Copy link` },
     'studio.pt_copied':    { vi: `Đã chép`, en: `Copied` },
-    'studio.pt_note':      { vi: `Đây là bản phác. Thợ chọn vải vụn theo tông, họa tiết và kiểu ghép bạn chọn, nên màu và hoa văn sẽ gần giống chứ không giống hệt. Gem nhắn ảnh vải cho bạn duyệt trước khi may.`, en: `This is a sketch. Gem picks the scraps closest to it, so colours and prints will be close, not identical. Gem sends you a photo of the fabrics before sewing.` },
+    'studio.pt_note':      { vi: `Vải vụn thật sẽ gần giống chứ không giống hệt bản vẽ. Gem nhắn ảnh vải cho bạn duyệt trước khi may.`, en: `The real scraps will be close to the drawing, not identical. Gem sends you a photo of the fabrics before sewing.` },
     'studio.pt_real':      { vi: `Đồ thật Gem đã may`, en: `Pieces Gem has sewn` },
     'studio.pt_similar':   { vi: `Có sẵn, tông gần giống — mua được ngay`, en: `Ready now, in a similar palette` },
     'studio.pt_products':  { vi: `Chọn món`, en: `Choose a piece` },
@@ -1294,9 +1299,31 @@
         '<div class="pt-left">' +
           '<div class="pt-shared" hidden></div>' +
           '<div class="pt-view">' +
-            '<div class="pt-board"></div>' +
-            '<img class="pt-sewer" alt="" draggable="false" hidden>' +
+            '<div class="pt-stage">' +
+              '<div class="pt-board"></div>' +
+              // "from my drawing": draw straight on the piece
+              '<canvas class="pt-canvas" width="680" height="680" hidden data-i18n-attr="aria-label:studio.pt_draw" aria-label="' + esc(t('studio.pt_draw')) + '"></canvas>' +
+              // a real piece Gem has sewn, pinned to the corner like a photo
+              '<button type="button" class="gv-polaroid" data-gv-zoom data-i18n-attr="aria-label:studio.gv_next" aria-label="' + esc(t('studio.gv_next')) + '">' +
+                '<span class="gv-photo"><img alt="" draggable="false"></span>' +
+                '<span class="gv-cap" data-i18n="studio.pt_real_cap">' + esc(t('studio.pt_real_cap')) + '</span>' +
+              '</button>' +
+              '<button type="button" class="gv-next" data-gv-next hidden data-i18n-attr="aria-label:studio.gv_next" aria-label="' + esc(t('studio.gv_next')) + '">›</button>' +
+              // Udon the teacher sits by the piece; sews and cheers there too
+              '<div class="gv-udon" aria-hidden="true">' + GV_POSES.map(function (n, i) {
+                return '<img src="images/studio/udon/ud-gv-' + n + '.webp" alt="" draggable="false" data-gv="' + n + '"' + (i ? ' hidden' : '') + '>';
+              }).join('') + '</div>' +
+              '<img class="pt-sewer" alt="" draggable="false" hidden>' +
+            '</div>' +
+            '<div class="pt-drawbar" hidden>' +
+              '<div class="pt-inks" role="group"></div>' +
+              '<div class="pt-sizes" role="group" data-i18n-attr="aria-label:studio.pt_size" aria-label="' + esc(t('studio.pt_size')) + '"></div>' +
+              '<button type="button" class="pt-tool pt-mini" data-pt="undo" data-i18n="studio.pt_undo">' + esc(t('studio.pt_undo')) + '</button>' +
+              '<button type="button" class="pt-tool pt-mini" data-pt="clear" data-i18n="studio.pt_clear">' + esc(t('studio.pt_clear')) + '</button>' +
+              '<p class="pt-small pt-draw-msg" aria-live="polite"></p>' +
+            '</div>' +
             '<p class="pt-small pt-hint" aria-live="polite"></p>' +
+            '<p class="gv-say" aria-live="polite"></p>' +
           '</div>' +
         '</div>' +
         '<div class="pt-side">' +
@@ -1349,51 +1376,27 @@
               (window.GemTu ? '<button type="button" class="pt-tool" data-pt="keep" data-i18n="studio.pt_keep">' + esc(t('studio.pt_keep')) + '</button>' : '') +
             '</div>' +
           '</section>' +
-          // the rest is optional: folded away so the first look is the play
-          '<details class="pt-extra"><summary data-i18n="studio.pt_extra">' + esc(t('studio.pt_extra')) + '</summary>' +
-          '<section class="pt-sec">' + tr('h3', 'studio.pt_tones', ' class="pt-label"') + '<div class="pt-tones pt-chips"></div></section>' +
-          '<section class="pt-sec">' + tr('h3', 'studio.pt_prints', ' class="pt-label"') + '<div class="pt-prints pt-chips"></div></section>' +
-          '<section class="pt-sec">' + tr('h3', 'studio.pt_fabrics', ' class="pt-label"') + '<div class="pt-fabrics pt-chips"></div>' +
+          // a kraft note pinned at the end: all optional
+          '<details class="pt-extra pt-letter"><summary><span class="pt-letter-h" data-i18n="studio.pt_letter">' + esc(t('studio.pt_letter')) + '</span>' +
+            '<span class="pt-small" data-i18n="studio.pt_letter_p">' + esc(t('studio.pt_letter_p')) + '</span></summary>' +
+          '<section class="pt-sec">' + tr('h3', 'studio.pt_fabrics', ' class="pt-label"') + '<div class="pt-fabrics pt-chips pt-tags"></div>' +
             '<label class="pt-other">' + tr('span', 'studio.pt_other') +
               '<input name="other" maxlength="' + P.MAX_OTHER + '" autocomplete="off" data-i18n-attr="placeholder:studio.pt_other_ph" placeholder="' + esc(t('studio.pt_other_ph')) + '"></label>' +
           '</section>' +
-          '<section class="pt-sec">' + tr('h3', 'studio.pt_draw', ' class="pt-label"') +
-            tr('p', 'studio.pt_draw_p', ' class="pt-small"') +
-            '<div class="pt-draw">' +
-              '<canvas class="pt-canvas" width="512" height="512" data-i18n-attr="aria-label:studio.pt_draw" aria-label="' + esc(t('studio.pt_draw')) + '"></canvas>' +
-              '<div class="pt-inks" role="group"></div>' +
-              '<div class="pt-sizes" role="group" data-i18n-attr="aria-label:studio.pt_size" aria-label="' + esc(t('studio.pt_size')) + '"></div>' +
-              '<div class="pt-tools">' +
-                '<button type="button" class="pt-tool" data-pt="undo" data-i18n="studio.pt_undo">' + esc(t('studio.pt_undo')) + '</button>' +
-                '<button type="button" class="pt-tool" data-pt="clear" data-i18n="studio.pt_clear">' + esc(t('studio.pt_clear')) + '</button>' +
-              '</div>' +
-              '<p class="pt-small pt-draw-msg" aria-live="polite"></p>' +
-            '</div>' +
-          '</section>' +
+          '<section class="pt-sec"><label class="pt-notefield">' + tr('span', 'studio.pt_note_label', ' class="pt-label"') +
+            '<textarea name="note" rows="3" maxlength="' + P.MAX_NOTE + '" data-i18n-attr="placeholder:studio.pt_note_ph" placeholder="' + esc(t('studio.pt_note_ph')) + '"></textarea></label></section>' +
           '<section class="pt-sec">' + tr('h3', 'studio.pt_photo', ' class="pt-label"') +
-            tr('p', 'studio.pt_photo_p', ' class="pt-small"') +
             '<div class="pt-photo">' +
-              '<label class="pt-tool pt-upload"><span data-i18n="studio.pt_photo_add">' + esc(t('studio.pt_photo_add')) + '</span>' +
+              '<label class="pt-polaroid-add"><span class="pt-polaroid-in"><span data-i18n="studio.pt_photo_add">' + esc(t('studio.pt_photo_add')) + '</span></span>' +
                 '<input type="file" name="photo" accept="image/*" hidden></label>' +
               '<figure class="pt-photo-prev" hidden><img alt=""><figcaption></figcaption>' +
-                '<button type="button" class="pt-tool" data-pt="photo-del" data-i18n="studio.pt_photo_del">' + esc(t('studio.pt_photo_del')) + '</button></figure>' +
+                '<button type="button" class="pt-tool pt-mini" data-pt="photo-del" data-i18n="studio.pt_photo_del">' + esc(t('studio.pt_photo_del')) + '</button></figure>' +
+              tr('p', 'studio.pt_photo_p', ' class="pt-small"') +
               '<p class="pt-small pt-photo-msg" aria-live="polite"></p>' +
             '</div>' +
           '</section>' +
-          '<section class="pt-sec"><label class="pt-notefield">' + tr('span', 'studio.pt_note_label', ' class="pt-label"') +
-            '<textarea name="note" rows="2" maxlength="' + P.MAX_NOTE + '" data-i18n-attr="placeholder:studio.pt_note_ph" placeholder="' + esc(t('studio.pt_note_ph')) + '"></textarea></label></section>' +
-          '</details>' +
-          // Udon the teacher: points at a board with a real piece Gem has sewn
-          '<div class="gv" aria-live="polite">' +
-            '<div class="gv-udon">' + GV_POSES.map(function (n, i) {
-              return '<img src="images/studio/udon/ud-gv-' + n + '.webp" alt="" draggable="false" data-gv="' + n + '"' + (i ? ' hidden' : '') + '>';
-            }).join('') + '</div>' +
-            '<button type="button" class="gv-board" data-gv-next data-i18n-attr="aria-label:studio.gv_next" aria-label="' + esc(t('studio.gv_next')) + '">' +
-              '<span class="gv-photo"><img alt="" draggable="false"></span>' +
-            '</button>' +
-            '<p class="gv-say"></p>' +
-          '</div>' +
           tr('p', 'studio.pt_note', ' class="pt-note"') +
+          '</details>' +
         '</div>' +
       '</div>',
       true
@@ -1423,7 +1426,7 @@
   }
 
   function gvBoard(sku, line) {
-    var root = sheetBody.querySelector('.gv');
+    var root = sheetBody.querySelector('.pt');
     if (!root || !thumbOf(sku)) return;
     var im = root.querySelector('.gv-photo img');
     im.src = thumbOf(sku);
@@ -1451,7 +1454,7 @@
   // why: 'hi' (opened), 'product' (another piece), 'taste' (colours /
   // prints changed), 'next' (board tapped: next real photo)
   function teach(why) {
-    var root = sheetBody.querySelector('.gv');
+    var root = sheetBody.querySelector('.pt');
     if (!root) return;
     clearTimeout(gvTimer);
     var sku = P.PRODUCTS[D.d.product].sku;
@@ -1573,11 +1576,15 @@
     var box = sheetBody.querySelector('.pt-moods');
     if (!box) return;
     var cur = P.moodOf(D.d), l = lng();
+    var gem = !D.d.fab && D.d.tones[0] === P.GEM;
     box.innerHTML = P.MOODS.map(function (m) {
       var on = cur === m;
       return '<button type="button" class="pt-mood' + (on ? ' is-on' : '') + '" data-mood="' + m.id + '" aria-pressed="' + on + '">' +
         '<img src="' + P.VAI + 'mood-' + m.id + '.webp" alt="" draggable="false"><span>' + esc(m[l]) + '</span></button>';
-    }).join('');
+    }).join('') +
+      // Gem picks the fabrics: the order note says so, the preview is a guess
+      '<button type="button" class="pt-mood' + (gem ? ' is-on' : '') + '" data-mood="gem" aria-pressed="' + gem + '">' +
+        '<img src="images/mascot/udon_portrait.png" alt="" draggable="false"><span>' + esc(t('studio.pt_mood_gem')) + '</span></button>';
   }
 
   function renderShared() {
@@ -1691,14 +1698,17 @@
         th.style.animationDelay = Math.round(k * step) + 'ms';
         el.parentNode.appendChild(th);
       });
-      if (sewer) { sewer.src = 'images/studio/udon/ud-may.webp'; sewer.className = 'pt-sewer is-sewing'; sewer.hidden = false; }
+      if (sewer) {
+        sewer.src = 'images/studio/udon/ud-may.webp'; sewer.className = 'pt-sewer is-sewing'; sewer.hidden = false;
+        board.parentNode.classList.add('is-sewing');   // the teacher Udon steps aside
+      }
       needleRun(svgEl, seams, step, each, total);
     }
     setTimeout(function () {
       if (sewer && !reduce) {
         sewer.src = 'images/studio/udon/ud-reo.webp';
         sewer.className = 'pt-sewer is-cheer';
-        setTimeout(function () { sewer.hidden = true; }, 2600);
+        setTimeout(function () { sewer.hidden = true; board.parentNode.classList.remove('is-sewing'); }, 2600);
       }
       setTimeout(function () {
         var done = sheetBody.querySelector('.pt-done');
@@ -1908,7 +1918,6 @@
     var root = sheetBody.querySelector('.pt');
     if (!root || !P) return;
     var l = lng(), d = D.d, prod = P.PRODUCTS[d.product];
-    var gemTones = d.tones[0] === P.GEM, gemPrints = d.prints[0] === P.GEM;
 
     var tab = d.product === 'lotcocv' ? 'lotcoc' : d.product;   // the square coaster lives under "Lót cốc"
     root.querySelector('.pt-tabs').innerHTML = P.PRODUCT_ORDER.map(function (id) {
@@ -1937,14 +1946,6 @@
       return chip('data-layout', id, id === d.layout, P.LAYOUTS[id][l], icon);
     }).join('');
 
-    root.querySelector('.pt-tones').innerHTML = P.TONE_ORDER.map(function (id) {
-      return chip('data-tone', id, d.tones.indexOf(id) >= 0, P.TONES[id][l], P.toneDot(id, 22));
-    }).join('') + chip('data-tone', P.GEM, gemTones, t('studio.pt_gem'));
-
-    root.querySelector('.pt-prints').innerHTML = P.PRINT_ORDER.map(function (id) {
-      return chip('data-print', id, d.prints.indexOf(id) >= 0, P.PRINTS[id][l], P.printDot(id, 22));
-    }).join('') + chip('data-print', P.GEM, gemPrints, t('studio.pt_gem'));
-
     root.querySelector('.pt-fabrics').innerHTML = P.FABRIC_ORDER.map(function (id) {
       return chip('data-fabric', id, d.fabrics.indexOf(id) >= 0, P.FABRICS[id][l]);
     }).join('');
@@ -1960,8 +1961,11 @@
         '" aria-pressed="' + (i === D.size) + '" aria-label="' + esc(t('studio.pt_size')) + ' ' + (i + 1) + '">' +
         '<span style="width:' + Math.round(4 + w * 3.4) + 'px;height:' + Math.round(4 + w * 3.4) + 'px"></span></button>';
     }).join('');
-    // "from my drawing" needs the drawing: unfold the extras for it
-    if (d.layout === 'tuve') root.querySelector('.pt-extra').open = true;
+    // "from my drawing": the canvas over the piece + the pen bar under it
+    var drawing = d.layout === 'tuve';
+    root.querySelector('.pt-canvas').hidden = !drawing;
+    root.querySelector('.pt-drawbar').hidden = !drawing;
+    root.querySelector('.pt-stage').classList.toggle('is-drawing', drawing);
 
     renderMoods();
     renderBasket();
@@ -1975,8 +1979,9 @@
     if (!root) return;
     var d = D.d, spec = specNow(), ok = P.isComplete(d);
     root.querySelector('.pt-board').innerHTML = P.svg(d, { title: esc(P.describe(d)), hit: true });
-    root.querySelector('.pt-hint').textContent = d.layout === 'tuve' ? t('studio.pt_hint_draw')
-      : D.held != null ? t('studio.pt_hint_held').replace('{vai}', fabricName(D.held).toLowerCase()) : t('studio.pt_hint');
+    // a short instruction when it matters; otherwise Udon's line shows
+    root.querySelector('.pt-hint').textContent = d.layout === 'tuve' ? t('studio.pt_draw_on')
+      : D.held != null ? t('studio.pt_hint_held').replace('{vai}', fabricName(D.held).toLowerCase()) : '';
     drawCanvas();
     root.querySelector('[data-pt="undo"]').disabled = !d.sketch.length;
     root.querySelector('[data-pt="clear"]').disabled = !d.sketch.length;
@@ -2078,15 +2083,9 @@
     var cv = sheetBody.querySelector('.pt-canvas');
     if (!cv || !cv.getContext) return;
     var g = cv.getContext('2d'), s = cv.width / P.GRID;
-    g.fillStyle = '#FBF6EE';
-    g.fillRect(0, 0, cv.width, cv.height);
-    g.strokeStyle = 'rgba(138,106,68,0.12)';
-    g.lineWidth = 1;
-    for (var k = 8; k < P.GRID; k += 8) {
-      g.beginPath(); g.moveTo(k * s, 0); g.lineTo(k * s, cv.height); g.moveTo(0, k * s); g.lineTo(cv.width, k * s); g.stroke();
-    }
+    g.clearRect(0, 0, cv.width, cv.height);
     g.lineCap = 'round'; g.lineJoin = 'round';
-    D.d.sketch.forEach(function (st) {
+    D.d.sketch.filter(function (st) { return !!st.raw; }).forEach(function (st) {
       g.strokeStyle = P.INKS[st.c];
       g.lineWidth = s * P.WIDTHS[st.w || 0];
       // a stroke in progress: its fine points (already in cells, no +0.5)
@@ -2164,6 +2163,13 @@
   function designerClick(e) {
     var el, teachAfter = null, shuffled = false;
     if (e.target.closest('[data-gv-next]')) { teach('next'); return true; }
+    if (e.target.closest('[data-gv-zoom]')) {
+      // the pinned photo: tap to see it big, tap again to put it back
+      var st = sheetBody.querySelector('.pt-stage');
+      var big = st.classList.toggle('is-zoom');
+      sheetBody.querySelector('.gv-next').hidden = !big;
+      return true;
+    }
     if ((el = e.target.closest('[data-scrap]'))) {
       if (Date.now() - scrapDragged < 350) return true;   // the end of a drag
       var sid = parseKey(el.getAttribute('data-scrap'));
@@ -2197,6 +2203,14 @@
       return true;
     }
     if ((el = e.target.closest('[data-mood]'))) {
+      if (el.getAttribute('data-mood') === 'gem') {
+        D.d.fab = ''; D.d.cus = []; D.d.moodId = '';
+        D.d.tones = [P.GEM]; D.d.prints = [P.GEM];
+        D.basket = fillBasket([]);
+        D.held = null;
+        unsew(); renderDesigner(); teach('taste');
+        return true;
+      }
       var mood = P.MOODS.filter(function (m) { return m.id === el.getAttribute('data-mood'); })[0];
       if (!mood) return true;
       P.applyMood(D.d, mood, true);

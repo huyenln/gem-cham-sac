@@ -1540,6 +1540,20 @@ Góp ý: bàn thiết kế giống tờ khảo sát, bản vẽ trông rẻ, chi
   còn làm dự phòng. Đồ trong giỏ cũng nằm trong xe nhân vật đẩy (`.st-cargo`, vành
   xe đo từ tranh: `CART_RIM`).
 
+**Xếp lại phần dưới (10/2026):**
+- Udon giáo viên ngồi ở góc dưới bên trái món (`.pt-stage .gv-udon`); câu của Udon
+  là bóng thoại ngay dưới món (`.gv-say`), nhường chỗ cho hướng dẫn khi đang cầm
+  vải hoặc đang vẽ (`.pt-hint`). Ảnh món thật là tấm polaroid ghim góc trên bên
+  phải (`.gv-polaroid`): chạm để phóng to, nút › xem món khác. Udon tạm ẩn khi
+  Udon ngồi may xuất hiện.
+- Bỏ hẳn chip "Tông màu" / "Họa tiết": tâm trạng + rổ + Màu riêng thay thế. Thêm
+  tâm trạng "Gem chọn giúp": bỏ vải từng ô, tông và họa tiết = Gem chọn.
+- "Theo hình mình vẽ": vẽ thẳng lên món — canvas trong suốt phủ lên hình món, chỉ
+  vẽ nét đang kéo; nét xong vào SVG của món (nằm trong hình món, có bóng). Thanh
+  bút ngay dưới món.
+- "Tự chỉnh" thành **Tờ nhắn gửi Gem**: giấy kraft có ghim, chất vải dạng nhãn may,
+  lời nhắn trên giấy kẻ dòng (Dancing Script), ảnh tham khảo là polaroid trống.
+
 **Chưa làm (đợt 2–3):** vải thật dạng "Mảnh hiếm" (bảng `fabrics` + admin), tường
 thiết kế của khách, Thiết kế của tháng.
 

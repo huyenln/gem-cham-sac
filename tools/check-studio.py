@@ -587,6 +587,28 @@ async def design(browser, db):
         mood = await pg.evaluate("(document.querySelector('.pt-mood.is-on') || {dataset: {}}).dataset.mood")
         check(lay == 'chong' and mood == 'tet', f'{name}: picking a mood keeps the layout ({lay}, {mood})')
         await js_click(pg, '[data-layout="vuong"]')
+        # the rearranged table: Udon + the real piece by the board, no tone/print chips
+        check(await pg.evaluate("!!document.querySelector('.pt-stage .gv-udon') && !!document.querySelector('.pt-stage .gv-polaroid') && !document.querySelector('.pt-tones, .pt-prints')"),
+              f'{name}: Udon and the real piece sit by the board; tone / print chips are gone')
+        # "from my drawing": draw straight on the piece
+        await js_click(pg, '[data-layout="tuve"]')
+        await pg.evaluate("document.querySelector('.pt-board').scrollIntoView({block: 'center'})")
+        await pg.wait_for_timeout(200)
+        cb = await pg.evaluate("(() => { const r = document.querySelector('.pt-canvas').getBoundingClientRect(); return [r.x, r.y, r.width, r.height]; })()")
+        await pg.mouse.move(cb[0] + cb[2] * 0.3, cb[1] + cb[3] * 0.4)
+        await pg.mouse.down()
+        await pg.mouse.move(cb[0] + cb[2] * 0.7, cb[1] + cb[3] * 0.6, steps=12)
+        await pg.mouse.up()
+        await pg.wait_for_timeout(200)
+        check(await pg.evaluate("document.querySelectorAll('.pt-board svg path[stroke-linecap=round]').length") == 1,
+              f'{name}: a line drawn on the piece lands in the design')
+        await js_click(pg, '[data-pt="clear"]')
+        await js_click(pg, '[data-mood="gem"]')
+        await pg.wait_for_timeout(200)
+        note = await pg.evaluate("document.querySelector('.pt-board svg title').textContent")
+        check('Gem chọn' in note, f'{name}: "Gem chọn giúp" leaves the fabrics to Gem ({note[:60]}…)')
+        await js_click(pg, '[data-mood="hanoi"]')
+        await js_click(pg, '[data-layout="vuong"]')
         # own colour: dye the basket, put one on a patch, it travels in the code
         await js_click(pg, '[data-pt="own"]')
         await pg.evaluate("document.querySelector('[name=own]').value = '#7a4fa0'")
