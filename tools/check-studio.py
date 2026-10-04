@@ -14,7 +14,8 @@ and walks through what broke before:
   editor   (owner) add a piece, Dài thêm, publish, studio.html shows it, Xoá hết,
            backgrounds offered per scene, the street scene saves too
   library  (owner) upload into a new tab with "Xoá nền trắng", rename / move /
-           remove it; product cut-outs show under "Sản phẩm thật"
+           remove it; product cut-outs show under "Sản phẩm thật"; several files
+           at once, one dropped before saving, one refused by storage
   product  (owner) product form: photo -> shrunk + 600px thumb, gallery,
            "Xoá nền trắng" cut-out, Kệ; all saved in one PATCH
   catalog  san-pham.html builds a card for a product only the database knows,
@@ -154,6 +155,8 @@ class FakeDB:
                                        headers={'Access-Control-Allow-Origin': '*'})
             return await r.fulfill(status=404, body='')
         if '/storage/v1/object/gem-media/' in u and m == 'POST':
+            if 'hong' in u:   # a file the storage refuses: the batch upload must carry on
+                return await r.fulfill(status=400, content_type='application/json', body='{"message":"giả lập lỗi"}')
             self.files[u.split('/gem-media/')[1]] = (r.request.headers.get('content-type'), r.request.post_data_buffer)
             return await r.fulfill(status=200, content_type='application/json', body='{}')
         if '/rest/v1/' in u or '/rpc/' in u:
@@ -470,6 +473,27 @@ async def library(browser, db):
         await js_click(pg, '[data-asset-del]')
         await pg.wait_for_timeout(500)
         check(not db.assets, f'{name}: removed from the library')
+
+        # several at once: drop one before saving, one refused by storage
+        files = [test_photo(OUT / f'{n}.jpg', 900, 700) for n in ('ghe', 'den', 'hong', 'thua')]
+        items0 = await pg.evaluate("document.querySelectorAll('.se-item').length")
+        await pg.set_input_files('[name="se-file"]', files)
+        await pg.wait_for_timeout(300)
+        check(await pg.evaluate("document.querySelectorAll('.se-up-strip img').length") == 4, f'{name}: four files in one go')
+        await js_click(pg, '[data-up-drop="3"]')
+        await pg.wait_for_timeout(100)
+        await pg.screenshot(path=OUT / f'library-{name}-batch.png')
+        await js_click(pg, '[data-up="save"]')
+        await pg.wait_for_timeout(4000)
+        names = sorted(a['name'] for a in db.assets)
+        check(names == ['den', 'ghe'], f'{name}: the good ones saved, named after their files ({names})')
+        left = await pg.evaluate("[...document.querySelectorAll('.se-upform img')].map(i => i.title || 'one')")
+        check(len(left) == 1, f'{name}: the refused one stays in the form ({left})')
+        msg = await pg.evaluate("document.querySelector('.se-status').textContent")
+        check('hong' in msg, f'{name}: status names it ({msg[:70]}…)')
+        check(await pg.evaluate("document.querySelectorAll('.se-item').length") == items0, f'{name}: a batch is not dropped into the scene')
+        await js_click(pg, '[data-up="cancel"]')
+        check(not pg.errors, f'{name}: no script errors after the batch {pg.errors}')
         check(not pg.errors, f'{name}: no script errors {pg.errors}')
         await pg.context.close()
 
