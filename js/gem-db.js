@@ -122,6 +122,36 @@ window.GemDB = (function () {
       });
     },
 
+    // Ảnh tham khảo khách gửi ở Bàn thiết kế: kho riêng gem-design (khách
+    // chỉ thêm được, nhân sự mới xem được). blob = JPEG đã thu nhỏ. Trả tên
+    // file ngẫu nhiên (20 ký tự + .jpg) — chỉ tên này nằm trong mã thiết kế.
+    uploadDesignPhoto: function (blob) {
+      var abc = 'abcdefghijklmnopqrstuvwxyz0123456789', name = '';
+      var rnd = new Uint8Array(20);
+      (window.crypto || window.msCrypto).getRandomValues(rnd);
+      for (var i = 0; i < 20; i++) name += abc[rnd[i] % 36];
+      name += '.jpg';
+      return fetch(URL + '/storage/v1/object/gem-design/' + name, {
+        method: 'POST',
+        headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY, 'Content-Type': 'image/jpeg' },
+        body: blob
+      }).then(function (res) {
+        if (!res.ok) return res.text().then(function (t) { throw new Error(t || ('HTTP ' + res.status)); });
+        return name;
+      });
+    },
+
+    // Nhân sự xem ảnh tham khảo của đơn: tải bằng token đăng nhập → blob URL.
+    designPhotoUrl: function (name) {
+      if (!/^[a-z0-9]{20}\.jpg$/.test(name || '')) return Promise.reject(new Error('bad name'));
+      return fetch(URL + '/storage/v1/object/authenticated/gem-design/' + name, {
+        headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + (token || KEY) }
+      }).then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.blob();
+      }).then(function (b) { return window.URL.createObjectURL(b); });
+    },
+
     // Giữ chỗ. Trả về { ok, code, seats_left } hoặc { ok:false, error }.
     book: function (payload) {
       return req('/rest/v1/rpc/book_session', {

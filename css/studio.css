@@ -63,7 +63,7 @@
   min-height: 320px;
   overflow: hidden;
   background: #efe3cf;
-  touch-action: manipulation;
+  touch-action: pan-y;        /* sideways drags are ours: swipe to walk */
   user-select: none;
   -webkit-user-select: none;
   /* Chrome on Android flashes the whole tappable stage blue otherwise */
@@ -160,6 +160,12 @@
 .st-udon.is-asleep { animation: none; }
 .st-udon:focus-visible { outline: 3px solid var(--sage-deep); outline-offset: 4px; border-radius: 12px; }
 .st-udon-ghost { position: absolute; z-index: 6; height: auto; max-width: none; pointer-events: none; }
+.st-udon { cursor: grab; touch-action: none; }
+.st-udon-ghost.is-dragging { z-index: 20; filter: drop-shadow(0 10px 12px rgba(61, 74, 46, 0.3)); cursor: grabbing; }
+/* something held over the cart / basket: say "let go here" */
+.st-stage.is-drop-ok .st-udon-ghost.is-dragging { filter: drop-shadow(0 0 10px rgba(135, 150, 90, 0.9)); }
+/* Udon peeking out of the basket widget */
+.st-udon-peek { position: absolute; left: 18%; bottom: 30%; width: 64%; height: auto; max-width: none; z-index: 25; pointer-events: none; }
 .st-stage * { -webkit-tap-highlight-color: transparent; }
 
 /* Owner's layout pieces (js/studio-layout.js): behind the character unless
@@ -351,6 +357,13 @@
 }
 
 .st-modal[hidden] { display: none; }
+/* No pull-to-refresh / swipe-to-navigate from the studio: horizontal drags
+   walk, vertical drags inside a sheet scroll it or pull it closed. */
+html:has(.studio-page), .studio-page { overscroll-behavior: none; }
+.st-sheet { overscroll-behavior: contain; touch-action: pan-y; }
+/* grab handle: a bottom sheet you can pull down */
+.st-grab { position: sticky; top: calc(-1 * var(--space-6)); z-index: 2; height: 28px; margin: calc(-1 * var(--space-6)) calc(-1 * var(--space-4)) 0; display: flex; justify-content: center; align-items: center; cursor: grab; touch-action: none; }
+.st-grab span { width: 44px; height: 5px; border-radius: 999px; background: rgba(61, 74, 46, 0.28); }
 
 .st-sheet {
   position: relative;
@@ -547,6 +560,7 @@
   .st-hot-label { font-size: 0.9rem; }
 
   .st-modal { align-items: center; padding: var(--space-6); }
+  .st-grab { display: none; }
 
   .st-sheet {
     max-width: 760px;
@@ -579,17 +593,29 @@
 /* Basket sits above the bottom nav, smaller, so it never covers a chip. */
 .studio-page .gb-widget {
   width: 64px;
-  height: 60px;
+  height: 64px;
   bottom: calc(72px + env(safe-area-inset-bottom));
 }
-/* Painted wicker basket (images/studio/ui/gio-hang.webp) instead of the
-   line-drawn one: the same picture twice, the front copy cut below the rim,
-   so items in the basket still sit inside it. */
+/* Painted wooden cart (images/studio/ui/gio-hang.webp = props/xe) instead
+   of the line-drawn basket: the same picture twice, the front copy cut below
+   the cloth rim, so items in the basket still sit inside it. */
 .studio-page .gb-layer svg { display: none; }
 .studio-page .gb-layer {
   background: url("../images/studio/ui/gio-hang.webp") center bottom / contain no-repeat;
 }
-.studio-page .gb-layer-front { clip-path: inset(33% 0 0 0); }
+.studio-page .gb-layer-front { clip-path: inset(36% 0 0 0); }
+.studio-page .gb-pile { left: 26%; right: 4%; }
+/* A round paper button, so the cart reads as a control floating over the
+   painting, not a piece of furniture standing in the scene. */
+.studio-page .gb-widget {
+  border-radius: 50%;
+  background: rgba(251, 246, 238, 0.94);
+  border: 2px solid var(--kraft);
+  box-shadow: 0 6px 18px rgba(61, 74, 46, 0.28), 0 0 0 5px rgba(251, 246, 238, 0.45);
+  filter: none;
+}
+.studio-page .gb-widget .gb-basket-art { position: absolute; inset: 14% 13% 16% 15%; width: auto; height: auto; }
+.studio-page .gb-widget .gb-badge { top: -4px; right: -4px; }
 /* A sheet is open: the nav is covered anyway, so back to the corner. */
 .studio-page.st-lock .gb-widget { bottom: max(0.75rem, env(safe-area-inset-bottom)); }
 
@@ -698,6 +724,14 @@
 
 .pt-price { font-weight: 600; color: var(--kraft); margin-right: auto; }
 
+.pt-photo { display: grid; gap: var(--space-2); justify-items: start; }
+.pt-upload { display: inline-flex; align-items: center; cursor: pointer; }
+.pt-photo-prev { margin: 0; display: grid; grid-template-columns: 96px 1fr; gap: var(--space-2) var(--space-3); align-items: center; }
+.pt-photo-prev[hidden] { display: none; }
+.pt-photo-prev img { width: 96px; height: 96px; object-fit: cover; border-radius: 10px; border: 3px solid var(--paper-white); box-shadow: 0 2px 8px rgba(61, 74, 46, 0.18); grid-row: span 2; }
+.pt-photo-prev img[hidden] { display: none; }
+.pt-photo-prev figcaption { font-size: var(--text-xs); color: var(--ink-soft); }
+.pt-photo-prev .pt-tool { justify-self: start; min-height: 36px; }
 .pt-note { margin: 0; font-size: var(--text-xs); color: var(--ink-soft); line-height: 1.5; }
 
 @media (min-width: 768px) {
@@ -835,7 +869,7 @@
 .pt-real li.is-this img { box-shadow: 0 0 0 2px var(--sage-deep); }
 
 @media (min-width: 768px) {
-  .studio-page .gb-widget { width: 80px; height: 74px; bottom: 84px; }
+  .studio-page .gb-widget { width: 80px; height: 80px; bottom: 84px; }
 }
 
 /* BẢNG LỜI NHẮN */
