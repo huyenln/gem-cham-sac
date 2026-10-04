@@ -567,7 +567,7 @@
     var out = '<g clip-path="url(#' + clipId + ')">';
     patches('vuong', p.grid).forEach(function (pt, n) {
       out += '<path d="M' + pt.pts.map(function (q) { return (x + q[0] * w / 100).toFixed(1) + ' ' + (y + q[1] * h / 100).toFixed(1); }).join('L') +
-        'Z" fill="' + fill(n) + '" stroke="' + STITCH + '" stroke-width="1.6" stroke-dasharray="6 5"/>';
+        'Z" fill="' + fill(n) + '" stroke="' + STITCH + '" stroke-width="1.6" stroke-dasharray="6 5" stroke-opacity="0.4"/>';
     });
     return out + '</g>';
   }
@@ -642,7 +642,7 @@
       else if (d.layout === 'hai') {
         out += '<g clip-path="url(#' + pre + 'bm)"><rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h / 2 + '" fill="' + fill(0) + '"/>' +
           '<rect x="' + x + '" y="' + (y + h / 2) + '" width="' + w + '" height="' + h / 2 + '" fill="' + fill(1) + '"/></g>' +
-          '<path d="M' + x + ' ' + (y + h / 2) + 'h' + w + '" stroke="' + STITCH + '" stroke-width="1.6" stroke-dasharray="6 5"/>';
+          '<path d="M' + x + ' ' + (y + h / 2) + 'h' + w + '" stroke="' + STITCH + '" stroke-width="1.6" stroke-dasharray="6 5" stroke-opacity="0.4"/>';
       } else out += '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="10" fill="' + fill(0) + '"/>';
       out += '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="10" fill="url(#' + pre + 'puff)" stroke="' + STITCH + '" stroke-width="2.2"/>' +
         '<rect x="' + (x + 8) + '" y="' + (y + 8) + '" width="' + (w - 16) + '" height="' + (h - 16) + '" rx="6" fill="none" stroke="' + STITCH + '" stroke-width="1.4" stroke-dasharray="5 5"/>';
@@ -665,7 +665,7 @@
           '<path d="M170 58C276 70 270 262 170 268" fill="none" stroke="' + fill(1) + '" stroke-width="48"/>';
       } else out += '<path d="' + loop + '" fill="none" stroke="' + fill(0) + '" stroke-width="48"/>';
       out += '<path d="' + loop + '" fill="none" stroke="#3D4A2E" stroke-opacity="0.1" stroke-width="48"/>' +
-        '<path d="' + loop + '" fill="none" stroke="' + STITCH + '" stroke-width="1.6" stroke-dasharray="6 5"/>';
+        '<path d="' + loop + '" fill="none" stroke="' + STITCH + '" stroke-width="1.6" stroke-dasharray="6 5" stroke-opacity="0.4"/>';
       // clasp: a ring and a swivel hook
       return out + '<rect x="150" y="256" width="40" height="22" rx="5" fill="' + METAL + '"/>' + ring(170, 296, 14) +
         '<path d="M170 310L170 322Q170 332 180 332" fill="none" stroke="' + METAL + '" stroke-width="6" stroke-linecap="round"/>';
@@ -717,7 +717,7 @@
     // the corner of a page
     bookmark: { n: 'bookmark', diag: 1 }
   };
-  var SEAM = '" stroke="' + STITCH + '" stroke-width="1.8" stroke-dasharray="6 5" fill="none"/>';
+  var SEAM = '" stroke="' + STITCH + '" stroke-width="1.8" stroke-dasharray="6 5" stroke-opacity="0.4" fill="none"/>';
   function artPiece(d, p, fill, pre) {
     var A = ART[p.shape], name = A.n, out = '';
     out += '<mask id="' + pre + 'mk" maskUnits="userSpaceOnUse" x="0" y="0" width="340" height="340">' +
@@ -726,7 +726,11 @@
     // the fabric area: the painted piece fills most of its square
     var box = [0, 0, 340];
     if (d.layout === 'tuve') {
-      out += '<rect width="340" height="340" fill="#FBF6EE"/>' + sketchPaths(d.sketch, box[0], box[1], box[2]);
+      // drawn on a fabric picked from the basket (or plain paper); the
+      // eraser paints that fabric back
+      var bg = d.fab ? fill(0) : '#FBF6EE', bgPaint = bg.split('"')[0];
+      out += '<rect width="340" height="340" fill="' + bg + '"/>' +
+        sketchPaths(d.sketch, box[0], box[1], box[2]).split('stroke="' + INKS[ERASER] + '"').join('stroke="' + bgPaint + '"');
     } else if (p.shape === 'scrunchie') {
       if (d.layout === 'hai') {
         for (var w = 0; w < 12; w++) {
@@ -762,7 +766,7 @@
       patches(d.layout, p.grid).forEach(function (pt, n) {
         var i = d.layout === 'sao' || d.layout === 'chong' ? pt.i : n;
         out += '<path d="M' + pt.pts.map(function (q) { return (bx[0] + q[0] * sx).toFixed(1) + ' ' + (bx[1] + q[1] * sy).toFixed(1); }).join('L') +
-          'Z" fill="' + fill(i) + '" stroke="' + STITCH + '" stroke-width="1.8" stroke-dasharray="6 5" stroke-linejoin="round"/>';
+          'Z" fill="' + fill(i) + '" stroke="' + STITCH + '" stroke-width="1.8" stroke-dasharray="6 5" stroke-opacity="0.4" stroke-linejoin="round"/>';
       });
     }
     out += '</g>';
@@ -864,7 +868,7 @@
         patches(d.layout, p.grid).forEach(function (pt, n) {
           var i = d.layout === 'sao' || d.layout === 'chong' ? pt.i : n;
           body += '<path d="' + pathOf(pt.pts, pad, pad, sc) + '" fill="' + fill(i) + '" stroke="' + STITCH +
-            '" stroke-width="1.8" stroke-dasharray="6 5" stroke-linejoin="round"/>';
+            '" stroke-width="1.8" stroke-dasharray="6 5" stroke-opacity="0.4" stroke-linejoin="round"/>';
         });
         body += '<rect x="' + pad + '" y="' + pad + '" width="' + inner + '" height="' + inner + '" fill="url(#' + pre + 'puff)"/>';
       }
@@ -872,7 +876,7 @@
         '" rx="' + (rx - 6) + '" fill="none" stroke="' + STITCH + '" stroke-width="1.6" stroke-dasharray="5 5"/>';
     }
 
-    if (opts.count) return d.layout === 'tuve' ? 0 : maxI + 1;
+    if (opts.count) return d.layout === 'tuve' ? (ART[p.shape] ? 1 : 0) : maxI + 1;
     // the seams, so "May xong" can sew them
     if (opts.hit) body = body.replace(/ stroke-dasharray=/g, ' class="pt-seam" stroke-dasharray=');
 

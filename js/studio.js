@@ -269,7 +269,7 @@
     'studio.pt_letter_p':  { vi: `Không bắt buộc: chất vải, lời nhắn, ảnh tham khảo`, en: `Optional: fabrics, a message, a reference photo` },
     'studio.pt_real_cap':  { vi: `Đồ thật`, en: `The real one` },
     'studio.pt_mood_gem':  { vi: `Gem chọn giúp`, en: `Gem picks` },
-    'studio.pt_draw_on':   { vi: `Vẽ thẳng lên món bằng ngón tay. Gem may theo tinh thần hình vẽ.`, en: `Draw right on the piece with your finger. Gem sews in its spirit.` },
+    'studio.pt_draw_on':   { vi: `Vẽ thẳng lên món bằng ngón tay. Chạm một mảnh trong rổ để đổi vải nền.`, en: `Draw right on the piece with your finger. Tap a scrap in the basket to change the fabric under it.` },
     'studio.pt_title_label': { vi: `Tên mẫu`, en: `Design name` },
     'studio.pt_title_hint': { vi: `Chạm vào tên để đặt tên riêng cho mẫu.`, en: `Tap the name to give it your own.` },
     'studio.pt_sewing':    { vi: `Đang may...`, en: `Sewing...` },
@@ -1370,8 +1370,10 @@
             '<div class="pt-done-card"><img alt=""><span class="pt-small pt-card-wait" data-i18n="studio.pt_card_wait">' + esc(t('studio.pt_card_wait')) + '</span></div>' +
             '<label class="pt-byfield">' + tr('span', 'studio.pt_by_label', ' class="pt-label"') +
               '<input name="by" maxlength="24" autocomplete="nickname" data-i18n-attr="placeholder:studio.pt_by_ph" placeholder="' + esc(t('studio.pt_by_ph')) + '"></label>' +
+            '<div class="pt-done-buy"><span class="pt-price"></span>' +
+              '<button type="button" class="st-btn" data-pt="add" data-i18n="studio.pt_add">' + esc(t('studio.pt_add')) + '</button></div>' +
             '<div class="pt-done-acts">' +
-              '<button type="button" class="st-btn" data-pt="share-img" data-i18n="studio.pt_share_img">' + esc(t('studio.pt_share_img')) + '</button>' +
+              '<button type="button" class="pt-tool pt-share-main" data-pt="share-img" data-i18n="studio.pt_share_img">' + esc(t('studio.pt_share_img')) + '</button>' +
               '<button type="button" class="pt-tool" data-pt="link" data-i18n="studio.pt_share">' + esc(t('studio.pt_share')) + '</button>' +
               (window.GemTu ? '<button type="button" class="pt-tool" data-pt="keep" data-i18n="studio.pt_keep">' + esc(t('studio.pt_keep')) + '</button>' : '') +
             '</div>' +
@@ -1658,6 +1660,7 @@
       var under = document.elementFromPoint(e.clientX, e.clientY);
       var patch = under && under.closest && under.closest('.pt-board [data-i]');
       if (patch) putFabric(+patch.getAttribute('data-i'), s0.id);
+      else if (under && under.classList && under.classList.contains('pt-canvas')) putFabric(0, s0.id);
     };
     document.addEventListener('pointerup', end);
     document.addEventListener('pointercancel', end);
@@ -2002,7 +2005,7 @@
 
     var sku = P.PRODUCTS[d.product].sku;
     var info = window.GemBasket ? window.GemBasket.info(sku) : null;
-    root.querySelector('.pt-price').textContent = info ? info.price : '';
+    root.querySelectorAll('.pt-price').forEach(function (el) { el.textContent = info ? info.price : ''; });
     root.querySelectorAll('[data-pt="add"]').forEach(function (add) { add.disabled = !ok || (info && !info.inStock); });
     var keep = root.querySelector('[data-pt="keep"]');
     if (keep) keep.disabled = !ok;
@@ -2163,6 +2166,11 @@
   function designerClick(e) {
     var el, teachAfter = null, shuffled = false;
     if (e.target.closest('[data-gv-next]')) { teach('next'); return true; }
+    var stz = sheetBody.querySelector('.pt-stage.is-zoom');
+    if (stz && !e.target.closest('[data-gv-zoom], [data-gv-next]')) {
+      stz.classList.remove('is-zoom');
+      sheetBody.querySelector('.gv-next').hidden = true;
+    }
     if (e.target.closest('[data-gv-zoom]')) {
       // the pinned photo: tap to see it big, tap again to put it back
       var st = sheetBody.querySelector('.pt-stage');
@@ -2173,6 +2181,7 @@
     if ((el = e.target.closest('[data-scrap]'))) {
       if (Date.now() - scrapDragged < 350) return true;   // the end of a drag
       var sid = parseKey(el.getAttribute('data-scrap'));
+      if (D.d.layout === 'tuve') { D.held = null; putFabric(0, sid); return true; }
       D.held = D.held === sid ? null : sid;
       renderBasket();
       renderPreview();
@@ -2237,7 +2246,7 @@
     } else if ((el = e.target.closest('[data-layout]'))) {
       var pal2 = paletteNow();
       D.d.layout = el.getAttribute('data-layout');
-      if (D.d.fab) D.d.fab = D.d.layout === 'tuve' ? '' : P.scatter(D.d, pal2);
+      if (D.d.fab) P.scatter(D.d, pal2);
     } else if ((el = e.target.closest('[data-tone]'))) {
       toggle('tones', el.getAttribute('data-tone'), P.MAX_TONES);
       D.d.fab = '';   // the chips decide again
