@@ -607,6 +607,33 @@ async def design(browser, db):
         check(await pg.evaluate("document.querySelector('.pt-board svg title').textContent.includes('vải từng mảnh')"),
               f'{name}: while drawing, a scrap from the basket becomes the fabric under the drawing')
         await js_click(pg, '[data-pt="clear"]')
+        # "Ghép theo nét vẽ": a closed loop + an edge-to-edge line cut 3 pieces
+        await js_click(pg, '[data-layout="net"]')
+        await pg.wait_for_timeout(200)
+        cb = await pg.evaluate("(() => { const r = document.querySelector('.pt-canvas').getBoundingClientRect(); return [r.x, r.y, r.width, r.height]; })()")
+        import math
+        cx, cy, rr = cb[0] + cb[2] * 0.5, cb[1] + cb[3] * 0.55, cb[2] * 0.18
+        await pg.mouse.move(cx + rr, cy)
+        await pg.mouse.down()
+        for k in range(1, 37):
+            a = k * 10 * math.pi / 180
+            await pg.mouse.move(cx + rr * math.cos(a), cy + rr * math.sin(a))
+        await pg.mouse.up()
+        await pg.mouse.move(cb[0] + cb[2] * 0.02, cb[1] + cb[3] * 0.2)
+        await pg.mouse.down()
+        await pg.mouse.move(cb[0] + cb[2] * 0.98, cb[1] + cb[3] * 0.25, steps=15)
+        await pg.mouse.up()
+        await pg.wait_for_timeout(300)
+        n = await pg.evaluate("document.querySelectorAll('.pt-board path[data-i]').length")
+        check(n == 3, f'{name}: lines cut the piece into patches ({n})')
+        sid3 = await pg.evaluate("document.querySelectorAll('.pt-scrap')[6].dataset.scrap")
+        await js_click(pg, '.pt-scrap:nth-child(7)')
+        await pg.mouse.click(cx, cy)
+        await pg.wait_for_timeout(300)
+        fill1 = await pg.evaluate("[...document.querySelectorAll('.pt-board path[data-i]')].map(p => p.getAttribute('fill')).join(' ')")
+        check(f'f{sid3})' in fill1 or 'c' in sid3, f'{name}: tapping a cut patch through the canvas lays the held scrap on it')
+        await pg.screenshot(path=OUT / f'design-{name}-net.png')
+        await js_click(pg, '[data-pt="clear"]')
         await js_click(pg, '[data-mood="gem"]')
         await pg.wait_for_timeout(200)
         note = await pg.evaluate("document.querySelector('.pt-board svg title').textContent")

@@ -269,6 +269,8 @@
     'studio.pt_letter_p':  { vi: `Không bắt buộc: chất vải, lời nhắn, ảnh tham khảo`, en: `Optional: fabrics, a message, a reference photo` },
     'studio.pt_real_cap':  { vi: `Đồ thật`, en: `The real one` },
     'studio.pt_mood_gem':  { vi: `Gem chọn giúp`, en: `Gem picks` },
+    'studio.pt_net_on':    { vi: `Vẽ đường cắt lên món: nét khép kín, hoặc chạy từ mép này sang mép kia. Chạm vào từng mảnh để đắp vải.`, en: `Draw cut lines on the piece: a closed shape, or edge to edge. Tap each piece to lay a fabric on it.` },
+    'studio.pt_net_full':  { vi: `Nhiều mảnh quá, Gem gộp bớt mảnh nhỏ (tối đa {n} mảnh).`, en: `That's a lot of pieces — Gem merges the small ones (up to {n}).` },
     'studio.pt_draw_on':   { vi: `Vẽ thẳng lên món bằng ngón tay. Chạm một mảnh trong rổ để đổi vải nền.`, en: `Draw right on the piece with your finger. Tap a scrap in the basket to change the fabric under it.` },
     'studio.pt_title_label': { vi: `Tên mẫu`, en: `Design name` },
     'studio.pt_title_hint': { vi: `Chạm vào tên để đặt tên riêng cho mẫu.`, en: `Tap the name to give it your own.` },
@@ -749,11 +751,11 @@
 
   // (Re)build the frames for the chosen character. Each frame is a box the
   // size of its picture, so accessories can be placed in % of it.
-  // The cart's rim in each push frame (fraction of the picture's height,
-  // measured from the drawings): what is in the basket rides in the cart,
-  // its lower part hidden below the rim.
-  var CART_RIM = {"p1-cart1": 0.632, "p1-cart2": 0.626, "p1-cart3": 0.629, "p2-cart1": 0.615, "p2-cart2": 0.615, "p2-cart3": 0.617,
-    "p3-cart1": 0.625, "p3-cart2": 0.625, "p3-cart3": 0.625, "p4-cart1": 0.611, "p4-cart2": 0.613, "p4-cart3": 0.611};
+  // The top edge of the cart's FRONT liner in each push frame (fraction of
+  // the picture's height, measured from the drawings): what is in the basket
+  // is cut off there, so it sits in front of the back wall, inside the cart.
+  var CART_RIM = {"p1-cart1": 0.662, "p1-cart2": 0.657, "p1-cart3": 0.661, "p2-cart1": 0.653, "p2-cart2": 0.65, "p2-cart3": 0.652,
+    "p3-cart1": 0.653, "p3-cart2": 0.651, "p3-cart3": 0.651, "p4-cart1": 0.649, "p4-cart2": 0.648, "p4-cart3": 0.647};
 
   function renderCargo() {
     if (!bobEl || !window.GemBasket || !window.GemBasket.pieces) return;
@@ -1660,7 +1662,10 @@
       var under = document.elementFromPoint(e.clientX, e.clientY);
       var patch = under && under.closest && under.closest('.pt-board [data-i]');
       if (patch) putFabric(+patch.getAttribute('data-i'), s0.id);
-      else if (under && under.classList && under.classList.contains('pt-canvas')) putFabric(0, s0.id);
+      else if (under && under.classList && under.classList.contains('pt-canvas')) {
+        var pu = D.d.layout === 'net' ? patchUnder(e.clientX, e.clientY) : null;
+        putFabric(pu ? +pu.getAttribute('data-i') : 0, s0.id);
+      }
     };
     document.addEventListener('pointerup', end);
     document.addEventListener('pointercancel', end);
@@ -1943,7 +1948,9 @@
 
     root.querySelector('.pt-layouts').innerHTML = prod.layouts.map(function (id) {
       var preview = Object.assign({}, d, { layout: id });
-      var icon = id === 'tuve' && !d.sketch.length
+      var icon = id === 'net' && !d.sketch.length
+        ? '<svg viewBox="0 0 24 24" width="40" height="40" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3" fill="#F3EAD8" stroke="#8A6A44" stroke-width="1.2"/><path d="M3 15C8 9 13 17 21 8" fill="none" stroke="#8A6A44" stroke-width="1.4" stroke-dasharray="2.2 1.8"/></svg>'
+        : id === 'tuve' && !d.sketch.length
         ? '<svg viewBox="0 0 24 24" width="40" height="40" aria-hidden="true"><path d="M5 19l3-1L18 8l-2-2L6 16z" fill="none" stroke="#8A6A44" stroke-width="1.6" stroke-linejoin="round"/></svg>'
         : P.svg(preview, { size: 40 });
       return chip('data-layout', id, id === d.layout, P.LAYOUTS[id][l], icon);
@@ -1965,9 +1972,11 @@
         '<span style="width:' + Math.round(4 + w * 3.4) + 'px;height:' + Math.round(4 + w * 3.4) + 'px"></span></button>';
     }).join('');
     // "from my drawing": the canvas over the piece + the pen bar under it
-    var drawing = d.layout === 'tuve';
+    var drawing = d.layout === 'tuve' || d.layout === 'net';
     root.querySelector('.pt-canvas').hidden = !drawing;
     root.querySelector('.pt-drawbar').hidden = !drawing;
+    // cut lines have no colour or width: only undo / clear
+    root.querySelector('.pt-drawbar').classList.toggle('is-net', d.layout === 'net');
     root.querySelector('.pt-stage').classList.toggle('is-drawing', drawing);
 
     renderMoods();
@@ -1983,7 +1992,8 @@
     var d = D.d, spec = specNow(), ok = P.isComplete(d);
     root.querySelector('.pt-board').innerHTML = P.svg(d, { title: esc(P.describe(d)), hit: true });
     // a short instruction when it matters; otherwise Udon's line shows
-    root.querySelector('.pt-hint').textContent = d.layout === 'tuve' ? t('studio.pt_draw_on')
+    root.querySelector('.pt-hint').textContent = d.layout === 'net' ? t('studio.pt_net_on')
+      : d.layout === 'tuve' ? t('studio.pt_draw_on')
       : D.held != null ? t('studio.pt_hint_held').replace('{vai}', fabricName(D.held).toLowerCase()) : '';
     drawCanvas();
     root.querySelector('[data-pt="undo"]').disabled = !d.sketch.length;
@@ -2056,7 +2066,8 @@
       if (D.d.sketch.length >= P.MAX_STROKES || pointsUsed() >= P.MAX_POINTS) { renderPreview(); return; }
       e.preventDefault();
       try { cv.setPointerCapture(e.pointerId); } catch (x) { /* ignore */ }
-      D.drawing = { c: D.ink, w: D.size || 0, pts: [], raw: [at(e)] };
+      var net = D.d.layout === 'net';
+      D.drawing = { c: net ? 0 : D.ink, w: net ? 0 : D.size || 0, pts: [], raw: [at(e)] };
       D.d.sketch.push(D.drawing);
       drawCanvas();
     });
@@ -2067,19 +2078,48 @@
       D.drawing.raw.push(p);
       drawCanvas();
     });
-    var end = function () {
+    var end = function (e) {
       if (!D.drawing) return;
       var st = D.drawing;
       D.drawing = null;
+      if (D.d.layout === 'net') {
+        // a tap, not a line: it's for the patch under the finger
+        var xs = st.raw.map(function (q) { return q[0]; }), ys = st.raw.map(function (q) { return q[1]; });
+        if (Math.max.apply(null, xs) - Math.min.apply(null, xs) < 1.2 && Math.max.apply(null, ys) - Math.min.apply(null, ys) < 1.2) {
+          D.d.sketch.pop();
+          drawCanvas();
+          var pt = patchUnder(e.clientX, e.clientY);
+          if (pt) tapPatch(+pt.getAttribute('data-i'));
+          return;
+        }
+      }
       st.pts = P.settle(st.raw);
       delete st.raw;
       // over the point budget: keep what fits
       var room = P.MAX_POINTS - (pointsUsed() - st.pts.length);
       if (st.pts.length > room) st.pts = st.pts.slice(0, Math.max(1, room));
+      if (D.d.layout === 'net') { refitNet(); unsew(); renderDesigner(); return; }
       renderPreview();
     };
     cv.addEventListener('pointerup', end);
     cv.addEventListener('pointercancel', end);
+  }
+
+  // the patch under a point, looking through the drawing canvas
+  function patchUnder(x, y) {
+    var cv = sheetBody.querySelector('.pt-canvas');
+    if (cv) cv.style.pointerEvents = 'none';
+    var el = document.elementFromPoint(x, y);
+    if (cv) cv.style.pointerEvents = '';
+    return el && el.closest ? el.closest('.pt-board [data-i]') : null;
+  }
+
+  // the lines changed: as many fabrics as patches, the old ones kept
+  function refitNet() {
+    P.refit(D.d, D.basket);
+    P.syncTaste(D.d);
+    var msg = sheetBody.querySelector('.pt-draw-msg');
+    if (msg) msg.textContent = P.netRegions(D.d.sketch).capped ? t('studio.pt_net_full').replace('{n}', P.NET_MAX) : '';
   }
 
   function drawCanvas() {
@@ -2246,7 +2286,8 @@
     } else if ((el = e.target.closest('[data-layout]'))) {
       var pal2 = paletteNow();
       D.d.layout = el.getAttribute('data-layout');
-      if (D.d.fab) P.scatter(D.d, pal2);
+      if (D.d.layout === 'net') { if (!D.d.fab) D.d.fab = ''; P.refit(D.d, pal2); P.syncTaste(D.d); }
+      else if (D.d.fab) P.scatter(D.d, pal2);
     } else if ((el = e.target.closest('[data-tone]'))) {
       toggle('tones', el.getAttribute('data-tone'), P.MAX_TONES);
       D.d.fab = '';   // the chips decide again
@@ -2267,8 +2308,10 @@
       var act = el.getAttribute('data-pt');
       if (act === 'undo') {
         D.d.sketch.pop();
+        if (D.d.layout === 'net') refitNet();
       } else if (act === 'clear') {
         D.d.sketch = [];
+        if (D.d.layout === 'net') refitNet();
       } else if (act === 'photo-del') {
         D.d.img = '';
       } else if (act === 'random') {
