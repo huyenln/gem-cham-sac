@@ -6,7 +6,7 @@
 // spot where the character stops for each, Udon and the start point are
 // placed the same way. "Ngoài cửa" switches to the street in front of the
 // studio (layout.outside), where studio.html opens. "Lưu nháp" saves the
-// draft; "Xuất bản" makes it what customers see. studio.html?nhap=1 previews the draft (owner only).
+// draft (saved on its own); "Phát hành" makes it what customers see. studio.html?nhap=1 previews the draft (owner only).
 //
 // Layout format and validation: js/studio-layout.js. RLS on studio_layout
 // lets only the owner write; this screen is a convenience, not the lock.
@@ -54,8 +54,7 @@ window.GemStudioEditor = (function () {
   function remember() {
     undo.push(clone(data));
     if (undo.length > 60) undo.shift();
-    dirty = true;
-    status('Có thay đổi chưa lưu');
+    changed();
   }
 
   /* ---------- mount ---------- */
@@ -65,6 +64,17 @@ window.GemStudioEditor = (function () {
     // "Lưu" menu, so the stage gets the screen (on a phone especially).
     root.innerHTML =
       '<div class="se">' +
+        // what is being edited, what customers see, and the three actions
+        '<div class="se-head">' +
+          '<div class="se-doc"><b class="se-docname">Bản nháp</b> <span class="se-saved"></span>' +
+            '<span class="se-live"></span></div>' +
+          '<div class="se-acts">' +
+            '<button type="button" class="ad-btn" data-hd="layouts">Bố cục</button>' +
+            '<a class="ad-btn" href="studio.html?nhap=1" target="_blank" rel="noopener">Xem thử</a>' +
+            '<button type="button" class="ad-btn" data-hd="save">Lưu</button>' +
+            '<button type="button" class="ad-btn on" data-hd="publish">Phát hành</button>' +
+          '</div>' +
+        '</div>' +
         '<div class="se-bar">' +
           '<span class="se-seg" role="group" aria-label="Cảnh">' +
             '<button type="button" class="is-on" data-se="sc-in" aria-pressed="true">Trong</button>' +
@@ -80,34 +90,14 @@ window.GemStudioEditor = (function () {
           '<button type="button" class="se-tb se-sq" data-se="zin" aria-label="Phóng to">+</button>' +
           '<button type="button" class="se-tb" data-se="hot" aria-pressed="true" title="Hiện / ẩn khung bấm">Khung bấm</button>' +
           '<button type="button" class="se-tb danger" data-se="clear">Xoá hết</button>' +
-          '<details class="se-menu">' +
-            '<summary class="se-tb on">Lưu</summary>' +
-            '<div class="se-pop">' +
-              '<div class="se-row">' +
-                '<button type="button" class="ad-btn" data-se="save">Lưu nháp</button>' +
-                '<button type="button" class="ad-btn on" data-se="publish">Xuất bản</button>' +
-                '<a class="ad-btn" href="studio.html?nhap=1" target="_blank" rel="noopener">Xem thử nháp</a>' +
-              '</div>' +
-              '<div class="se-prof">' +
-                '<b>Bố cục đã lưu</b>' +
-                '<select class="se-profsel" aria-label="Bố cục đã lưu"></select>' +
-                '<div class="se-row">' +
-                  '<button type="button" class="ad-btn" data-se="p-open">Mở</button>' +
-                  '<button type="button" class="ad-btn on" data-se="p-live">Cho chạy ngay</button>' +
-                  '<button type="button" class="ad-btn danger" data-se="p-del">Xoá</button>' +
-                '</div>' +
-                '<div class="se-row">' +
-                  '<button type="button" class="ad-btn" data-se="p-save">Lưu vào bố cục đang mở</button>' +
-                  '<button type="button" class="ad-btn" data-se="p-new">Lưu thành bố cục mới…</button>' +
-                '</div>' +
-                '<span class="se-live"></span>' +
-              '</div>' +
-            '</div>' +
-          '</details>' +
+
         '</div>' +
         '<p class="se-status" role="status"></p>' +
         '<div class="se-stage"><div class="se-world"><img class="se-bgimg" alt="" draggable="false"></div></div>' +
         '<div class="se-panel"></div>' +
+        '<div class="se-sheet" hidden></div>' +
+        '<div class="se-dlg" hidden></div>' +
+        '<div class="se-toast" hidden role="status"></div>' +
       '</div>';
     stageEl = root.querySelector('.se-stage');
     worldEl = root.querySelector('.se-world');
@@ -116,10 +106,12 @@ window.GemStudioEditor = (function () {
     status('Đang tải...');
 
     root.querySelector('.se-bar').addEventListener('click', barClick);
-    root.querySelector('.se-prof').addEventListener('click', profClick);
-    // the Lưu menu closes when you tap elsewhere
-    document.addEventListener('click', menuAway);
-    root.querySelector('.se-menu').addEventListener('toggle', placeMenu);
+    root.querySelector('.se-head').addEventListener('click', headClick);
+    root.querySelector('.se-sheet').addEventListener('click', sheetClick);
+    root.querySelector('.se-sheet').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && e.target.matches('input')) { e.preventDefault(); var b = e.target.parentNode.querySelector('[data-ok]'); if (b) b.click(); }
+    });
+    document.addEventListener('visibilitychange', flushAutosave);
     root.querySelector('.se-bgsel').addEventListener('change', function (e) {
       var b = lib.backgrounds[e.target.value === '' ? -1 : +e.target.value];
       if (!b) return;
@@ -136,11 +128,19 @@ window.GemStudioEditor = (function () {
     panelEl.addEventListener('click', panelClick);
     panelEl.addEventListener('change', panelChange);
     panelEl.addEventListener('input', function (e) {
+      if (e.target.name === 'se-find') {
+        findQ = e.target.value.trim();
+        var g = libGroups().filter(function (x) { return x.id === group; })[0] || lib.groups[0];
+        panelEl.setAttribute('data-view', g.id + '|' + findQ);
+        panelEl.querySelectorAll('[data-group]').forEach(function (c) { c.classList.toggle('is-on', !findQ && c.dataset.group === g.id); });
+        renderGrid(g);
+        return;
+      }
       if (e.target.name !== 'se-size' || !sel || sel.kind !== 'item') return;
       resize(S().items[sel.i], +e.target.value);
       var num = panelEl.querySelector('[name="se-h"]');
       if (num) num.value = e.target.value;
-      dirty = true;
+      changed();
       draw();
     });
     document.addEventListener('keydown', keyDown);
@@ -158,7 +158,7 @@ window.GemStudioEditor = (function () {
       mergeLib();
       data = L.sanitize(r[1]) || L.sanitize(r[2]) || L.blank(lib.backgrounds[0]);
       syncBg();
-      status(r[1] ? 'Đang sửa bản nháp' : r[2] ? 'Bắt đầu từ bản đang chạy' : 'Bố cục mới');
+      status(r[1] ? 'Tiếp tục bản đang sửa' : r[2] ? 'Bắt đầu từ bản khách đang thấy' : 'Bố cục mới');
       draw();
       renderPanel();
       // product list for "Sản phẩm" on a piece (owner is signed in)
@@ -183,7 +183,7 @@ window.GemStudioEditor = (function () {
     if (cut) add(cut);
     else if (image && L.srcOk(image)) add({ src: image, w: 600, h: 600, frame: true, sku: sku });
     else { status('Sản phẩm này chưa có ảnh — thêm ảnh hoặc ảnh cắt nền ở tab Sản phẩm.', true); return; }
-    status('Đã thêm "' + sku + '" giữa màn hình — kéo lên kệ rồi Xuất bản');
+    status('Đã thêm "' + sku + '" giữa màn hình — kéo lên kệ rồi Phát hành');
   }
 
   /* ---------- the library ----------
@@ -328,7 +328,10 @@ window.GemStudioEditor = (function () {
   // Only the library entry goes: the file stays in storage, so layouts
   // already using the picture keep showing it.
   function deleteAsset(id) {
-    if (!window.confirm('Bỏ ảnh này khỏi thư viện? Bố cục nào đang dùng nó vẫn hiện bình thường.')) return;
+    ask('Bỏ ảnh này khỏi thư viện?', 'Bố cục nào đang dùng nó vẫn hiện bình thường.',
+      [{ v: null, t: 'Thôi' }, { v: 'del', t: 'Bỏ khỏi thư viện', on: 'danger' }]).then(function (v) { if (v) deleteAssetNow(id); });
+  }
+  function deleteAssetNow(id) {
     DB.deleteStudioAsset(id).then(function () {
       dbAssets = dbAssets.filter(function (r) { return r.id !== id; });
       mergeLib();
@@ -399,23 +402,9 @@ window.GemStudioEditor = (function () {
   // The menu hangs from the right edge of "Lưu"; on a phone that button can
   // wrap to the middle of a row and the menu would run off the left side.
   // Nudge it back inside the screen each time it opens.
-  function placeMenu() {
-    var m = root.querySelector('.se-menu'), pop = m.querySelector('.se-pop');
-    pop.style.transform = '';
-    if (!m.open) return;
-    var r = pop.getBoundingClientRect(), vw = document.documentElement.clientWidth, pad = 8, dx = 0;
-    if (r.left < pad) dx = pad - r.left;
-    else if (r.right > vw - pad) dx = vw - pad - r.right;
-    if (dx) pop.style.transform = 'translateX(' + Math.round(dx) + 'px)';
-  }
-
-  function menuAway(e) {
-    var m = root && root.querySelector('.se-menu');
-    if (m && m.open && !m.contains(e.target)) m.open = false;
-  }
-
   function unmount() {
-    document.removeEventListener('click', menuAway);
+    flushAutosave();
+    document.removeEventListener('visibilitychange', flushAutosave);
     document.removeEventListener('keydown', keyDown);
     document.removeEventListener('pointermove', pinchMove);
     document.removeEventListener('pointerup', pinchUp);
@@ -586,8 +575,7 @@ window.GemStudioEditor = (function () {
     delete touches[e.pointerId];
     if (pinch && Object.keys(touches).length < 2) {
       undo.push(pinch.before);
-      dirty = true;
-      status('Có thay đổi chưa lưu');
+      changed();
       pinch = null;
       renderPanel();
     }
@@ -659,7 +647,7 @@ window.GemStudioEditor = (function () {
       document.removeEventListener('pointermove', move);
       document.removeEventListener('pointerup', up);
       if (moved) {
-        undo.push(before); dirty = true; status('Có thay đổi chưa lưu');
+        undo.push(before); changed();
       }
       draw(); renderPanel();
     }
@@ -693,7 +681,7 @@ window.GemStudioEditor = (function () {
   function doUndo() {
     var last = undo.pop();
     if (!last) return;
-    data = last; sel = null; dirty = true;
+    data = last; sel = null; changed();
     syncBg();
     status('Đã hoàn tác');
     draw(); renderPanel();
@@ -754,7 +742,7 @@ window.GemStudioEditor = (function () {
         'Kéo để di chuyển, kéo góc để đổi cỡ, kéo nút tròn để xoay. Điện thoại: chụm / mở hai ngón để đổi cỡ, vặn hai ngón để xoay. ' +
         'Phím mũi tên dịch từng chút, Ctrl+Z hoàn tác. "Khung bấm" ẩn các khung xanh khi xếp đồ.</p></details>';
     }
-    var g = lib.groups.filter(function (x) { return x.id === group; })[0] || lib.groups[0];
+    var g = libGroups().filter(function (x) { return x.id === group; })[0] || lib.groups[0];
     var extra = '';
     if (upForm) {
       var many = upForm.files.length > 1;
@@ -793,28 +781,77 @@ window.GemStudioEditor = (function () {
           '</div></div>';
       }
     }
+    // keep the library where it was: the panel is rebuilt on every pick
+    var oldGrid = panelEl.querySelector('.se-grid'), oldTabs = panelEl.querySelector('.se-tabs');
+    var keep = oldGrid && panelEl.getAttribute('data-view') === g.id + '|' + findQ
+      ? [oldGrid.scrollLeft, oldGrid.scrollTop] : null;
+    var keepTabs = oldTabs ? oldTabs.scrollLeft : 0;
+    var hadFind = document.activeElement && document.activeElement.classList.contains('se-find');
     panelEl.innerHTML = tools + extra +
       '<div class="se-lib' + (manage ? ' is-manage' : '') + '">' +
-        '<div class="se-tabs">' + lib.groups.map(function (x) {
-          return '<button type="button" class="se-chip' + (x.id === g.id ? ' is-on' : '') + '" data-group="' + esc(x.id) + '">' +
-            esc(x.label) + '</button>';
+        '<div class="se-tabs">' + libGroups().map(function (x) {
+          return '<button type="button" class="se-chip' + (x.id === g.id && !findQ ? ' is-on' : '') + (x.id === RECENT ? ' is-recent' : '') +
+            '" data-group="' + esc(x.id) + '">' + esc(x.label) + '</button>';
         }).join('') +
         '<label class="se-chip se-upload">+ Tải ảnh<input type="file" name="se-file" accept="image/png,image/webp,image/jpeg" multiple hidden></label>' +
         '<button type="button" class="se-chip' + (manage ? ' is-on' : '') + '" data-manage>Sửa thư viện</button>' +
         '</div>' +
         (manage ? '<span class="se-hint-s">Chạm ảnh có viền đứt (ảnh đã tải lên) để đổi tên, chuyển tab hoặc bỏ. ' +
           'Ảnh có sẵn trong code và ảnh “Sản phẩm thật” sửa ở chỗ khác (tab Sản phẩm).</span>' : '') +
-        '<div class="se-grid">' + g.items.map(function (a, i) {
-          return '<button type="button" class="se-asset' + (a.db ? ' is-own' : '') + '" data-asset="' + i + '" title="' +
-            esc(a.name || a.src.split('/').pop()) + '">' +
-            '<img src="' + esc(a.src) + '" alt="" loading="lazy"></button>';
-        }).join('') + '</div>' +
+        '<input class="se-find" type="search" name="se-find" placeholder="Tìm ảnh theo tên hoặc tab…" autocomplete="off" value="' + esc(findQ) + '">' +
+        '<div class="se-grid"></div>' +
       '</div>';
+    panelEl.setAttribute('data-view', g.id + '|' + findQ);
+    renderGrid(g);
+    var grid = panelEl.querySelector('.se-grid');
+    if (keep) { grid.scrollLeft = keep[0]; grid.scrollTop = keep[1]; }
+    panelEl.querySelector('.se-tabs').scrollLeft = keepTabs;
+    if (hadFind) { var f = panelEl.querySelector('.se-find'); f.focus(); f.setSelectionRange(f.value.length, f.value.length); }
+  }
+
+  /* ---------- library: recently used, search ---------- */
+  var RECENT = '__recent', findQ = '', shown = [];
+  function recent() {
+    try { var r = JSON.parse(localStorage.getItem('gem-se-recent') || '[]'); return Array.isArray(r) ? r.filter(function (a) { return a && L.srcOk(a.src); }) : []; }
+    catch (e) { return []; }
+  }
+  function noteRecent(a) {
+    var keepKeys = ['src', 'w', 'h', 'h0', 'y0', 'frame', 'sku', 'name'], o = {};
+    keepKeys.forEach(function (k2) { if (a[k2] != null) o[k2] = a[k2]; });
+    var r = [o].concat(recent().filter(function (x) { return x.src !== a.src; })).slice(0, 8);
+    try { localStorage.setItem('gem-se-recent', JSON.stringify(r)); } catch (e) { /* private mode */ }
+  }
+  function libGroups() {
+    var r = recent();
+    return (r.length ? [{ id: RECENT, label: 'Vừa dùng', items: r }] : []).concat(lib.groups);
+  }
+  function plain(t) {
+    return String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').toLowerCase();
+  }
+  function renderGrid(g) {
+    var grid = panelEl.querySelector('.se-grid');
+    if (!grid) return;
+    if (findQ) {
+      var q = plain(findQ), seen = {};
+      shown = [];
+      lib.groups.forEach(function (x) {
+        var hitGroup = plain(x.label).indexOf(q) >= 0;
+        x.items.forEach(function (a) {
+          if (seen[a.src]) return;
+          if (hitGroup || plain(a.name).indexOf(q) >= 0 || plain(a.src.split('/').pop()).indexOf(q) >= 0) { seen[a.src] = 1; shown.push(a); }
+        });
+      });
+    } else shown = g.items;
+    grid.innerHTML = shown.length ? shown.map(function (a, i) {
+      return '<button type="button" class="se-asset' + (a.db ? ' is-own' : '') + '" data-asset="' + i + '" title="' +
+        esc(a.name || a.src.split('/').pop()) + '">' +
+        '<img src="' + esc(a.src) + '" alt="" loading="lazy"></button>';
+    }).join('') : '<span class="se-hint-s">Không có ảnh nào khớp.</span>';
   }
 
   function panelClick(e) {
     var b;
-    if ((b = e.target.closest('[data-group]'))) { group = b.dataset.group; renderPanel(); return; }
+    if ((b = e.target.closest('[data-group]'))) { group = b.dataset.group; findQ = ''; renderPanel(); return; }
     if ((b = e.target.closest('[data-up-drop]'))) {
       var k = +b.getAttribute('data-up-drop');
       URL.revokeObjectURL(upForm.files[k].preview);
@@ -833,8 +870,8 @@ window.GemStudioEditor = (function () {
     if ((b = e.target.closest('[data-asset-del]'))) { deleteAsset(b.getAttribute('data-asset-del')); return; }
     if (e.target.closest('[data-asset-close]')) { editAsset = null; renderPanel(); return; }
     if ((b = e.target.closest('[data-asset]'))) {
-      var g = lib.groups.filter(function (x) { return x.id === group; })[0] || lib.groups[0];
-      var a = g.items[+b.dataset.asset];
+      var a = shown[+b.dataset.asset];
+      if (!a) return;
       if (manage) {
         if (a.db) { editAsset = a.db; upForm = null; renderPanel(); }
         else status('Ảnh này có sẵn trong code (hoặc là ảnh sản phẩm) — không sửa ở đây.', true);
@@ -881,6 +918,7 @@ window.GemStudioEditor = (function () {
 
   function panelChange(e) {
     var nm = e.target.name || '';
+    if (nm === 'se-find') return;
     if (nm === 'se-file') { startUpload(e.target.files); e.target.value = ''; return; }
     if (/^up-/.test(nm) && upForm) {
       if (nm === 'up-grp') upForm.grp = e.target.value;
@@ -935,6 +973,7 @@ window.GemStudioEditor = (function () {
   // New piece in the middle of what's on screen, a sensible size.
   function add(a) {
     if (!a || !L.srcOk(a.src)) return;
+    noteRecent(a);
     if (!a.w || !a.h) {
       var im = new Image();
       im.onload = function () { a.w = im.naturalWidth; a.h = im.naturalHeight; add(a); };
@@ -954,95 +993,377 @@ window.GemStudioEditor = (function () {
     draw(); renderPanel();
   }
 
-  /* ---------- profiles: named layouts to switch between quickly ---------- */
-  function loadProfiles() {
-    return DB.studioProfiles().then(function (rows) {
-      rows = rows || [];
-      profiles = rows.filter(function (r) { return r.id !== 'live'; });
-      var live = rows.filter(function (r) { return r.id === 'live'; })[0];
-      liveName = live ? live.name : null;
-      renderProfiles();
-    }).catch(function () { profiles = []; renderProfiles(); });
+  /* ---------- saved layouts, autosave, publish ----------
+     Rows in studio_layout: 'draft' (what is being edited, saved on its own a
+     moment after every change; its name column holds the id of the saved
+     layout it belongs to), 'live' (what customers see), 'prev' (what they
+     saw before the last publish: "Hoàn tác phát hành"), 'p-…' (saved
+     layouts). Confirmations are drawn in the page, never window.confirm. */
+  var saveTimer = null, savedAt = null, saving = false;
+  var rows = { live: null, draft: null, prev: null };
+
+  function changed() {
+    dirty = true;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(autosave, 2000);
+    syncHead();
   }
 
-  function renderProfiles() {
-    var selEl = root.querySelector('.se-profsel');
-    selEl.innerHTML = profiles.length
-      ? profiles.map(function (p) {
-          return '<option value="' + esc(p.id) + '">' + esc(p.name || p.id) +
-            (p.name && p.name === liveName ? ' (đang chạy)' : '') + '</option>';
-        }).join('')
-      : '<option value="">(chưa có)</option>';
-    if (current) selEl.value = current;
-    var open = profiles.filter(function (p) { return p.id === current; })[0];
-    root.querySelector('[data-se="p-save"]').disabled = !open;
-    root.querySelector('[data-se="p-save"]').textContent = open ? 'Lưu vào "' + (open.name || open.id) + '"' : 'Lưu vào bố cục đang mở';
-    root.querySelector('.se-live').textContent = 'Khách đang thấy: ' + (liveName || (profiles.length ? 'bố cục chưa đặt tên' : '—'));
+  function autosave() {
+    saveTimer = null;
+    var clean = data && L.sanitize(data);
+    if (!clean) return Promise.resolve();
+    saving = true; syncHead();
+    return DB.saveStudioLayout('draft', clean, current || null).then(function () {
+      savedAt = new Date(); saving = false; syncHead();
+    }, function (err) {
+      saving = false;
+      status('Chưa tự lưu được: ' + (err.message || '') + ' — thử lại sau ít giây', true);
+      saveTimer = setTimeout(autosave, 8000);
+    });
+  }
+
+  function flushAutosave() {
+    if (saveTimer) { clearTimeout(saveTimer); autosave(); }
+  }
+
+  function profileName(id) {
+    var p = profiles.filter(function (x) { return x.id === id; })[0];
+    return p ? (p.name || p.id) : null;
+  }
+
+  function hhmm(d) { return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); }
+
+  function syncHead() {
+    if (!root) return;
+    var nm = root.querySelector('.se-docname'), sv = root.querySelector('.se-saved'), lv = root.querySelector('.se-live');
+    if (!nm) return;
+    var name = current && profileName(current);
+    nm.textContent = name ? 'Đang sửa: ' + name : 'Bản nháp chưa đặt tên';
+    sv.textContent = saving ? '· đang tự lưu…' : saveTimer ? '· có thay đổi' : savedAt ? '· đã tự lưu ' + hhmm(savedAt) : '';
+    if (name && dirty) sv.textContent += ' (chưa lưu vào "' + name + '")';
+    lv.textContent = 'Khách đang thấy: ' + (liveName || (rows.live ? 'bố cục chưa đặt tên' : '—'));
+    var save = root.querySelector('[data-hd="save"]');
+    save.textContent = name ? 'Lưu' : 'Lưu thành…';
+  }
+
+  function loadProfiles() {
+    return DB.studioProfiles().then(function (list) {
+      list = list || [];
+      profiles = list.filter(function (r) { return /^p-/.test(r.id); });
+      ['live', 'draft', 'prev'].forEach(function (k) { rows[k] = list.filter(function (r) { return r.id === k; })[0] || null; });
+      liveName = rows.live ? rows.live.name : null;
+      // the draft remembers which saved layout it belongs to
+      if (current === null && rows.draft && rows.draft.name && profileName(rows.draft.name)) current = rows.draft.name;
+      syncHead();
+      if (!root.querySelector('.se-sheet').hidden) renderSheet();
+    }).catch(function () { profiles = []; syncHead(); });
   }
 
   function slug(name) {
-    var s = String(name).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D')
+    var s = String(name).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D')
       .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30);
     return 'p-' + (s || 'bo-cuc') + '-' + Date.now().toString(36).slice(-4);
   }
 
-  function profClick(e) {
-    var b = e.target.closest('[data-se]');
-    if (!b || !data) return;
-    var a = b.dataset.se;
-    var id = root.querySelector('.se-profsel').value;
-    var p = profiles.filter(function (x) { return x.id === id; })[0];
-    var clean = L.sanitize(data);
-    var job = null;
-
-    if (a === 'p-open' && p) {
-      if (dirty && !window.confirm('Bố cục đang sửa chưa lưu. Mở bố cục khác?')) return;
-      job = DB.studioLayout(id).then(function (d) {
-        var ok = L.sanitize(d);
-        if (!ok) throw new Error('bố cục hỏng');
-        undo.push(clone(data));
-        data = ok; current = id; sel = null; dirty = false;
-        syncBg(); draw(); renderPanel();
-        return 'Đã mở "' + (p.name || id) + '"';
-      });
-    } else if (a === 'p-live' && p) {
-      if (!window.confirm('Cho khách thấy "' + (p.name || id) + '" ngay?')) return;
-      job = DB.studioLayout(id).then(function (d) {
-        var ok = L.sanitize(d);
-        if (!ok) throw new Error('bố cục hỏng');
-        return DB.saveStudioLayout('live', ok, p.name || id);
-      }).then(function () { return '"' + (p.name || id) + '" đang chạy'; });
-    } else if (a === 'p-del' && p) {
-      if (!window.confirm('Xoá hẳn bố cục "' + (p.name || id) + '"? (Bản khách đang thấy không bị xoá.)')) return;
-      job = DB.deleteStudioLayout(id).then(function () {
-        if (current === id) current = null;
-        return 'Đã xoá "' + (p.name || id) + '"';
-      });
-    } else if (a === 'p-save' && current) {
-      var cur = profiles.filter(function (x) { return x.id === current; })[0];
-      if (!clean || !cur) return;
-      job = DB.saveStudioLayout(current, clean, cur.name).then(function () {
-        dirty = false;
-        return 'Đã lưu vào "' + (cur.name || current) + '"';
-      });
-    } else if (a === 'p-new') {
-      if (!clean) return;
-      var name = (window.prompt('Tên bố cục (vd: Tết 2027, Mùa thu):') || '').trim().slice(0, 60);
-      if (!name) return;
-      var nid = slug(name);
-      job = DB.saveStudioLayout(nid, clean, name).then(function () {
-        current = nid; dirty = false;
-        return 'Đã lưu thành "' + name + '"';
-      });
-    }
-    if (!job) return;
-    b.disabled = true;
-    job.then(function (msg) { status(msg); return loadProfiles(); })
-      .catch(function (err) { status('Không làm được: ' + (err.message || ''), true); })
-      .then(function () { b.disabled = false; });
+  /* ---------- in-page dialog + toast ---------- */
+  // buttons: [{ v: value, t: label, on: true (primary) | 'danger' }]; input: default text
+  function ask(title, text, buttons, input) {
+    var dlg = root.querySelector('.se-dlg');
+    return new Promise(function (resolve) {
+      dlg.innerHTML = '<div class="se-dlg-box" role="dialog" aria-modal="true"><b></b><p></p>' +
+        (input != null ? '<input class="se-dlg-in" maxlength="60">' : '') +
+        '<div class="se-row">' + buttons.map(function (b, i) {
+          return '<button type="button" class="ad-btn' + (b.on === true ? ' on' : b.on === 'danger' ? ' danger' : '') + '" data-v="' + i + '">' + esc(b.t) + '</button>';
+        }).join('') + '</div></div>';
+      dlg.querySelector('b').textContent = title;
+      dlg.querySelector('p').textContent = text || '';
+      var inp = dlg.querySelector('.se-dlg-in');
+      if (inp) { inp.value = input; setTimeout(function () { inp.focus(); inp.select(); }, 30); }
+      dlg.hidden = false;
+      var done = function (v) {
+        dlg.hidden = true; dlg.innerHTML = '';
+        dlg.removeEventListener('click', onClick); dlg.removeEventListener('keydown', onKey);
+        resolve(v);
+      };
+      var onClick = function (e) {
+        if (e.target === dlg) return done(null);
+        var b = e.target.closest('[data-v]');
+        if (!b) return;
+        var v = buttons[+b.dataset.v].v;
+        if (inp && v !== null) { var txt = inp.value.trim().slice(0, 60); if (!txt) { inp.focus(); return; } return done({ v: v, text: txt }); }
+        done(v);
+      };
+      var onKey = function (e) {
+        if (e.key === 'Escape') done(null);
+        if (e.key === 'Enter' && inp) { e.preventDefault(); dlg.querySelector('.ad-btn.on').click(); }
+      };
+      dlg.addEventListener('click', onClick);
+      dlg.addEventListener('keydown', onKey);
+    });
   }
 
-  /* ---------- save / publish ---------- */
+  var toastTimer = null;
+  function toast(msg, bad, action) {
+    var el = root.querySelector('.se-toast');
+    el.innerHTML = '<span></span>' + (action ? '<button type="button" class="ad-btn">' + esc(action.t) + '</button>' : '');
+    el.querySelector('span').textContent = msg;
+    el.classList.toggle('bad', !!bad);
+    el.hidden = false;
+    if (action) el.querySelector('button').onclick = function () { el.hidden = true; action.fn(); };
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.hidden = true; }, action ? 9000 : 4000);
+  }
+
+  function fail(err) {
+    toast('Không làm được: ' + (err && err.message || '') +
+      (err && (err.status === 403 || err.status === 401) ? ' (chỉ tài khoản chủ được lưu)' : ''), true);
+  }
+
+  /* ---------- header actions ---------- */
+  function headClick(e) {
+    var b = e.target.closest('[data-hd]');
+    if (!b || !data) return;
+    var a = b.dataset.hd;
+    if (a === 'layouts') return openSheet();
+    if (a === 'save') return saveLayout();
+    if (a === 'publish') return publish(L.sanitize(data), current ? profileName(current) : null);
+  }
+
+  function saveLayout() {
+    var clean = L.sanitize(data);
+    if (!clean) { toast('Bố cục không hợp lệ.', true); return; }
+    if (current && profileName(current)) {
+      var name = profileName(current);
+      return DB.saveStudioLayout(current, clean, name).then(function () {
+        dirty = false; toast('Đã lưu vào "' + name + '"'); return loadProfiles();
+      }).catch(fail);
+    }
+    return saveAsNew(clean);
+  }
+
+  function saveAsNew(clean) {
+    return ask('Lưu thành bố cục mới', 'Đặt tên để lần sau mở lại (vd: Tết 2027, Mùa thu).',
+      [{ v: null, t: 'Huỷ' }, { v: 'ok', t: 'Lưu', on: true }], '').then(function (r) {
+      if (!r) return;
+      var nid = slug(r.text);
+      return DB.saveStudioLayout(nid, clean, r.text).then(function () {
+        current = nid; dirty = false;
+        toast('Đã lưu thành "' + r.text + '"');
+        autosave();
+        return loadProfiles();
+      });
+    }).catch(fail);
+  }
+
+  // Publish: keep what customers saw as 'prev' first, so it can be undone.
+  function publish(clean, name) {
+    if (!clean) { toast('Bố cục không hợp lệ.', true); return; }
+    var what = name ? '"' + name + '"' : 'bản đang sửa';
+    var was = liveName ? '"' + liveName + '"' : (rows.live ? 'bản đang chạy' : null);
+    return ask('Phát hành ' + what + '?', 'Khách sẽ thấy ' + what + (was ? ' thay cho ' + was : '') +
+      '. Bấm "Hoàn tác phát hành" ngay sau đó nếu lỡ tay.',
+      [{ v: null, t: 'Huỷ' }, { v: 'go', t: 'Phát hành', on: true }]).then(function (v) {
+      if (!v) return;
+      return DB.studioLayout('live').catch(function () { return null; }).then(function (old) {
+        return old ? DB.saveStudioLayout('prev', old, liveName) : null;
+      }).then(function () {
+        return DB.saveStudioLayout('live', clean, name || null);
+      }).then(function () {
+        toast('Đã phát hành — khách đang thấy ' + what, false, rows.live || liveName ? { t: 'Hoàn tác phát hành', fn: undoPublish } : null);
+        return loadProfiles();
+      });
+    }).catch(fail);
+  }
+
+  function undoPublish() {
+    DB.studioLayout('prev').then(function (old) {
+      var ok = L.sanitize(old);
+      if (!ok) throw new Error('không còn bản trước');
+      return DB.saveStudioLayout('live', ok, rows.prev ? rows.prev.name : null);
+    }).then(function () {
+      toast('Đã trả lại bản khách thấy trước đó');
+      return loadProfiles();
+    }).catch(fail);
+  }
+
+  /* ---------- the layouts sheet ---------- */
+  var confirmDel = null, renaming = null;
+  function openSheet() {
+    var sh = root.querySelector('.se-sheet');
+    sh.hidden = false;
+    confirmDel = null; renaming = null;
+    renderSheet();
+    loadProfiles();
+  }
+
+  function ago(iso) {
+    if (!iso) return '';
+    var m = Math.round((Date.now() - new Date(iso)) / 60000);
+    if (m < 1) return 'vừa xong';
+    if (m < 60) return m + ' phút trước';
+    if (m < 60 * 24) return Math.round(m / 60) + ' giờ trước';
+    var d = Math.round(m / 1440);
+    return d === 1 ? 'hôm qua' : d + ' ngày trước';
+  }
+
+  function renderSheet() {
+    var sh = root.querySelector('.se-sheet');
+    var cards = profiles.map(function (p) {
+      var live = p.name && p.name === liveName, open = p.id === current;
+      var acts = confirmDel === p.id
+        ? '<span class="se-card-q">Xoá hẳn? Bản khách đang thấy không bị ảnh hưởng.</span>' +
+          '<button type="button" class="ad-btn danger" data-sh="del-yes" data-id="' + esc(p.id) + '">Xoá</button>' +
+          '<button type="button" class="ad-btn" data-sh="del-no">Thôi</button>'
+        : renaming === p.id
+        ? '<input class="se-card-in" maxlength="60" value="' + esc(p.name || '') + '">' +
+          '<button type="button" class="ad-btn on" data-ok data-sh="ren-yes" data-id="' + esc(p.id) + '">Đổi tên</button>' +
+          '<button type="button" class="ad-btn" data-sh="ren-no">Thôi</button>'
+        : '<button type="button" class="ad-btn' + (open ? '' : ' on') + '" data-sh="open" data-id="' + esc(p.id) + '"' + (open ? ' disabled' : '') + '>' + (open ? 'Đang mở' : 'Mở') + '</button>' +
+          '<button type="button" class="ad-btn" data-sh="live" data-id="' + esc(p.id) + '">Phát hành</button>' +
+          '<button type="button" class="ad-btn" data-sh="ren" data-id="' + esc(p.id) + '">Đổi tên</button>' +
+          '<button type="button" class="ad-btn" data-sh="dup" data-id="' + esc(p.id) + '">Nhân bản</button>' +
+          '<button type="button" class="ad-btn danger" data-sh="del" data-id="' + esc(p.id) + '">Xoá</button>';
+      return '<li class="se-card' + (open ? ' is-open' : '') + '">' +
+        '<canvas class="se-thumb" width="240" height="96" data-id="' + esc(p.id) + '"></canvas>' +
+        '<div class="se-card-t"><b>' + esc(p.name || p.id) + '</b>' +
+          (live ? '<span class="se-badge">Đang chạy</span>' : '') + (open ? '<span class="se-badge is-open">Đang sửa</span>' : '') +
+          '<span class="se-card-d">sửa ' + esc(ago(p.updated_at)) + '</span></div>' +
+        '<div class="se-card-a">' + acts + '</div></li>';
+    }).join('');
+    sh.innerHTML = '<div class="se-sheet-box">' +
+      '<div class="se-sheet-h"><b>Bố cục đã lưu</b><button type="button" class="se-x" data-sh="close" aria-label="Đóng">×</button></div>' +
+      '<p class="se-hint-s">Khách đang thấy: <b>' + esc(liveName || (rows.live ? 'bố cục chưa đặt tên' : '—')) + '</b>' +
+        (rows.prev ? ' · <button type="button" class="se-link" data-sh="undo-live">Trả lại bản trước</button>' : '') + '</p>' +
+      '<div class="se-row">' +
+        '<button type="button" class="ad-btn on" data-sh="new-copy">+ Lưu bản đang sửa thành bố cục mới</button>' +
+        '<button type="button" class="ad-btn" data-sh="new-blank">+ Bắt đầu từ tường trống</button>' +
+      '</div>' +
+      (profiles.length ? '<ul class="se-cards">' + cards + '</ul>' : '<p class="se-hint-s">Chưa có bố cục nào. Lưu bản đang sửa để bắt đầu.</p>') +
+      '</div>';
+    var inp = sh.querySelector('.se-card-in');
+    if (inp) { inp.focus(); inp.select(); }
+    sh.querySelectorAll('.se-thumb').forEach(drawThumb);
+  }
+
+  // A thumbnail: the start of the studio wall with its pieces.
+  var thumbImgs = {};
+  function img(src) {
+    if (!thumbImgs[src]) {
+      thumbImgs[src] = new Promise(function (res) { var im = new Image(); im.onload = function () { res(im); }; im.onerror = function () { res(null); }; im.src = src; });
+    }
+    return thumbImgs[src];
+  }
+  function drawThumb(cv) {
+    var p = profiles.filter(function (x) { return x.id === cv.dataset.id; })[0];
+    var d = p && L.sanitize(p.data);
+    if (!d) return;
+    var g = cv.getContext('2d'), sc = cv.height / d.bg.h, viewW = cv.width / sc;
+    var x0 = Math.max(0, Math.min(d.bg.w - viewW, (d.start || 0) - viewW / 2));
+    var pieces = d.items.filter(function (it) { return it.x + it.w / 2 > x0 && it.x - it.w / 2 < x0 + viewW; });
+    Promise.all([img(d.bg.src)].concat(pieces.map(function (it) { return img(it.src); }))).then(function (ims) {
+      g.fillStyle = '#F0E1D2'; g.fillRect(0, 0, cv.width, cv.height);
+      if (ims[0]) g.drawImage(ims[0], x0 * ims[0].naturalWidth / d.bg.w, 0, viewW * ims[0].naturalWidth / d.bg.w, ims[0].naturalHeight, 0, 0, cv.width, cv.height);
+      pieces.forEach(function (it, n) {
+        var im = ims[n + 1];
+        if (!im) return;
+        g.save();
+        g.translate((it.x - x0) * sc, it.y * sc);
+        g.rotate((it.rot || 0) * Math.PI / 180);
+        if (it.flip) g.scale(-1, 1);
+        g.drawImage(im, -it.w * sc / 2, -it.h * sc / 2, it.w * sc, it.h * sc);
+        g.restore();
+      });
+    });
+  }
+
+  function openData(d, id) {
+    undo.push(clone(data));
+    data = d; current = id; sel = null; dirty = false;
+    if (scene !== 'in') setScene('in'); else { syncBg(); draw(); renderPanel(); }
+    autosave();
+  }
+
+  // Leaving work that isn't in a saved layout: ask first.
+  function okToLeave() {
+    if (!dirty) return Promise.resolve(true);
+    var name = current && profileName(current);
+    return ask(name ? 'Thay đổi chưa lưu vào "' + name + '"' : 'Bản đang sửa chưa đặt tên',
+      name ? 'Lưu vào "' + name + '" trước khi mở bố cục khác?' : 'Mở bố cục khác sẽ thay bản đang sửa. Lưu nó thành bố cục mới trước?',
+      [{ v: null, t: 'Huỷ' }, { v: 'drop', t: 'Bỏ thay đổi', on: 'danger' }, { v: 'save', t: name ? 'Lưu rồi mở' : 'Lưu thành…', on: true }])
+      .then(function (v) {
+        if (!v) return false;
+        if (v === 'drop') return true;
+        var before = current;
+        return Promise.resolve(saveLayout()).then(function () { return !dirty || current !== before; });
+      });
+  }
+
+  function sheetClick(e) {
+    var b = e.target.closest('[data-sh]');
+    if (e.target.classList.contains('se-sheet')) { root.querySelector('.se-sheet').hidden = true; return; }
+    if (!b) return;
+    var a = b.dataset.sh, id = b.dataset.id, p = profiles.filter(function (x) { return x.id === id; })[0];
+    var sh = root.querySelector('.se-sheet');
+    if (a === 'close') { sh.hidden = true; return; }
+    if (a === 'del') { confirmDel = id; renaming = null; return renderSheet(); }
+    if (a === 'del-no' || a === 'ren-no') { confirmDel = null; renaming = null; return renderSheet(); }
+    if (a === 'ren') { renaming = id; confirmDel = null; return renderSheet(); }
+    if (a === 'undo-live') return undoPublish();
+    if (a === 'new-copy') { sh.hidden = true; return saveAsNew(L.sanitize(data)); }
+    if (a === 'new-blank') {
+      return okToLeave().then(function (go) {
+        if (!go) return;
+        sh.hidden = true;
+        openData(L.blank(lib.backgrounds[0]), null);
+        toast('Tường trống — bấm "Lưu thành…" khi muốn đặt tên');
+      });
+    }
+    if (!p) return;
+    var d = L.sanitize(p.data);
+    if (a === 'del-yes') {
+      return DB.deleteStudioLayout(id).then(function () {
+        if (current === id) current = null;
+        confirmDel = null; toast('Đã xoá "' + (p.name || id) + '"'); return loadProfiles();
+      }).catch(fail);
+    }
+    if (a === 'ren-yes') {
+      var nm = sh.querySelector('.se-card-in').value.trim().slice(0, 60);
+      if (!nm) return;
+      var wasLive = p.name && p.name === liveName;
+      return DB.saveStudioLayout(id, d, nm).then(function () {
+        // the live row is matched by name: keep the "Đang chạy" mark
+        return wasLive && rows.live ? DB.saveStudioLayout('live', L.sanitize(rows.live.data), nm) : null;
+      }).then(function () { renaming = null; toast('Đã đổi tên thành "' + nm + '"'); return loadProfiles(); }).catch(fail);
+    }
+    if (!d) { toast('Bố cục này bị hỏng, không mở được.', true); return; }
+    if (a === 'open') {
+      return okToLeave().then(function (go) {
+        if (!go) return;
+        sh.hidden = true;
+        openData(d, id);
+        toast('Đã mở "' + (p.name || id) + '"');
+        syncHead();
+      });
+    }
+    if (a === 'live') return publish(d, p.name || id);
+    if (a === 'dup') {
+      var copyName = (p.name || 'Bố cục') + ' (bản sao)';
+      return DB.saveStudioLayout(slug(copyName), d, copyName).then(function () {
+        toast('Đã nhân bản thành "' + copyName + '"'); return loadProfiles();
+      }).catch(fail);
+    }
+  }
+
+  function clearScene() {
+    remember();
+    S().items = [];
+    sel = null;
+    draw(); renderPanel();
+    status('Đã xoá hết đồ — xếp lại từ tường trống');
+  }
+
+  /* ---------- tool bar ---------- */
   function barClick(e) {
     var b = e.target.closest('[data-se]');
     if (!b || !data) return;
@@ -1058,13 +1379,9 @@ window.GemStudioEditor = (function () {
     }
     if (a === 'clear') {
       if (!S().items.length) { status('Cảnh này chưa có món nào.'); return; }
-      if (!window.confirm('Xoá hết ' + S().items.length + ' món trong cảnh ' + (scene === 'out' ? '"Ngoài cửa"' : '"Trong studio"') +
-        '? Vùng bấm, Udon và điểm xuất phát giữ nguyên. Bấm Hoàn tác để lấy lại.')) return;
-      remember();
-      S().items = [];
-      sel = null;
-      draw(); renderPanel();
-      status('Đã xoá hết đồ — xếp lại từ tường trống');
+      ask('Xoá hết ' + S().items.length + ' món trong cảnh ' + (scene === 'out' ? '"Ngoài cửa"' : '"Trong studio"') + '?',
+        'Vùng bấm, Udon và điểm xuất phát giữ nguyên. Bấm Hoàn tác để lấy lại.',
+        [{ v: null, t: 'Thôi' }, { v: 'go', t: 'Xoá hết', on: 'danger' }]).then(function (v) { if (v) clearScene(); });
       return;
     }
     if (a === 'undo') return doUndo();
@@ -1075,26 +1392,7 @@ window.GemStudioEditor = (function () {
       stageEl.scrollLeft = mid * k - stageEl.clientWidth / 2;
       return;
     }
-    var clean = L.sanitize(data);
-    if (!clean) { status('Bố cục không hợp lệ.', true); return; }
-    b.disabled = true;
-    var job = a === 'save'
-      ? DB.saveStudioLayout('draft', clean)
-      : (window.confirm('Xuất bản bố cục này cho khách?')
-        ? DB.saveStudioLayout('draft', clean).then(function () {
-            var cur = profiles.filter(function (x) { return x.id === current; })[0];
-            return DB.saveStudioLayout('live', clean, cur ? cur.name : null);
-          })
-        : null);
-    if (!job) { b.disabled = false; return; }
-    job.then(function () {
-      dirty = false;
-      status(a === 'save' ? 'Đã lưu nháp' : 'Đã xuất bản — khách thấy bố cục mới');
-      if (a !== 'save') loadProfiles();
-    }).catch(function (err) {
-      status('Không lưu được: ' + (err.message || '') + (err.status === 403 || err.status === 401 ? ' (chỉ tài khoản chủ được lưu)' : ''), true);
-    }).then(function () { b.disabled = false; });
   }
 
-  return { mount: mount, unmount: unmount, queueProduct: queueProduct, isDirty: function () { return dirty; } };
+  return { mount: mount, unmount: unmount, queueProduct: queueProduct, isDirty: function () { flushAutosave(); return false; } };
 })();

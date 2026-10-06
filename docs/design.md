@@ -1573,6 +1573,26 @@ món hẹp (Bloom, dây đeo) vùng nằm ngoài hình món vẫn tính là mộ
 **Chưa làm (đợt 2–3):** vải thật dạng "Mảnh hiếm" (bảng `fabrics` + admin), tường
 thiết kế của khách, Thiết kế của tháng.
 
+### Lắp studio: lưu / mở / phát hành (10/2026)
+
+- **Lỗi cũ:** nút trong menu "Lưu" (Mở, Lưu vào…, Xoá) lọt xuống `barClick`, và
+  nút nào không biết thì bị coi là "Xuất bản" → hỏi phát hành ở mọi nút. Giờ
+  thanh công cụ chỉ xử lý nút của nó; đầu trình lắp dùng `data-hd`.
+- **Thanh đầu:** "Đang sửa: <tên>" · trạng thái tự lưu · "Khách đang thấy: <tên>"
+  + Bố cục / Xem thử / Lưu / Phát hành.
+- **Tự lưu nháp** 2 giây sau mỗi thay đổi (dòng `draft`; cột `name` của nháp giữ
+  id bố cục đang mở để mở lại đúng bố cục). Không còn "chưa lưu, rời đi?".
+- **Bố cục:** tấm trượt (điện thoại) / bảng bên phải (máy tính), mỗi bố cục một
+  thẻ có ảnh thu nhỏ, nhãn Đang chạy / Đang sửa, Mở / Phát hành / Đổi tên / Nhân
+  bản / Xoá (xoá hỏi ngay trên thẻ). Mở khi có thay đổi chưa lưu → hỏi lưu / bỏ.
+- **Phát hành:** hỏi một lần bằng khung trong trang; trước khi ghi `live`, bản
+  khách đang thấy được chép sang dòng `prev` → nút "Hoàn tác phát hành" (toast) và
+  "Trả lại bản trước" trong danh sách. Không cần migration (owner ghi được mọi id,
+  `prev` khách không đọc được).
+- **Thư viện:** giữ tab + vị trí cuộn sau mỗi lần thêm; tab "Vừa dùng" (8 ảnh,
+  `localStorage['gem-se-recent']`); ô tìm theo tên ảnh / tên tab.
+- Hộp thoại của trình duyệt (`confirm` / `prompt`) không còn dùng trong trình lắp.
+
 ### Góp ý đợt 3 (10/2026)
 
 - **Bàn thiết kế gọn lại:** trên cùng là các món + "Gợi ý ngẫu nhiên". Lần đầu chỉ

@@ -343,7 +343,7 @@ window.GemDB = (function () {
 
     // Bố cục đã lưu (id 'p-…') + tên của bản đang chạy. Chỉ owner đọc được.
     studioProfiles: function () {
-      return req('/rest/v1/studio_layout?select=id,name,updated_at&or=(id.like.p-*,id.eq.live)&order=updated_at.desc');
+      return req('/rest/v1/studio_layout?select=id,name,updated_at,data&or=(id.like.p-*,id.eq.live,id.eq.draft,id.eq.prev)&order=updated_at.desc');
     },
 
     deleteStudioLayout: function (id) {
