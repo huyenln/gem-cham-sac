@@ -457,7 +457,7 @@
 .se-item img { display: block; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
 .se-item.is-frame img { object-fit: cover; border: 3px solid #FBF6EE; outline: 3px solid #B08452; }
 .se-item.is-front { outline: 1px dotted rgba(166, 80, 60, 0.6); }
-.se-item.is-sel { z-index: 50; }
+/* the selected piece stays in its own place in the stack (Lên / Xuống show at once); .se-grab carries the outline + grips */
 
 .se-item { z-index: 20; }
 .se-hot { border: 2px dashed rgba(135, 150, 90, 0.95); background: rgba(135, 150, 90, 0.08); z-index: 10; }

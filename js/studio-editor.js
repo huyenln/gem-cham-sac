@@ -1214,12 +1214,19 @@ window.GemStudioEditor = (function () {
     else if (a === 'frame') it.frame = !it.frame;
     else if (a === 'lock') { if (it.lock) delete it.lock; else { it.lock = true; sel = null; status('Đã khoá — mở lại ở "Món đã khoá" bên dưới.'); } }
     else if (a === 'back' || a === 'front') it.layer = a;
-    else if (a === 'up' && i < S().items.length - 1) {
-      S().items.splice(i, 1); S().items.splice(i + 1, 0, it); sel.i = i + 1;
-    } else if (a === 'down' && i > 0) {
-      S().items.splice(i, 1); S().items.splice(i - 1, 0, it); sel.i = i - 1;
+    else if (a === 'up' || a === 'down') {
+      // one press = past the next piece that actually overlaps it (stepping
+      // over pieces elsewhere on the wall changed nothing you could see)
+      var list = S().items, j = i, d = a === 'up' ? 1 : -1;
+      do { j += d; } while (j >= 0 && j < list.length && !overlaps(it, list[j]));
+      j = Math.max(0, Math.min(list.length - 1, j));
+      list.splice(i, 1); list.splice(j, 0, it); sel.i = j;
     }
     draw(); renderPanel();
+  }
+
+  function overlaps(p, q) {
+    return Math.abs(p.x - q.x) * 2 < p.w + q.w && Math.abs(p.y - q.y) * 2 < p.h + q.h;
   }
 
   // Height in strip px, width follows (aspect kept), centre stays put.
@@ -1261,6 +1268,10 @@ window.GemStudioEditor = (function () {
      layouts). Confirmations are drawn in the page, never window.confirm. */
   var saveTimer = null, savedAt = null, saving = false;
   var rows = { live: null, draft: null, prev: null };
+  // What customers saw before the last publish. The table only takes ids
+  // 'draft', 'live' and 'p-…' (check constraint studio_layout_id_check), so
+  // it is kept as a saved layout with a fixed id, hidden from the list.
+  var PREV = 'p-ban-truoc';
 
   function changed() {
     dirty = true;
@@ -1310,8 +1321,9 @@ window.GemStudioEditor = (function () {
   function loadProfiles() {
     return DB.studioProfiles().then(function (list) {
       list = list || [];
-      profiles = list.filter(function (r) { return /^p-/.test(r.id); });
-      ['live', 'draft', 'prev'].forEach(function (k) { rows[k] = list.filter(function (r) { return r.id === k; })[0] || null; });
+      profiles = list.filter(function (r) { return /^p-/.test(r.id) && r.id !== PREV; });
+      ['live', 'draft'].forEach(function (k) { rows[k] = list.filter(function (r) { return r.id === k; })[0] || null; });
+      rows.prev = list.filter(function (r) { return r.id === PREV; })[0] || null;
       liveName = rows.live ? rows.live.name : null;
       // the draft remembers which saved layout it belongs to
       if (current === null && rows.draft && rows.draft.name && profileName(rows.draft.name)) current = rows.draft.name;
@@ -1417,6 +1429,7 @@ window.GemStudioEditor = (function () {
   }
 
   // Publish: keep what customers saw as 'prev' first, so it can be undone.
+  var undoable = false;
   function publish(clean, name) {
     if (!clean) { toast('Bố cục không hợp lệ.', true); return; }
     var what = name ? '"' + name + '"' : 'bản đang sửa';
@@ -1426,18 +1439,20 @@ window.GemStudioEditor = (function () {
       [{ v: null, t: 'Huỷ' }, { v: 'go', t: 'Phát hành', on: true }]).then(function (v) {
       if (!v) return;
       return DB.studioLayout('live').catch(function () { return null; }).then(function (old) {
-        return old ? DB.saveStudioLayout('prev', old, liveName) : null;
-      }).then(function () {
+        // keeping the old copy must never stop the publish itself
+        return old ? DB.saveStudioLayout(PREV, old, liveName).then(function () { return true; }, function () { return false; }) : false;
+      }).then(function (kept) {
+        undoable = kept;
         return DB.saveStudioLayout('live', clean, name || null);
       }).then(function () {
-        toast('Đã phát hành — khách đang thấy ' + what, false, rows.live || liveName ? { t: 'Hoàn tác phát hành', fn: undoPublish } : null);
+        toast('Đã phát hành — khách đang thấy ' + what, false, undoable ? { t: 'Hoàn tác phát hành', fn: undoPublish } : null);
         return loadProfiles();
       });
     }).catch(fail);
   }
 
   function undoPublish() {
-    DB.studioLayout('prev').then(function (old) {
+    DB.studioLayout(PREV).then(function (old) {
       var ok = L.sanitize(old);
       if (!ok) throw new Error('không còn bản trước');
       return DB.saveStudioLayout('live', ok, rows.prev ? rows.prev.name : null);
