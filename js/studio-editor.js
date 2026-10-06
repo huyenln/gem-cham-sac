@@ -417,9 +417,6 @@ window.GemStudioEditor = (function () {
 
   function draw() {
     if (!data || !worldEl) return;
-    // A piece is selected: fingers belong to it (pinch / drag), not to
-    // scrolling. Tap empty wall to deselect and scroll again.
-    stageEl.style.touchAction = sel && sel.kind === 'item' ? 'none' : '';
     var h = stageEl.clientHeight || 420;
     k = (h - 40) / S().bg.h * zoom;   // minus the stage padding
     worldEl.style.width = px(S().bg.w);
@@ -440,7 +437,7 @@ window.GemStudioEditor = (function () {
     S().items.forEach(function (it, i) {
       var n = document.createElement('div');
       n.className = 'se-el se-item' + (it.layer === 'front' ? ' is-front' : '') + (it.frame ? ' is-frame' : '') + (it.sku ? ' is-prod' : '') +
-        (isSel('item', i) ? ' is-sel' : '');
+        (it.lock ? ' is-lock' : '') + (isSel('item', i) ? ' is-sel' : '');
       n.dataset.kind = 'item'; n.dataset.i = i;
       place(n, it.x - it.w / 2, it.y - it.h / 2, it.w, it.h);
       n.style.transform = 'rotate(' + it.rot + 'deg)';
@@ -448,9 +445,22 @@ window.GemStudioEditor = (function () {
       img.src = it.src; img.alt = ''; img.draggable = false;
       if (it.flip) img.style.transform = 'scaleX(-1)';
       n.appendChild(img);
-      if (isSel('item', i)) handles(n, true);
       worldEl.appendChild(n);
     });
+    // The selected piece gets a see-through twin above everything: a finger
+    // inside its outline always moves IT, even where another piece is drawn
+    // on top, and its handles can't be covered.
+    if (sel && sel.kind === 'item' && S().items[sel.i]) {
+      var it = S().items[sel.i];
+      var gb = document.createElement('div');
+      var small = Math.min(it.w, it.h) * k < 72;   // corner grips would cover a small piece
+      gb.className = 'se-el se-grab' + (it.lock ? ' is-lock' : '') + (small ? ' is-small' : '');
+      gb.dataset.kind = 'item'; gb.dataset.i = sel.i;
+      place(gb, it.x - it.w / 2, it.y - it.h / 2, it.w, it.h);
+      gb.style.transform = 'rotate(' + it.rot + 'deg)';
+      if (!it.lock) handles(gb, true);
+      worldEl.appendChild(gb);
+    }
 
     // character at the start + floor line, for scale
     var feet = L.FEET_Y, ph = 410;
@@ -543,10 +553,16 @@ window.GemStudioEditor = (function () {
       mid: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 } };
   }
 
+  var onSel = false;      // the first finger of this touch landed on the selected piece
+  var touchSeq = 0;       // bumps when a second finger lands: the first one's tap is off
+
   function pinchDown(e) {
     if (e.pointerType !== 'touch') return;
+    var n0 = Object.keys(touches).length;
     touches[e.pointerId] = { x: e.clientX, y: e.clientY };
-    if (Object.keys(touches).length !== 2 || !sel || sel.kind !== 'item') return;
+    if (n0 === 0) onSel = !!(e.target.closest && e.target.closest('.se-grab'));
+    if (Object.keys(touches).length === 2) touchSeq++;
+    if (Object.keys(touches).length !== 2 || !onSel || !sel || sel.kind !== 'item' || S().items[sel.i].lock) return;
     e.stopPropagation();          // not a new selection / drag
     e.preventDefault();
     var p = pair();
@@ -581,17 +597,29 @@ window.GemStudioEditor = (function () {
     }
   }
 
+  // What a touch does (phone / tablet):
+  //   - on the selected piece (or its handles): drag / resize / rotate it
+  //   - anywhere else: nothing until the finger lifts. A swipe scrolls the
+  //     stage (the browser takes it); a tap selects what is under the finger.
+  //   - a tap on the selected piece selects the next one under it, so a
+  //     piece hidden behind another can still be reached.
+  // A mouse keeps "press and drag" on any piece: no scrolling to confuse.
   function pointerDown(e) {
     if (pinch || Object.keys(touches).length > 1) return;   // second finger of a pinch
     var n = e.target.closest('.se-el');
-    if (!n || n.classList.contains('se-floor')) {
+    if (n && n.classList.contains('se-floor')) n = null;
+    var finger = e.pointerType === 'touch' || e.pointerType === 'pen';
+    var mine = n && (n.classList.contains('se-grab') || (n.dataset.kind !== 'item' && n.classList.contains('is-sel')));
+    if (!n && !finger) {
       if (sel) { sel = null; draw(); renderPanel(); }
       return;
     }
+    if (!mine && finger) { waitTap(e); return; }
     e.preventDefault();
     var kind = n.dataset.kind;
     sel = { kind: kind, i: n.dataset.i != null ? +n.dataset.i : null, id: n.dataset.id || null };
     var handle = e.target.dataset.handle || null;
+    var cx0 = e.clientX, cy0 = e.clientY, seq = touchSeq;
     var p0 = toStrip(e);
     var before = clone(data);
     var obj = target();
@@ -603,8 +631,9 @@ window.GemStudioEditor = (function () {
       if (pinch || gen !== pinchGen) return;   // two fingers took over this gesture
       var p = toStrip(ev);
       var dx = p.x - p0.x, dy = p.y - p0.y;
-      if (!moved && Math.abs(dx) + Math.abs(dy) < 2 / k) return;
+      if (!moved && Math.hypot(ev.clientX - cx0, ev.clientY - cy0) < (finger ? 8 : 3)) return;
       moved = true;
+      if (kind === 'item' && obj.lock) return;
       if (kind === 'item') {
         if (handle === 'rot') {
           var a0 = Math.atan2(p0.y - start.y, p0.x - start.x), a1 = Math.atan2(p.y - start.y, p.x - start.x);
@@ -643,16 +672,59 @@ window.GemStudioEditor = (function () {
       }
       draw();
     }
-    function up() {
+    function up(ev) {
       document.removeEventListener('pointermove', move);
       document.removeEventListener('pointerup', up);
-      if (moved) {
+      document.removeEventListener('pointercancel', up);
+      if (moved && !obj.lock) {
         undo.push(before); changed();
+      } else if (!moved && mine && ev.type === 'pointerup' && gen === pinchGen && seq === touchSeq) {
+        pickAt(ev.clientX, ev.clientY, true);   // tapped the selected piece again: the one under it
+        return;
       }
       draw(); renderPanel();
     }
     document.addEventListener('pointermove', move);
     document.addEventListener('pointerup', up);
+    document.addEventListener('pointercancel', up);
+    if (!mine) { draw(); renderPanel(); }
+  }
+
+  // A finger that isn't on the selected piece: wait. Moving it far is a
+  // scroll (the browser usually cancels the pointer itself); lifting it close
+  // to where it landed is a tap.
+  function waitTap(e) {
+    var id = e.pointerId, x0 = e.clientX, y0 = e.clientY, seq = touchSeq, far = false;
+    function move(ev) { if (ev.pointerId === id && Math.hypot(ev.clientX - x0, ev.clientY - y0) > 10) far = true; }
+    function end(ev) {
+      if (ev.pointerId !== id) return;
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', end);
+      document.removeEventListener('pointercancel', end);
+      if (ev.type !== 'pointerup' || far || seq !== touchSeq || pinch) return;
+      pickAt(ev.clientX, ev.clientY);
+    }
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', end);
+    document.addEventListener('pointercancel', end);
+  }
+
+  // Select what is under a point. Already holding one of the things there?
+  // Take the next one down (round and round), so stacked pieces can all be
+  // reached. Locked pieces take no taps (CSS), so they never come up here.
+  function pickAt(x, y, again) {
+    var seen = {}, stack = [];
+    document.elementsFromPoint(x, y).forEach(function (n) {
+      if (!n.classList.contains('se-el') || n.classList.contains('se-grab') || n.classList.contains('se-floor') || !worldEl.contains(n)) return;
+      var s1 = { kind: n.dataset.kind, i: n.dataset.i != null ? +n.dataset.i : null, id: n.dataset.id || null };
+      var key = s1.kind + '|' + s1.i + '|' + s1.id;
+      if (!seen[key]) { seen[key] = 1; stack.push(s1); }
+    });
+    var at = -1;
+    stack.forEach(function (s1, j) { if (sel && s1.kind === sel.kind && s1.i === sel.i && s1.id === (sel.id || null)) at = j; });
+    var next = stack.length ? stack[(at + 1) % stack.length] : null;
+    if (again && (at < 0 || stack.length === 1)) return;   // nothing else here: keep it
+    sel = next;
     draw(); renderPanel();
   }
 
@@ -672,6 +744,7 @@ window.GemStudioEditor = (function () {
     if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); doUndo(); return; }
     if (!sel || sel.kind !== 'item') return;
     var it = S().items[sel.i];
+    if (it.lock) return;
     var step = e.shiftKey ? 20 : 2;
     var m = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] }[e.key];
     if (m) { e.preventDefault(); remember(); it.x += m[0]; it.y += m[1]; draw(); return; }
@@ -691,10 +764,14 @@ window.GemStudioEditor = (function () {
   function renderPanel() {
     if (!lib) return;
     var tools = '';
-    if (sel && sel.kind === 'item') {
+    if (sel && sel.kind === 'item' && S().items[sel.i].lock) {
+      tools = '<div class="se-tools"><b>Đang khoá</b><span class="se-lockmsg">không kéo nhầm được</span>' +
+        '<button type="button" class="se-tb on" data-act="lock">Mở khoá</button></div>';
+    } else if (sel && sel.kind === 'item') {
       var it = S().items[sel.i];
       // one strip of small controls; scrolls sideways on a phone
       tools = '<div class="se-tools">' +
+        '<button type="button" class="se-tb" data-act="lock" title="Khoá: chạm vào không chọn, không kéo được nữa (hợp với tường, cửa, kệ lớn)">Khoá</button>' +
         '<span class="se-seg" role="group" aria-label="Lớp">' +
           '<button type="button" data-act="back" class="' + (it.layer !== 'front' ? 'is-on' : '') + '">Sau người</button>' +
           '<button type="button" data-act="front" class="' + (it.layer === 'front' ? 'is-on' : '') + '">Trước người</button>' +
@@ -738,9 +815,17 @@ window.GemStudioEditor = (function () {
         '<span class="se-hint-s">Khung nét đứt = chỗ khách chạm; cột đỏ ở sàn = chỗ nhân vật dừng.</span>' +
       '</div>';
     } else {
-      tools = '<details class="se-help"><summary>Cách dùng</summary><p>Chạm một món ở thư viện để thêm vào giữa màn hình. ' +
-        'Kéo để di chuyển, kéo góc để đổi cỡ, kéo nút tròn để xoay. Điện thoại: chụm / mở hai ngón để đổi cỡ, vặn hai ngón để xoay. ' +
-        'Phím mũi tên dịch từng chút, Ctrl+Z hoàn tác. "Khung bấm" ẩn các khung xanh khi xếp đồ.</p></details>';
+      var locked = [];
+      S().items.forEach(function (x, i) { if (x.lock) locked.push(i); });
+      tools = (locked.length ? '<div class="se-locks"><span>Món đã khoá — chạm để chọn:</span>' + locked.map(function (i) {
+          return '<button type="button" class="se-lockpick" data-lock="' + i + '" aria-label="Chọn món đã khoá"><img src="' + esc(S().items[i].src) + '" alt=""></button>';
+        }).join('') + '</div>' : '') +
+        '<details class="se-help"><summary>Cách dùng</summary><p>Chạm một món ở thư viện để thêm vào giữa màn hình. ' +
+        'Điện thoại: chạm một lần để chọn món, rồi mới kéo được món đó; vuốt chỗ khác thì chỉ cuộn màn hình. ' +
+        'Món nằm dưới món khác: chạm thêm lần nữa vào món đang chọn để chọn món bên dưới. ' +
+        'Kéo góc để đổi cỡ, kéo nút tròn để xoay, hoặc chụm / vặn hai ngón trên món đang chọn. ' +
+        '"Khoá" những món to như tường, cửa, kệ để không kéo nhầm. ' +
+        'Máy tính: kéo thẳng món nào cũng được, phím mũi tên dịch từng chút, Ctrl+Z hoàn tác.</p></details>';
     }
     var g = libGroups().filter(function (x) { return x.id === group; })[0] || lib.groups[0];
     var extra = '';
@@ -852,6 +937,14 @@ window.GemStudioEditor = (function () {
   function panelClick(e) {
     var b;
     if ((b = e.target.closest('[data-group]'))) { group = b.dataset.group; findQ = ''; renderPanel(); return; }
+    if ((b = e.target.closest('[data-lock]'))) {
+      var li = +b.dataset.lock, lit = S().items[li];
+      if (!lit) return;
+      sel = { kind: 'item', i: li };
+      stageEl.scrollLeft = Math.max(0, lit.x * k - stageEl.clientWidth / 2);
+      draw(); renderPanel();
+      return;
+    }
     if ((b = e.target.closest('[data-up-drop]'))) {
       var k = +b.getAttribute('data-up-drop');
       URL.revokeObjectURL(upForm.files[k].preview);
@@ -954,6 +1047,7 @@ window.GemStudioEditor = (function () {
     else if (a === 'bigger') resize(it, it.h * 1.15);
     else if (a === 'smaller') resize(it, it.h / 1.15);
     else if (a === 'frame') it.frame = !it.frame;
+    else if (a === 'lock') { if (it.lock) delete it.lock; else { it.lock = true; sel = null; status('Đã khoá — mở lại ở "Món đã khoá" bên dưới.'); } }
     else if (a === 'back' || a === 'front') it.layer = a;
     else if (a === 'up' && i < S().items.length - 1) {
       S().items.splice(i, 1); S().items.splice(i + 1, 0, it); sel.i = i + 1;
