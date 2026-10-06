@@ -9,7 +9,14 @@
 //     v: 1,
 //     bg:    { src, w, h },                  background strip; w may be longer
 //            than the picture for backgrounds in EXTEND (owner's "Dài thêm")
-//     items: [{ src, x, y, w, h, rot, flip, layer, frame, lock?, sku? }],
+//     items: [{ src, x, y, w, h, rot, flip, layer, frame, lock?, sku?,
+//               kind?, zone?, board?, show? }],
+//            kind: what a tap does (KINDS; none = decoration, a sku = product).
+//            zone = { act, link?, vi?, en? } for kind 'zone' (like a spot's
+//            settings; the character walks to the piece's x). board =
+//            { feed: 'workshop' | 'post' } for kind 'board'. show = { from?,
+//            to? } 'YYYY-MM-DD': the piece is only there on those days.
+//            Stories and lines live in the studio_info table, by src.
 //            x, y = centre; rot = degrees; layer 'back' (behind the
 //            character) | 'front' (in front); frame = thin wooden frame
 //            (for product photos); sku = a real product: customers tap it
@@ -170,6 +177,7 @@ window.GemLayout = (function () {
         lock: it.lock ? true : undefined,   // editor only: taps pass through it
         sku: typeof it.sku === 'string' && /^[a-z0-9-]{1,40}$/.test(it.sku) ? it.sku : undefined
       });
+      behave(out.items[out.items.length - 1], it);
     });
 
     if (d.hot && typeof d.hot === 'object') {
@@ -233,6 +241,70 @@ window.GemLayout = (function () {
     return out;
   }
 
+  /* ---------- what a piece does (kinds) ---------- */
+  var KINDS = [
+    { id: 'decor',   vi: 'Trang trí' },
+    { id: 'product', vi: 'Sản phẩm' },
+    { id: 'story',   vi: 'Câu chuyện' },
+    { id: 'zone',    vi: 'Khu vực' },
+    { id: 'talk',    vi: 'Lời thoại' },
+    { id: 'board',   vi: 'Bảng tin' }
+  ];
+  var KIND_IDS = KINDS.map(function (k) { return k.id; });
+  var FEEDS = ['workshop', 'post'];
+  var DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+  function behave(o, it) {
+    var kind = KIND_IDS.indexOf(it.kind) >= 0 ? it.kind : (o.sku ? 'product' : 'decor');
+    if (kind === 'product' && !o.sku) kind = 'decor';
+    if (kind !== 'product') o.sku = undefined;
+    if (kind !== 'decor') o.kind = kind;
+    if (kind === 'zone') {
+      var z = it.zone && typeof it.zone === 'object' ? it.zone : {}, c = {};
+      if (label(z.vi)) c.vi = label(z.vi);
+      if (label(z.en)) c.en = label(z.en);
+      if (linkOk(z.link)) c.link = z.link;
+      c.act = ACT_IDS.indexOf(z.act) >= 0 && (z.act !== 'link' || c.link) ? z.act : 'none';
+      o.zone = c;
+    }
+    if (kind === 'board') o.board = { feed: it.board && FEEDS.indexOf(it.board.feed) >= 0 ? it.board.feed : 'workshop' };
+    var sh = it.show && typeof it.show === 'object' ? it.show : {}, show = {};
+    if (DAY.test(sh.from || '')) show.from = sh.from;
+    if (DAY.test(sh.to || '')) show.to = sh.to;
+    if (show.from || show.to) o.show = show;
+  }
+
+  // Is the piece out today? (local date, 'YYYY-MM-DD' compares as text)
+  function shownOn(it, day) {
+    if (!it.show) return true;
+    if (!day) {
+      var d = new Date();
+      day = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+    }
+    return !(it.show.from && day < it.show.from) && !(it.show.to && day > it.show.to);
+  }
+
+  // A studio_info row, cleaned: text stays text (callers use textContent /
+  // esc()), the picture must be ours, the link one of ours or https.
+  function text(v, max) {
+    return typeof v === 'string' ? v.replace(/[\u0000-\u0008\u000b-\u001f]/g, '').trim().slice(0, max) : '';
+  }
+  function info(r) {
+    if (!r || typeof r !== 'object' || !srcOk(r.src)) return null;
+    var lines = Array.isArray(r.lines) ? r.lines : [];
+    return {
+      src: r.src,
+      kind: KIND_IDS.indexOf(r.kind) >= 0 ? r.kind : 'decor',
+      title_vi: text(r.title_vi, 120), title_en: text(r.title_en, 120),
+      body_vi: text(r.body_vi, 4000), body_en: text(r.body_en, 4000),
+      image: srcOk(r.image) ? r.image : '',
+      link: linkOk(r.link) ? r.link : '',
+      lines: lines.slice(0, 20).map(function (l) {
+        return { vi: text(l && l.vi, 200), en: text(l && l.en, 200) };
+      }).filter(function (l) { return l.vi || l.en; })
+    };
+  }
+
   function sanitize(d) {
     var s = scene(d, SPOTS);
     if (!s) return null;
@@ -249,5 +321,6 @@ window.GemLayout = (function () {
   }
 
   return { SPOTS: SPOTS, OUT_SPOTS: OUT_SPOTS, FEET_Y: FEET_Y, srcOk: srcOk, blank: blank, sanitize: sanitize,
-    outsideDefault: outsideDefault, EXTEND: EXTEND, linkOk: linkOk, ACTS: ACTS, bgParts: bgParts, partStyle: partStyle };
+    outsideDefault: outsideDefault, EXTEND: EXTEND, linkOk: linkOk, ACTS: ACTS, bgParts: bgParts, partStyle: partStyle,
+    KINDS: KINDS, FEEDS: FEEDS, shownOn: shownOn, info: info };
 })();

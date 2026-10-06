@@ -117,6 +117,9 @@ class FakeDB:
         self.assets = []
         self.files = {}
         self.patches = []
+        self.info = {}       # studio_info by src
+        self.sessions = []   # sessions_public
+        self.posts = []
 
     async def route(self, r):
         u, m = r.request.url, r.request.method
@@ -140,6 +143,16 @@ class FakeDB:
             i = mm.group(1) if mm else None
             rows = [{'data': self.rows[i]}] if i in self.rows else []
             return await r.fulfill(status=200, content_type='application/json', body=json.dumps(rows))
+        if '/rest/v1/studio_info' in u:
+            if m == 'POST':
+                b = json.loads(r.request.post_data)
+                self.info[b['src']] = b
+                return await r.fulfill(status=201, body='')
+            return await r.fulfill(status=200, content_type='application/json', body=json.dumps(list(self.info.values())))
+        if '/rest/v1/sessions_public' in u:
+            return await r.fulfill(status=200, content_type='application/json', body=json.dumps(self.sessions))
+        if '/rest/v1/posts' in u:
+            return await r.fulfill(status=200, content_type='application/json', body=json.dumps(self.posts))
         if '/rest/v1/products' in u:
             if m == 'PATCH':
                 self.patches.append(json.loads(r.request.post_data))
@@ -878,6 +891,99 @@ async def catalog(browser, db):
         await pg.context.close()
 
 
+async def kinds(browser, db):
+    """What a piece does ("Loại"): set in the editor, played in the studio."""
+    print('kinds')
+    db.rows.clear(); db.info.clear()
+    pg = await page(browser, db, 1440, 900, "sessionStorage.setItem('gem-admin-token','fake')")
+    await pg.goto(f'{BASE}/admin.html')
+    await pg.wait_for_timeout(800)
+    await js_click(pg, '[data-tab="studio"]')
+    await pg.wait_for_timeout(1500)
+    await js_click(pg, '[data-group="cay"]')
+    await js_click(pg, '.se-asset[data-asset="9"]')
+    await pg.wait_for_timeout(200)
+    await pg.select_option('[name="se-kind"]', 'story')
+    await pg.wait_for_timeout(200)
+    check(await pg.evaluate("!!document.querySelector('.se-kindbox [name=in-body_vi]')"), 'editor: "Câu chuyện" shows the story fields')
+    await pg.fill('[name="in-title_vi"]', 'Chậu cây của bà')
+    await pg.fill('[name="in-body_vi"]', 'Đoạn một.\n\nĐoạn hai <b>đậm</b>.')
+    await js_click(pg, '[data-info="save"]')
+    await pg.wait_for_timeout(500)
+    row = next(iter(db.info.values()), {})
+    check(row.get('kind') == 'story' and row.get('title_vi') == 'Chậu cây của bà', f'editor: the story is saved by picture ({row.get("src")})')
+    await pg.select_option('[name="se-kind"]', 'zone')
+    await pg.wait_for_timeout(200)
+    await pg.select_option('[name="zn-act"]', 'memo')
+    await pg.fill('[name="zn-vi"]', 'Bảng nhỏ')
+    await pg.dispatch_event('[name="zn-vi"]', 'change')
+    await pg.fill('[name="sh-from"]', '2026-01-01')
+    await pg.dispatch_event('[name="sh-from"]', 'change')
+    await pg.wait_for_timeout(2600)
+    it = ((db.rows.get('draft') or {}).get('items') or [{}])[-1]
+    check(it.get('kind') == 'zone' and it.get('zone', {}).get('act') == 'memo' and it.get('zone', {}).get('vi') == 'Bảng nhỏ',
+          f'editor: a zone keeps its action + name in the layout ({it.get("zone")})')
+    check(it.get('show') == {'from': '2026-01-01'}, f'editor: dates to show it ({it.get("show")})')
+    await pg.screenshot(path=OUT / 'kinds-editor.png')
+    check(not pg.errors, f'editor: no script errors {pg.errors}')
+    await pg.context.close()
+
+    # the studio: one piece of each kind, near the door so they are on screen
+    src = lambda n: f'images/studio/cay/cay-{n:02d}.webp'
+    piece = lambda n, x, **kw: dict(src=src(n), x=x, y=700, w=160, h=200, rot=0, flip=False, layer='back', frame=False, **kw)
+    lay = json.loads(json.dumps(db.rows.get('draft')))
+    lay['items'] = [
+        piece(10, 500, kind='story'),
+        piece(4, 700, kind='talk'),
+        piece(5, 900, kind='zone', zone={'act': 'memo', 'vi': 'Bảng nhỏ'}),
+        piece(6, 1100, kind='board', board={'feed': 'workshop'}),
+        piece(7, 1300, show={'from': '2099-01-01'}),
+    ]
+    lay['udon'] = {'x': 1500, 'y': 560, 'w': 128, 'h': 140}
+    lay['start'] = 900
+    db.rows['live'] = lay
+    db.info = {
+        src(10): {'src': src(10), 'kind': 'story', 'title_vi': 'Chậu cây của bà', 'body_vi': 'Đoạn một.\n\nĐoạn hai <b>đậm</b>.', 'lines': []},
+        src(4): {'src': src(4), 'kind': 'talk', 'lines': [{'vi': 'Câu một'}, {'vi': 'Câu hai'}]},
+    }
+    db.sessions = [{'slug': 'tui-vai', 'name_vi': 'Workshop túi vải', 'starts_at': '2099-05-02T09:00:00+07:00', 'seats_left': 4, 'capacity': 8}]
+    st = await page(browser, db, 1440, 900, "sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1')")
+    await st.goto(f'{BASE}/studio.html')
+    await st.wait_for_timeout(2000)
+    check(await st.evaluate("document.querySelectorAll('.st-item').length") == 4, 'studio: a piece outside its dates is not there')
+    check(await st.evaluate("document.querySelectorAll('.st-thing').length") == 4, 'studio: four pieces that do something')
+    board = await st.evaluate("(document.querySelector('.st-board') || {}).textContent || ''")
+    check('Workshop túi vải' in board, f'studio: the board shows the next workshop ({board})')
+    await st.mouse.click(*(await center(st, '.st-thing[data-kind="talk"]')))
+    await st.wait_for_timeout(200)
+    a = await st.evaluate("document.querySelector('.st-talk').textContent")
+    await st.mouse.click(*(await center(st, '.st-thing[data-kind="talk"]')))
+    await st.wait_for_timeout(200)
+    b = await st.evaluate("document.querySelector('.st-talk').textContent")
+    check((a, b) == ('Câu một', 'Câu hai'), f'studio: talk says the next line each tap ({a}, {b})')
+    await st.mouse.click(*(await center(st, '.st-thing[data-kind="story"]')))
+    await st.wait_for_timeout(500)
+    body = await st.evaluate("document.getElementById('st-sheet-body').innerHTML")
+    check('Chậu cây của bà' in body and '&lt;b&gt;' in body and body.count('<p>') >= 2, 'studio: tap a story — its card, text kept as text')
+    await st.keyboard.press('Escape')
+    await st.wait_for_timeout(400)
+    await drag(st, await center(st, '.st-thing[data-kind="story"]'), await center(st, '.st-udon'))
+    await st.wait_for_timeout(700)
+    check(await st.evaluate("!!document.querySelector('#st-sheet-body .st-story-udon')"), 'studio: a story dropped on Udon — Udon tells it')
+    await st.screenshot(path=OUT / 'kinds-story-udon.png')
+    await st.keyboard.press('Escape')
+    await st.wait_for_timeout(400)
+    await st.mouse.click(*(await center(st, '.st-thing[data-kind="zone"]')))
+    await st.wait_for_timeout(500)
+    check(await st.evaluate("!!document.querySelector('#st-sheet-body .mb-form')"), 'studio: a zone piece opens its action (memo board)')
+    check(await st.evaluate("document.querySelector('.st-zone-label').textContent") == 'Bảng nhỏ', 'studio: the zone has its name')
+    await st.keyboard.press('Escape')
+    await st.wait_for_timeout(400)
+    await st.screenshot(path=OUT / 'kinds-studio.png')
+    check(not st.errors, f'studio: no script errors {st.errors}')
+    await st.context.close()
+
+
 async def main(which):
     OUT.mkdir(exist_ok=True)
     srv = serve()
@@ -885,7 +991,7 @@ async def main(which):
     async with async_playwright() as p:
         browser = await launch(p)
         for name, fn in (('street', street), ('wear', wear), ('shop', shop), ('spots', spots), ('editor', editor),
-                         ('library', library), ('product', product), ('design', design), ('catalog', catalog)):
+                         ('library', library), ('product', product), ('design', design), ('catalog', catalog), ('kinds', kinds)):
             if which in (None, name):
                 await fn(browser, db)
         await browser.close()

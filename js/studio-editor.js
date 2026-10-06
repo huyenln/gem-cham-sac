@@ -136,6 +136,7 @@ window.GemStudioEditor = (function () {
         renderGrid(g);
         return;
       }
+      if (/^in-/.test(e.target.name) && e.target.name !== 'in-file') { infoInput(e); return; }
       if (e.target.name !== 'se-size' || !sel || sel.kind !== 'item') return;
       resize(S().items[sel.i], +e.target.value);
       var num = panelEl.querySelector('[name="se-h"]');
@@ -163,6 +164,12 @@ window.GemStudioEditor = (function () {
       renderPanel();
       // product list for "Sản phẩm" on a piece (owner is signed in)
       DB.adminProducts().then(function (rows) { prods = rows || []; mergeLib(); renderPanel(); }, function () { prods = []; });
+      // stories / lines of each picture (studio_info; [] when the table isn't there yet)
+      DB.studioInfo().then(function (rows) {
+        infos = {};
+        (rows || []).forEach(function (r) { var o = L.info(r); if (o) infos[o.src] = o; });
+        draw(); renderPanel();
+      });
       if (queued) { var q = queued; queued = null; placeProduct(q.sku, q.image); }
       return loadProfiles();
     }).catch(function (err) {
@@ -174,6 +181,8 @@ window.GemStudioEditor = (function () {
      A piece with a sku is a product: customers tap it for its card or drag
      it into the basket. The Sản phẩm tab sends one here with queueProduct. */
   var prods = [];        // products rows: sku, name_vi, image, cutout…
+  var infos = {};        // studio_info by src: kind + story + lines (saved)
+  var drafts = {};       // src -> the same fields as typed, not saved yet
   var queued = null;     // product waiting for the editor to finish loading
 
   function placeProduct(sku, image) {
@@ -437,7 +446,8 @@ window.GemStudioEditor = (function () {
     S().items.forEach(function (it, i) {
       var n = document.createElement('div');
       n.className = 'se-el se-item' + (it.layer === 'front' ? ' is-front' : '') + (it.frame ? ' is-frame' : '') + (it.sku ? ' is-prod' : '') +
-        (it.lock ? ' is-lock' : '') + (isSel('item', i) ? ' is-sel' : '');
+        (it.lock ? ' is-lock' : '') + (isSel('item', i) ? ' is-sel' : '') +
+        ' k-' + kindOf(it) + (L.shownOn(it) ? '' : ' is-sched');
       n.dataset.kind = 'item'; n.dataset.i = i;
       place(n, it.x - it.w / 2, it.y - it.h / 2, it.w, it.h);
       n.style.transform = 'rotate(' + it.rot + 'deg)';
@@ -761,6 +771,139 @@ window.GemStudioEditor = (function () {
   }
 
   /* ---------- side panel: selection tools + library ---------- */
+  /* ---------- what a piece does (Loại) ----------
+     Trang trí: nothing. Sản phẩm: card + drag to the basket. Câu chuyện: a
+     card with its story; dropped on Udon, Udon tells it. Khu vực: one of the
+     studio's actions, like a hotspot box, but it moves with the piece. Lời
+     thoại: a speech bubble, a new line each tap. Bảng tin: shows the next
+     workshop / latest post on itself. Stories and lines belong to the
+     PICTURE (studio_info, by src); the rest to this piece in this layout. */
+  function kindOf(it) { return it.kind || (it.sku ? 'product' : 'decor'); }
+
+  function infoOf(src) {
+    return drafts[src] || infos[src] || { src: src, kind: 'decor', title_vi: '', title_en: '', body_vi: '', body_en: '',
+      image: '', link: '', lines: [] };
+  }
+
+  function kindBox(it) {
+    var kind = kindOf(it);
+    var h = '<label class="se-kind" title="Khách chạm / kéo món này thì sao"><b>Loại</b> <select name="se-kind">' + L.KINDS.map(function (x) {
+      return '<option value="' + x.id + '"' + (x.id === kind ? ' selected' : '') + '>' + esc(x.vi) + '</option>';
+    }).join('') + '</select></label>';
+    if (kind === 'product') {
+      h += '<label>Sản phẩm <select name="se-sku"><option value="">(chọn sản phẩm)</option>' +
+        prods.map(function (p) {
+          return '<option value="' + esc(p.sku) + '"' + (p.sku === it.sku ? ' selected' : '') + '>' + esc(p.name_vi) + '</option>';
+        }).join('') +
+        (it.sku && !prods.some(function (p) { return p.sku === it.sku; }) ? '<option selected value="' + esc(it.sku) + '">' + esc(it.sku) + '</option>' : '') +
+        '</select></label>' +
+        '<span class="se-hint-s">Khách chạm để xem sản phẩm, kéo vào giỏ để mua.</span>';
+    } else if (kind === 'story' || kind === 'talk') {
+      var f = infoOf(it.src), unsaved = !!drafts[it.src];
+      h += kind === 'story'
+        ? '<label>Tên <input name="in-title_vi" maxlength="120" value="' + esc(f.title_vi) + '"></label>' +
+          '<label>Tên tiếng Anh <input name="in-title_en" maxlength="120" value="' + esc(f.title_en) + '"></label>' +
+          '<label class="se-wide">Câu chuyện <textarea name="in-body_vi" rows="4" maxlength="4000">' + esc(f.body_vi) + '</textarea></label>' +
+          '<label class="se-wide">Tiếng Anh <textarea name="in-body_en" rows="3" maxlength="4000">' + esc(f.body_en) + '</textarea></label>' +
+          '<div class="se-info-img">' + (f.image ? '<img src="' + esc(f.image) + '" alt="">' : '') +
+            '<label class="se-tb">' + (f.image ? 'Đổi ảnh' : '+ Ảnh minh hoạ') + '<input type="file" name="in-file" accept="image/*" hidden></label>' +
+            (f.image ? '<button type="button" class="se-tb" data-info="noimg">Bỏ ảnh</button>' : '') + '</div>' +
+          '<label>Link đọc thêm <input name="in-link" maxlength="300" placeholder="vd: ban-tin.html?bai=… hoặc https://…" value="' + esc(f.link) + '"></label>' +
+          '<span class="se-hint-s">Khách chạm để đọc; kéo món thả vào Udon thì Udon kể.</span>'
+        : '<label class="se-wide">Mỗi dòng một câu <textarea name="in-lines_vi" rows="4">' + esc(f.lines.map(function (l) { return l.vi; }).join('\n')) + '</textarea></label>' +
+          '<label class="se-wide">Tiếng Anh (cùng thứ tự) <textarea name="in-lines_en" rows="3">' + esc(f.lines.map(function (l) { return l.en; }).join('\n')) + '</textarea></label>' +
+          '<span class="se-hint-s">Khách chạm: hiện một câu, chạm nữa ra câu tiếp.</span>';
+      h += '<div class="se-row"><button type="button" class="se-tb on" data-info="save">' + (unsaved ? 'Lưu nội dung *' : 'Lưu nội dung') + '</button>' +
+        '<span class="se-hint-s">Nội dung đi theo ảnh này — đặt ở bố cục nào cũng vậy, không cần phát hành lại.</span></div>';
+    } else if (kind === 'zone') {
+      var z = it.zone || {};
+      h += '<label>Khi bấm <select name="zn-act">' + L.ACTS.map(function (x) {
+          return '<option value="' + x.id + '"' + (x.id === (z.act || 'none') ? ' selected' : '') + '>' + esc(x.vi) + '</option>';
+        }).join('') + '</select></label>' +
+        (z.act === 'link' ? '<label>Trang <input name="zn-link" maxlength="300" placeholder="vd: workshop.html hoặc https://…" value="' + esc(z.link || '') + '"></label>' : '') +
+        '<label>Tên hiện <input name="zn-vi" maxlength="40" value="' + esc(z.vi || '') + '"></label>' +
+        '<label>Tên tiếng Anh <input name="zn-en" maxlength="40" value="' + esc(z.en || '') + '"></label>' +
+        '<span class="se-hint-s">Khách chạm món này: nhân vật đi tới và mở chức năng. Dời món là khu vực đi theo.</span>';
+    } else if (kind === 'board') {
+      var feed = (it.board && it.board.feed) || 'workshop';
+      h += '<label>Hiện <select name="bd-feed">' +
+          '<option value="workshop"' + (feed === 'workshop' ? ' selected' : '') + '>Buổi workshop gần nhất</option>' +
+          '<option value="post"' + (feed === 'post' ? ' selected' : '') + '>Bài Bản tin mới nhất</option>' +
+        '</select></label>' +
+        '<span class="se-hint-s">Chữ tự đổi theo lịch / bài mới, không cần lắp lại. Khách chạm để mở.</span>';
+    }
+    var sh = it.show || {};
+    h += '<div class="se-row se-sched"><span>Hiện từ</span><input type="date" name="sh-from" value="' + esc(sh.from || '') + '">' +
+      '<span>đến</span><input type="date" name="sh-to" value="' + esc(sh.to || '') + '">' +
+      (sh.from || sh.to ? '<button type="button" class="se-tb" data-info="nosched">Luôn hiện</button>' : '<span class="se-hint-s">(trống = luôn hiện)</span>') + '</div>';
+    return '<div class="se-kindbox">' + h + '</div>';
+  }
+
+  function setKind(it, v) {
+    if (v === 'decor') delete it.kind; else it.kind = v;
+    if (v !== 'product') delete it.sku;
+    if (v !== 'zone') delete it.zone; else it.zone = it.zone || { act: 'none' };
+    if (v !== 'board') delete it.board; else it.board = it.board || { feed: 'workshop' };
+  }
+
+  function draftOf(src) {
+    if (!drafts[src]) drafts[src] = JSON.parse(JSON.stringify(infoOf(src)));
+    return drafts[src];
+  }
+
+  function infoInput(e) {
+    var it = sel && sel.kind === 'item' && S().items[sel.i];
+    if (!it) return;
+    var f = draftOf(it.src), nm = e.target.name.slice(3);
+    if (nm === 'lines_vi' || nm === 'lines_en') {
+      var vi = (nm === 'lines_vi' ? e.target.value : f.lines.map(function (l) { return l.vi; }).join('\n')).split('\n');
+      var en = (nm === 'lines_en' ? e.target.value : f.lines.map(function (l) { return l.en; }).join('\n')).split('\n');
+      f.lines = [];
+      for (var j = 0; j < Math.max(vi.length, en.length); j++) f.lines.push({ vi: (vi[j] || '').trim(), en: (en[j] || '').trim() });
+    } else {
+      f[nm] = e.target.value;
+    }
+    var b = panelEl.querySelector('[data-info="save"]');
+    if (b) b.textContent = 'Lưu nội dung *';
+  }
+
+  function saveInfo() {
+    var it = S().items[sel.i], f = draftOf(it.src);
+    var row = {
+      src: it.src, kind: kindOf(it),
+      title_vi: f.title_vi.trim() || null, title_en: f.title_en.trim() || null,
+      body_vi: f.body_vi.trim() || null, body_en: f.body_en.trim() || null,
+      image: f.image || null, link: f.link.trim() || null,
+      lines: f.lines.filter(function (l) { return l.vi || l.en; }).slice(0, 20)
+    };
+    if (row.link && !L.linkOk(row.link)) { status('Link chưa đúng: trang của Gem (vd ban-tin.html) hoặc https://…', true); return; }
+    if (row.kind === 'story' && !row.title_vi && !row.body_vi) { status('Viết tên hoặc câu chuyện trước đã.', true); return; }
+    if (row.kind === 'talk' && !row.lines.length) { status('Thêm ít nhất một câu.', true); return; }
+    status('Đang lưu…');
+    DB.saveStudioInfo(row).then(function () {
+      infos[it.src] = L.info(row);
+      delete drafts[it.src];
+      status('Đã lưu — khách thấy ngay.');
+      renderPanel();
+    }, function (err) {
+      status(/studio_info|relation|42P01|404/.test(err.message || '') ? 'Chưa có bảng studio_info — chạy file supabase/migrations/20261006_studio_info.sql trước.'
+        : 'Không lưu được: ' + (err.message || ''), true);
+    });
+  }
+
+  function infoPhoto(input) {
+    var file = input.files && input.files[0];
+    input.value = '';
+    if (!file || !sel || sel.kind !== 'item') return;
+    var it = S().items[sel.i];
+    status('Đang tải ảnh…');
+    window.GemImg.shrink(file).then(DB.uploadImage).then(function (url) {
+      draftOf(it.src).image = url;
+      status('Đã có ảnh — bấm "Lưu nội dung".');
+      renderPanel();
+    }, function (err) { status('Không tải được ảnh: ' + (err.message || ''), true); });
+  }
+
   function renderPanel() {
     if (!lib) return;
     var tools = '';
@@ -785,14 +928,7 @@ window.GemStudioEditor = (function () {
         '<button type="button" class="se-tb" data-act="frame">' + (it.frame ? 'Bỏ khung' : 'Khung gỗ') + '</button>' +
         '<button type="button" class="se-tb" data-act="dup">Nhân bản</button>' +
         '<button type="button" class="se-tb danger" data-act="del">Xoá</button>' +
-        '<label class="se-size" title="Món gắn sản phẩm: khách chạm để xem, kéo vào giỏ để mua">Sản phẩm ' +
-          '<select name="se-sku"><option value="">(chỉ trang trí)</option>' +
-          prods.map(function (p) {
-            return '<option value="' + esc(p.sku) + '"' + (p.sku === it.sku ? ' selected' : '') + '>' + esc(p.name_vi) + '</option>';
-          }).join('') +
-          (it.sku && !prods.some(function (p) { return p.sku === it.sku; }) ? '<option selected value="' + esc(it.sku) + '">' + esc(it.sku) + '</option>' : '') +
-        '</select></label>' +
-      '</div>';
+      '</div>' + kindBox(it);
     } else if (sel && (sel.kind === 'hot' || sel.kind === 'stand')) {
       var name = spots().filter(function (x) { return x.id === sel.id; })[0].vi;
       var c = spotCfg(sel.id);
@@ -944,6 +1080,13 @@ window.GemStudioEditor = (function () {
   function panelClick(e) {
     var b;
     if ((b = e.target.closest('[data-group]'))) { group = b.dataset.group; findQ = ''; renderPanel(); return; }
+    if ((b = e.target.closest('[data-info]')) && sel && sel.kind === 'item') {
+      var iit = S().items[sel.i];
+      if (b.dataset.info === 'save') saveInfo();
+      if (b.dataset.info === 'noimg') { draftOf(iit.src).image = ''; renderPanel(); }
+      if (b.dataset.info === 'nosched') { remember(); delete iit.show; draw(); renderPanel(); }
+      return;
+    }
     if ((b = e.target.closest('[data-lock]'))) {
       var li = +b.dataset.lock, lit = S().items[li];
       if (!lit) return;
@@ -1028,6 +1171,8 @@ window.GemStudioEditor = (function () {
       if (nm === 'up-grp') panelEl.querySelector('.se-up-new').hidden = e.target.value !== '__new';
       return;
     }
+    if (nm === 'in-file') { infoPhoto(e.target); return; }
+    if (/^in-/.test(nm)) return;   // story / lines: typed into the draft, saved with "Lưu nội dung"
     if (/^as-/.test(nm)) {
       if (nm === 'as-grp') panelEl.querySelector('.se-asset-edit .se-up-new').hidden = e.target.value !== '__new';
       return;
@@ -1039,6 +1184,19 @@ window.GemStudioEditor = (function () {
     if (e.target.name === 'se-size' || e.target.name === 'se-h') resize(it, +e.target.value);
     if (e.target.name === 'se-rot') it.rot = Math.max(-180, Math.min(180, Math.round(+e.target.value || 0)));
     if (e.target.name === 'se-sku') { if (e.target.value) it.sku = e.target.value; else delete it.sku; renderPanel(); }
+    if (nm === 'se-kind') { setKind(it, e.target.value); renderPanel(); }
+    if (/^zn-/.test(nm)) {
+      it.zone = it.zone || { act: 'none' };
+      it.zone[nm.slice(3)] = e.target.value.trim();
+      if (nm === 'zn-act') renderPanel();
+    }
+    if (nm === 'bd-feed') it.board = { feed: e.target.value };
+    if (nm === 'sh-from' || nm === 'sh-to') {
+      it.show = it.show || {};
+      if (e.target.value) it.show[nm.slice(3)] = e.target.value; else delete it.show[nm.slice(3)];
+      if (!it.show.from && !it.show.to) delete it.show;
+      renderPanel();
+    }
     draw();
   }
 
@@ -1089,6 +1247,7 @@ window.GemStudioEditor = (function () {
     var it = { src: a.src, x: Math.round(cx), y: Math.round(a.y0 || L.FEET_Y - h / 2 - 40), w: w, h: Math.round(h),
       rot: 0, flip: false, layer: 'back', frame: !!a.frame };
     if (a.sku) it.sku = a.sku;
+    else if (infos[a.src] && (infos[a.src].kind === 'story' || infos[a.src].kind === 'talk')) it.kind = infos[a.src].kind;
     S().items.push(it);
     sel = { kind: 'item', i: S().items.length - 1 };
     draw(); renderPanel();

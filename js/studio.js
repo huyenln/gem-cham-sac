@@ -334,6 +334,12 @@
     'studio.prod_tip':      { vi: `Mẹo: kéo thẳng món trên kệ thả vào xe đẩy hay giỏ hàng cũng được.`, en: `Tip: you can also drag a piece off the shelf into the cart or the basket.` },
     'studio.prod_in_cart':  { vi: `Đã bỏ vào giỏ rồi nha!`, en: `In the basket!` },
     'studio.prod_in_basket': { vi: `Đã bỏ vào giỏ rồi nha!`, en: `In the basket!` },
+    'studio.story_udon':    { vi: `Để Udon kể bạn nghe nhé.`, en: `Let Udon tell you about it.` },
+    'studio.story_more':    { vi: `Đọc thêm`, en: `Read more` },
+    'studio.board_ws':      { vi: `Workshop sắp tới`, en: `Next workshop` },
+    'studio.board_post':    { vi: `Bản tin mới`, en: `Latest news` },
+    'studio.board_none_ws': { vi: `Lịch workshop sắp có`, en: `New workshops soon` },
+    'studio.board_none_post': { vi: `Bản tin của Gem`, en: `Gem's news` },
     'studio.prod_out':      { vi: `Món này đang tạm hết, bạn ghé lại sau nhé.`, en: `This one's sold out for now — check back soon.` },
     'studio.pt_extra':     { vi: `Tự chỉnh: tông màu, họa tiết, chất vải, tự vẽ, ảnh, lời nhắn`, en: `Fine-tune: colours, prints, fabrics, a drawing, a photo, a note` },
     'studio.pt_size':      { vi: `Cỡ nét`, en: `Brush size` },
@@ -503,6 +509,7 @@
 
   function buildItems(items) {
     items.forEach(function (it) {
+      if (window.GemLayout && !window.GemLayout.shownOn(it)) return;   // not today (owner's dates)
       var el = document.createElement(it.frame ? 'span' : 'img');
       var img = el;
       if (it.frame) {
@@ -523,6 +530,192 @@
       el.style.height = pct(it.h, SCENE.height);
       el.style.transform = 'rotate(' + it.rot + 'deg)' + (it.flip ? ' scaleX(-1)' : '');
       world.appendChild(el);
+      if (it.kind && it.kind !== 'product') thing(el, it);
+    });
+  }
+
+  /* ---------- pieces that do something (the owner's "Loại") ----------
+     story: tap for its card, drag onto Udon and Udon tells it · zone: one of
+     the studio's actions, the character walks over · talk: a bubble, a new
+     line each tap · board: the next workshop / latest post written on it.
+     Stories and lines come from studio_info (by picture), see INFO. */
+  var THINGS = [];
+  var INFO = {};          // src -> GemLayout.info(row)
+  var FEED = {};          // 'workshop' | 'post' -> Promise of the row (or null)
+  var FEED_ROW = {};      // the same rows once they are in
+
+  function loadInfo() {
+    if (!window.GemDB || !window.GemDB.studioInfo) return;
+    window.GemDB.studioInfo().then(function (rows) {
+      (rows || []).forEach(function (r) { var o = window.GemLayout.info(r); if (o) INFO[o.src] = o; });
+    });
+  }
+
+  function infoText(o, field) { return (lng() === 'en' && o[field + '_en']) || o[field + '_vi'] || ''; }
+
+  function thing(el, it) {
+    var n = THINGS.push(it) - 1;
+    el.classList.add('st-thing');
+    el.setAttribute('data-thing', n);
+    el.setAttribute('data-kind', it.kind);
+    el.setAttribute('role', 'button');
+    el.setAttribute('tabindex', '0');
+    var name = it.kind === 'zone' ? (it.zone[lng()] || it.zone.vi || '') : '';
+    if (name) {
+      el.setAttribute('aria-label', name);
+      var lab = document.createElement('span');   // the owner's text: textContent only
+      lab.className = 'st-hot-label st-zone-label';
+      lab.setAttribute('data-thing-label', n);
+      lab.textContent = name;
+      lab.style.left = pct(it.x, SCENE.width);
+      lab.style.top = pct(it.y - it.h / 2, SCENE.height);
+      world.appendChild(lab);
+    }
+    if (it.kind === 'board') board(it, n);
+  }
+
+  function relabelThings() {
+    world.querySelectorAll('[data-thing-label]').forEach(function (lab) {
+      var it = THINGS[+lab.getAttribute('data-thing-label')];
+      lab.textContent = it.zone[lng()] || it.zone.vi || '';
+    });
+    world.querySelectorAll('.st-board').forEach(function (b) { fillBoard(b, THINGS[+b.getAttribute('data-thing')]); });
+  }
+
+  // The writing on a board: over the picture, turned with it, never takes taps.
+  function board(it, n) {
+    var o = document.createElement('div');
+    o.className = 'st-board';
+    o.setAttribute('data-thing', n);
+    o.style.left = pct(it.x - it.w / 2, SCENE.width);
+    o.style.top = pct(it.y - it.h / 2, SCENE.height);
+    o.style.width = pct(it.w, SCENE.width);
+    o.style.height = pct(it.h, SCENE.height);
+    o.style.transform = 'rotate(' + it.rot + 'deg)';
+    world.appendChild(o);
+    fillBoard(o, it);
+  }
+
+  function feed(kind) {
+    if (!FEED[kind]) {
+      var DB = window.GemDB;
+      FEED[kind] = (!DB ? Promise.resolve([]) : (kind === 'post' ? DB.posts() : DB.sessions())).then(function (rows) {
+        rows = rows || [];
+        var now = Date.now();
+        var r = kind === 'post' ? rows[0] || null
+          : rows.filter(function (x) { return new Date(x.starts_at).getTime() > now && !(x.seats_left <= 0); })[0] || null;
+        FEED_ROW[kind] = r;
+        return r;
+      }, function () { return null; });
+    }
+    return FEED[kind];
+  }
+
+  function fillBoard(o, it) {
+    feed(it.board.feed).then(function (r) {
+      var post = it.board.feed === 'post', en = lng() === 'en';
+      var head = t(post ? 'studio.board_post' : 'studio.board_ws'), title = '', when = '';
+      if (r) {
+        title = (en && (r.title_en || r.name_en)) || r.title_vi || r.name_vi || '';
+        var d = new Date(post ? r.happened_on : r.starts_at);
+        if (!isNaN(d)) {
+          var tz = 'Asia/Ho_Chi_Minh';   // the shop's clock, wherever the visitor is
+          when = post ? d.toLocaleDateString(en ? 'en-GB' : 'vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: tz })
+            : d.toLocaleDateString(en ? 'en-GB' : 'vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit', timeZone: tz }) +
+              ' · ' + d.toLocaleTimeString(en ? 'en-GB' : 'vi-VN', { hour: '2-digit', minute: '2-digit', timeZone: tz });
+        }
+      } else {
+        title = t(post ? 'studio.board_none_post' : 'studio.board_none_ws');
+      }
+      o.textContent = '';
+      var inner = document.createElement('div');
+      inner.className = 'st-board-in';
+      [['st-board-h', head], ['st-board-t', title], ['st-board-d', when]].forEach(function (p) {
+        if (!p[1]) return;
+        var sp = document.createElement('span');
+        sp.className = p[0];
+        sp.textContent = p[1];
+        inner.appendChild(sp);
+      });
+      o.appendChild(inner);
+    });
+  }
+
+  function storySheet(it, byUdon) {
+    var o = INFO[it.src];
+    if (!o || !(o.title_vi || o.body_vi)) return;
+    var body = infoText(o, 'body').split(/\n\s*\n/).map(function (p) {
+      return p.trim() ? '<p>' + esc(p.trim()).replace(/\n/g, '<br>') + '</p>' : '';
+    }).join('');
+    var ext = /^https:/.test(o.link);
+    openSheet(
+      (byUdon ? '<p class="st-story-udon"><img src="images/studio/udon/ud-vay.webp" alt="" width="56" height="56">' +
+        esc(t('studio.story_udon')) + '</p>' : '') +
+      '<article class="st-story">' +
+        (o.image ? '<img class="st-story-img" src="' + esc(o.image) + '" alt="">' : '') +
+        '<h2>' + esc(infoText(o, 'title')) + '</h2>' + body +
+        (o.link ? '<p class="st-foot"><a href="' + esc(o.link) + '"' + (ext ? ' target="_blank" rel="noopener"' : '') + '>' +
+          esc(t('studio.story_more')) + '</a></p>' : '') +
+      '</article>');
+  }
+
+  var talkTimer = null;
+  function talk(it) {
+    var o = INFO[it.src];
+    if (!o || !o.lines.length) return;
+    it._line = ((it._line == null ? -1 : it._line) + 1) % o.lines.length;
+    var line = o.lines[it._line];
+    var b = world.querySelector('.st-talk');
+    if (!b) { b = document.createElement('div'); b.className = 'st-talk'; b.setAttribute('role', 'status'); world.appendChild(b); }
+    b.textContent = (lng() === 'en' && line.en) || line.vi || line.en;
+    b.style.left = pct(it.x, SCENE.width);
+    b.style.top = pct(it.y - it.h / 2, SCENE.height);
+    b.hidden = false;
+    clearTimeout(talkTimer);
+    talkTimer = setTimeout(function () { b.hidden = true; }, 4500);
+  }
+
+  function boardGo(it) {
+    var r = FEED_ROW[it.board.feed];
+    if (it.board.feed === 'post') location.href = r && r.slug ? 'ban-tin.html?bai=' + encodeURIComponent(r.slug) : 'ban-tin.html';
+    else location.href = r && r.slug ? 'workshop.html?loai=' + encodeURIComponent(r.slug) : 'workshop.html';
+  }
+
+  // A tap (or Enter) on a piece that does something.
+  function thingTap(el) {
+    var it = THINGS[+el.getAttribute('data-thing')];
+    if (!it) return;
+    if (it.kind === 'story') storySheet(it, false);
+    else if (it.kind === 'talk') talk(it);
+    else if (it.kind === 'zone') runAct(it.zone.act, it.zone.link, Math.max(120, Math.min(SCENE.width - 120, it.x)));
+    else if (it.kind === 'board') boardGo(it);
+  }
+
+  // Stories can be picked up and handed to Udon (inside only: Udon lives there).
+  function bindThings() {
+    world.addEventListener('pointerdown', function (e) {
+      var el = e.target.closest('.st-thing[data-kind="story"]');
+      if (!el || (e.pointerType === 'mouse' && e.button !== 0)) return;
+      e.preventDefault();
+      var it = THINGS[+el.getAttribute('data-thing')];
+      var img = el.tagName === 'IMG' ? el : el.querySelector('img');
+      dragFrom(e, img, {
+        where: function (x, y) { return udonEl && overEl(udonEl, x, y, 20) ? 'udon' : null; },
+        start: function () { el.classList.add('is-lifted'); },
+        cancel: function () { el.classList.remove('is-lifted'); },
+        tap: function () { storySheet(it, false); },
+        drop: function () {
+          udonPose('ud-vay');
+          storySheet(it, true);
+          return false;   // the piece goes back where it was
+        }
+      });
+    });
+    world.addEventListener('keydown', function (e) {
+      var el = e.target.closest && e.target.closest('.st-thing');
+      if (!el || (e.key !== 'Enter' && e.key !== ' ')) return;
+      e.preventDefault();
+      thingTap(el);
     });
   }
 
@@ -701,7 +894,7 @@
     Array.prototype.slice.call(world.children).forEach(function (n) {
       if (!n.classList.contains('st-bg')) n.remove();   // .st-bgx too: paintBg redraws it
     });
-    udonEl = null; memoPins = null;
+    udonEl = null; memoPins = null; THINGS = [];
     if (name === 'out') {
       var O = outsideScene();
       SCENE.width = O.bg.w; SCENE.height = O.bg.h; SCENE.startX = O.start;
@@ -2624,7 +2817,8 @@
         if (opts.start) opts.start();
       }
       ghost.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(1.08)';
-      stage.classList.toggle('is-drop-ok', overCart(ev.clientX, ev.clientY) || overBasket(ev.clientX, ev.clientY));
+      stage.classList.toggle('is-drop-ok', opts.where ? !!opts.where(ev.clientX, ev.clientY)
+        : overCart(ev.clientX, ev.clientY) || overBasket(ev.clientX, ev.clientY));
     };
     var up = function (ev) {
       if (ev.pointerId !== id) return;
@@ -2634,7 +2828,8 @@
       stage.classList.remove('is-drop-ok');
       swiped = Date.now();   // the click that follows is ours, not a walk / hotspot
       if (!ghost) { if (opts.tap) opts.tap(); return; }
-      var where = overBasket(ev.clientX, ev.clientY) ? 'basket' : overCart(ev.clientX, ev.clientY) ? 'cart' : null;
+      var where = opts.where ? opts.where(ev.clientX, ev.clientY)
+        : overBasket(ev.clientX, ev.clientY) ? 'basket' : overCart(ev.clientX, ev.clientY) ? 'cart' : null;
       if (where && opts.drop(where, ghost)) return;
       // not dropped anywhere useful: back where it came from
       var t = ghost.style.transform;
@@ -2938,26 +3133,25 @@
     var h = hotById(id);
     if (!h || spotOff(id)) return;
     var cfg = spotSet(id), act = cfg.act || (cfg.link ? 'link' : id);
-    var link = act === 'link' ? cfg.link : null;
-    if (act === 'none') { walkTo(standX(h)); return; }
-    if (act !== id && act !== 'link' && open !== false) {
-      // the owner gave this spot another spot's action
-      walkTo(standX(h));
-      if (act.indexOf('shop:') === 0) shelfSheet(act.slice(5));
-      else if (act === 'enter') enterStudio();
-      else if (ACTIONS[act]) ACTIONS[act]();
-      return;
-    }
-    if (link && open !== false) {
-      // the owner pointed this spot at another page
-      walkTo(standX(h), function () {
+    if (open === false) { walkTo(standX(h)); return; }
+    runAct(act, cfg.link, standX(h));   // the spot's own action, another spot's, a page, or nothing
+  }
+
+  // Walk to x and do an action (ACTS in studio-layout.js). Shared by the
+  // hotspot boxes and the pieces of kind "zone".
+  function runAct(act, link, x) {
+    if (act === 'link' && link) {
+      walkTo(x, function () {
         if (/^https:/.test(link)) window.open(link, '_blank', 'noopener');
         else location.href = link;
       });
       return;
     }
-    walkTo(standX(h));
-    if (open !== false && ACTIONS[id]) ACTIONS[id]();
+    walkTo(x);
+    if (act === 'none' || act === 'link') return;
+    if (act.indexOf('shop:') === 0) shelfSheet(act.slice(5));
+    else if (act === 'enter') enterStudio();
+    else if (ACTIONS[act]) ACTIONS[act]();
   }
 
   // Is a tap on (or right beside) the character? Then it means "walk",
@@ -2975,6 +3169,7 @@
   function bind() {
     bindSwipe();
     bindProducts();
+    bindThings();
     bindSheetDrag();
     // Back gesture / button: closes the open sheet first, then (inside) steps
     // back out to the street, and only then leaves the page.
@@ -2985,6 +3180,11 @@
     });
     world.addEventListener('click', function (e) {
       if (Date.now() - swiped < 350) return;   // the end of a swipe, not a tap
+      var th = e.target.closest('.st-thing');
+      if (th && th.getAttribute('data-kind') !== 'story' && (e.detail === 0 || !nearPlayer(e.clientX, e.clientY))) {
+        thingTap(th);
+        return;
+      }
       var hot = e.target.closest('.st-hot');
       // A label, an object, or Enter/Space on a focused spot (detail 0):
       // open it — unless the tap lands on the character, which means walk.
@@ -3100,7 +3300,7 @@
       e.target.closest('.mb-form').querySelector('.mb-count').textContent = e.target.value.length + '/280';
     });
 
-    document.addEventListener('gem:langchange', function () { renderDesigner(); renderTu(); relabelSpots(); });
+    document.addEventListener('gem:langchange', function () { renderDesigner(); renderTu(); relabelSpots(); relabelThings(); });
     // an own-colour fabric finished dyeing: swap the plain colour for it
     var fabricTimer = null;
     document.addEventListener('gem:fabric', function () {
@@ -3148,6 +3348,7 @@
     sheetEl = document.querySelector('.st-sheet');
     if (!stage || !world) return;
 
+    loadInfo();
     loadLayout().then(function (L) {
       if (L) applyLayout(L);
       start();

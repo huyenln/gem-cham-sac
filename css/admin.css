@@ -582,6 +582,35 @@
   content: 'SP'; position: absolute; left: -6px; top: -6px; padding: 0 5px;
   border-radius: 999px; background: var(--sage-deep); color: #fff; font-size: 10px; font-weight: 700; line-height: 16px;
 }
+/* what a piece does: a small tag on the stage */
+.se-item.k-story::after, .se-item.k-zone::after, .se-item.k-talk::after, .se-item.k-board::after {
+  position: absolute; left: -6px; top: -6px; padding: 0 5px;
+  border-radius: 999px; color: #fff; font-size: 10px; font-weight: 700; line-height: 16px;
+}
+.se-item.k-story::after { content: 'Chuyện'; background: #8a6a3f; }
+.se-item.k-zone::after  { content: 'Khu vực'; background: #3d7be0; }
+.se-item.k-talk::after  { content: 'Thoại'; background: #a6503c; }
+.se-item.k-board::after { content: 'Bảng tin'; background: var(--ink-dark); }
+.se-item.is-sched { opacity: 0.45; }
+
+.se-kindbox {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px;
+  border: 1px dashed var(--sage-light); border-radius: var(--radius-md); font-size: var(--text-sm);
+}
+.se-kindbox label { display: flex; align-items: center; gap: 6px; }
+.se-kindbox label.se-wide { flex-basis: 100%; align-items: flex-start; flex-direction: column; gap: 4px; }
+.se-kindbox input:not([type]), .se-kindbox input[type="date"], .se-kindbox select, .se-kindbox textarea {
+  min-height: 36px; border: 1.5px solid var(--sage-light); border-radius: 8px; padding: 4px 8px;
+  font: inherit; background: var(--paper-white); color: var(--ink-dark); max-width: 100%;
+}
+.se-kindbox input:not([type]) { width: 14em; }
+.se-kindbox textarea { width: 100%; box-sizing: border-box; resize: vertical; line-height: 1.5; }
+.se-kindbox .se-row, .se-sched { flex-basis: 100%; align-items: center; }
+.se-kindbox .se-kind { flex-basis: 100%; }
+.se-info-img { display: flex; align-items: center; gap: 8px; }
+.se-info-img img { width: 56px; height: 56px; object-fit: cover; border-radius: 8px; }
+.se-info-img .se-tb { display: inline-flex; align-items: center; }
+
 .ad-prod-studio { margin: var(--space-2) 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); font-size: var(--text-sm); color: var(--ink-soft); }
 .ad-prod-studio .ad-btn { margin: 0; }
 .se-hot.is-off { opacity: 0.45; border-style: dotted; background: repeating-linear-gradient(45deg, rgba(166, 80, 60, 0.08) 0 6px, transparent 6px 12px); }
