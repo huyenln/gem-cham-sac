@@ -726,3 +726,17 @@
   .se-acts { flex-wrap: nowrap; width: 100%; }
   .se-acts .ad-btn { flex: 1 1 auto; min-height: 40px; padding: 6px 8px; font-size: var(--text-sm); justify-content: center; text-align: center; }
 }
+
+/* "Khung bấm" tab: the built-in tap boxes (hide / show) + the owner's own (add / delete) */
+.se-boxlist { display: grid; gap: var(--space-2); }
+.se-boxlist ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.se-boxlist li {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 6px 8px;
+  border: 1px solid var(--sage-light); border-radius: 10px; background: var(--paper-white); font-size: var(--text-sm);
+}
+.se-boxlist li b { flex: 1 1 8em; }
+.se-boxlist li span { color: var(--ink-soft); font-size: var(--text-xs); }
+.se-boxlist li.is-off b { color: var(--ink-soft); text-decoration: line-through; }
+.se-boxes-chip { border-style: dashed; }
+.se-hot.is-own { border-color: rgba(184, 153, 104, 0.95); background: rgba(184, 153, 104, 0.08); }
+.se-spot select { min-height: 36px; border: 1.5px solid var(--sage-light); border-radius: 8px; background: var(--paper-white); font: inherit; max-width: 100%; }

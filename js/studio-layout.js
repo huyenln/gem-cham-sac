@@ -119,6 +119,7 @@ window.GemLayout = (function () {
   var LOCAL = /^images\/(studio|products)\/[a-z0-9_\/.-]+\.(webp|png|jpe?g)$/;
   var REMOTE = /^[A-Za-z0-9%._-]+$/;
   var MAX_ITEMS = 400;
+  var MAX_BOXES = 30;
   var FEET_Y = 965;     // the floor line the character walks on (studio.js feetY)
 
   function srcOk(src) {
@@ -189,6 +190,19 @@ window.GemLayout = (function () {
         out.hot[sp.id] = { box: b, stand: num(h.stand, 0, W, (b[0] + b[2]) / 2) };
       });
     }
+    // the owner's own tap boxes ("Khung bấm" → "+ Thêm khung"), besides the built-in ones
+    out.boxes = [];
+    (Array.isArray(d.boxes) ? d.boxes : []).slice(0, MAX_BOXES).forEach(function (o) {
+      if (!o || typeof o.id !== 'string' || !/^k-[a-z0-9]{1,12}$/.test(o.id) || !Array.isArray(o.box) || o.box.length !== 4) return;
+      var b = o.box.map(function (v, i) { return num(v, 0, i % 2 ? H : W, 0); });
+      if (b[2] - b[0] < 20 || b[3] - b[1] < 20) return;
+      var c = { id: o.id, box: b, stand: num(o.stand, 0, W, (b[0] + b[2]) / 2) };
+      if (label(o.vi)) c.vi = label(o.vi);
+      if (label(o.en)) c.en = label(o.en);
+      if (linkOk(o.link)) c.link = o.link;
+      c.act = ACT_IDS.indexOf(o.act) >= 0 && (o.act !== 'link' || c.link) ? o.act : 'none';
+      out.boxes.push(c);
+    });
     out.start = num(d.start, 120, W - 120, 400);
     return out;
   }
@@ -310,7 +324,7 @@ window.GemLayout = (function () {
     if (!s) return null;
     var W = s.bg.w, H = s.bg.h;
     var out = blank(s.bg);
-    out.items = s.items; out.hot = s.hot; out.start = s.start;
+    out.items = s.items; out.hot = s.hot; out.start = s.start; out.boxes = s.boxes;
     if (d.udon) {
       out.udon = { x: num(d.udon.x, 0, W, out.udon.x), y: num(d.udon.y, 0, H, out.udon.y),
         w: num(d.udon.w, 30, 600, 128), h: num(d.udon.h, 30, 600, 140) };

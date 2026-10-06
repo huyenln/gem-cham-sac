@@ -340,6 +340,11 @@
     'studio.board_post':    { vi: `Bản tin mới`, en: `Latest news` },
     'studio.board_none_ws': { vi: `Lịch workshop sắp có`, en: `New workshops soon` },
     'studio.board_none_post': { vi: `Bản tin của Gem`, en: `Gem's news` },
+    'studio.motion':        { vi: `Hiệu ứng`, en: `Motion` },
+    'studio.motion_tip':    { vi: `Bật / tắt nhân vật bước đi và các hiệu ứng chuyển động`, en: `Turn walking and other motion on / off` },
+    'studio.motion_on':     { vi: `Đã bật hiệu ứng — nhân vật sẽ bước đi.`, en: `Motion on — your character walks.` },
+    'studio.motion_off':    { vi: `Đã tắt hiệu ứng — nhân vật tới thẳng chỗ bạn chạm.`, en: `Motion off — your character just appears where you tap.` },
+    'studio.motion_calm':   { vi: `Máy bạn đang bật "giảm chuyển động" nên nhân vật không bước. Muốn xem đi lại thì bấm "Hiệu ứng" ở trên nhé.`, en: `Your device asks for less motion, so your character doesn't walk. Tap "Motion" at the top to turn it on.` },
     'studio.prod_out':      { vi: `Món này đang tạm hết, bạn ghé lại sau nhé.`, en: `This one's sold out for now — check back soon.` },
     'studio.pt_extra':     { vi: `Tự chỉnh: tông màu, họa tiết, chất vải, tự vẽ, ảnh, lời nhắn`, en: `Fine-tune: colours, prints, fabrics, a drawing, a photo, a note` },
     'studio.pt_size':      { vi: `Cỡ nét`, en: `Brush size` },
@@ -415,8 +420,44 @@
     return '<' + tag + (attrs || '') + ' data-i18n="' + key + '">' + esc(t(key)) + '</' + tag + '>';
   }
 
-  var reduceMotion = window.matchMedia &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Motion follows the device's "reduce motion" setting, unless the visitor
+  // chose with the "Hiệu ứng" button (localStorage gem-motion: on / off).
+  // With it off the character doesn't walk: it is simply there.
+  var systemCalm = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  var reduceMotion = systemCalm;
+  try {
+    var mp = localStorage.getItem('gem-motion');
+    if (mp === 'on') reduceMotion = false;
+    if (mp === 'off') reduceMotion = true;
+  } catch (e) { /* private mode */ }
+
+  function syncMotion() {
+    document.documentElement.classList.toggle('st-calm', reduceMotion);
+    var b = document.querySelector('.st-motion');
+    if (b) b.setAttribute('aria-pressed', String(!reduceMotion));
+  }
+
+  syncMotion();   // before anything animates (the button itself comes later)
+
+  function bindMotion() {
+    syncMotion();
+    var b = document.querySelector('.st-motion');
+    if (!b) return;
+    b.addEventListener('click', function () {
+      reduceMotion = !reduceMotion;
+      try { localStorage.setItem('gem-motion', reduceMotion ? 'off' : 'on'); } catch (e) { /* private mode */ }
+      syncMotion();
+      say(reduceMotion ? 'studio.motion_off' : 'studio.motion_on', 3000);
+    });
+    // The device asks for less motion and nobody chose yet: say why the
+    // character doesn't walk, once.
+    var told = false;
+    try { told = !!localStorage.getItem('gem-motion') || localStorage.getItem('gem-motion-told') === '1'; } catch (e) { told = true; }
+    if (systemCalm && !told) {
+      setTimeout(function () { say('studio.motion_calm', 7000); }, 2500);
+      try { localStorage.setItem('gem-motion-told', '1'); } catch (e) { /* ignore */ }
+    }
+  }
 
   /* ======================================================================
      GEOMETRY
@@ -435,9 +476,20 @@
   }
 
   function hotById(id) {
-    var list = sceneName === 'out' ? OUT_HOT : HOTSPOTS;
+    var list = (sceneName === 'out' ? OUT_HOT : HOTSPOTS).concat(OWN_HOT);
     for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
     return null;
+  }
+
+  // The owner's own tap boxes (layout boxes, id 'k-…'): drawn like the
+  // built-in ones; their settings (name, act, link) live on the box itself.
+  var OWN_HOT = [];
+  function addOwnBoxes(boxes) {
+    (boxes || []).forEach(function (o) {
+      var h = { id: o.id, label: '', abs: o.box, standAbs: o.stand, own: o };
+      OWN_HOT.push(h);
+      addHot(h);
+    });
   }
 
   function standX(h) {
@@ -531,6 +583,7 @@
       el.style.transform = 'rotate(' + it.rot + 'deg)' + (it.flip ? ' scaleX(-1)' : '');
       world.appendChild(el);
       if (it.kind && it.kind !== 'product') thing(el, it);
+      if (it.sku || (it.kind && it.kind !== 'product')) prepAlpha(el);
     });
   }
 
@@ -540,6 +593,83 @@
      line each tap · board: the next workshop / latest post written on it.
      Stories and lines come from studio_info (by picture), see INFO. */
   var THINGS = [];
+
+  /* ---------- taps go by the picture, not its box ----------
+     A piece's box takes in its see-through margins (a sofa's box covers the
+     wall beside it). A tap there belongs to whatever is behind: the next
+     piece, a hotspot box, or the wall (walk). ALPHA keeps a small copy of
+     each picture's transparency, read once. */
+  var ALPHA = {};
+  function alphaOf(src) {
+    if (ALPHA[src]) return ALPHA[src];
+    ALPHA[src] = 'wait';
+    var im = new Image();
+    if (/^https?:/.test(src)) im.crossOrigin = 'anonymous';   // our bucket sends CORS; else the canvas can't be read
+    im.onload = function () {
+      try {
+        var sc = Math.min(1, 160 / Math.max(im.naturalWidth, im.naturalHeight));
+        var w = Math.max(1, Math.round(im.naturalWidth * sc)), h = Math.max(1, Math.round(im.naturalHeight * sc));
+        var c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        var g = c.getContext('2d');
+        g.drawImage(im, 0, 0, w, h);
+        var px = g.getImageData(0, 0, w, h).data, a = new Uint8Array(w * h);
+        for (var i = 0; i < a.length; i++) a[i] = px[i * 4 + 3];
+        ALPHA[src] = { w: w, h: h, a: a };
+      } catch (e) { ALPHA[src] = 'solid'; }   // can't read it: the whole box counts
+    };
+    im.onerror = function () { ALPHA[src] = 'solid'; };
+    im.src = src;
+    return 'wait';
+  }
+
+  // Is the picture of el solid at screen point (x, y)? Unknown -> yes.
+  function solidAt(el, x, y) {
+    if (el.tagName !== 'IMG') return true;            // a framed photo: solid all over
+    var m = alphaOf(el.getAttribute('src'));
+    if (typeof m === 'string') return true;
+    var w = el.offsetWidth, h = el.offsetHeight;
+    if (!w || !h) return true;
+    var r = el.getBoundingClientRect();
+    var p = { x: x - (r.left + r.width / 2), y: y - (r.top + r.height / 2) };
+    try {
+      var tf = getComputedStyle(el).transform;   // rotate / flip about the centre
+      if (tf && tf !== 'none') p = new DOMMatrix(tf).inverse().transformPoint(new DOMPoint(p.x, p.y));
+    } catch (e) { /* old browser: no rotation correction */ }
+    // object-fit: contain — the picture sits centred in the box, margins see-through
+    var ar = m.w / m.h, dw = w, dh = h;
+    if (w / h > ar) dw = h * ar; else dh = w / ar;
+    var u = p.x / dw + 0.5, v = p.y / dh + 0.5;
+    if (u < 0 || u > 1 || v < 0 || v > 1) return false;
+    var cx = Math.floor(u * m.w), cy = Math.floor(v * m.h);
+    for (var dy = -1; dy <= 1; dy++) {               // a finger is not a pixel: look around a little
+      for (var dx = -1; dx <= 1; dx++) {
+        var xx = cx + dx, yy = cy + dy;
+        if (xx >= 0 && yy >= 0 && xx < m.w && yy < m.h && m.a[yy * m.w + xx] > 40) return true;
+      }
+    }
+    return false;
+  }
+
+  // What a tap at (x, y) is on: { piece } (a product or a piece that does
+  // something, where its picture is), { hot } (a hotspot box), or {}.
+  function pickAt(x, y) {
+    var list = document.elementsFromPoint(x, y);
+    for (var i = 0; i < list.length; i++) {
+      var n = list[i];
+      if (!world.contains(n)) continue;
+      var pc = n.closest('.st-thing, .st-shelf-prod');
+      if (pc) { if (solidAt(pc, x, y)) return { piece: pc }; continue; }
+      var hot = n.closest('.st-hot');
+      if (hot) return { hot: hot };
+    }
+    return {};
+  }
+  function prepAlpha(el) {
+    var img = el.tagName === 'IMG' ? el : null;
+    if (img) alphaOf(img.getAttribute('src'));
+  }
+
   var INFO = {};          // src -> GemLayout.info(row)
   var FEED = {};          // 'workshop' | 'post' -> Promise of the row (or null)
   var FEED_ROW = {};      // the same rows once they are in
@@ -694,8 +824,8 @@
   // Stories can be picked up and handed to Udon (inside only: Udon lives there).
   function bindThings() {
     world.addEventListener('pointerdown', function (e) {
-      var el = e.target.closest('.st-thing[data-kind="story"]');
-      if (!el || (e.pointerType === 'mouse' && e.button !== 0)) return;
+      var el = pickAt(e.clientX, e.clientY).piece;
+      if (!el || el.getAttribute('data-kind') !== 'story' || (e.pointerType === 'mouse' && e.button !== 0)) return;
       e.preventDefault();
       var it = THINGS[+el.getAttribute('data-thing')];
       var img = el.tagName === 'IMG' ? el : el.querySelector('img');
@@ -738,6 +868,7 @@
     });
 
     HOTSPOTS.forEach(function (h) { if (!spotOff(h.id)) addHot(h); });
+    if (LAYOUT) addOwnBoxes(LAYOUT.boxes);
 
     // Udon on the counter
     var u = SCENE.udon;
@@ -796,10 +927,13 @@
   /* ---------- owner's per-spot settings (layout.spots) ----------
      off: not in the studio; vi / en: its label; link: opens that page
      instead of the built-in sheet. */
-  function spotSet(id) { return (LAYOUT && LAYOUT.spots && LAYOUT.spots[id]) || {}; }
+  function spotSet(id) {
+    if (/^k-/.test(id)) { var h = hotById(id); return h && h.own ? h.own : {}; }
+    return (LAYOUT && LAYOUT.spots && LAYOUT.spots[id]) || {};
+  }
   function spotOff(id) { return !!spotSet(id).off; }
   function spotName(h) {
-    return spotSet(h.id)[lng()] || t(h.label);   // no English set: the built-in English
+    return spotSet(h.id)[lng()] || (h.label ? t(h.label) : spotSet(h.id).vi || '');   // no English set: the built-in English / the Vietnamese
   }
 
   function addHot(h) {
@@ -809,7 +943,7 @@
     btn.type = 'button';
     btn.className = 'st-hot';
     btn.setAttribute('data-hot', h.id);
-    if (!custom) btn.setAttribute('data-i18n-attr', 'aria-label:' + h.label);
+    if (!custom && h.label) btn.setAttribute('data-i18n-attr', 'aria-label:' + h.label);
     btn.setAttribute('aria-label', spotName(h));
     btn.style.left = pct(b.x0, SCENE.width);
     btn.style.top = pct(b.y0, SCENE.height);
@@ -817,7 +951,7 @@
     btn.style.height = pct(b.y1 - b.y0, SCENE.height);
     var lab = document.createElement('span');
     lab.className = 'st-hot-label';
-    if (!custom) lab.setAttribute('data-i18n', h.label);
+    if (!custom && h.label) lab.setAttribute('data-i18n', h.label);
     lab.textContent = spotName(h);   // the owner's text: textContent only
     btn.appendChild(lab);
     world.appendChild(btn);
@@ -866,6 +1000,7 @@
     var h = OUT_HOT[0], o = O.hot.enter;
     h.abs = o.box; h.standAbs = o.stand;
     addHot(h);
+    addOwnBoxes(O.boxes);
     addPlayer();
   }
 
@@ -894,7 +1029,7 @@
     Array.prototype.slice.call(world.children).forEach(function (n) {
       if (!n.classList.contains('st-bg')) n.remove();   // .st-bgx too: paintBg redraws it
     });
-    udonEl = null; memoPins = null; THINGS = [];
+    udonEl = null; memoPins = null; THINGS = []; OWN_HOT = [];
     if (name === 'out') {
       var O = outsideScene();
       SCENE.width = O.bg.w; SCENE.height = O.bg.h; SCENE.startX = O.start;
@@ -1255,7 +1390,9 @@
     var st = null;
     stage.addEventListener('pointerdown', function (e) {
       if (e.pointerType === 'mouse' && e.button !== 0) return;
-      if (e.target.closest('.st-udon, .st-shelf-prod')) return;   // those are dragged themselves
+      if (e.target.closest('.st-udon')) return;   // dragged itself
+      var pc = pickAt(e.clientX, e.clientY).piece;   // so are products and stories (where their picture is)
+      if (pc && (pc.classList.contains('st-shelf-prod') || pc.getAttribute('data-kind') === 'story')) return;
       st = { x: e.clientX, y: e.clientY, px: player.x, t: performance.now(), lastX: e.clientX, lastT: performance.now(), v: 0, on: false, id: e.pointerId };
     });
     stage.addEventListener('pointermove', function (e) {
@@ -1498,16 +1635,7 @@
               '<div class="pt-board"></div>' +
               // "from my drawing": draw straight on the piece
               '<canvas class="pt-canvas" width="680" height="680" hidden data-i18n-attr="aria-label:studio.pt_draw" aria-label="' + esc(t('studio.pt_draw')) + '"></canvas>' +
-              // a real piece Gem has sewn, pinned to the corner like a photo
-              '<button type="button" class="gv-polaroid" data-gv-zoom data-i18n-attr="aria-label:studio.gv_next" aria-label="' + esc(t('studio.gv_next')) + '">' +
-                '<span class="gv-photo"><img alt="" draggable="false"></span>' +
-                '<span class="gv-cap" data-i18n="studio.pt_real_cap">' + esc(t('studio.pt_real_cap')) + '</span>' +
-              '</button>' +
               '<button type="button" class="gv-next" data-gv-next hidden data-i18n-attr="aria-label:studio.gv_next" aria-label="' + esc(t('studio.gv_next')) + '">›</button>' +
-              // Udon the teacher sits by the piece; sews and cheers there too
-              '<div class="gv-udon" aria-hidden="true">' + GV_POSES.map(function (n, i) {
-                return '<img src="images/studio/udon/ud-gv-' + n + '.webp" alt="" draggable="false" data-gv="' + n + '"' + (i ? ' hidden' : '') + '>';
-              }).join('') + '</div>' +
               '<img class="pt-sewer" alt="" draggable="false" hidden>' +
             '</div>' +
             '<div class="pt-drawbar" hidden>' +
@@ -1518,7 +1646,19 @@
               '<p class="pt-small pt-draw-msg" aria-live="polite"></p>' +
             '</div>' +
             '<p class="pt-small pt-hint" aria-live="polite"></p>' +
-            '<p class="gv-say" aria-live="polite"></p>' +
+            // Udon the teacher + the real piece, in a row UNDER the piece so
+            // nothing covers what is being designed
+            '<div class="gv-row">' +
+              '<div class="gv-udon" aria-hidden="true">' + GV_POSES.map(function (n, i) {
+                return '<img src="images/studio/udon/ud-gv-' + n + '.webp" alt="" draggable="false" data-gv="' + n + '"' + (i ? ' hidden' : '') + '>';
+              }).join('') + '</div>' +
+              '<p class="gv-say" aria-live="polite"></p>' +
+              // a real piece Gem has sewn, a small photo: tap to see it big
+              '<button type="button" class="gv-polaroid" data-gv-zoom data-i18n-attr="aria-label:studio.gv_next" aria-label="' + esc(t('studio.gv_next')) + '">' +
+                '<span class="gv-photo"><img alt="" draggable="false"></span>' +
+                '<span class="gv-cap" data-i18n="studio.pt_real_cap">' + esc(t('studio.pt_real_cap')) + '</span>' +
+              '</button>' +
+            '</div>' +
           '</div>' +
         '</div>' +
         '<div class="pt-side">' +
@@ -1882,8 +2022,7 @@
 
   function sewNow(btn, board) {
     var svgEl = board.querySelector('svg');
-    var reduce = false;
-    try { reduce = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (x) { /* old browser */ }
+    var reduce = reduceMotion;
     btn.disabled = true;
     btn.textContent = t('studio.pt_sewing');
     var seams = Array.prototype.slice.call(svgEl.querySelectorAll('.pt-seam'));
@@ -2399,14 +2538,14 @@
   function designerClick(e) {
     var el, teachAfter = null, shuffled = false;
     if (e.target.closest('[data-gv-next]')) { teach('next'); return true; }
-    var stz = sheetBody.querySelector('.pt-stage.is-zoom');
+    var stz = sheetBody.querySelector('.pt-view.is-zoom');
     if (stz && !e.target.closest('[data-gv-zoom], [data-gv-next]')) {
       stz.classList.remove('is-zoom');
       sheetBody.querySelector('.gv-next').hidden = true;
     }
     if (e.target.closest('[data-gv-zoom]')) {
       // the pinned photo: tap to see it big, tap again to put it back
-      var st = sheetBody.querySelector('.pt-stage');
+      var st = sheetBody.querySelector('.pt-view');
       var big = st.classList.toggle('is-zoom');
       sheetBody.querySelector('.gv-next').hidden = !big;
       return true;
@@ -2889,8 +3028,8 @@
 
   function bindProducts() {
     world.addEventListener('pointerdown', function (e) {
-      var el = e.target.closest('.st-shelf-prod');
-      if (!el || (e.pointerType === 'mouse' && e.button !== 0)) return;
+      var el = pickAt(e.clientX, e.clientY).piece;
+      if (!el || !el.classList.contains('st-shelf-prod') || (e.pointerType === 'mouse' && e.button !== 0)) return;
       e.preventDefault();
       var sku = el.getAttribute('data-sku');
       var img = el.tagName === 'IMG' ? el : el.querySelector('img');
@@ -3180,12 +3319,16 @@
     });
     world.addEventListener('click', function (e) {
       if (Date.now() - swiped < 350) return;   // the end of a swipe, not a tap
-      var th = e.target.closest('.st-thing');
+      // keyboard (detail 0): the focused element; a tap: what's under the finger, by the picture
+      var at = e.detail === 0 ? { piece: e.target.closest('.st-thing, .st-shelf-prod'), hot: e.target.closest('.st-hot') }
+        : e.target.closest('.st-hot-label') ? { hot: e.target.closest('.st-hot') } : pickAt(e.clientX, e.clientY);
+      var th = at.piece && at.piece.classList.contains('st-thing') ? at.piece : null;
       if (th && th.getAttribute('data-kind') !== 'story' && (e.detail === 0 || !nearPlayer(e.clientX, e.clientY))) {
         thingTap(th);
         return;
       }
-      var hot = e.target.closest('.st-hot');
+      if (at.piece) return;   // a product / story: their own pointer handlers took the tap
+      var hot = at.hot || null;
       // A label, an object, or Enter/Space on a focused spot (detail 0):
       // open it — unless the tap lands on the character, which means walk.
       if (hot && (e.detail === 0 || e.target.closest('.st-hot-label') || !nearPlayer(e.clientX, e.clientY))) {
@@ -3358,6 +3501,7 @@
 
   function start() {
     syncNav();
+    bindMotion();
     INSIDE = { width: SCENE.width, height: SCENE.height, startX: SCENE.startX,
       bg: LAYOUT ? LAYOUT.bg.src : 'images/studio/bg/strip.webp' };
     loadWorn();

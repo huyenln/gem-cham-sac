@@ -730,7 +730,7 @@ async def design(browser, db):
         check(lay == 'chong' and mood == 'tet', f'{name}: picking a mood keeps the layout ({lay}, {mood})')
         await js_click(pg, '[data-layout="vuong"]')
         # the rearranged table: Udon + the real piece by the board, no tone/print chips
-        check(await pg.evaluate("!!document.querySelector('.pt-stage .gv-udon') && !!document.querySelector('.pt-stage .gv-polaroid') && !document.querySelector('.pt-tones, .pt-prints')"),
+        check(await pg.evaluate("!!document.querySelector('.gv-row .gv-udon') && !!document.querySelector('.gv-row .gv-polaroid') && !document.querySelector('.pt-tones, .pt-prints')"),
               f'{name}: Udon and the real piece sit by the board; tone / print chips are gone')
         # "from my drawing": draw straight on the piece
         await js_click(pg, '[data-layout="tuve"]')
@@ -932,6 +932,33 @@ async def kinds(browser, db):
     check(it.get('kind') == 'zone' and it.get('zone', {}).get('act') == 'memo' and it.get('zone', {}).get('vi') == 'Bảng nhỏ',
           f'editor: a zone keeps its action + name in the layout ({it.get("zone")})')
     check(it.get('show') == {'from': '2026-01-01'}, f'editor: dates to show it ({it.get("show")})')
+    # an upload with a big see-through margin comes back cut to the picture
+    sz = await pg.evaluate("""async () => {
+      const c = document.createElement('canvas'); c.width = 400; c.height = 300;
+      c.getContext('2d').fillRect(150, 100, 100, 50);
+      const b = await new Promise(r => c.toBlob(r, 'image/png'));
+      const f = await GemImg.shrink(new File([b], 'x.png', {type: 'image/png'}), {alpha: true});
+      return GemImg.size(f).then(d => [d.w, d.h]);
+    }""")
+    check(sz[0] < 130 and sz[1] < 80, f'upload: see-through margins are cut away ({sz})')
+    # "Khung bấm" tab: add an own box, name it, give it an action; hide a built-in one
+    await js_click(pg, '[data-boxes]')
+    await pg.wait_for_timeout(200)
+    await js_click(pg, '[data-box-add]')
+    await pg.wait_for_timeout(200)
+    await pg.fill('[name="bx-vi"]', 'Gối trên tủ')
+    await pg.dispatch_event('[name="bx-vi"]', 'change')
+    await pg.select_option('[name="bx-act"]', 'shop:cabinet')
+    await js_click(pg, '[data-boxes]')
+    await js_click(pg, '[data-box-off="sofa"]')
+    await pg.wait_for_timeout(2600)
+    d = db.rows.get('draft') or {}
+    bx = (d.get('boxes') or [{}])[0]
+    check(bx.get('vi') == 'Gối trên tủ' and bx.get('act') == 'shop:cabinet', f'editor: an own tap box is saved ({bx})')
+    check((d.get('spots') or {}).get('sofa', {}).get('off') is True, 'editor: a built-in box can be hidden from the list')
+    await js_click(pg, '[data-box-del="' + bx.get('id', '') + '"]')
+    await pg.wait_for_timeout(200)
+    check(await pg.evaluate("document.querySelectorAll('.se-hot.is-own').length") == 0, 'editor: an own box can be deleted')
     await pg.screenshot(path=OUT / 'kinds-editor.png')
     check(not pg.errors, f'editor: no script errors {pg.errors}')
     await pg.context.close()
@@ -948,7 +975,8 @@ async def kinds(browser, db):
         piece(7, 1300, show={'from': '2099-01-01'}),
     ]
     lay['udon'] = {'x': 1500, 'y': 560, 'w': 128, 'h': 140}
-    lay['start'] = 900
+    lay['boxes'] = [{'id': 'k-t1', 'box': [1180, 380, 1420, 620], 'stand': 1300, 'act': 'memo', 'vi': 'Gối trên tủ'}]
+    lay['start'] = 300   # away from the pieces: a tap right on the character means "walk"
     db.rows['live'] = lay
     db.info = {
         src(10): {'src': src(10), 'kind': 'story', 'title_vi': 'Chậu cây của bà', 'body_vi': 'Đoạn một.\n\nĐoạn hai <b>đậm</b>.', 'lines': []},
@@ -987,9 +1015,53 @@ async def kinds(browser, db):
     check(await st.evaluate("document.querySelector('.st-zone-label').textContent") == 'Bảng nhỏ', 'studio: the zone has its name')
     await st.keyboard.press('Escape')
     await st.wait_for_timeout(400)
+    # the corner of the zone's box is see-through: a tap there is not on it
+    r = await st.evaluate("(() => { const r = document.querySelector('.st-thing[data-kind=zone]').getBoundingClientRect(); return [r.x, r.y]; })()")
+    await st.mouse.click(r[0] + 3, r[1] + 3)
+    await st.wait_for_timeout(500)
+    check(await st.evaluate("!document.querySelector('#st-sheet-body .mb-form') || document.getElementById('st-modal').hidden"),
+          'studio: a tap on the see-through corner of a piece passes through')
+    check(await st.evaluate("(document.querySelector('.st-hot[data-hot=k-t1] .st-hot-label') || {}).textContent") == 'Gối trên tủ',
+          'studio: an own tap box is there, with its name')
+    await js_click(st, '.st-hot[data-hot=k-t1] .st-hot-label')
+    await st.wait_for_timeout(500)
+    check(await st.evaluate("!!document.querySelector('#st-sheet-body .mb-form')"), 'studio: an own tap box runs its action')
+    await st.keyboard.press('Escape')
+    await st.wait_for_timeout(300)
     await st.screenshot(path=OUT / 'kinds-studio.png')
     check(not st.errors, f'studio: no script errors {st.errors}')
     await st.context.close()
+
+
+async def motion(browser, db):
+    """A device that asks for less motion: no walking, a line saying why, and
+    the "Hiệu ứng" button turns walking back on (remembered)."""
+    print('motion')
+    ctx = await browser.new_context(viewport={'width': 390, 'height': 844}, reduced_motion='reduce', is_mobile=True, has_touch=True)
+    await ctx.route('**/*.supabase.co/**', lambda r: r.abort())
+    await ctx.add_init_script("sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1')")
+    pg = await ctx.new_page()
+    errs = []
+    pg.on('pageerror', lambda e: errs.append(str(e)))
+    await pg.goto(f'{BASE}/studio.html')
+    await pg.wait_for_timeout(3000)
+    said = await pg.evaluate("document.getElementById('st-bubble-text').textContent")
+    check('giảm chuyển động' in said, f'reduced motion: Udon says why the character does not walk ({said[:40]}…)')
+
+    async def frames(go):
+        await pg.keyboard.press('Escape')
+        await pg.evaluate("g => document.querySelector('[data-go=\"' + g + '\"]').click()", go)
+        seen = set()
+        for _ in range(8):
+            await pg.wait_for_timeout(90)
+            seen.add(await pg.evaluate("[...document.querySelectorAll('.st-fr')].findIndex(f => !f.hidden)"))
+        return seen
+    check(len(await frames('counter')) == 1, 'reduced motion: the character does not walk')
+    await js_click(pg, '.st-motion')
+    check(len(await frames('door')) > 2, '"Hiệu ứng" on: the character walks')
+    check(await pg.evaluate("localStorage.getItem('gem-motion')") == 'on', 'the choice is remembered')
+    check(not errs, f'no script errors {errs}')
+    await ctx.close()
 
 
 async def main(which):
@@ -999,7 +1071,7 @@ async def main(which):
     async with async_playwright() as p:
         browser = await launch(p)
         for name, fn in (('street', street), ('wear', wear), ('shop', shop), ('spots', spots), ('editor', editor),
-                         ('library', library), ('product', product), ('design', design), ('catalog', catalog), ('kinds', kinds)):
+                         ('library', library), ('product', product), ('design', design), ('catalog', catalog), ('kinds', kinds), ('motion', motion)):
             if which in (None, name):
                 await fn(browser, db)
         await browser.close()

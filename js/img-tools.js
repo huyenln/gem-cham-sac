@@ -1,6 +1,7 @@
 // Gem Chạm Sắc — image tools that run in the browser, before an upload.
 //
-//   GemImg.shrink(src, opts)      -> Promise<File>  max 1280px, WebP (~100–150 KB)
+//   GemImg.shrink(src, opts)      -> Promise<File>  max 1280px, WebP (~100–150 KB);
+//                                    opts.alpha: keep transparency + cut see-through margins
 //   GemImg.thumb(src, size)       -> Promise<File>  square centre crop (600px)
 //   GemImg.removeWhite(src, opts) -> Promise<File>  white paper/background -> transparent
 //   GemImg.size(src)              -> Promise<{w, h}>
@@ -69,6 +70,29 @@ window.GemImg = (function () {
     return load(src).then(function (img) { return { w: img.naturalWidth, h: img.naturalHeight }; });
   }
 
+  // Cut away see-through margins (a cut-out exported on a big empty canvas),
+  // keeping a small edge. A picture with no transparency comes back as is.
+  function trim(c) {
+    var W = c.width, H = c.height, px = c.getContext('2d').getImageData(0, 0, W, H).data;
+    var minX = W, minY = H, maxX = -1, maxY = -1;
+    for (var y = 0; y < H; y++) {
+      for (var x = 0; x < W; x++) {
+        if (px[(y * W + x) * 4 + 3] > 8) {
+          if (x < minX) minX = x; if (x > maxX) maxX = x;
+          if (y < minY) minY = y; if (y > maxY) maxY = y;
+        }
+      }
+    }
+    if (maxX < 0) return c;
+    var pad = Math.round(Math.max(W, H) * 0.01);
+    minX = Math.max(0, minX - pad); minY = Math.max(0, minY - pad);
+    maxX = Math.min(W - 1, maxX + pad); maxY = Math.min(H - 1, maxY + pad);
+    if (maxX - minX + 1 >= W - 2 && maxY - minY + 1 >= H - 2) return c;   // nothing worth cutting
+    var out = canvas(maxX - minX + 1, maxY - minY + 1);
+    out.getContext('2d').drawImage(c, minX, minY, out.width, out.height, 0, 0, out.width, out.height);
+    return out;
+  }
+
   function shrink(src, opts) {
     opts = opts || {};
     var max = opts.max || MAX;
@@ -78,6 +102,7 @@ window.GemImg = (function () {
       var g = c.getContext('2d');
       g.imageSmoothingQuality = 'high';
       g.drawImage(img, 0, 0, d.w, d.h);
+      if (opts.alpha) c = trim(c);
       return encode(c, baseName(src), !!opts.alpha);
     });
   }
