@@ -1634,10 +1634,10 @@ Mỗi món trong studio có một **Loại** (ô đầu tiên dưới dải côn
 updated_at): `si_read_all` cho anon + authenticated; insert / update / delete chỉ
 `is_owner()`. GRANT select cho anon + authenticated, insert/update/delete cho
 authenticated. SQL: `supabase/migrations/20261006_studio_info.sql`.
-⚠️ **Chưa chạy trên Supabase** (10/2026: kết nối của Claude chỉ có quyền đọc lúc làm).
-Chạy file đó trong SQL Editor, rồi chạy câu kiểm GRANT-vs-policy (không được có dòng
-`studio_info`) và kiểm ba vai. Chưa có bảng thì studio vẫn chạy (`studioInfo()` trả []),
-chỉ là câu chuyện / lời thoại chưa lưu được.
+Migration `gem_studio_info` (đã chạy 06/10/2026). Đã kiểm ba vai: anon → đọc được, ghi
+`permission denied`; đăng nhập không phải owner → `violates row-level security policy`
+(update / delete sửa 0 dòng); owner → ghi được (insert, update, delete, upsert). Câu kiểm
+GRANT-vs-policy không có dòng nào của `studio_info`.
 
 Kiểm tra: `kinds()` trong `tools/check-studio.py`.
 

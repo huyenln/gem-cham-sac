@@ -65,7 +65,7 @@ Static website cho cửa hàng **Gem Chạm Sắc** — pop-up store sustainabil
 
 **Backend (từ Sprint 3):** Supabase (project `dxdovvqsfjeizsoprrfn`, Singapore,
 Postgres 17). Bảng: `products`, `orders`, `order_items`, `sessions`, `bookings`,
-`workshop_types`, `staff`, `settings`, `posts`, `notes` (bảng lời nhắn Studio), `studio_layout` (bố cục studio, chỉ owner ghi), `studio_assets` (thư viện ảnh của trình lắp, chỉ owner), `studio_info` (loại + câu chuyện + lời thoại theo ảnh; khách đọc, owner ghi — SQL ở `supabase/migrations/20261006_studio_info.sql`, **chưa chạy**). Kho ảnh: Storage bucket
+`workshop_types`, `staff`, `settings`, `posts`, `notes` (bảng lời nhắn Studio), `studio_layout` (bố cục studio, chỉ owner ghi), `studio_assets` (thư viện ảnh của trình lắp, chỉ owner), `studio_info` (loại + câu chuyện + lời thoại theo ảnh; khách đọc, owner ghi — SQL ở `supabase/migrations/20261006_studio_info.sql`). Kho ảnh: Storage bucket
 `gem-media` (đọc công khai, tải lên chỉ nhân sự). Chi tiết ở `docs/design.md`.
 
 > ⚠️ **Hai luật bảo mật, đọc trước khi đụng vào database:**
