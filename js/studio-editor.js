@@ -512,6 +512,29 @@ window.GemStudioEditor = (function () {
       worldEl.appendChild(st);
     });
 
+    if (showHot) (S().boxes || []).forEach(function (o) {
+      var b = o.box;
+      var n = document.createElement('div');
+      n.className = 'se-el se-hot is-own' + (isSel('hot', o.id) ? ' is-sel' : '') + (o.act !== 'none' ? ' is-link' : '');
+      n.dataset.kind = 'hot'; n.dataset.id = o.id;
+      place(n, b[0], b[1], b[2] - b[0], b[3] - b[1]);
+      if (isSel('hot', o.id)) handles(n, false);
+      worldEl.appendChild(n);
+      var tag = document.createElement('div');
+      tag.className = 'se-el se-hot-tag' + (isSel('hot', o.id) ? ' is-sel' : '');
+      tag.dataset.kind = 'hot'; tag.dataset.id = o.id;
+      tag.textContent = (o.vi || 'Khung mới') + (o.act !== 'none' ? ' →' : '');
+      tag.style.left = px((b[0] + b[2]) / 2);
+      tag.style.top = px(b[1]);
+      worldEl.appendChild(tag);
+      var st = document.createElement('div');
+      st.className = 'se-el se-stand' + (isSel('stand', o.id) ? ' is-sel' : '');
+      st.dataset.kind = 'stand'; st.dataset.id = o.id;
+      place(st, o.stand - 14, feet - 60, 28, 64);
+      st.title = 'Chỗ dừng: ' + (o.vi || 'Khung mới');
+      worldEl.appendChild(st);
+    });
+
     if (scene === 'out') return;   // Udon lives in the studio
     var u = data.udon;
     var un = document.createElement('div');
@@ -742,7 +765,7 @@ window.GemStudioEditor = (function () {
   function target() {
     if (!sel) return null;
     if (sel.kind === 'item') return S().items[sel.i];
-    if (sel.kind === 'hot' || sel.kind === 'stand') return S().hot[sel.id];
+    if (sel.kind === 'hot' || sel.kind === 'stand') return S().hot[sel.id] || ownBox(sel.id);
     if (sel.kind === 'udon') return data.udon;
     if (sel.kind === 'start') return { v: S().start };
     return null;
@@ -771,6 +794,88 @@ window.GemStudioEditor = (function () {
   }
 
   /* ---------- side panel: selection tools + library ---------- */
+  /* ---------- tap boxes: the built-in ones (hide / show) + the owner's own ----------
+     Built-in boxes keep their ids: the studio's bottom nav goes to them by
+     id, so they can be hidden but not deleted. Own boxes (S().boxes, id
+     'k-…') have a name, an action (ACTS) and a stop on the floor. */
+  var boxView = false;    // the library area shows the box list ("Khung bấm" tab)
+
+  function ownBox(id) {
+    var list = (data && S().boxes) || [];
+    for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
+    return null;
+  }
+  function actName(id) {
+    var a = L.ACTS.filter(function (x) { return x.id === id; })[0];
+    return a ? a.vi : '';
+  }
+
+  function boxList() {
+    var own = S().boxes || [];
+    return '<div class="se-boxlist">' +
+      '<div class="se-row"><button type="button" class="se-tb on" data-box-add>+ Thêm khung</button>' +
+        '<span class="se-hint-s">Khung mới hiện giữa màn hình: kéo vào chỗ, đặt tên, chọn "Khi bấm".</span></div>' +
+      '<ul>' +
+        own.map(function (o) {
+          return '<li><b>' + esc(o.vi || 'Khung mới') + '</b><span>' + esc(actName(o.act)) + '</span>' +
+            '<button type="button" class="se-tb" data-box-pick="' + esc(o.id) + '">Chọn</button>' +
+            '<button type="button" class="se-tb danger" data-box-del="' + esc(o.id) + '">Xoá</button></li>';
+        }).join('') +
+        spots().map(function (sp) {
+          var off = spotCfg(sp.id).off;
+          return '<li class="' + (off ? 'is-off' : '') + '"><b>' + esc(spotCfg(sp.id).vi || sp.vi) + '</b><span>có sẵn' + (off ? ' · đang ẩn' : '') + '</span>' +
+            '<button type="button" class="se-tb" data-box-pick="' + esc(sp.id) + '">Chọn</button>' +
+            (sp.id === 'enter' ? '' : '<button type="button" class="se-tb" data-box-off="' + esc(sp.id) + '">' + (off ? 'Hiện' : 'Ẩn') + '</button>') + '</li>';
+        }).join('') +
+      '</ul></div>';
+  }
+
+  function addBox() {
+    remember();
+    if (!S().boxes) S().boxes = [];
+    var cx = (stageEl.scrollLeft + stageEl.clientWidth / 2) / k;
+    var id = 'k-' + Date.now().toString(36).slice(-6) + Math.floor(Math.random() * 36).toString(36);
+    var o = { id: id, box: [Math.round(cx - 180), 420, Math.round(cx + 180), 700], stand: Math.round(cx), act: 'none', vi: 'Khung mới' };
+    S().boxes.push(o);
+    showHot = true;
+    sel = { kind: 'hot', i: null, id: id };
+    draw(); renderPanel();
+  }
+
+  function pickBox(id) {
+    var o = ownBox(id) || S().hot[id];
+    if (!o) return;
+    showHot = true;
+    sel = { kind: 'hot', i: null, id: id };
+    stageEl.scrollLeft = Math.max(0, (o.box[0] + o.box[2]) / 2 * k - stageEl.clientWidth / 2);
+    draw(); renderPanel();
+  }
+
+  function delBox(id) {
+    if (!ownBox(id)) return;
+    remember();
+    S().boxes = S().boxes.filter(function (o) { return o.id !== id; });
+    if (sel && sel.id === id) sel = null;
+    draw(); renderPanel();
+  }
+
+  function boxChange(e) {
+    var o = ownBox(sel.id), n = e.target.name;
+    remember();
+    if (n === 'bx-vi' || n === 'bx-en') {
+      var v = e.target.value.trim().slice(0, 40), key = n.slice(3);
+      if (v) o[key] = v; else delete o[key];
+    }
+    if (n === 'bx-act') { o.act = e.target.value; if (o.act !== 'link') delete o.link; renderPanel(); }
+    if (n === 'bx-link') {
+      var link = e.target.value.trim();
+      if (!link) delete o.link;
+      else if (L.linkOk(link)) o.link = link;
+      else { status('Link chưa đúng: dùng tên trang (vd workshop.html) hoặc địa chỉ bắt đầu bằng https://', true); return; }
+    }
+    draw();
+  }
+
   /* ---------- what a piece does (Loại) ----------
      Trang trí: nothing. Sản phẩm: card + drag to the basket. Câu chuyện: a
      card with its story; dropped on Udon, Udon tells it. Khu vực: one of the
@@ -929,6 +1034,19 @@ window.GemStudioEditor = (function () {
         '<button type="button" class="se-tb" data-act="dup">Nhân bản</button>' +
         '<button type="button" class="se-tb danger" data-act="del">Xoá</button>' +
       '</div>' + kindBox(it);
+    } else if (sel && (sel.kind === 'hot' || sel.kind === 'stand') && ownBox(sel.id)) {
+      var ob = ownBox(sel.id);
+      tools = '<div class="se-tools se-spot">' +
+        '<b>Khung tự thêm</b>' +
+        '<label>Tên hiện <input name="bx-vi" maxlength="40" placeholder="vd: Gối trên tủ" value="' + esc(ob.vi || '') + '"></label>' +
+        '<label>Tên tiếng Anh <input name="bx-en" maxlength="40" value="' + esc(ob.en || '') + '"></label>' +
+        '<label>Khi bấm <select name="bx-act">' + L.ACTS.map(function (x) {
+          return '<option value="' + x.id + '"' + (x.id === ob.act ? ' selected' : '') + '>' + esc(x.vi) + '</option>';
+        }).join('') + '</select></label>' +
+        (ob.act === 'link' ? '<label>Trang <input name="bx-link" maxlength="300" placeholder="vd: workshop.html hoặc https://…" value="' + esc(ob.link || '') + '"></label>' : '') +
+        '<button type="button" class="se-tb danger" data-box-del="' + esc(ob.id) + '">Xoá khung</button>' +
+        '<span class="se-hint-s">Kéo khung / góc để đổi chỗ, đổi cỡ; cột đỏ ở sàn = chỗ nhân vật dừng.</span>' +
+      '</div>';
     } else if (sel && (sel.kind === 'hot' || sel.kind === 'stand')) {
       var name = spots().filter(function (x) { return x.id === sel.id; })[0].vi;
       var c = spotCfg(sel.id);
@@ -1014,8 +1132,10 @@ window.GemStudioEditor = (function () {
     var hadFind = document.activeElement && document.activeElement.classList.contains('se-find');
     panelEl.innerHTML = tools + extra +
       '<div class="se-lib' + (manage ? ' is-manage' : '') + '">' +
-        '<div class="se-tabs">' + libGroups().map(function (x) {
-          return '<button type="button" class="se-chip' + (x.id === g.id && !findQ ? ' is-on' : '') + (x.id === RECENT ? ' is-recent' : '') +
+        '<div class="se-tabs">' +
+        '<button type="button" class="se-chip se-boxes-chip' + (boxView ? ' is-on' : '') + '" data-boxes>Khung bấm</button>' +
+        libGroups().map(function (x) {
+          return '<button type="button" class="se-chip' + (x.id === g.id && !findQ && !boxView ? ' is-on' : '') + (x.id === RECENT ? ' is-recent' : '') +
             '" data-group="' + esc(x.id) + '">' + esc(x.label) + '</button>';
         }).join('') +
         '<label class="se-chip se-upload">+ Tải ảnh<input type="file" name="se-file" accept="image/png,image/webp,image/jpeg" multiple hidden></label>' +
@@ -1023,13 +1143,16 @@ window.GemStudioEditor = (function () {
         '</div>' +
         (manage ? '<span class="se-hint-s">Chạm ảnh có viền đứt (ảnh đã tải lên) để đổi tên, chuyển tab hoặc bỏ. ' +
           'Ảnh có sẵn trong code và ảnh “Sản phẩm thật” sửa ở chỗ khác (tab Sản phẩm).</span>' : '') +
-        '<input class="se-find" type="search" name="se-find" placeholder="Tìm ảnh theo tên hoặc tab…" autocomplete="off" value="' + esc(findQ) + '">' +
-        '<div class="se-grid"></div>' +
+        (boxView ? boxList() :
+          '<input class="se-find" type="search" name="se-find" placeholder="Tìm ảnh theo tên hoặc tab…" autocomplete="off" value="' + esc(findQ) + '">' +
+          '<div class="se-grid"></div>') +
       '</div>';
-    panelEl.setAttribute('data-view', g.id + '|' + findQ);
-    renderGrid(g);
-    var grid = panelEl.querySelector('.se-grid');
-    if (keep) { grid.scrollLeft = keep[0]; grid.scrollTop = keep[1]; }
+    panelEl.setAttribute('data-view', boxView ? '__boxes' : g.id + '|' + findQ);
+    if (!boxView) {
+      renderGrid(g);
+      var grid = panelEl.querySelector('.se-grid');
+      if (keep) { grid.scrollLeft = keep[0]; grid.scrollTop = keep[1]; }
+    }
     panelEl.querySelector('.se-tabs').scrollLeft = keepTabs;
     panelEl.setAttribute('data-tools', toolKind);
     var tl = panelEl.querySelector('.se-tools');
@@ -1079,7 +1202,21 @@ window.GemStudioEditor = (function () {
 
   function panelClick(e) {
     var b;
-    if ((b = e.target.closest('[data-group]'))) { group = b.dataset.group; findQ = ''; renderPanel(); return; }
+    if ((b = e.target.closest('[data-group]'))) { group = b.dataset.group; findQ = ''; boxView = false; renderPanel(); return; }
+    if (e.target.closest('[data-boxes]')) { boxView = true; manage = false; renderPanel(); return; }
+    if ((b = e.target.closest('[data-box-add]'))) { addBox(); return; }
+    if ((b = e.target.closest('[data-box-pick]'))) { pickBox(b.dataset.boxPick); return; }
+    if ((b = e.target.closest('[data-box-del]'))) { delBox(b.dataset.boxDel); return; }
+    if ((b = e.target.closest('[data-box-off]'))) {
+      var sid = b.dataset.boxOff;
+      remember();
+      if (!data.spots) data.spots = {};
+      var cfg = data.spots[sid] || {};
+      if (cfg.off) delete cfg.off; else cfg.off = true;
+      if (Object.keys(cfg).length) data.spots[sid] = cfg; else delete data.spots[sid];
+      draw(); renderPanel();
+      return;
+    }
     if ((b = e.target.closest('[data-info]')) && sel && sel.kind === 'item') {
       var iit = S().items[sel.i];
       if (b.dataset.info === 'save') saveInfo();
@@ -1178,6 +1315,7 @@ window.GemStudioEditor = (function () {
       return;
     }
     if (sel && (sel.kind === 'hot' || sel.kind === 'stand') && /^sp-/.test(e.target.name)) return spotChange(e);
+    if (sel && /^bx-/.test(nm) && ownBox(sel.id)) return boxChange(e);
     if (!sel || sel.kind !== 'item') return;
     var it = S().items[sel.i];
     remember();

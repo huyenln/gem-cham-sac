@@ -1641,6 +1641,30 @@ GRANT-vs-policy không có dòng nào của `studio_info`.
 
 Kiểm tra: `kinds()` trong `tools/check-studio.py`.
 
+### Studio: góp ý đợt 4 (10/2026)
+
+- **Phát hành báo `studio_layout_id_check`:** bảng chỉ nhận id `draft` / `live` /
+  `p-…`; bản trước khi phát hành giờ nằm ở `p-ban-truoc` (ẩn khỏi danh sách). Lưu
+  bản trước lỗi thì vẫn phát hành. FakeDB trong `check-studio.py` chặn id sai như thật.
+- **Lên / Xuống:** món đang chọn không còn bị đẩy lên trên cùng (z-index) và mỗi lần
+  bấm nhảy qua món kế tiếp **có chồng lên** nó.
+- **Nhân vật không bước trên máy em gái:** máy bật "giảm chuyển động"
+  (`prefers-reduced-motion`) → `walkTo` cho nhân vật tới thẳng, đứng một dáng.
+  Giờ có nút **Hiệu ứng** trên thanh trên (`localStorage gem-motion` on/off; chưa chọn
+  thì theo máy) và lần đầu Udon giải thích. Mọi hiệu ứng đi qua lớp `.st-calm`.
+- **Bàn thiết kế:** nền giấy phủ lớp kem 80% (vải đúng màu hơn), bóng `.pt-ss` 0.6,
+  bóng món `-bong` 0.8. Udon + lời + polaroid "Đồ thật" thành một hàng `.gv-row`
+  dưới món (không đè lên món); chạm polaroid thì phóng to đè lên món, chạm lần nữa
+  thu lại. Điện thoại: hàng gọn để rổ vải vẫn nằm trên thanh "May xong".
+- **Chạm theo hình, không theo khung:** món có loại / sản phẩm trong studio chỉ nhận
+  chạm ở phần có hình (`solidAt`: bản alpha nhỏ của ảnh, tính cả xoay / lật /
+  object-fit contain). Chạm vào viền trong suốt thì rơi xuống khung bấm / tường.
+  Ảnh tải lên (không xoá nền) tự cắt viền trong suốt (`GemImg.shrink` alpha → `trim`).
+  Ảnh đã tải từ trước thì không tự cắt lại.
+- **Tab "Khung bấm"** (chip đầu hàng tab thư viện): "+ Thêm khung" (`boxes[]` trong
+  từng cảnh: `{ id 'k-…', box, stand, act, link?, vi?, en? }`), Chọn, Xoá; 7 khung có
+  sẵn chỉ Ẩn / Hiện (thanh menu dưới của studio đi tới chúng theo id).
+
 ### Góp ý đợt 3 (10/2026)
 
 - **Bàn thiết kế gọn lại:** trên cùng là các món + "Gợi ý ngẫu nhiên". Lần đầu chỉ
