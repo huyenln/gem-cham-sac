@@ -340,6 +340,11 @@
     'studio.board_post':    { vi: `Bản tin mới`, en: `Latest news` },
     'studio.board_none_ws': { vi: `Lịch workshop sắp có`, en: `New workshops soon` },
     'studio.board_none_post': { vi: `Bản tin của Gem`, en: `Gem's news` },
+    'studio.motion':        { vi: `Hiệu ứng`, en: `Motion` },
+    'studio.motion_tip':    { vi: `Bật / tắt nhân vật bước đi và các hiệu ứng chuyển động`, en: `Turn walking and other motion on / off` },
+    'studio.motion_on':     { vi: `Đã bật hiệu ứng — nhân vật sẽ bước đi.`, en: `Motion on — your character walks.` },
+    'studio.motion_off':    { vi: `Đã tắt hiệu ứng — nhân vật tới thẳng chỗ bạn chạm.`, en: `Motion off — your character just appears where you tap.` },
+    'studio.motion_calm':   { vi: `Máy bạn đang bật "giảm chuyển động" nên nhân vật không bước. Muốn xem đi lại thì bấm "Hiệu ứng" ở trên nhé.`, en: `Your device asks for less motion, so your character doesn't walk. Tap "Motion" at the top to turn it on.` },
     'studio.prod_out':      { vi: `Món này đang tạm hết, bạn ghé lại sau nhé.`, en: `This one's sold out for now — check back soon.` },
     'studio.pt_extra':     { vi: `Tự chỉnh: tông màu, họa tiết, chất vải, tự vẽ, ảnh, lời nhắn`, en: `Fine-tune: colours, prints, fabrics, a drawing, a photo, a note` },
     'studio.pt_size':      { vi: `Cỡ nét`, en: `Brush size` },
@@ -415,8 +420,44 @@
     return '<' + tag + (attrs || '') + ' data-i18n="' + key + '">' + esc(t(key)) + '</' + tag + '>';
   }
 
-  var reduceMotion = window.matchMedia &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Motion follows the device's "reduce motion" setting, unless the visitor
+  // chose with the "Hiệu ứng" button (localStorage gem-motion: on / off).
+  // With it off the character doesn't walk: it is simply there.
+  var systemCalm = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  var reduceMotion = systemCalm;
+  try {
+    var mp = localStorage.getItem('gem-motion');
+    if (mp === 'on') reduceMotion = false;
+    if (mp === 'off') reduceMotion = true;
+  } catch (e) { /* private mode */ }
+
+  function syncMotion() {
+    document.documentElement.classList.toggle('st-calm', reduceMotion);
+    var b = document.querySelector('.st-motion');
+    if (b) b.setAttribute('aria-pressed', String(!reduceMotion));
+  }
+
+  syncMotion();   // before anything animates (the button itself comes later)
+
+  function bindMotion() {
+    syncMotion();
+    var b = document.querySelector('.st-motion');
+    if (!b) return;
+    b.addEventListener('click', function () {
+      reduceMotion = !reduceMotion;
+      try { localStorage.setItem('gem-motion', reduceMotion ? 'off' : 'on'); } catch (e) { /* private mode */ }
+      syncMotion();
+      say(reduceMotion ? 'studio.motion_off' : 'studio.motion_on', 3000);
+    });
+    // The device asks for less motion and nobody chose yet: say why the
+    // character doesn't walk, once.
+    var told = false;
+    try { told = !!localStorage.getItem('gem-motion') || localStorage.getItem('gem-motion-told') === '1'; } catch (e) { told = true; }
+    if (systemCalm && !told) {
+      setTimeout(function () { say('studio.motion_calm', 7000); }, 2500);
+      try { localStorage.setItem('gem-motion-told', '1'); } catch (e) { /* ignore */ }
+    }
+  }
 
   /* ======================================================================
      GEOMETRY
@@ -1498,16 +1539,7 @@
               '<div class="pt-board"></div>' +
               // "from my drawing": draw straight on the piece
               '<canvas class="pt-canvas" width="680" height="680" hidden data-i18n-attr="aria-label:studio.pt_draw" aria-label="' + esc(t('studio.pt_draw')) + '"></canvas>' +
-              // a real piece Gem has sewn, pinned to the corner like a photo
-              '<button type="button" class="gv-polaroid" data-gv-zoom data-i18n-attr="aria-label:studio.gv_next" aria-label="' + esc(t('studio.gv_next')) + '">' +
-                '<span class="gv-photo"><img alt="" draggable="false"></span>' +
-                '<span class="gv-cap" data-i18n="studio.pt_real_cap">' + esc(t('studio.pt_real_cap')) + '</span>' +
-              '</button>' +
               '<button type="button" class="gv-next" data-gv-next hidden data-i18n-attr="aria-label:studio.gv_next" aria-label="' + esc(t('studio.gv_next')) + '">›</button>' +
-              // Udon the teacher sits by the piece; sews and cheers there too
-              '<div class="gv-udon" aria-hidden="true">' + GV_POSES.map(function (n, i) {
-                return '<img src="images/studio/udon/ud-gv-' + n + '.webp" alt="" draggable="false" data-gv="' + n + '"' + (i ? ' hidden' : '') + '>';
-              }).join('') + '</div>' +
               '<img class="pt-sewer" alt="" draggable="false" hidden>' +
             '</div>' +
             '<div class="pt-drawbar" hidden>' +
@@ -1518,7 +1550,19 @@
               '<p class="pt-small pt-draw-msg" aria-live="polite"></p>' +
             '</div>' +
             '<p class="pt-small pt-hint" aria-live="polite"></p>' +
-            '<p class="gv-say" aria-live="polite"></p>' +
+            // Udon the teacher + the real piece, in a row UNDER the piece so
+            // nothing covers what is being designed
+            '<div class="gv-row">' +
+              '<div class="gv-udon" aria-hidden="true">' + GV_POSES.map(function (n, i) {
+                return '<img src="images/studio/udon/ud-gv-' + n + '.webp" alt="" draggable="false" data-gv="' + n + '"' + (i ? ' hidden' : '') + '>';
+              }).join('') + '</div>' +
+              '<p class="gv-say" aria-live="polite"></p>' +
+              // a real piece Gem has sewn, a small photo: tap to see it big
+              '<button type="button" class="gv-polaroid" data-gv-zoom data-i18n-attr="aria-label:studio.gv_next" aria-label="' + esc(t('studio.gv_next')) + '">' +
+                '<span class="gv-photo"><img alt="" draggable="false"></span>' +
+                '<span class="gv-cap" data-i18n="studio.pt_real_cap">' + esc(t('studio.pt_real_cap')) + '</span>' +
+              '</button>' +
+            '</div>' +
           '</div>' +
         '</div>' +
         '<div class="pt-side">' +
@@ -1882,8 +1926,7 @@
 
   function sewNow(btn, board) {
     var svgEl = board.querySelector('svg');
-    var reduce = false;
-    try { reduce = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (x) { /* old browser */ }
+    var reduce = reduceMotion;
     btn.disabled = true;
     btn.textContent = t('studio.pt_sewing');
     var seams = Array.prototype.slice.call(svgEl.querySelectorAll('.pt-seam'));
@@ -2399,14 +2442,14 @@
   function designerClick(e) {
     var el, teachAfter = null, shuffled = false;
     if (e.target.closest('[data-gv-next]')) { teach('next'); return true; }
-    var stz = sheetBody.querySelector('.pt-stage.is-zoom');
+    var stz = sheetBody.querySelector('.pt-view.is-zoom');
     if (stz && !e.target.closest('[data-gv-zoom], [data-gv-next]')) {
       stz.classList.remove('is-zoom');
       sheetBody.querySelector('.gv-next').hidden = true;
     }
     if (e.target.closest('[data-gv-zoom]')) {
       // the pinned photo: tap to see it big, tap again to put it back
-      var st = sheetBody.querySelector('.pt-stage');
+      var st = sheetBody.querySelector('.pt-view');
       var big = st.classList.toggle('is-zoom');
       sheetBody.querySelector('.gv-next').hidden = !big;
       return true;
@@ -3358,6 +3401,7 @@
 
   function start() {
     syncNav();
+    bindMotion();
     INSIDE = { width: SCENE.width, height: SCENE.height, startX: SCENE.startX,
       bg: LAYOUT ? LAYOUT.bg.src : 'images/studio/bg/strip.webp' };
     loadWorn();

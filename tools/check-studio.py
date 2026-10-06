@@ -730,7 +730,7 @@ async def design(browser, db):
         check(lay == 'chong' and mood == 'tet', f'{name}: picking a mood keeps the layout ({lay}, {mood})')
         await js_click(pg, '[data-layout="vuong"]')
         # the rearranged table: Udon + the real piece by the board, no tone/print chips
-        check(await pg.evaluate("!!document.querySelector('.pt-stage .gv-udon') && !!document.querySelector('.pt-stage .gv-polaroid') && !document.querySelector('.pt-tones, .pt-prints')"),
+        check(await pg.evaluate("!!document.querySelector('.gv-row .gv-udon') && !!document.querySelector('.gv-row .gv-polaroid') && !document.querySelector('.pt-tones, .pt-prints')"),
               f'{name}: Udon and the real piece sit by the board; tone / print chips are gone')
         # "from my drawing": draw straight on the piece
         await js_click(pg, '[data-layout="tuve"]')
@@ -992,6 +992,37 @@ async def kinds(browser, db):
     await st.context.close()
 
 
+async def motion(browser, db):
+    """A device that asks for less motion: no walking, a line saying why, and
+    the "Hiệu ứng" button turns walking back on (remembered)."""
+    print('motion')
+    ctx = await browser.new_context(viewport={'width': 390, 'height': 844}, reduced_motion='reduce', is_mobile=True, has_touch=True)
+    await ctx.route('**/*.supabase.co/**', lambda r: r.abort())
+    await ctx.add_init_script("sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1')")
+    pg = await ctx.new_page()
+    errs = []
+    pg.on('pageerror', lambda e: errs.append(str(e)))
+    await pg.goto(f'{BASE}/studio.html')
+    await pg.wait_for_timeout(3000)
+    said = await pg.evaluate("document.getElementById('st-bubble-text').textContent")
+    check('giảm chuyển động' in said, f'reduced motion: Udon says why the character does not walk ({said[:40]}…)')
+
+    async def frames(go):
+        await pg.keyboard.press('Escape')
+        await pg.evaluate("g => document.querySelector('[data-go=\"' + g + '\"]').click()", go)
+        seen = set()
+        for _ in range(8):
+            await pg.wait_for_timeout(90)
+            seen.add(await pg.evaluate("[...document.querySelectorAll('.st-fr')].findIndex(f => !f.hidden)"))
+        return seen
+    check(len(await frames('counter')) == 1, 'reduced motion: the character does not walk')
+    await js_click(pg, '.st-motion')
+    check(len(await frames('door')) > 2, '"Hiệu ứng" on: the character walks')
+    check(await pg.evaluate("localStorage.getItem('gem-motion')") == 'on', 'the choice is remembered')
+    check(not errs, f'no script errors {errs}')
+    await ctx.close()
+
+
 async def main(which):
     OUT.mkdir(exist_ok=True)
     srv = serve()
@@ -999,7 +1030,7 @@ async def main(which):
     async with async_playwright() as p:
         browser = await launch(p)
         for name, fn in (('street', street), ('wear', wear), ('shop', shop), ('spots', spots), ('editor', editor),
-                         ('library', library), ('product', product), ('design', design), ('catalog', catalog), ('kinds', kinds)):
+                         ('library', library), ('product', product), ('design', design), ('catalog', catalog), ('kinds', kinds), ('motion', motion)):
             if which in (None, name):
                 await fn(browser, db)
         await browser.close()
