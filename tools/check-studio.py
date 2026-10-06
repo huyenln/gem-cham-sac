@@ -113,6 +113,7 @@ class FakeDB:
 
     def __init__(self):
         self.rows = {}
+        self.names = {}
         self.assets = []
         self.files = {}
         self.patches = []
@@ -126,8 +127,17 @@ class FakeDB:
             if m == 'POST':
                 b = json.loads(r.request.post_data)
                 self.rows[b['id']] = b['data']
+                self.names[b['id']] = b.get('name')
                 return await r.fulfill(status=201, body='')
-            i = 'live' if 'id=eq.live' in u else 'draft' if 'id=eq.draft' in u else None
+            if m == 'DELETE':
+                i = re.search(r'id=eq\.([^&]+)', u).group(1)
+                self.rows.pop(i, None)
+                return await r.fulfill(status=204, body='')
+            if 'or=(' in u:   # the saved layouts list
+                rows = [{'id': k, 'name': self.names.get(k), 'updated_at': '2026-10-06T00:00:00Z', 'data': v} for k, v in self.rows.items()]
+                return await r.fulfill(status=200, content_type='application/json', body=json.dumps(rows))
+            mm = re.search(r'id=eq\.([^&]+)', u)
+            i = mm.group(1) if mm else None
             rows = [{'data': self.rows[i]}] if i in self.rows else []
             return await r.fulfill(status=200, content_type='application/json', body=json.dumps(rows))
         if '/rest/v1/products' in u:
@@ -249,11 +259,23 @@ async def editor(browser, db):
         await pg.screenshot(path=OUT / f'editor-{name}-1.png')
         opts = await pg.evaluate("[...document.querySelectorAll('.se-bgsel option')].map(o => o.textContent)")
         check('Mặt tiền' not in opts and len(opts) >= 2, f'{name}: studio backgrounds only inside ({opts})')
-        await pg.click('.se-menu summary')
+        r = await pg.evaluate("(() => { const r = document.querySelector('.se-head').getBoundingClientRect(); return [r.left, r.right, document.documentElement.clientWidth]; })()")
+        check(r[0] >= 0 and r[1] <= r[2], f'{name}: the header (Bố cục / Lưu / Phát hành) fits the screen ({[round(x) for x in r]})')
+        # the library stays where it was after a pick
+        await js_click(pg, '[data-group="cay"]')
+        await pg.evaluate("(() => { const g = document.querySelector('.se-grid'); g.scrollLeft = 300; g.scrollTop = 120; })()")
+        before = await pg.evaluate("(() => { const g = document.querySelector('.se-grid'); return [g.scrollLeft, g.scrollTop]; })()")
+        await js_click(pg, '.se-asset[data-asset="9"]')
         await pg.wait_for_timeout(200)
-        r = await pg.evaluate("(() => { const r = document.querySelector('.se-pop').getBoundingClientRect(); return [r.left, r.right, document.documentElement.clientWidth]; })()")
-        check(r[0] >= 0 and r[1] <= r[2], f'{name}: "Lưu" menu stays on screen ({[round(x) for x in r]})')
-        await pg.click('.se-menu summary')
+        after = await pg.evaluate("(() => { const g = document.querySelector('.se-grid'); return [g.scrollLeft, g.scrollTop]; })()")
+        check(before == after and before != [0, 0], f'{name}: picking a piece keeps the library scrolled ({before} → {after})')
+        check(await pg.evaluate("!!document.querySelector('[data-group=__recent]')"), f'{name}: "Vừa dùng" tab appears')
+        await pg.fill('.se-find', 'cay')
+        await pg.wait_for_timeout(200)
+        check(await pg.evaluate("document.querySelectorAll('.se-grid .se-asset').length") > 5, f'{name}: search finds pieces by tab name')
+        await pg.fill('.se-find', '')
+        await js_click(pg, '[data-act="del"]')
+        await js_click(pg, '[data-group="cua"]')
         await js_click(pg, '.se-asset[data-asset="0"]')
         await pg.wait_for_timeout(300)
         await js_click(pg, '[data-se="w+"]')
@@ -266,7 +288,17 @@ async def editor(browser, db):
         await pg.wait_for_timeout(400)
         opts = await pg.evaluate("[...document.querySelectorAll('.se-bgsel option')].map(o => o.textContent)")
         check(opts == ['Mặt tiền'], f'{name}: street background only outside ({opts})')
-        await js_click(pg, '[data-se="publish"]')
+        # the old bug: any button in the save area asked "Xuất bản?"
+        await js_click(pg, '[data-hd="layouts"]')
+        await pg.wait_for_timeout(300)
+        check(await pg.evaluate("document.querySelector('.se-dlg').hidden && !document.querySelector('.se-sheet').hidden"),
+              f'{name}: "Bố cục" opens the list, no publish question')
+        await js_click(pg, '[data-sh="close"]')
+        await pg.wait_for_timeout(2600)
+        check('draft' in db.rows, f'{name}: changes are saved on their own (draft)')
+        await js_click(pg, '[data-hd="publish"]')
+        await pg.wait_for_timeout(200)
+        await js_click(pg, '.se-dlg .ad-btn.on')
         await pg.wait_for_timeout(600)
         live = db.rows.get('live') or {}
         check(len(live.get('items', [])) == 1, f'{name}: publish saves the studio piece')
@@ -281,8 +313,34 @@ async def editor(browser, db):
         check(await st.evaluate("document.querySelectorAll('.st-bgx').length") == 3, f'{name}: studio.html paints the longer wall')
         await st.context.close()
 
+        # save as a named layout, publish it from the list, undo the publish
         await js_click(pg, '[data-se="sc-in"]')
+        await js_click(pg, '[data-hd="save"]')
+        await pg.wait_for_timeout(200)
+        await pg.fill('.se-dlg-in', 'Mùa thu')
+        await js_click(pg, '.se-dlg .ad-btn.on')
+        await pg.wait_for_timeout(600)
+        pid = [k for k in db.rows if k.startswith('p-')]
+        check(len(pid) == 1 and db.names[pid[0]] == 'Mùa thu', f'{name}: "Lưu thành…" names a new layout ({pid})')
+        check('Mùa thu' in await pg.evaluate("document.querySelector('.se-docname').textContent"), f'{name}: header says which layout is being edited')
+        await js_click(pg, '[data-hd="layouts"]')
+        await pg.wait_for_timeout(500)
+        check(await pg.evaluate("document.querySelectorAll('.se-card').length") == 1, f'{name}: the list shows the saved layout')
+        old_live = json.dumps(db.rows.get('live'))
+        db.rows['live']['items'] = []   # make "before" differ from the layout
+        await js_click(pg, '.se-card [data-sh="live"]')
+        await pg.wait_for_timeout(200)
+        await js_click(pg, '.se-dlg .ad-btn.on')
+        await pg.wait_for_timeout(700)
+        check(db.names.get('live') == 'Mùa thu' and 'prev' in db.rows, f'{name}: publishing keeps the previous live copy')
+        await js_click(pg, '.se-toast .ad-btn')
+        await pg.wait_for_timeout(600)
+        check(db.rows['live'].get('items') == [], f'{name}: "Hoàn tác phát hành" brings back what customers saw')
+        await pg.screenshot(path=OUT / f'editor-{name}-layouts.png')
+        await js_click(pg, '[data-sh="close"]')
         await js_click(pg, '[data-se="clear"]')
+        await pg.wait_for_timeout(200)
+        await js_click(pg, '.se-dlg .ad-btn.danger')
         await pg.wait_for_timeout(300)
         check(await pg.evaluate("document.querySelectorAll('.se-item').length") == 0, f'{name}: Xoá hết empties the scene')
         await pg.context.close()
@@ -373,7 +431,9 @@ async def spots(browser, db):
             await pg.press(f'[name="{field}"]', 'Tab')
         await pg.wait_for_timeout(200)
     await pg.screenshot(path=OUT / 'spots-editor.png')
-    await js_click(pg, '[data-se="publish"]')
+    await js_click(pg, '[data-hd="publish"]')
+    await pg.wait_for_timeout(200)
+    await js_click(pg, '.se-dlg .ad-btn.on')
     await pg.wait_for_timeout(600)
     live = db.rows.get('live') or {}
     check(live.get('spots', {}).get('memo', {}).get('off') is True, f'spot settings saved ({live.get("spots")})')
@@ -435,7 +495,7 @@ async def library(browser, db):
     db.rows.clear(); db.assets.clear(); db.files.clear()
     photo = test_photo(OUT / 'lib-photo.jpg', 1600, 1200)
     for name, w, h in (('mobile', 412, 900), ('desktop', 1440, 900)):
-        db.assets.clear()
+        db.assets.clear(); db.rows.clear()
         pg = await admin_page(browser, db, w, h)
         await js_click(pg, '[data-tab="studio"]')
         await pg.wait_for_timeout(1500)
@@ -479,6 +539,8 @@ async def library(browser, db):
         await js_click(pg, '.se-asset.is-own')
         await pg.wait_for_timeout(200)
         await js_click(pg, '[data-asset-del]')
+        await pg.wait_for_timeout(100)
+        await js_click(pg, '.se-dlg .ad-btn.danger')
         await pg.wait_for_timeout(500)
         check(not db.assets, f'{name}: removed from the library')
 
