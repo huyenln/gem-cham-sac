@@ -871,6 +871,10 @@ window.GemStudioEditor = (function () {
     var keep = oldGrid && panelEl.getAttribute('data-view') === g.id + '|' + findQ
       ? [oldGrid.scrollLeft, oldGrid.scrollTop] : null;
     var keepTabs = oldTabs ? oldTabs.scrollLeft : 0;
+    // and the tool strip (Lên / Xuống… pressed again and again): it is rebuilt
+    // on every press too, keep it where it was while the same kind of thing is selected
+    var oldTools = panelEl.querySelector('.se-tools'), toolKind = sel ? sel.kind : '';
+    var keepTools = oldTools && panelEl.getAttribute('data-tools') === toolKind ? oldTools.scrollLeft : 0;
     var hadFind = document.activeElement && document.activeElement.classList.contains('se-find');
     panelEl.innerHTML = tools + extra +
       '<div class="se-lib' + (manage ? ' is-manage' : '') + '">' +
@@ -891,6 +895,9 @@ window.GemStudioEditor = (function () {
     var grid = panelEl.querySelector('.se-grid');
     if (keep) { grid.scrollLeft = keep[0]; grid.scrollTop = keep[1]; }
     panelEl.querySelector('.se-tabs').scrollLeft = keepTabs;
+    panelEl.setAttribute('data-tools', toolKind);
+    var tl = panelEl.querySelector('.se-tools');
+    if (tl) tl.scrollLeft = keepTools;
     if (hadFind) { var f = panelEl.querySelector('.se-find'); f.focus(); f.setSelectionRange(f.value.length, f.value.length); }
   }
 

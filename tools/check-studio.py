@@ -382,6 +382,13 @@ async def fingers(pg, name):
     await pg.evaluate(TOUCH_JS, ['swipe', x, y, 40, 30])
     after = await pg.evaluate(pos)
     check(after[0] != before[0] and after[1] == before[1], f'{name}: dragging moves only the selected piece, even under another')
+    # the tool strip stays scrolled when a button in it is pressed again and again
+    await pg.evaluate("document.querySelector('.se-tools').scrollLeft = 200")
+    t0 = await pg.evaluate("document.querySelector('.se-tools').scrollLeft")
+    await js_click(pg, '[data-act="up"]')
+    await js_click(pg, '[data-act="down"]')
+    t1 = await pg.evaluate("document.querySelector('.se-tools').scrollLeft")
+    check((t0 > 0 or name != 'mobile') and t1 == t0, f'{name}: pressing Lên / Xuống keeps the tool strip where it was ({t0} → {t1})')
     await js_click(pg, '[data-act="lock"]')
     await pg.wait_for_timeout(200)
     check(await pg.evaluate("document.querySelectorAll('.se-lockpick').length") == 1, f'{name}: a locked piece is listed to unlock')
