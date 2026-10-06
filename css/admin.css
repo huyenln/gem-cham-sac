@@ -446,11 +446,18 @@
 .se-bgx { position: absolute; top: 0; height: 100%; pointer-events: none; }
 .se-seg button:disabled { opacity: 0.45; cursor: default; }
 
-.se-el { position: absolute; box-sizing: border-box; touch-action: none; cursor: move; }
+.se-el { position: absolute; box-sizing: border-box; touch-action: pan-x pan-y; cursor: move; }
+/* only what is selected holds the finger; everything else lets it scroll */
+.se-el.is-sel, .se-grab { touch-action: none; }
+.se-item.is-lock { pointer-events: none; }
+/* see-through twin of the selected piece, above every other piece */
+.se-grab { z-index: 55; outline: 2px solid #3d7be0; outline-offset: 1px; }
+.se-grab.is-lock { outline-style: dashed; cursor: default; }
+.se-grab.is-small .se-h-nw, .se-grab.is-small .se-h-ne, .se-grab.is-small .se-h-sw { display: none; }
 .se-item img { display: block; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
 .se-item.is-frame img { object-fit: cover; border: 3px solid #FBF6EE; outline: 3px solid #B08452; }
 .se-item.is-front { outline: 1px dotted rgba(166, 80, 60, 0.6); }
-.se-item.is-sel { outline: 2px solid #3d7be0; outline-offset: 1px; z-index: 50; }
+.se-item.is-sel { z-index: 50; }
 
 .se-item { z-index: 20; }
 .se-hot { border: 2px dashed rgba(135, 150, 90, 0.95); background: rgba(135, 150, 90, 0.08); z-index: 10; }
@@ -557,7 +564,18 @@
   .se-h-nw { left: -15px; top: -15px; } .se-h-ne { right: -15px; top: -15px; }
   .se-h-sw { left: -15px; bottom: -15px; } .se-h-se { right: -15px; bottom: -15px; }
   .se-rot { width: 30px; height: 30px; top: -46px; }
+  /* 44px to aim at, drawn smaller */
+  .se-h::before, .se-rot::before { content: ''; position: absolute; inset: -9px; border-radius: 50%; }
+  .se-rot::before { inset: -7px; }
 }
+.se-locks { display: flex; align-items: center; gap: 6px; overflow-x: auto; padding: 6px; font-size: var(--text-xs); color: var(--ink-soft); }
+.se-locks span { white-space: nowrap; }
+.se-lockpick {
+  flex: none; width: 44px; height: 44px; padding: 3px; cursor: pointer;
+  border: 1.5px dashed var(--sage-light); border-radius: 8px; background: var(--paper-white);
+}
+.se-lockmsg { font-size: var(--text-xs); color: var(--ink-soft); white-space: nowrap; }
+.se-lockpick img { width: 100%; height: 100%; object-fit: contain; }
 
 /* a piece linked to a product: customers can drag it into the basket */
 .se-item.is-prod::after {

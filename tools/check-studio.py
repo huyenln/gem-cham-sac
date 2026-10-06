@@ -343,7 +343,59 @@ async def editor(browser, db):
         await js_click(pg, '.se-dlg .ad-btn.danger')
         await pg.wait_for_timeout(300)
         check(await pg.evaluate("document.querySelectorAll('.se-item').length") == 0, f'{name}: Xoá hết empties the scene')
+        await fingers(pg, name)
         await pg.context.close()
+
+
+# Fingers on the editor stage (pointer events with pointerType 'touch'; the
+# browser's own scrolling isn't simulated, only what the editor does).
+TOUCH_JS = '''([kind, x, y, dx, dy]) => {
+  const t = document.elementFromPoint(x, y);
+  // down on what is under the finger; the rest to the document (the editor
+  // redraws the stage while dragging, so that node may be gone by then)
+  const ev = (type, cx, cy) => (type === 'pointerdown' ? t : document).dispatchEvent(new PointerEvent(type, {bubbles: true, cancelable: true,
+    pointerType: 'touch', pointerId: 7, isPrimary: true, clientX: cx, clientY: cy}));
+  ev('pointerdown', x, y);
+  if (kind === 'swipe') for (let i = 1; i <= 6; i++) ev('pointermove', x + dx * i / 6, y + dy * i / 6);
+  ev('pointerup', x + (kind === 'swipe' ? dx : 0), y + (kind === 'swipe' ? dy : 0));
+}'''
+
+
+async def fingers(pg, name):
+    await js_click(pg, '[data-group="cay"]')
+    await js_click(pg, '.se-asset[data-asset="9"]')
+    await js_click(pg, '.se-asset[data-asset="3"]')   # lands on top of the first
+    await pg.wait_for_timeout(300)
+    x, y = await center(pg, '.se-item[data-i="0"]')   # inside both; the second is drawn over it
+    pos = "[...document.querySelectorAll('.se-item')].map(n => n.style.left + n.style.top)"
+    sel = "(document.querySelector('.se-grab') || {dataset: {}}).dataset.i || null"
+    sx, sy = await pg.evaluate("(() => { const r = document.querySelector('.se-world').getBoundingClientRect(), s = document.querySelector('.se-stage').getBoundingClientRect(); return [Math.max(r.left, s.left) + 12, s.top + 40]; })()")
+    await pg.evaluate(TOUCH_JS, ['tap', sx, sy, 0, 0])   # empty wall: let go
+    check(await pg.evaluate(sel) is None, f'{name}: a tap on empty wall lets go of the piece')
+    before = await pg.evaluate(pos)
+    await pg.evaluate(TOUCH_JS, ['swipe', x, y, -120, 0])
+    check(await pg.evaluate(pos) == before, f'{name}: a swipe over pieces moves none of them')
+    await pg.evaluate(TOUCH_JS, ['tap', x, y, 0, 0])
+    check(await pg.evaluate(sel) == '1', f'{name}: a tap selects the top piece')
+    await pg.evaluate(TOUCH_JS, ['tap', x, y, 0, 0])
+    check(await pg.evaluate(sel) == '0', f'{name}: tapping it again selects the one under it')
+    await pg.evaluate(TOUCH_JS, ['swipe', x, y, 40, 30])
+    after = await pg.evaluate(pos)
+    check(after[0] != before[0] and after[1] == before[1], f'{name}: dragging moves only the selected piece, even under another')
+    await js_click(pg, '[data-act="lock"]')
+    await pg.wait_for_timeout(200)
+    check(await pg.evaluate("document.querySelectorAll('.se-lockpick').length") == 1, f'{name}: a locked piece is listed to unlock')
+    await pg.evaluate(TOUCH_JS, ['tap', x + 40, y + 30, 0, 0])
+    check(await pg.evaluate(sel) != '0', f'{name}: a tap passes through the locked piece')
+    await js_click(pg, '.se-lockpick')
+    await pg.wait_for_timeout(200)
+    check(await pg.evaluate(sel) == '0' and await pg.evaluate("!!document.querySelector('[data-act=lock].on')"), f'{name}: the list selects it, "Mở khoá" ready')
+    held = await pg.evaluate(pos)
+    gx, gy = await center(pg, '.se-grab')
+    await pg.evaluate(TOUCH_JS, ['swipe', gx, gy, 50, 0])
+    check(await pg.evaluate(pos) == held, f'{name}: a locked piece does not move')
+    await pg.screenshot(path=OUT / f'editor-{name}-fingers.png')
+    check(not pg.errors, f'{name}: no script errors (fingers) {pg.errors}')
 
 
 async def center(pg, sel):

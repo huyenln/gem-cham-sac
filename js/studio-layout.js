@@ -9,7 +9,7 @@
 //     v: 1,
 //     bg:    { src, w, h },                  background strip; w may be longer
 //            than the picture for backgrounds in EXTEND (owner's "Dài thêm")
-//     items: [{ src, x, y, w, h, rot, flip, layer, frame, sku? }],
+//     items: [{ src, x, y, w, h, rot, flip, layer, frame, lock?, sku? }],
 //            x, y = centre; rot = degrees; layer 'back' (behind the
 //            character) | 'front' (in front); frame = thin wooden frame
 //            (for product photos); sku = a real product: customers tap it
@@ -167,6 +167,7 @@ window.GemLayout = (function () {
         flip: !!it.flip,
         layer: it.layer === 'front' ? 'front' : 'back',
         frame: !!it.frame,
+        lock: it.lock ? true : undefined,   // editor only: taps pass through it
         sku: typeof it.sku === 'string' && /^[a-z0-9-]{1,40}$/.test(it.sku) ? it.sku : undefined
       });
     });

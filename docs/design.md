@@ -1593,6 +1593,22 @@ thiết kế của khách, Thiết kế của tháng.
   `localStorage['gem-se-recent']`); ô tìm theo tên ảnh / tên tab.
 - Hộp thoại của trình duyệt (`confirm` / `prompt`) không còn dùng trong trình lắp.
 
+### Lắp studio: chạm trên điện thoại (10/2026)
+
+- **Lỗi cũ:** món nào cũng `touch-action: none` và bị chọn + kéo ngay khi chạm →
+  vuốt để cuộn màn hình là kéo nhầm món; hai món chồng nhau thì món trên luôn
+  thắng; tay cầm nhỏ.
+- **Giờ (ngón tay / bút):** chạm 1 lần = chọn, chỉ món đang chọn mới kéo được.
+  Vuốt chỗ khác = cuộn (`.se-el` để `pan-x pan-y`, chỉ `.is-sel` / `.se-grab`
+  là `none`). Món đang chọn có "bản sao trong suốt" `.se-grab` nằm trên mọi món
+  và mang tay cầm → ngón trong viền của nó luôn kéo đúng món đó. Chạm lại vào
+  món đang chọn = chọn món ngay dưới (`pickAt`, vòng tròn). Hai ngón chỉ đổi
+  cỡ / xoay khi ngón đầu đặt trên món đang chọn. Chuột vẫn bấm-kéo thẳng như cũ.
+- **Khoá món:** `items[].lock` (giữ qua `sanitize`, studio.html bỏ qua). Món khoá
+  `pointer-events: none`; mở lại ở dải "Món đã khoá" dưới sân khấu.
+- Tay cầm vùng chạm ~44px (`::before`), món nhỏ hơn 72px trên màn hình chỉ còn
+  góc dưới phải. Kiểm tra: `fingers()` trong `tools/check-studio.py`.
+
 ### Góp ý đợt 3 (10/2026)
 
 - **Bàn thiết kế gọn lại:** trên cùng là các món + "Gợi ý ngẫu nhiên". Lần đầu chỉ
