@@ -148,7 +148,6 @@
 /* Udon is a button: tap and Udon hops into the basket, then back out. */
 .st-udon {
   position: absolute;
-  z-index: 2;
   padding: 0;
   border: 0;
   background: none;
@@ -177,12 +176,17 @@
 .st-stage * { -webkit-tap-highlight-color: transparent; }
 
 /* Owner's layout pieces (js/studio-layout.js): behind the character unless
-   'front'. Never tappable themselves; the hotspots under them are. */
+   'front'. Never tappable themselves; the hotspots under them are.
+   The stack inside .st-world, back to front (keep every number in step):
+   1 pieces behind the character, memo pins · 2 tap boxes · 3 pieces behind
+   the character that take taps (products, a "Loại"), over the boxes so a
+   tap finds them first · 4 the character · 5 pieces in front · 6 Udon, zone
+   names · 7 speech. */
 .st-item { position: absolute; z-index: 1; pointer-events: none; object-fit: contain; max-width: none; }
-.st-item.is-front { z-index: 4; }
+.st-item.is-front { z-index: 5; }
 .st-hot { z-index: 2; }
-.st-player { z-index: 3; }
-.st-udon { z-index: 5; }
+.st-player { z-index: 4; }
+.st-udon { z-index: 6; }
 .st-wait .st-world { opacity: 0; }
 .st-world { transition: opacity 0.25s ease; }
 
@@ -212,8 +216,9 @@
 .st-thing[data-kind="story"] { cursor: grab; touch-action: none; }
 .st-thing[data-kind="story"]:hover, .st-thing[data-kind="zone"]:hover { filter: brightness(1.06) drop-shadow(0 0 6px rgba(251, 246, 238, 0.9)); }
 .st-thing.is-lifted { opacity: 0.25; }
-.st-zone-label { z-index: 5; pointer-events: none; }
+.st-zone-label { z-index: 6; pointer-events: none; }
 .st-board { position: absolute; z-index: 3; pointer-events: none; container-type: size; }
+.st-board.is-front { z-index: 5; }
 /* inset (not padding): % of the board itself, not of the whole wall */
 .st-board-in {
   position: absolute; inset: 12% 13%; display: flex; flex-direction: column; justify-content: center; align-items: center;
@@ -225,7 +230,7 @@
   display: -webkit-box !important; -webkit-line-clamp: 3; -webkit-box-orient: vertical; white-space: normal; }
 .st-board-d { font-size: min(8.5cqh, 9cqw); font-weight: 600; }
 .st-talk {
-  position: absolute; z-index: 6; transform: translate(-50%, calc(-100% - 10px));
+  position: absolute; z-index: 7; transform: translate(-50%, calc(-100% - 10px));
   max-width: 240px; padding: 8px 12px; border-radius: 14px;
   background: var(--paper-white); border: 1.5px solid var(--kraft); color: var(--ink-dark);
   font-size: 0.85rem; line-height: 1.4; pointer-events: none; box-shadow: 0 4px 12px rgba(61, 74, 46, 0.15);
@@ -288,7 +293,6 @@
   width: 0;
   transform-origin: 0 100%;
   pointer-events: none;
-  z-index: 2;
 }
 
 .st-bob {

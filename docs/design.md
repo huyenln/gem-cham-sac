@@ -1646,6 +1646,11 @@ Kiểm tra: `kinds()` trong `tools/check-studio.py`.
 - **Phát hành báo `studio_layout_id_check`:** bảng chỉ nhận id `draft` / `live` /
   `p-…`; bản trước khi phát hành giờ nằm ở `p-ban-truoc` (ẩn khỏi danh sách). Lưu
   bản trước lỗi thì vẫn phát hành. FakeDB trong `check-studio.py` chặn id sai như thật.
+  Đã kiểm trên database thật (06/10/2026): ràng buộc là
+  `id in ('draft','live') or id ~ '^p-[a-z0-9-]{1,40}$'` — phần sau `p-` tối đa 40 ký
+  tự, chỉ chữ thường / số / gạch nối. Dòng `p-ban-truoc` đã có trong bảng (một lần
+  phát hành thật ghi ra); owner ghi đè được, `prev` bị từ chối đúng lỗi này (thử trong
+  transaction rồi rollback). Id bố cục do `slug()` sinh dài nhất 35 ký tự nên luôn lọt.
 - **Lên / Xuống:** món đang chọn không còn bị đẩy lên trên cùng (z-index) và mỗi lần
   bấm nhảy qua món kế tiếp **có chồng lên** nó.
 - **Nhân vật không bước trên máy em gái:** máy bật "giảm chuyển động"
@@ -1664,6 +1669,13 @@ Kiểm tra: `kinds()` trong `tools/check-studio.py`.
 - **Tab "Khung bấm"** (chip đầu hàng tab thư viện): "+ Thêm khung" (`boxes[]` trong
   từng cảnh: `{ id 'k-…', box, stand, act, link?, vi?, en? }`), Chọn, Xoá; 7 khung có
   sẵn chỉ Ẩn / Hiện (thanh menu dưới của studio đi tới chúng theo id).
+- **Món "Sau người" vẫn đè lên người** (món là Sản phẩm hoặc có Loại): các món đó ở
+  `z-index: 3`, còn nhân vật thật ra chỉ ở 2 — luật `.st-player { z-index: 2 }` cũ nằm
+  cuối `css/studio.css` đè lên luật `3` phía trên. Giờ thang lớp ghi một chỗ (khối
+  `.st-item`): 1 món sau người · 2 khung bấm · 3 món sau người nhận chạm (vẫn trên
+  khung bấm để chạm trúng món trước) · 4 nhân vật · 5 món trước người · 6 Udon, tên
+  khu vực · 7 lời thoại. Chữ của Bảng tin đặt "Trước người" cũng lên cùng lớp với ảnh
+  (trước đó nằm dưới ảnh). Kiểm tra: `layers()` trong `tools/check-studio.py`.
 
 ### Góp ý đợt 3 (10/2026)
 
