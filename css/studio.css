@@ -198,6 +198,42 @@
 }
 /* products customers can pick up: tap for the card, drag to the basket */
 .st-shelf-prod { pointer-events: auto; cursor: grab; touch-action: none; z-index: 3; }
+/* pieces the owner gave a "Loại" (studio.js thing()) */
+.st-thing { pointer-events: auto; cursor: pointer; z-index: 3; }
+.st-thing:focus-visible { outline: 3px solid var(--sage-deep); outline-offset: 2px; }
+.st-thing[data-kind="story"] { cursor: grab; touch-action: none; }
+.st-thing[data-kind="story"]:hover, .st-thing[data-kind="zone"]:hover { filter: brightness(1.06) drop-shadow(0 0 6px rgba(251, 246, 238, 0.9)); }
+.st-thing.is-lifted { opacity: 0.25; }
+.st-zone-label { z-index: 5; pointer-events: none; }
+.st-board { position: absolute; z-index: 3; pointer-events: none; container-type: size; }
+/* inset (not padding): % of the board itself, not of the whole wall */
+.st-board-in {
+  position: absolute; inset: 12% 13%; display: flex; flex-direction: column; justify-content: center; align-items: center;
+  gap: 2cqh; text-align: center; color: var(--ink-dark); overflow: hidden;
+}
+.st-board span { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.st-board-h { font-family: var(--font-hand); font-size: min(12cqh, 13cqw); color: var(--kraft); line-height: 1.1; }
+.st-board-t { font-family: var(--font-display); font-weight: 800; font-size: min(11cqh, 12cqw); line-height: 1.15;
+  display: -webkit-box !important; -webkit-line-clamp: 3; -webkit-box-orient: vertical; white-space: normal; }
+.st-board-d { font-size: min(8.5cqh, 9cqw); font-weight: 600; }
+.st-talk {
+  position: absolute; z-index: 6; transform: translate(-50%, calc(-100% - 10px));
+  max-width: 240px; padding: 8px 12px; border-radius: 14px;
+  background: var(--paper-white); border: 1.5px solid var(--kraft); color: var(--ink-dark);
+  font-size: 0.85rem; line-height: 1.4; pointer-events: none; box-shadow: 0 4px 12px rgba(61, 74, 46, 0.15);
+  animation: st-pop 0.2s ease-out;
+}
+.st-talk[hidden] { display: none; }
+.st-talk::after {
+  content: ''; position: absolute; left: 50%; top: 100%; transform: translateX(-50%);
+  border: 7px solid transparent; border-top-color: var(--kraft);
+}
+@keyframes st-pop { from { opacity: 0; transform: translate(-50%, calc(-100% - 2px)); } }
+@media (prefers-reduced-motion: reduce) { .st-talk { animation: none; } }
+.st-story-udon { display: flex; align-items: center; gap: 10px; margin: 0 0 var(--space-3); font-family: var(--font-hand); font-size: 1.25rem; color: var(--sage-deep); }
+.st-story h2 { margin: var(--space-3) 0 var(--space-2); font-family: var(--font-display); }
+.st-story p { margin: 0 0 var(--space-3); line-height: 1.7; }
+.st-story-img { display: block; width: 100%; max-height: 46vh; object-fit: cover; border-radius: var(--radius-md); }
 .st-shelf-prod:hover { filter: brightness(1.06) drop-shadow(0 0 6px rgba(251, 246, 238, 0.9)); }
 .st-shelf-prod.is-lifted { opacity: 0.25; }
 /* a cut-out product stands on the shelf as itself, no frame */

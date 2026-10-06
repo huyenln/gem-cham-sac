@@ -1609,6 +1609,38 @@ thiết kế của khách, Thiết kế của tháng.
 - Tay cầm vùng chạm ~44px (`::before`), món nhỏ hơn 72px trên màn hình chỉ còn
   góc dưới phải. Kiểm tra: `fingers()` trong `tools/check-studio.py`.
 
+### Lắp studio: Loại của món (10/2026)
+
+Mỗi món trong studio có một **Loại** (ô đầu tiên dưới dải công cụ khi chọn món):
+
+| Loại | Khách | Lưu ở đâu |
+|---|---|---|
+| Trang trí (mặc định) | — | — |
+| Sản phẩm | chạm xem thẻ, kéo vào giỏ | `items[].sku` (như cũ) |
+| Câu chuyện | chạm đọc; kéo thả vào Udon → thẻ có dòng "Để Udon kể bạn nghe nhé." | **`studio_info`** theo ảnh |
+| Khu vực | nhân vật đi tới `x` của món, chạy hành động (`ACTS`, giống khung bấm) | `items[].zone = { act, link?, vi?, en? }` |
+| Lời thoại | bong bóng, mỗi chạm một câu | **`studio_info.lines`** theo ảnh |
+| Bảng tin | chữ đè lên ảnh: buổi workshop gần nhất còn chỗ / bài Bản tin mới nhất; chạm mở trang | `items[].board = { feed }` |
+
+- Thêm cho mọi loại: **Hiện từ / đến** (`items[].show`, 'YYYY-MM-DD', so theo ngày máy khách).
+- Khung bấm rời (`hot`) **vẫn giữ** — một tủ có thể có hai khung (đồ trang trí + gối).
+- Câu chuyện / lời thoại thuộc về **ảnh** (`src`): đặt ảnh ở bố cục nào cũng kể y vậy,
+  sửa xong khách thấy ngay, không cần phát hành lại. Món mới thả vào mà ảnh đã có
+  câu chuyện / lời thoại thì tự nhận loại đó.
+- Bảo mật: mọi chữ của chủ đi qua `textContent` / `esc()`; link qua `linkOk`, ảnh qua
+  `srcOk` (`GemLayout.info`). Giờ trên bảng tin theo múi giờ `Asia/Ho_Chi_Minh`.
+
+**Bảng `studio_info`** (src PK, kind, title_vi/en, body_vi/en, image, link, lines jsonb,
+updated_at): `si_read_all` cho anon + authenticated; insert / update / delete chỉ
+`is_owner()`. GRANT select cho anon + authenticated, insert/update/delete cho
+authenticated. SQL: `supabase/migrations/20261006_studio_info.sql`.
+⚠️ **Chưa chạy trên Supabase** (10/2026: kết nối của Claude chỉ có quyền đọc lúc làm).
+Chạy file đó trong SQL Editor, rồi chạy câu kiểm GRANT-vs-policy (không được có dòng
+`studio_info`) và kiểm ba vai. Chưa có bảng thì studio vẫn chạy (`studioInfo()` trả []),
+chỉ là câu chuyện / lời thoại chưa lưu được.
+
+Kiểm tra: `kinds()` trong `tools/check-studio.py`.
+
 ### Góp ý đợt 3 (10/2026)
 
 - **Bàn thiết kế gọn lại:** trên cùng là các món + "Gợi ý ngẫu nhiên". Lần đầu chỉ

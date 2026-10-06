@@ -350,6 +350,21 @@ window.GemDB = (function () {
       return req('/rest/v1/studio_layout?id=eq.' + encodeURIComponent(id), { method: 'DELETE' });
     },
 
+    // Loại + câu chuyện + lời thoại của từng ảnh trong Studio (theo đường dẫn
+    // ảnh). Ai cũng đọc được; chỉ owner ghi. Bảng chưa có thì trả [].
+    studioInfo: function () {
+      return req('/rest/v1/studio_info?select=*').catch(function () { return []; });
+    },
+
+    saveStudioInfo: function (row) {
+      row.updated_at = new Date().toISOString();
+      return req('/rest/v1/studio_info?on_conflict=src', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify(row)
+      });
+    },
+
     // Thư viện asset của trình lắp (chỉ owner): ảnh đã tải lên, xếp theo nhóm.
     studioAssets: function () {
       return req('/rest/v1/studio_assets?select=*&order=created_at.asc');
