@@ -129,6 +129,10 @@ class FakeDB:
         if '/rest/v1/studio_layout' in u:
             if m == 'POST':
                 b = json.loads(r.request.post_data)
+                # the real table: check constraint studio_layout_id_check
+                if not re.fullmatch(r'draft|live|p-[a-z0-9-]+', b['id']):
+                    return await r.fulfill(status=400, content_type='application/json',
+                                           body=json.dumps({'message': 'new row for relation "studio_layout" violates check constraint "studio_layout_id_check"'}))
                 self.rows[b['id']] = b['data']
                 self.names[b['id']] = b.get('name')
                 return await r.fulfill(status=201, body='')
@@ -345,7 +349,7 @@ async def editor(browser, db):
         await pg.wait_for_timeout(200)
         await js_click(pg, '.se-dlg .ad-btn.on')
         await pg.wait_for_timeout(700)
-        check(db.names.get('live') == 'Mùa thu' and 'prev' in db.rows, f'{name}: publishing keeps the previous live copy')
+        check(db.names.get('live') == 'Mùa thu' and 'p-ban-truoc' in db.rows, f'{name}: publishing keeps the previous live copy')
         await js_click(pg, '.se-toast .ad-btn')
         await pg.wait_for_timeout(600)
         check(db.rows['live'].get('items') == [], f'{name}: "Hoàn tác phát hành" brings back what customers saw')
@@ -401,6 +405,10 @@ async def fingers(pg, name):
     await js_click(pg, '[data-act="up"]')
     await js_click(pg, '[data-act="down"]')
     t1 = await pg.evaluate("document.querySelector('.se-tools').scrollLeft")
+    await js_click(pg, '[data-act="up"]')
+    up = await pg.evaluate(sel)
+    await js_click(pg, '[data-act="down"]')
+    check((up, await pg.evaluate(sel)) == ('1', '0'), f'{name}: Lên / Xuống step over the piece on top of it ({up})')
     check((t0 > 0 or name != 'mobile') and t1 == t0, f'{name}: pressing Lên / Xuống keeps the tool strip where it was ({t0} → {t1})')
     await js_click(pg, '[data-act="lock"]')
     await pg.wait_for_timeout(200)
