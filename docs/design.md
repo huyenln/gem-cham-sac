@@ -1255,13 +1255,28 @@ Bốn kiểu ghép hiện là **tạm**, chờ ảnh mẫu ghép vải của m�
 
 ### Tranh nhân vật (4 bạn) — cách đưa tranh mới vào
 
-Nguồn: `ch-pN-dung.png` (đứng: trước / nghiêng / ¾), `ch-pN-di.png` (đi, 4
-khung), `ch-pN-day-xe.png` (đẩy xe, 3 khung), 1536×1024, nền giấy trắng.
+Nguồn: `ch-pN-dung` (đứng: trước / nghiêng / ¾), `ch-pN-di` (đi, 4 khung),
+`ch-pN-day-xe` (đẩy xe, 3 khung), đuôi `.png` hoặc `.webp`. Tool nhận hai kiểu tờ:
+
+- **Đã xoá nền sẵn** (nền trong suốt, cỡ nào cũng được): tool giữ nguyên viền của tờ.
+  Nên dùng kiểu này.
+- Nền giấy trắng 1536×1024: tool tự tách nền, nhưng để lại viền sáng quanh người và
+  giấy trắng kẹt trong tóc.
+
 Chạy `python3 tools/studio-assets.py --cast <thư mục>` → 10 khung WebP mỗi bạn
 trong `images/studio/char/` (cùng chiều cao 720px, chân sát đáy, nền trong) và
-in ra `ANCHOR` để dán vào `js/studio.js`. Khung chạm nhau (mũi xe sát người
-bên cạnh) thì tool tự cắt ở cột thưa nét nhất; giấy trắng kẹt giữa chân và
-tay xe cũng được xoá.
+in ra `ANCHOR`. Chạy tiếp `--hands` → nắm tay `pN-<khung>-tay.webp` và `WEAR_AT`
+(nắm tay cắt từ chính các khung vừa ra). Dán cả hai vào `js/studio.js`, đổi số
+`?v=` trong `studio.html`. Khung chạm nhau (mũi xe sát người bên cạnh) thì tool
+tự cắt ở cột thưa nét nhất; mũi giày lấn qua đường cắt thì được trả về đúng
+khung của nó; với tờ nền giấy, giấy trắng kẹt giữa chân và tay xe cũng được xoá.
+Máy chạy tool cần `pip install numpy pillow`.
+
+**Bộ khung 07/10/2026:** cắt lại từ 12 tờ đã xoá nền (2000×1414): hết viền trắng
+quanh người và giấy trắng kẹt trong tóc. Vẫn là tranh cũ, nên mỗi khung lệch
+nhiều nhất vài px bề ngang; `CART_RIM` giữ nguyên (mép lót xe lệch ≤ 1px trên
+720). Ai là ai: `p1` cô áo kem đeo túi chắp vải, `p2` cậu đeo kính, `p3` cô váy
+xanh búi tóc, `p4` cô áo len hồng.
 
 **Bộ tranh 2 (10/2026):** `--strip2 <thư mục z1..z5.png>` ghép 5 cảnh mới
 thành `bg/strip.webp` (6264px; tủ trống ở khu 3 được giữ để bày ảnh sản phẩm thật — `DISPLAY` trong `js/studio.js`).

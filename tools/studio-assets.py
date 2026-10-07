@@ -5,7 +5,7 @@ Not a build step: run it by hand whenever new art arrives, then commit the
 WebP files it writes. Source PNGs stay in Drive (D-assets), not in the repo.
 
     python3 tools/studio-assets.py <source-folder>
-    python3 tools/studio-assets.py --cast <folder with ch-pN-*.png>
+    python3 tools/studio-assets.py --cast <folder with ch-pN-*.png / .webp>
     python3 tools/studio-assets.py --pieces <folder>   (names: see PIECES)
     python3 tools/studio-assets.py --batch <folder>    (sheet-/pr-/full- files)
     python3 tools/studio-assets.py --outside <facade.png>  (street scene)
@@ -279,10 +279,35 @@ def copy_rest(src):
 #   same height with the feet on the bottom edge, so frames and characters
 #   swap without jumping. Prints each frame's anchor (where the body's centre
 #   sits across the frame) for CAST in js/studio.js.
+# A sheet may also arrive already cut out (.png or .webp with a transparent
+# ground, any size, from a background remover): its own edges are kept. They
+# are cleaner than cutting the paper here, which left paper caught in the
+# hair and a pale rim. Run --hands afterwards: the fists are cut from these
+# frames.
 # ---------------------------------------------------------------------------
 SHEETS = {'dung': ['front', 'side', 'q'], 'di': ['walk1', 'walk2', 'walk3', 'walk4'],
           'day-xe': ['cart1', 'cart2', 'cart3']}
 FIG_H = 720   # px, head to feet, in every output frame
+
+
+def sheet_file(src, stem):
+    for ext in ('.png', '.webp'):
+        if (src / (stem + ext)).exists():
+            return src / (stem + ext)
+    return None
+
+
+def open_sheet(path):
+    """A sheet as RGBA with its ground gone: kept as it is when the file
+    already has a transparent ground, cut out of its paper otherwise."""
+    im = Image.open(path)
+    if im.mode in ('RGBA', 'LA', 'PA') or 'transparency' in im.info:
+        im = im.convert('RGBA')
+        al = np.asarray(im)[:, :, 3]
+        edge = np.concatenate([al[0], al[-1], al[:, 0], al[:, -1]])
+        if (edge < 10).mean() > 0.9:
+            return im
+    return cut_out(im.convert('RGB'), enclosed=400)
 
 
 def frame_boxes(cut, want):
@@ -326,20 +351,73 @@ def territories(alpha, boxes):
     return [(cuts[i], cuts[i + 1]) for i in range(len(boxes))]
 
 
+def tips(alpha, terr, reach=40, most=1500):
+    """Paint poking over a cut between two figures (a toe past the next
+    figure's hem): the small end on one side belongs with its body on the
+    other side. Two bodies that really touch are left to the straight cut.
+
+    → [(frame it goes to, frame it leaves, mask of the sheet)]; the mask is a
+    little wider than the tip, so its soft edge moves with it.
+    """
+    out = []
+    h, w = alpha.shape
+    for i in range(len(terr) - 1):
+        c = terr[i][1]
+        if not (alpha[:, c - 1:c + 1] > 40).any():
+            continue
+        x0, x1 = max(0, c - reach), min(w, c + reach)
+        lab, _ = _label(alpha[:, x0:x1] > 40)
+        k = c - x0
+        for l in np.unique(lab[:, k - 1:k + 1]):
+            if not l:
+                continue
+            left, right = lab[:, :k] == l, lab[:, k:] == l
+            m = np.zeros((h, w), bool)
+            if 0 < right.sum() <= most and right.sum() < left.sum() and not right[:, -1].any():
+                m[:, c:x1] = right
+                to, frm = i, i + 1
+            elif 0 < left.sum() <= most and left.sum() < right.sum() and not left[:, 0].any():
+                m[:, x0:c] = left
+                to, frm = i + 1, i
+            else:
+                continue
+            m = np.asarray(Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.MaxFilter(7))) > 0
+            if to == i:
+                m[:, :c] = False    # only what lay on the other figure's side changes hands
+            else:
+                m[:, c:] = False
+            out.append((to, frm, m))
+    return out
+
+
 def build_cast(src):
     anchors = {}
     for n in range(1, 10):
-        if not (src / f'ch-p{n}-dung.png').exists():
+        if not sheet_file(src, f'ch-p{n}-dung'):
             continue
         for sheet, names in SHEETS.items():
-            cut = cut_out(Image.open(src / f'ch-p{n}-{sheet}.png').convert('RGB'), enclosed=400)
+            cut = open_sheet(sheet_file(src, f'ch-p{n}-{sheet}'))
             a = np.asarray(cut)[:, :, 3]
-            for name, (x0, x1) in zip(names, territories(a, frame_boxes(cut, len(names)))):
-                col = a[:, x0:x1] > 40
+            terr = territories(a, frame_boxes(cut, len(names)))
+            moved = tips(a, terr)
+            for i, (name, (x0, x1)) in enumerate(zip(names, terr)):
+                mine = np.zeros(a.shape, bool)
+                mine[:, x0:x1] = True
+                for to, frm, m in moved:
+                    if to == i:
+                        mine |= m
+                    if frm == i:
+                        mine &= ~m
+                col = (a > 40) & mine
                 rows = np.where(col.sum(axis=1) > 2)[0]
                 cols = np.where(col.sum(axis=0) > 0)[0]
                 top, bot = int(rows.min()), int(rows.max()) + 1
-                fr = cut.crop((x0 + int(cols.min()), top, x0 + int(cols.max()) + 1, bot))
+                left, right = int(cols.min()), int(cols.max()) + 1
+                fr = cut.crop((left, top, right, bot))
+                if moved:
+                    px = np.asarray(fr).copy()
+                    px[..., 3] = np.where(mine[top:bot, left:right], px[..., 3], 0)
+                    fr = Image.fromarray(px)
                 k = FIG_H / fr.height
                 fr = fr.resize((max(1, round(fr.width * k)), FIG_H), Image.LANCZOS)
                 # body centre = middle of the head (top quarter of the figure)
