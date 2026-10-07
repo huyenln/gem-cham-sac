@@ -716,6 +716,7 @@
   function board(it, n) {
     var o = document.createElement('div');
     o.className = 'st-board';
+    if (it.layer === 'front') o.classList.add('is-front');   // with its picture, in front of the character
     o.setAttribute('data-thing', n);
     o.style.left = pct(it.x - it.w / 2, SCENE.width);
     o.style.top = pct(it.y - it.h / 2, SCENE.height);

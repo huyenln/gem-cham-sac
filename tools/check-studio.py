@@ -23,13 +23,20 @@ and walks through what broke before:
            the share link (with a name) opens the same design for a friend
   catalog  san-pham.html builds a card for a product only the database knows,
            in its category and order, and the lightbox opens on it
+  kinds    (owner) a piece's "Loại": story, zone, talk, board, dates to show
+           it, own tap boxes — set in the editor, played in the studio
+  layers   "Sau người" / "Trước người": a piece stays on its side of the
+           character whatever its kind
+  topbar   the top bar fits a phone (320px up), in Vietnamese and English
+  motion   a device asking for less motion: no walking, "Hiệu ứng" turns it on
 
 Screenshots go to /tmp/gem-check/ — look at them, a pass only means nothing
 crashed and the counts add up.
 
     python3 tools/check-studio.py            all checks
     python3 tools/check-studio.py wear       one check (street | wear | shop | spots | editor |
-                                             library | product | design | catalog)
+                                             library | product | design | catalog | kinds |
+                                             layers | topbar | motion)
 
 Needs: pip install playwright. Chromium: PLAYWRIGHT_BROWSERS_PATH or
 CHROMIUM=/path/to/chrome (the cloud sessions have /opt/pw-browsers/chromium).
@@ -130,7 +137,7 @@ class FakeDB:
             if m == 'POST':
                 b = json.loads(r.request.post_data)
                 # the real table: check constraint studio_layout_id_check
-                if not re.fullmatch(r'draft|live|p-[a-z0-9-]+', b['id']):
+                if not re.fullmatch(r'draft|live|p-[a-z0-9-]{1,40}', b['id']):
                     return await r.fulfill(status=400, content_type='application/json',
                                            body=json.dumps({'message': 'new row for relation "studio_layout" violates check constraint "studio_layout_id_check"'}))
                 self.rows[b['id']] = b['data']
@@ -786,7 +793,11 @@ async def design(browser, db):
         await js_click(pg, '[data-pt="own"]')
         await pg.evaluate("document.querySelector('[name=own]').value = '#7a4fa0'")
         await js_click(pg, '[data-own-go]')
-        await pg.wait_for_timeout(1500)
+        try:   # the dye takes a second or two; sewing before it lands redraws the piece and drops the thread
+            await pg.wait_for_function("getComputedStyle(document.querySelector('.pt-scrap .pt-sf')).backgroundImage.includes('blob:')", timeout=8000)
+        except Exception:
+            pass   # reported by the check below
+        await pg.wait_for_timeout(500)
         keys = await pg.evaluate("[...document.querySelectorAll('.pt-scrap')].map(b => b.dataset.scrap)")
         check(len(keys) == 9 and all(k.endswith('7a4fa0') for k in keys), f'{name}: own colour fills the basket with 9 kinds ({keys[:2]}…)')
         dyed = await pg.evaluate("getComputedStyle(document.querySelector('.pt-scrap .pt-sf')).backgroundImage")
@@ -1033,6 +1044,94 @@ async def kinds(browser, db):
     await st.context.close()
 
 
+async def layers(browser, db):
+    """"Sau người" / "Trước người": a piece stays on its side of the character
+    whatever its kind. Products and pieces with a "Loại" used to be drawn over
+    the character from behind."""
+    print('layers')
+    db.rows.clear(); db.info.clear()
+    cay = lambda n: f'images/studio/cay/cay-{n:02d}.webp'
+    piece = lambda src, x, y, w, h, layer='back', **kw: dict(src=src, x=x, y=y, w=w, h=h, rot=0, flip=False, layer=layer, frame=False, **kw)
+    # the character stands at 780: the product and the zone are right behind it,
+    # the small plant right in front
+    db.rows['live'] = {
+        'v': 1, 'bg': {'src': 'images/studio/bg/strip-tron.webp', 'w': 5792, 'h': 1024},
+        'items': [
+            piece(cay(6), 480, 760, 220, 300),
+            piece('images/studio/sp/origami.webp', 690, 780, 230, 266, sku='origami'),
+            piece(cay(5), 870, 770, 150, 333, kind='zone', zone={'act': 'memo', 'vi': 'Khu'}),
+            piece(cay(4), 1080, 770, 150, 328, kind='board', board={'feed': 'workshop'}),
+            piece(cay(10), 790, 890, 140, 160, 'front'),
+            piece(cay(7), 1300, 770, 200, 300, 'front', kind='zone', zone={'act': 'memo'}),
+            piece(cay(8), 1500, 770, 200, 300, 'front', kind='board', board={'feed': 'workshop'}),
+        ],
+        'udon': {'x': 2400, 'y': 560, 'w': 128, 'h': 140}, 'start': 780,
+    }
+    names = ['decoration', 'product', 'zone', 'board', 'decoration', 'zone', 'board']
+    for view, w, h in (('desktop', 1440, 900), ('mobile', 390, 844)):
+        st = await page(browser, db, w, h, "sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1')")
+        await st.goto(f'{BASE}/studio.html')
+        await st.wait_for_timeout(2000)
+        got = await st.evaluate("""() => {
+          const z = el => parseInt(getComputedStyle(el).zIndex, 10) || 0;
+          // painted over: a higher z-index, or the same and later in the page
+          const over = (a, b) => z(a) !== z(b) ? z(a) > z(b) : !!(b.compareDocumentPosition(a) & Node.DOCUMENT_POSITION_FOLLOWING);
+          const who = document.querySelector('.st-player'), hot = document.querySelector('.st-hot');
+          const items = [...document.querySelectorAll('.st-item')], writing = [...document.querySelectorAll('.st-board')];
+          return {
+            n: items.length,
+            items: items.map(el => over(el, who)),
+            writing: writing.map(el => over(el, who)),
+            onPicture: writing.map(el => over(el, document.querySelector('.st-item[data-thing="' + el.getAttribute('data-thing') + '"]'))),
+            overHot: items.filter(el => el.matches('.st-thing, .st-shelf-prod')).every(el => over(el, hot)),
+          };
+        }""")
+        check(got['n'] == 7, f'{view}: seven pieces in the studio ({got["n"]})')
+        for i, name in enumerate(names):
+            front = i >= 4
+            check(got['items'][i] == front, f'{view}: a {name} set "{"Trước" if front else "Sau"} người" is {"in front of" if front else "behind"} the character')
+        check(got['writing'] == [False, True], f'{view}: a board\'s writing is on the same side as its picture ({got["writing"]})')
+        check(all(got['onPicture']), f'{view}: a board\'s writing is over its picture ({got["onPicture"]})')
+        check(got['overHot'], f'{view}: pieces that take taps stay over the tap boxes')
+        await st.screenshot(path=OUT / f'layers-{view}.png')
+        check(not st.errors, f'{view}: no script errors {st.errors}')
+        await st.context.close()
+
+
+async def topbar(browser, db):
+    """The top bar on a phone: the logo and the three controls side by side,
+    none on top of another, none past the edge, in both languages. (A fourth
+    control once pushed the language switch off the screen.)"""
+    print('topbar')
+    for lang in ('vi', 'en'):
+        for w in (320, 360, 390, 480):
+            pg = await page(browser, db, w, 844, f"localStorage.setItem('gem-lang','{lang}')")
+            await pg.goto(f'{BASE}/studio.html')
+            await pg.wait_for_timeout(800)
+            await pg.evaluate('document.fonts.ready.then(() => true)')
+            got = await pg.evaluate("""() => {
+              const bar = document.querySelector('.st-top');
+              const box = s => bar.querySelector(s).getBoundingClientRect();
+              const name = box('.st-brand span'), shown = name.width > 2;
+              const seen = [box('.st-brand img')].concat(shown ? [name] : [], [box('.st-list-link'), box('.st-motion'), box('.lang-switch')]);
+              const en = box('.lang-btn[data-lang=en]');
+              const hit = document.elementFromPoint(en.left + en.width / 2, en.top + en.height / 2);
+              return {
+                clash: seen.some((b, i) => i > 0 && b.left < seen[i - 1].right - 0.5),
+                past: Math.round(seen[seen.length - 1].right - innerWidth),
+                shown: shown,
+                read: bar.querySelector('.st-brand').textContent.includes('Gem Studio 2D'),
+                en: !!hit && hit.getAttribute('data-lang') === 'en',
+              };
+            }""")
+            check(not got['clash'] and got['past'] <= 0, f'{lang} {w}px: the top bar fits (past the edge: {max(0, got["past"])}px)')
+            check(got['en'], f'{lang} {w}px: the EN button can be tapped')
+            check(got['shown'] == (w >= 480) and got['read'], f'{lang} {w}px: the name is {"shown" if w >= 480 else "left to the logo, still read out"}')
+            if lang == 'vi':
+                await pg.screenshot(path=OUT / f'topbar-{w}.png', clip={'x': 0, 'y': 0, 'width': w, 'height': 120})
+            await pg.context.close()
+
+
 async def motion(browser, db):
     """A device that asks for less motion: no walking, a line saying why, and
     the "Hiệu ứng" button turns walking back on (remembered)."""
@@ -1065,13 +1164,16 @@ async def motion(browser, db):
 
 
 async def main(which):
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')   # a Windows console's code page has no Vietnamese
     OUT.mkdir(exist_ok=True)
     srv = serve()
     db = FakeDB()
     async with async_playwright() as p:
         browser = await launch(p)
         for name, fn in (('street', street), ('wear', wear), ('shop', shop), ('spots', spots), ('editor', editor),
-                         ('library', library), ('product', product), ('design', design), ('catalog', catalog), ('kinds', kinds), ('motion', motion)):
+                         ('library', library), ('product', product), ('design', design), ('catalog', catalog), ('kinds', kinds),
+                         ('layers', layers), ('topbar', topbar), ('motion', motion)):
             if which in (None, name):
                 await fn(browser, db)
         await browser.close()
