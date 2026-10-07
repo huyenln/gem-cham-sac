@@ -39,6 +39,19 @@
 
 .st-brand span { white-space: nowrap; }
 
+/* A phone has no room for the name beside the three controls: with it the
+   list link sat on the name and the language switch ran off the screen.
+   The logo stands for it there; the name is still read out. */
+@media (max-width: 479px) {
+  .st-brand { position: relative; }
+  .st-brand::after { content: ''; position: absolute; inset: -7px -4px; }   /* a finger-sized target around the logo */
+  .st-brand span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+}
+/* the smallest phones (320px) */
+@media (max-width: 359px) {
+  .st-top { gap: var(--space-2); padding-left: var(--space-3); padding-right: var(--space-3); }
+}
+
 .st-list-link {
   font-size: var(--text-sm);
   min-height: 44px;

@@ -27,6 +27,7 @@ and walks through what broke before:
            it, own tap boxes — set in the editor, played in the studio
   layers   "Sau người" / "Trước người": a piece stays on its side of the
            character whatever its kind
+  topbar   the top bar fits a phone (320px up), in Vietnamese and English
   motion   a device asking for less motion: no walking, "Hiệu ứng" turns it on
 
 Screenshots go to /tmp/gem-check/ — look at them, a pass only means nothing
@@ -35,7 +36,7 @@ crashed and the counts add up.
     python3 tools/check-studio.py            all checks
     python3 tools/check-studio.py wear       one check (street | wear | shop | spots | editor |
                                              library | product | design | catalog | kinds |
-                                             layers | motion)
+                                             layers | topbar | motion)
 
 Needs: pip install playwright. Chromium: PLAYWRIGHT_BROWSERS_PATH or
 CHROMIUM=/path/to/chrome (the cloud sessions have /opt/pw-browsers/chromium).
@@ -1097,6 +1098,40 @@ async def layers(browser, db):
         await st.context.close()
 
 
+async def topbar(browser, db):
+    """The top bar on a phone: the logo and the three controls side by side,
+    none on top of another, none past the edge, in both languages. (A fourth
+    control once pushed the language switch off the screen.)"""
+    print('topbar')
+    for lang in ('vi', 'en'):
+        for w in (320, 360, 390, 480):
+            pg = await page(browser, db, w, 844, f"localStorage.setItem('gem-lang','{lang}')")
+            await pg.goto(f'{BASE}/studio.html')
+            await pg.wait_for_timeout(800)
+            await pg.evaluate('document.fonts.ready.then(() => true)')
+            got = await pg.evaluate("""() => {
+              const bar = document.querySelector('.st-top');
+              const box = s => bar.querySelector(s).getBoundingClientRect();
+              const name = box('.st-brand span'), shown = name.width > 2;
+              const seen = [box('.st-brand img')].concat(shown ? [name] : [], [box('.st-list-link'), box('.st-motion'), box('.lang-switch')]);
+              const en = box('.lang-btn[data-lang=en]');
+              const hit = document.elementFromPoint(en.left + en.width / 2, en.top + en.height / 2);
+              return {
+                clash: seen.some((b, i) => i > 0 && b.left < seen[i - 1].right - 0.5),
+                past: Math.round(seen[seen.length - 1].right - innerWidth),
+                shown: shown,
+                read: bar.querySelector('.st-brand').textContent.includes('Gem Studio 2D'),
+                en: !!hit && hit.getAttribute('data-lang') === 'en',
+              };
+            }""")
+            check(not got['clash'] and got['past'] <= 0, f'{lang} {w}px: the top bar fits (past the edge: {max(0, got["past"])}px)')
+            check(got['en'], f'{lang} {w}px: the EN button can be tapped')
+            check(got['shown'] == (w >= 480) and got['read'], f'{lang} {w}px: the name is {"shown" if w >= 480 else "left to the logo, still read out"}')
+            if lang == 'vi':
+                await pg.screenshot(path=OUT / f'topbar-{w}.png', clip={'x': 0, 'y': 0, 'width': w, 'height': 120})
+            await pg.context.close()
+
+
 async def motion(browser, db):
     """A device that asks for less motion: no walking, a line saying why, and
     the "Hiệu ứng" button turns walking back on (remembered)."""
@@ -1138,7 +1173,7 @@ async def main(which):
         browser = await launch(p)
         for name, fn in (('street', street), ('wear', wear), ('shop', shop), ('spots', spots), ('editor', editor),
                          ('library', library), ('product', product), ('design', design), ('catalog', catalog), ('kinds', kinds),
-                         ('layers', layers), ('motion', motion)):
+                         ('layers', layers), ('topbar', topbar), ('motion', motion)):
             if which in (None, name):
                 await fn(browser, db)
         await browser.close()

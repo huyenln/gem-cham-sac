@@ -1676,6 +1676,13 @@ Kiểm tra: `kinds()` trong `tools/check-studio.py`.
   khung bấm để chạm trúng món trước) · 4 nhân vật · 5 món trước người · 6 Udon, tên
   khu vực · 7 lời thoại. Chữ của Bảng tin đặt "Trước người" cũng lên cùng lớp với ảnh
   (trước đó nằm dưới ảnh). Kiểm tra: `layers()` trong `tools/check-studio.py`.
+- **Thanh trên cùng tràn trên điện thoại** (từ khi thêm nút "Hiệu ứng"): chữ "Danh sách"
+  đè lên tên trang, và nút EN bị cắt từ 390px trở xuống (360–375px thì gần như mất hẳn,
+  không đổi được ngôn ngữ). Dưới 480px tên "Gem Studio 2D" nhường chỗ cho logo (chữ vẫn
+  nằm trong link nên trình đọc màn hình vẫn đọc; vùng chạm quanh logo 44px); dưới 360px
+  khoảng cách và lề hẹp lại cho vừa máy 320px. Từ 480px trở lên không đổi. Thêm nút nào
+  vào thanh này thì chạy `topbar()` trong `tools/check-studio.py` (320 / 360 / 390 /
+  480px, tiếng Việt + tiếng Anh).
 
 ### Góp ý đợt 3 (10/2026)
 
