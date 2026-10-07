@@ -14,6 +14,11 @@
 
 .studio-page.st-lock { overflow: hidden; }
 
+/* Things to press are not text to select: a click must not leave a text
+   caret in a button (a browser in caret-browsing mode, F7, blinks one
+   wherever the selection lands). Words worth copying stay selectable. */
+.studio-page button, .studio-page [role="button"], .studio-page summary { -webkit-user-select: none; user-select: none; }
+
 /* ---------- TOP BAR ---------- */
 .st-top {
   display: flex;
@@ -128,6 +133,7 @@
 
 .st-hot-label {
   position: absolute;
+  z-index: 6;        /* its box lies under the pieces; the name stays on top */
   left: 50%;
   top: 0;
   transform: translate(-50%, -60%);
@@ -189,15 +195,15 @@
 .st-stage * { -webkit-tap-highlight-color: transparent; }
 
 /* Owner's layout pieces (js/studio-layout.js): behind the character unless
-   'front'. Never tappable themselves; the hotspots under them are.
+   'front'. Plain ones never take a tap themselves; the tap boxes under them do.
    The stack inside .st-world, back to front (keep every number in step):
-   1 pieces behind the character, memo pins · 2 tap boxes · 3 pieces behind
-   the character that take taps (products, a "Loại"), over the boxes so a
-   tap finds them first · 4 the character · 5 pieces in front · 6 Udon, zone
-   names · 7 speech. */
+   tap boxes (no z-index: under every piece, so a tap finds a piece first) ·
+   1 pieces behind the character, IN THE OWNER'S ORDER whatever their kind
+   (a bag hung on a screen that is a "Khu vực" stays on it), memo pins ·
+   4 the character · 5 pieces in front · 6 Udon and every name tag (tap box,
+   zone, product) · 7 speech. */
 .st-item { position: absolute; z-index: 1; pointer-events: none; object-fit: contain; max-width: none; }
 .st-item.is-front { z-index: 5; }
-.st-hot { z-index: 2; }
 .st-player { z-index: 4; }
 .st-udon { z-index: 6; }
 .st-wait .st-world { opacity: 0; }
@@ -222,15 +228,24 @@
   object-fit: cover; border: 3px solid #FBF6EE;
 }
 /* products customers can pick up: tap for the card, drag to the basket */
-.st-shelf-prod { pointer-events: auto; cursor: grab; touch-action: none; z-index: 3; }
+.st-shelf-prod { pointer-events: auto; touch-action: none; z-index: 1; }
 /* pieces the owner gave a "Loại" (studio.js thing()) */
-.st-thing { pointer-events: auto; cursor: pointer; z-index: 3; }
-.st-thing:focus-visible { outline: 3px solid var(--sage-deep); outline-offset: 2px; }
-.st-thing[data-kind="story"] { cursor: grab; touch-action: none; }
-.st-thing[data-kind="story"]:hover, .st-thing[data-kind="zone"]:hover { filter: brightness(1.06) drop-shadow(0 0 6px rgba(251, 246, 238, 0.9)); }
+.st-thing { pointer-events: auto; }
+.st-thing[data-kind="story"] { touch-action: none; }
+/* Lit by its own outline, never by its box: an uploaded picture can sit in a
+   sheet much wider than itself. .is-over = the mouse is on the picture
+   (studio.js over()); a piece reached with the keyboard gets a firmer rim. */
+.st-thing.is-over[data-kind="story"], .st-thing.is-over[data-kind="zone"], .st-shelf-prod.is-over {
+  filter: brightness(1.06) drop-shadow(0 0 6px rgba(251, 246, 238, 0.9));
+}
+.st-thing.is-over[data-kind="story"], .st-shelf-prod.is-over { cursor: grab; }
+.st-thing:focus-visible {
+  outline: none;
+  filter: brightness(1.06) drop-shadow(0 0 2px var(--sage-deep)) drop-shadow(0 0 7px rgba(251, 246, 238, 0.95));
+}
 .st-thing.is-lifted { opacity: 0.25; }
-.st-zone-label { z-index: 6; pointer-events: none; }
-.st-board { position: absolute; z-index: 3; pointer-events: none; container-type: size; }
+.st-zone-label { pointer-events: none; }
+.st-board { position: absolute; z-index: 1; pointer-events: none; container-type: size; }   /* right after its picture */
 .st-board.is-front { z-index: 5; }
 /* inset (not padding): % of the board itself, not of the whole wall */
 .st-board-in {
@@ -259,7 +274,9 @@
 .st-story h2 { margin: var(--space-3) 0 var(--space-2); font-family: var(--font-display); }
 .st-story p { margin: 0 0 var(--space-3); line-height: 1.7; }
 .st-story-img { display: block; width: 100%; max-height: 46vh; object-fit: cover; border-radius: var(--radius-md); }
-.st-shelf-prod:hover { filter: brightness(1.06) drop-shadow(0 0 6px rgba(251, 246, 238, 0.9)); }
+/* a product's name while the mouse is over it (studio.js nameTag) */
+.st-prod-label { pointer-events: none; }
+.st-prod-label[hidden] { display: none; }
 .st-shelf-prod.is-lifted { opacity: 0.25; }
 /* a cut-out product stands on the shelf as itself, no frame */
 .st-shelf-item.is-cut { aspect-ratio: auto; background: none; border: 0; box-shadow: none; }
@@ -269,6 +286,7 @@
 
 /* Paper notes on the memo board: a hint that people have written. */
 .st-pins { position: absolute; z-index: 1; pointer-events: none; }   /* same layer as the pieces, after them: on the board picture */
+.st-pins.is-front { z-index: 5; }   /* the board is set in front of the character */
 .st-pin {
   position: absolute;
   width: 20%;
@@ -355,6 +373,9 @@
 }
 
 .st-bubble[hidden] { display: none; }
+/* a story is in hand: the bubble is where to drop it (studio.js storyDrop) */
+.st-bubble.is-drop { border-style: dashed; border-color: var(--sage-deep); box-shadow: 0 0 0 4px rgba(135, 150, 90, 0.22), var(--shadow-paper); }
+.st-stage.is-drop-ok .st-bubble.is-drop { background: #EEF1E2; }
 .st-bubble img { flex: none; border-radius: 50%; background: var(--paper-cream); object-fit: cover; object-position: 50% 15%; }
 .st-bubble p { margin: 0; font-size: 1rem; color: var(--ink-dark); line-height: 1.45; }
 

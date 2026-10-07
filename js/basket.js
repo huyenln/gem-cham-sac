@@ -253,11 +253,28 @@
      STATE
      ====================================================================== */
   var STORAGE_KEY = 'gem-basket';
-  var items = [];   // [{ sku, qty, spec? }]  spec = design code from js/patch.js
+  var items = [];   // [{ sku, qty, spec?, pics? }]  spec = design code from js/patch.js
   var liveSkus = null;   // skus the database sells, in its order; null until it answers
 
   // A custom design is its own line even when the product is the same.
   function keyOf(it) { return it.sku + (it.spec ? '|' + it.spec : ''); }
+
+  /* ---------- the very piece picked up ----------
+     In the Studio one product can hang as several pictures (a green shirt, a
+     yellow one). pics keeps the cut-out of each piece taken, one per unit, so
+     the basket shows what was picked, not the catalogue photo. Only pictures:
+     the order still says sku + qty. Read back from storage, so checked like
+     anything else that comes from there — one of our own pictures or nothing
+     (the same rule as srcOk in js/studio-layout.js). */
+  var PIC_BUCKET = 'https://dxdovvqsfjeizsoprrfn.supabase.co/storage/v1/object/public/gem-media/';
+  function okPic(u) {
+    if (typeof u !== 'string' || u.length > 400) return false;
+    if (/^images\/(studio|products)\/[a-z0-9_\/.-]+\.(webp|png|jpe?g)$/.test(u) && u.indexOf('..') < 0) return true;
+    return u.indexOf(PIC_BUCKET) === 0 && /^[A-Za-z0-9%._-]+$/.test(u.slice(PIC_BUCKET.length));
+  }
+  // Cut-outs the page itself knows (studio.js: the pieces standing in the
+  // Studio), for a product whose "Ảnh cắt nền" is still empty in admin.
+  var pageCuts = Object.create(null);   // no inherited names: a sku is any text
 
   function validSpec(spec) {
     return !!(spec && window.GemPatch && window.GemPatch.isComplete(window.GemPatch.parse(spec)));
@@ -301,10 +318,11 @@
      CATALOG ở trên là bản dự phòng: nếu Supabase không trả lời (mất mạng,
      dịch vụ trục trặc) thì trang sản phẩm vẫn chạy với giá đã biết, thay vì
      trắng trơn. Khi database trả lời thì giá trong đó thắng — đó mới là chỗ
-     em gái sửa giá. */
+     em gái sửa giá. Database trả lời "không có món nào" (ẩn hết / xoá hết)
+     cũng là một câu trả lời: trang không còn bán món nào. */
   function mergeFromDb(rows) {
-    if (!rows || !rows.length) return false;
-    var changed = false;
+    if (!Array.isArray(rows)) return false;
+    var changed = rows.length === 0;
     rows.forEach(function (r) {
       var p = bySku(r.sku);
       if (!p) {
@@ -339,6 +357,10 @@
       }).map(function (it) {
         var out = { sku: it.sku, qty: Math.min(99, Math.round(it.qty)) };
         if (it.spec) out.spec = it.spec;
+        if (Array.isArray(it.pics)) {
+          var pics = it.pics.slice(0, out.qty).map(function (u) { return okPic(u) ? u : null; });
+          if (pics.some(Boolean)) out.pics = pics;
+        }
         return out;
       });
     } catch (e) { items = []; }
@@ -413,18 +435,24 @@
     return null;
   }
 
-  function addItem(sku, spec) {
-    var key = keyOf({ sku: sku, spec: spec });
+  // cut: the picture of the very piece picked up (Studio), kept for this unit
+  function addItem(sku, spec, cut) {
+    var key = keyOf({ sku: sku, spec: spec }), line = null;
     for (var i = 0; i < items.length; i++) {
-      if (keyOf(items[i]) === key) {
-        items[i].qty = Math.min(99, items[i].qty + 1);
-        save();
-        return;
-      }
+      if (keyOf(items[i]) === key) { line = items[i]; break; }
     }
-    var it = { sku: sku, qty: 1 };
-    if (spec) it.spec = spec;
-    items.push(it);
+    if (line) {
+      line.qty = Math.min(99, line.qty + 1);
+    } else {
+      line = { sku: sku, qty: 1 };
+      if (spec) line.spec = spec;
+      items.push(line);
+    }
+    if (cut) {
+      if (!line.pics) line.pics = [];
+      while (line.pics.length < line.qty - 1) line.pics.push(null);   // the units before it keep the product's own picture
+      line.pics[line.qty - 1] = cut;
+    }
     save();
   }
 
@@ -432,30 +460,42 @@
     items = items.filter(function (it) {
       if (keyOf(it) !== key) return true;
       it.qty = qty;
+      if (it.pics) {
+        it.pics = it.pics.slice(0, qty);
+        if (!it.pics.some(Boolean)) delete it.pics;
+      }
       return qty > 0;
     });
     save();
   }
 
-  // Flat list of sprites in the basket, one entry per unit
+  // Flat list of what is in the basket, one entry per unit, each with the
+  // picture of the piece that was picked (when one was).
   function spriteQueue() {
     var out = [];
     items.forEach(function (it) {
-      for (var i = 0; i < it.qty; i++) out.push(it);
+      for (var i = 0; i < it.qty; i++) out.push({ sku: it.sku, spec: it.spec, cut: (it.pics && it.pics[i]) || null });
     });
     return out;
   }
 
-  // A picture of what is in the basket: the customer's own design, else the
-  // product's cut-out or photo, else the little drawn sprite.
+  // One line of the basket as a single picture: the first piece picked.
+  function lineView(it) {
+    return { sku: it.sku, spec: it.spec, cut: (it.pics && it.pics.filter(Boolean)[0]) || null };
+  }
+
+  // A picture of what is in the basket: the customer's own design, else a
+  // cut-out (the piece picked, the product's own, one the page knows), else
+  // the product's photo, else the little drawn sprite.
   function pic(it) {
     var p = bySku(it.sku);
     if (it.spec && window.GemPatch) {
       var svg = window.GemPatch.svg(it.spec, {});
       if (svg) return svg;
     }
-    if (p && (p.cutout || p.image)) {
-      return '<img src="' + esc(p.cutout || p.image) + '" alt="" draggable="false" class="' + (p.cutout ? 'is-cut' : 'is-photo') + '">';
+    var cut = it.cut || (p && p.cutout) || pageCuts[it.sku] || null;
+    if (cut || (p && p.image)) {
+      return '<img src="' + esc(cut || p.image) + '" alt="" draggable="false" class="' + (cut ? 'is-cut' : 'is-photo') + '">';
     }
     return (p && SPRITES[p.sprite]) || '';
   }
@@ -701,7 +741,7 @@
       var p = bySku(it.sku);
       var custom = it.spec && window.GemPatch;
       return '<li class="gb-row" data-key="' + esc(keyOf(it)) + '">' +
-        '<span class="gb-row-sprite">' + pic(it) + '</span>' +
+        '<span class="gb-row-sprite">' + pic(lineView(it)) + '</span>' +
         '<span class="gb-row-text">' +
           '<span class="gb-row-name"' + nameAttr(p) + '>' +
             (isKey(p) ? '' : esc(pName(p))) + '</span>' +
@@ -1286,17 +1326,27 @@
       // what is in the basket, one entry per piece, with its picture (studio:
       // the things riding in the character's cart)
       pieces: function () { return spriteQueue().map(function (it) { return { sku: it.sku, spec: it.spec || null, html: pic(it) }; }); },
-      add: function (sku, sourceEl, spec) {
+      // cut (optional): the picture of the very piece picked up in the Studio
+      add: function (sku, sourceEl, spec, cut) {
         var p = bySku(sku);
         if (!p || p.inStock === false) return false;
         if (spec && !validSpec(spec)) return false;
-        fly(sourceEl, { sku: sku, spec: spec }, function () {
-          addItem(sku, spec);
+        if (spec || !okPic(cut)) cut = null;   // a design is its own picture
+        fly(sourceEl, { sku: sku, spec: spec, cut: cut }, function () {
+          addItem(sku, spec, cut);
           renderWidget();
           wiggle();
           if (panel.classList.contains('open') && view === 'basket') renderBasketView();
         });
         return true;
+      },
+      // { sku: picture }: cut-outs this page has for products without one of
+      // their own (the Studio: its pieces). The basket is drawn again with them.
+      cutouts: function (map) {
+        pageCuts = Object.create(null);
+        Object.keys(map || {}).forEach(function (sku) { if (okPic(map[sku])) pageCuts[sku] = map[sku]; });
+        renderWidget();
+        if (panel.classList.contains('open') && view === 'basket') renderBasketView();
       },
       open: openPanel
     };

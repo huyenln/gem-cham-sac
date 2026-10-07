@@ -1553,7 +1553,7 @@ Góp ý: bàn thiết kế giống tờ khảo sát, bản vẽ trông rẻ, chi
 - Giỏ hàng (góc + danh sách + hình bay vào giỏ) dùng hình thật: thiết kế riêng
   → SVG của thiết kế, món có sẵn → ảnh cắt nền hoặc ảnh sản phẩm; sprite cũ chỉ
   còn làm dự phòng. Đồ trong giỏ cũng nằm trong xe nhân vật đẩy (`.st-cargo`, vành
-  xe đo từ tranh: `CART_RIM`).
+  xe đo từ tranh: `CART_RIM`). (Ảnh cắt nền nào được chọn: xem "Studio: góp ý đợt 5".)
 
 **Xếp lại phần dưới (10/2026):**
 - Udon giáo viên ngồi ở góc dưới bên trái món (`.pt-stage .gv-udon`); câu của Udon
@@ -1687,10 +1687,10 @@ Kiểm tra: `kinds()` trong `tools/check-studio.py`.
 - **Món "Sau người" vẫn đè lên người** (món là Sản phẩm hoặc có Loại): các món đó ở
   `z-index: 3`, còn nhân vật thật ra chỉ ở 2 — luật `.st-player { z-index: 2 }` cũ nằm
   cuối `css/studio.css` đè lên luật `3` phía trên. Giờ thang lớp ghi một chỗ (khối
-  `.st-item`): 1 món sau người · 2 khung bấm · 3 món sau người nhận chạm (vẫn trên
-  khung bấm để chạm trúng món trước) · 4 nhân vật · 5 món trước người · 6 Udon, tên
-  khu vực · 7 lời thoại. Chữ của Bảng tin đặt "Trước người" cũng lên cùng lớp với ảnh
-  (trước đó nằm dưới ảnh). Kiểm tra: `layers()` trong `tools/check-studio.py`.
+  `.st-item`) — **thang hiện tại ở "góp ý đợt 5" bên dưới** (bản đầu tách món nhận chạm
+  lên lớp 3, làm đồ trang trí đặt trên "Khu vực" bị che). Chữ của Bảng tin đặt "Trước
+  người" cũng lên cùng lớp với ảnh (trước đó nằm dưới ảnh). Kiểm tra: `layers()` trong
+  `tools/check-studio.py`.
 - **Thanh trên cùng tràn trên điện thoại** (từ khi thêm nút "Hiệu ứng"): chữ "Danh sách"
   đè lên tên trang, và nút EN bị cắt từ 390px trở xuống (360–375px thì gần như mất hẳn,
   không đổi được ngôn ngữ). Dưới 480px tên "Gem Studio 2D" nhường chỗ cho logo (chữ vẫn
@@ -1698,6 +1698,69 @@ Kiểm tra: `kinds()` trong `tools/check-studio.py`.
   khoảng cách và lề hẹp lại cho vừa máy 320px. Từ 480px trở lên không đổi. Thêm nút nào
   vào thanh này thì chạy `topbar()` trong `tools/check-studio.py` (320 / 360 / 390 /
   480px, tiếng Việt + tiếng Anh).
+
+### Studio: góp ý đợt 5 (10/2026)
+
+Chủ studio giờ **ẩn gần hết khung bấm có sẵn** và giao việc cho món "Khu vực" (ảnh tự
+tải lên, thường nằm trong một tấm trong suốt rộng hơn hình nhiều). Đợt này làm cho
+studio đi theo **hình**, không theo khung.
+
+- **Thang lớp trong `.st-world`** (khối `.st-item` trong `css/studio.css`, sửa số nào
+  thì sửa cả khối): khung bấm **không có z-index** (nằm dưới mọi món, nên chạm trúng
+  món trước) · **1** mọi món "Sau người", **theo đúng thứ tự chủ xếp, bất kể Loại** +
+  giấy nhắn · **4** nhân vật · **5** món "Trước người" · **6** Udon và mọi nhãn tên
+  (khung bấm, khu vực, sản phẩm) · **7** lời thoại. Lỗi đã gặp: món có Loại / sản phẩm
+  từng ở lớp 3, đồ trang trí ở lớp 1 → túi treo trên bình phong (bình phong là "Khu
+  vực") bị bình phong che mất ở trang khách, trong khi trình lắp vẫn vẽ đúng. Hệ quả
+  cần biết: viền sáng của khung bấm giờ nằm **sau** đồ đạc; rê chuột vào khung thì thấy
+  rõ nhất là nhãn tên đổi màu.
+- **Sáng theo hình:** rê chuột chỉ làm sáng món khi chuột nằm trên phần có hình
+  (`over()` → lớp `.is-over`, cùng phép thử `pickAt` với chạm). Không còn khung chữ
+  nhật quanh món; đi bằng bàn phím (Tab) thì món có viền sáng ôm theo hình
+  (`drop-shadow`). Sản phẩm hiện **tên** khi rê chuột (`nameTag`, `.st-prod-label`;
+  màn cảm ứng không có rê chuột — chạm là mở thẻ).
+- **Việc của khung đã ẩn đi theo món** (`placeFor(id)` → `ownPlace(id)`): nút trên
+  thanh dưới, "Tự thiết kế theo mẫu này", giấy nhắn trên bảng đều tìm món "Khu vực"
+  (hoặc khung tự thêm) có cùng hành động. Nhân vật dừng ở **giữa hình** (`standIn`,
+  đo từ `ALPHA[src].box`), nên món "Khu vực" không cần đặt điểm dừng. Nút trên thanh
+  dưới chỉ ẩn khi không còn gì làm việc đó (`hasPlace`). "Kệ hàng" nhận bất kỳ kệ nào
+  (`SPOT_ACTS`).
+- **Giấy nhắn:** khung "Bảng lời nhắn" ẩn mà có món "Khu vực" hành động Bảng lời nhắn
+  thì giấy ghim lên chính món đó (`memoBoard` → `placePins`, đặt lại khi đọc xong ảnh).
+- **Kéo món "Câu chuyện":** Udon ở xa thì không biết thả đâu → vừa nhấc món lên, bóng
+  thoại của Udon hiện ở góc với viền nét đứt "Thả vào đây, Udon kể bạn nghe."
+  (`storyDrop`); thả vào bóng thoại cũng như thả vào Udon.
+- **Trình lắp:** khung đang ẩn không còn vẽ trên sân (bấm "Chọn" ở tab Khung bấm thì
+  hiện lại để sửa); mỗi điểm dừng có tên khung của nó (`.se-stand-name`).
+- **Bàn thiết kế — gối:** đường chia 3×3 và kiểu "sao" uốn theo đường may vẽ sẵn trên
+  tranh gối (`ART.cushion.seams`, `onSeams` trong `js/patch.js`); trước đó chia đều
+  33/67 nên hàng dưới lệch khỏi đường vẽ.
+- **Dấu nháy khi bấm vào nội dung:** trang không có ô nhập nào ở đó — nhiều khả năng
+  là chế độ "duyệt bằng con trỏ" của trình duyệt (phím **F7**). Vẫn chặn chọn chữ trên
+  nút của Studio (`user-select: none`) để không còn chỗ cho dấu nháy bám.
+- **Trang Sản phẩm:** danh mục không còn món nào (ẩn hết / xoá hết trong admin) thì ẩn
+  cả khối và hai chỗ liệt kê danh mục (`tidy()` trong `js/catalog.js`). Kéo theo:
+  database trả lời "không có món nào" giờ được coi là câu trả lời thật (`mergeFromDb`),
+  không còn rơi về danh sách dự phòng — dự phòng chỉ dùng khi database **không trả lời**.
+- **Ảnh trong giỏ là ảnh cắt nền, không phải ảnh chụp** (xe nhân vật đẩy, giỏ ở góc,
+  dòng trong giỏ, hình bay vào giỏ — cùng một hàm `pic()` trong `js/basket.js`). Thứ tự:
+  1. **chính món khách nhấc** trong Studio — kéo vào giỏ / xe, hoặc chạm món rồi "Thêm
+     vào giỏ" (`pieceCut` → `GemBasket.add(sku, el, spec, cut)`). Một sản phẩm có thể
+     treo nhiều hình (áo xanh, áo vàng cùng sku): kéo áo nào giỏ hiện áo đó. Lưu trong
+     giỏ: `pics[]`, mỗi cái một hình, cùng `localStorage gem-basket` nên trang khác
+     cũng thấy;
+  2. "Ảnh cắt nền" của sản phẩm (admin → Sản phẩm → Sửa);
+  3. hình của một món sản phẩm đó đang bày trong Studio (`shareCuts` →
+     `GemBasket.cutouts`), cho món chưa điền "Ảnh cắt nền" — chỉ có ở `studio.html`;
+  4. ảnh chụp sản phẩm; 5. hình vẽ nhỏ dự phòng.
+  `pics` đọc lại từ localStorage nên qua `okPic` (cùng luật `srcOk`: ảnh trong repo hoặc
+  kho `gem-media`), sai thì bỏ. **Đơn gửi đi vẫn chỉ có `sku` + `qty`** — cửa hàng chưa
+  biết khách nhấc áo nào; việc đó thuộc đề xuất "lựa chọn của sản phẩm".
+  Muốn ảnh cắt nền hiện ở mọi trang (không chỉ Studio) cho món thêm từ trang Sản phẩm:
+  điền "Ảnh cắt nền" trong admin.
+
+Kiểm tra: `layers`, `zones`, `cart`, `kinds`, `catalog`, `shop` trong
+`tools/check-studio.py`.
 
 ### Góp ý đợt 3 (10/2026)
 

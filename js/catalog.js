@@ -85,9 +85,32 @@
     });
   }
 
+  // A category with nothing left to show (its products all hidden or deleted
+  // in admin) goes from the page, and from the two lists of categories.
+  // Grids without data-cat (2hand: one gallery card) are not the database's.
+  function tidy() {
+    var live = {};
+    rows.forEach(function (r) { live[r.sku] = true; });
+    document.querySelectorAll('.product-grid[data-cat]').forEach(function (grid) {
+      var block = grid.closest('.category-block');
+      if (!block) return;
+      var any = Array.prototype.some.call(grid.querySelectorAll('.product-card'), function (card) {
+        var sku = card.getAttribute('data-sku');
+        return !sku || live[sku];
+      });
+      block.hidden = !any;
+      var id = block.id || (block.closest('section') || {}).id;   // the first category's id is on its <section>
+      if (!id) return;
+      document.querySelectorAll('.toc-item[href="#' + id + '"]').forEach(function (a) {
+        (a.closest('li') || a).hidden = !any;
+      });
+    });
+  }
+
   document.addEventListener('gem:products', function (e) {
     rows = (e.detail && e.detail.rows) || [];
     if (rows.length) apply();
+    tidy();
   });
 
   document.addEventListener('gem:langchange', function () {

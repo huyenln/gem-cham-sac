@@ -486,6 +486,9 @@ window.GemStudioEditor = (function () {
     worldEl.appendChild(floor);
 
     if (showHot) spots().forEach(function (sp) {
+      // A hidden box takes no room on the stage (no frame, name or stop pin).
+      // The "Khung bấm" tab still lists it: "Chọn" there brings it up.
+      if (spotCfg(sp.id).off && !isSel('hot', sp.id) && !isSel('stand', sp.id)) return;
       var o = S().hot[sp.id], b = o.box;
       var n = document.createElement('div');
       n.className = 'se-el se-hot' + (isSel('hot', sp.id) ? ' is-sel' : '') + (spotCfg(sp.id).off ? ' is-off' : '') +
@@ -508,7 +511,8 @@ window.GemStudioEditor = (function () {
       st.className = 'se-el se-stand' + (isSel('stand', sp.id) ? ' is-sel' : '');
       st.dataset.kind = 'stand'; st.dataset.id = sp.id;
       place(st, o.stand - 14, feet - 60, 28, 64);
-      st.title = 'Chỗ dừng: ' + sp.vi;
+      st.title = 'Chỗ dừng: ' + (spotCfg(sp.id).vi || sp.vi);
+      st.appendChild(pinName(spotCfg(sp.id).vi || sp.vi));
       worldEl.appendChild(st);
     });
 
@@ -532,6 +536,7 @@ window.GemStudioEditor = (function () {
       st.dataset.kind = 'stand'; st.dataset.id = o.id;
       place(st, o.stand - 14, feet - 60, 28, 64);
       st.title = 'Chỗ dừng: ' + (o.vi || 'Khung mới');
+      st.appendChild(pinName(o.vi || 'Khung mới'));
       worldEl.appendChild(st);
     });
 
@@ -544,6 +549,14 @@ window.GemStudioEditor = (function () {
     un.innerHTML = '<img src="images/studio/udon/ud-ngoi-a.webp" alt="" draggable="false">';
     if (isSel('udon')) handles(un, false);
     worldEl.appendChild(un);
+  }
+
+  // Whose stop a pin is, written under it (the owner's text: textContent).
+  function pinName(text) {
+    var s = document.createElement('span');
+    s.className = 'se-stand-name';
+    s.textContent = text;
+    return s;
   }
 
   function place(n, x, y, w, h) {
@@ -928,7 +941,8 @@ window.GemStudioEditor = (function () {
         (z.act === 'link' ? '<label>Trang <input name="zn-link" maxlength="300" placeholder="vd: workshop.html hoặc https://…" value="' + esc(z.link || '') + '"></label>' : '') +
         '<label>Tên hiện <input name="zn-vi" maxlength="40" value="' + esc(z.vi || '') + '"></label>' +
         '<label>Tên tiếng Anh <input name="zn-en" maxlength="40" value="' + esc(z.en || '') + '"></label>' +
-        '<span class="se-hint-s">Khách chạm món này: nhân vật đi tới và mở chức năng. Dời món là khu vực đi theo.</span>';
+        '<span class="se-hint-s">Khách chạm món này: nhân vật đi tới giữa hình và mở chức năng. Dời món là khu vực đi theo. ' +
+          'Khung có sẵn cùng việc mà đang ẩn thì nút ở thanh dưới của studio (và giấy nhắn trên bảng) đi theo món này.</span>';
     } else if (kind === 'board') {
       var feed = (it.board && it.board.feed) || 'workshop';
       h += '<label>Hiện <select name="bd-feed">' +

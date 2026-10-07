@@ -335,6 +335,7 @@
     'studio.prod_in_cart':  { vi: `Đã bỏ vào giỏ rồi nha!`, en: `In the basket!` },
     'studio.prod_in_basket': { vi: `Đã bỏ vào giỏ rồi nha!`, en: `In the basket!` },
     'studio.story_udon':    { vi: `Để Udon kể bạn nghe nhé.`, en: `Let Udon tell you about it.` },
+    'studio.story_drop':    { vi: `Thả vào đây, Udon kể bạn nghe.`, en: `Drop it here and Udon will tell you about it.` },
     'studio.story_more':    { vi: `Đọc thêm`, en: `Read more` },
     'studio.board_ws':      { vi: `Workshop sắp tới`, en: `Next workshop` },
     'studio.board_post':    { vi: `Bản tin mới`, en: `Latest news` },
@@ -557,6 +558,8 @@
       var o = L.hot[h.id];
       if (o) { h.abs = o.box; h.standAbs = o.stand; }
     });
+    // "Khu vực" pieces: read their pictures early (where to stop, where the notes go)
+    L.items.forEach(function (it) { if (it.kind === 'zone') alphaOf(it.src); });
   }
 
   function buildItems(items) {
@@ -614,8 +617,20 @@
         var g = c.getContext('2d');
         g.drawImage(im, 0, 0, w, h);
         var px = g.getImageData(0, 0, w, h).data, a = new Uint8Array(w * h);
-        for (var i = 0; i < a.length; i++) a[i] = px[i * 4 + 3];
-        ALPHA[src] = { w: w, h: h, a: a };
+        var x0 = w, y0 = h, x1 = -1, y1 = -1;
+        for (var i = 0; i < a.length; i++) {
+          a[i] = px[i * 4 + 3];
+          if (a[i] > 40) {
+            var x = i % w, y = (i - x) / w;
+            if (x < x0) x0 = x;
+            if (x > x1) x1 = x;
+            if (y < y0) y0 = y;
+            if (y > y1) y1 = y;
+          }
+        }
+        // box: where the picture sits in its image (fractions), see-through margins left out
+        ALPHA[src] = { w: w, h: h, a: a, box: x1 < 0 ? [0, 0, 1, 1] : [x0 / w, y0 / h, (x1 + 1) / w, (y1 + 1) / h] };
+        if (src === memoSrc) placePins();   // the memo board's picture is known now
       } catch (e) { ALPHA[src] = 'solid'; }   // can't read it: the whole box counts
     };
     im.onerror = function () { ALPHA[src] = 'solid'; };
@@ -669,6 +684,57 @@
     var img = el.tagName === 'IMG' ? el : null;
     if (img) alphaOf(img.getAttribute('src'));
   }
+
+  // Where a piece's picture really is (strip px): its box without the
+  // see-through margins of the image (an uploaded sofa can sit in a much
+  // wider sheet). The whole box until the picture has been read; a turned
+  // piece is taken as upright.
+  function picBox(it) {
+    var m = ALPHA[it.src], b = m && m.box ? m.box : [0, 0, 1, 1];
+    var left = it.x - it.w / 2, top = it.y - it.h / 2;
+    return { x0: left + (it.flip ? 1 - b[2] : b[0]) * it.w, x1: left + (it.flip ? 1 - b[0] : b[2]) * it.w,
+             y0: top + b[1] * it.h, y1: top + b[3] * it.h };
+  }
+
+  /* ---------- where an action lives ----------
+     The owner may hide a built-in tap box and hand its job to a piece of
+     their own ("Khu vực") or to a tap box they added. What goes by the job
+     (the bottom nav, the notes on the memo board, "design one like this")
+     then goes by that piece: the character stops at the middle of its
+     picture, so there is no stop to place. */
+  var SPOT_ACTS = { pegboard: ['shop:pegboard'], cabinet: ['shop:cabinet'],
+    display: ['shop:display', 'shop:all', 'shop:pegboard', 'shop:cabinet'] };   // "Kệ hàng" in the nav: any shelf will do
+
+  function standIn(it) {
+    var b = picBox(it), W = LAYOUT ? LAYOUT.bg.w : SCENE.width;
+    return Math.max(120, Math.min(W - 120, (b.x0 + b.x1) / 2));
+  }
+
+  // The owner's piece (or own box) for a built-in spot's job, in the studio.
+  function ownPlace(id) {
+    if (!LAYOUT) return null;
+    var acts = SPOT_ACTS[id] || [id], boxes = LAYOUT.boxes || [];
+    for (var a = 0; a < acts.length; a++) {
+      for (var i = 0; i < LAYOUT.items.length; i++) {
+        var it = LAYOUT.items[i];
+        if (it.kind === 'zone' && it.zone.act === acts[a] && window.GemLayout.shownOn(it)) {
+          return { x: standIn(it), act: it.zone.act, link: it.zone.link, it: it };
+        }
+      }
+      for (var j = 0; j < boxes.length; j++) {
+        if (boxes[j].act === acts[a]) return { x: boxes[j].stand, act: boxes[j].act, link: boxes[j].link, box: boxes[j].box };
+      }
+    }
+    return null;
+  }
+
+  // Where to go for a spot: the built-in box while it is on, else the owner's.
+  function placeFor(id) {
+    if (spotOff(id)) return ownPlace(id);
+    var h = hotById(id), cfg = spotSet(id);
+    return h ? { x: standX(h), act: cfg.act || (cfg.link ? 'link' : id), link: cfg.link } : null;
+  }
+  function hasPlace(id) { return !spotOff(id) || !!ownPlace(id); }
 
   var INFO = {};          // src -> GemLayout.info(row)
   var FEED = {};          // 'workshop' | 'post' -> Promise of the row (or null)
@@ -818,11 +884,22 @@
     if (!it) return;
     if (it.kind === 'story') storySheet(it, false);
     else if (it.kind === 'talk') talk(it);
-    else if (it.kind === 'zone') runAct(it.zone.act, it.zone.link, Math.max(120, Math.min(SCENE.width - 120, it.x)));
+    else if (it.kind === 'zone') runAct(it.zone.act, it.zone.link, standIn(it));
     else if (it.kind === 'board') boardGo(it);
   }
 
   // Stories can be picked up and handed to Udon (inside only: Udon lives there).
+  // Udon is often a long way off, at the counter: while a story is in hand,
+  // Udon's bubble comes up on the stage and is a place to drop it too.
+  function storyDrop(on) {
+    clearTimeout(bubbleTimer);
+    bubble.classList.toggle('is-drop', on);
+    bubble.hidden = !on;
+    if (!on) return;
+    bubbleText.setAttribute('data-i18n', 'studio.story_drop');
+    bubbleText.textContent = t('studio.story_drop');
+  }
+
   function bindThings() {
     world.addEventListener('pointerdown', function (e) {
       var el = pickAt(e.clientX, e.clientY).piece;
@@ -831,11 +908,12 @@
       var it = THINGS[+el.getAttribute('data-thing')];
       var img = el.tagName === 'IMG' ? el : el.querySelector('img');
       dragFrom(e, img, {
-        where: function (x, y) { return udonEl && overEl(udonEl, x, y, 20) ? 'udon' : null; },
-        start: function () { el.classList.add('is-lifted'); },
-        cancel: function () { el.classList.remove('is-lifted'); },
+        where: function (x, y) { return (udonEl && overEl(udonEl, x, y, 20)) || overEl(bubble, x, y, 12) ? 'udon' : null; },
+        start: function () { el.classList.add('is-lifted'); storyDrop(true); },
+        cancel: function () { el.classList.remove('is-lifted'); storyDrop(false); },
         tap: function () { storySheet(it, false); },
         drop: function () {
+          storyDrop(false);
           udonPose('ud-vay');
           storySheet(it, true);
           return false;   // the piece goes back where it was
@@ -892,24 +970,46 @@
     bindUdon();
 
     // Paper notes pinned on the memo board (filled once notes load)
-    if (!spotOff('memo')) {
-      var mb = memoBoard();
-      memoPins = document.createElement('div');
-      memoPins.className = 'st-pins';
-      memoPins.style.left = pct(mb.x0, SCENE.width);
-      memoPins.style.top = pct(mb.y0, SCENE.height);
-      memoPins.style.width = pct(mb.x1 - mb.x0, SCENE.width);
-      memoPins.style.height = pct(mb.y1 - mb.y0, SCENE.height);
-      world.insertBefore(memoPins, world.querySelector('.st-hot'));
-    }
+    placePins();
 
     addPlayer();
+  }
+
+  // The pins lie on the board: in the pieces' layer (behind the character, or
+  // in front of it when the board is), after every piece — so, on its picture.
+  var memoSrc = null;   // the board's picture, when the pins go by one
+  function placePins() {
+    var mb = sceneName === 'in' ? memoBoard() : null;
+    if (!mb) {
+      if (memoPins) memoPins.remove();
+      memoPins = null;
+      return;
+    }
+    if (!memoPins) memoPins = document.createElement('div');
+    memoPins.className = 'st-pins' + (mb.front ? ' is-front' : '');
+    memoPins.style.left = pct(mb.x0, SCENE.width);
+    memoPins.style.top = pct(mb.y0, SCENE.height);
+    memoPins.style.width = pct(mb.x1 - mb.x0, SCENE.width);
+    memoPins.style.height = pct(mb.y1 - mb.y0, SCENE.height);
+    world.insertBefore(memoPins, world.querySelector('.st-hot, .st-udon'));   // the pieces are built before these
   }
 
   // Where the notes are pinned: on the board picture itself when the owner's
   // layout has one inside the memo spot (the spot's box is usually drawn
   // bigger than the board, and notes landed on its frame), else the box.
+  // The memo box hidden: on the piece (or own box) that does its job now.
   function memoBoard() {
+    memoSrc = null;
+    if (spotOff('memo')) {
+      var pl = ownPlace('memo');
+      if (!pl) return null;
+      if (!pl.it) return { x0: pl.box[0] + (pl.box[2] - pl.box[0]) * 0.1, x1: pl.box[2] - (pl.box[2] - pl.box[0]) * 0.1,
+                           y0: pl.box[1] + (pl.box[3] - pl.box[1]) * 0.18, y1: pl.box[3] - (pl.box[3] - pl.box[1]) * 0.12 };
+      var p = picBox(pl.it), pw = p.x1 - p.x0, ph = p.y1 - p.y0;
+      memoSrc = pl.it.src;
+      return { x0: p.x0 + pw * 0.1, x1: p.x1 - pw * 0.1, y0: p.y0 + ph * 0.2, y1: p.y1 - ph * 0.12,
+               front: pl.it.layer === 'front' };
+    }
     var h0 = boxOf(hotById('memo')), w0 = h0.x1 - h0.x0, t0 = h0.y1 - h0.y0;
     var hb = { x0: h0.x0 + w0 * 0.1, x1: h0.x1 - w0 * 0.1, y0: h0.y0 + t0 * 0.18, y1: h0.y1 - t0 * 0.12 };
     if (!LAYOUT) return hb;
@@ -922,7 +1022,8 @@
     if (!best) return hb;
     var b = best.it;
     // inside the frame: clear of the wooden edge and the hanging bar on top
-    return { x0: b.x - b.w * 0.4, x1: b.x + b.w * 0.4, y0: b.y - b.h * 0.3, y1: b.y + b.h * 0.38 };
+    return { x0: b.x - b.w * 0.4, x1: b.x + b.w * 0.4, y0: b.y - b.h * 0.3, y1: b.y + b.h * 0.38,
+             front: b.layer === 'front' };
   }
 
   /* ---------- owner's per-spot settings (layout.spots) ----------
@@ -969,12 +1070,13 @@
     });
   }
 
-  // The bottom nav: a button whose spot is taken out goes too.
+  // The bottom nav: a button goes when its spot is taken out and no piece of
+  // the owner's does that job instead.
   var NAV_SPOT = { door: 'door', fitting: 'fitting', shelves: 'display', sewing: 'sewing', tu: 'tu', counter: 'counter' };
   function syncNav() {
     document.querySelectorAll('.st-nav [data-go]').forEach(function (b) {
       var id = NAV_SPOT[b.getAttribute('data-go')];
-      b.classList.toggle('is-off', !!id && spotOff(id));
+      b.classList.toggle('is-off', !!id && !hasPlace(id));
     });
   }
 
@@ -1457,7 +1559,7 @@
       (out
         ? '<button type="button" class="st-btn" disabled>' + esc(t('studio.out')) + '</button>'
         : '<button type="button" class="st-btn" data-add="' + esc(sku) + '" data-i18n="studio.add">' + esc(t('studio.add')) + '</button>') +
-      (designable(sku) && !spotOff('sewing')
+      (designable(sku) && hasPlace('sewing')
         ? '<button type="button" class="st-link st-design-from" data-design-from="' + esc(sku) + '" data-i18n="studio.prod_design">' +
           esc(t('studio.prod_design')) + '</button>'
         : '') +
@@ -3013,18 +3115,83 @@
     D.d = P.blank(id);
     D.d.tones = keep.tones; D.d.prints = keep.prints; D.d.fabrics = keep.fabrics;
     gvRef = sku;
-    var h = hotById('sewing');
-    if (h && !spotOff('sewing')) walkTo(standX(h));
+    var pl = placeFor('sewing');
+    if (pl) walkTo(pl.x);
     designerSheet();
   }
 
-  function productSheet(sku) {
+  // cut: the picture of the piece that was tapped — what "Thêm vào giỏ" puts
+  // in the basket is that very piece.
+  function productSheet(sku, cut) {
     var card = productCard(sku);
     if (!card) return;
     openSheet(tr('p', 'studio.prod_tip', ' class="st-lead st-prod-tip"') +
       '<ul class="st-grid st-grid--one">' + card + '</ul>' +
 
       '<p class="st-foot">' + tr('a', 'studio.all_products', ' href="san-pham.html"') + '</p>');
+    var add = sheetBody.querySelector('[data-add]');
+    if (add && cut) add.setAttribute('data-cut', cut);
+  }
+
+  /* ---------- what the basket shows ----------
+     A cut-out, never the catalogue photo, whenever the Studio has one: the
+     piece itself when it was picked up here (pieceCut), else the product's
+     own "Ảnh cắt nền", else a piece of it standing in the Studio
+     (shareCuts). GemBasket checks every picture it is handed. */
+  function pieceCut(el) {
+    if (!el) return null;
+    if (el.tagName === 'IMG') return el.getAttribute('src');   // a free picture; a framed photo is a <span>
+    return el.classList.contains('is-cut') ? el.querySelector('img').getAttribute('src') : null;
+  }
+
+  function shareCuts() {
+    if (!window.GemBasket || !window.GemBasket.cutouts) return;
+    var map = Object.create(null);
+    var take = function (it) { if (it.sku && !it.frame && !map[it.sku]) map[it.sku] = it.src; };
+    if (LAYOUT) {
+      LAYOUT.items.forEach(take);
+      if (LAYOUT.outside) LAYOUT.outside.items.forEach(take);
+    }
+    window.GemBasket.cutouts(map);
+  }
+
+  /* ---------- the mouse over a piece ----------
+     By the picture, the same test as a tap: the see-through part of a
+     piece's box lights nothing up. A product also shows its name. A touch
+     screen has no hover: there a tap opens the card. */
+  var lit = null;
+  function over(el) {
+    if (el !== lit) {
+      if (lit) lit.classList.remove('is-over');
+      if (el) el.classList.add('is-over');
+      lit = el;
+    }
+    nameTag(el && el.classList.contains('st-shelf-prod') ? el : null);
+  }
+
+  function bindHover() {
+    world.addEventListener('pointermove', function (e) {
+      if (e.pointerType !== 'mouse') return;
+      over(e.buttons ? null : pickAt(e.clientX, e.clientY).piece || null);
+    });
+    world.addEventListener('pointerleave', function () { over(null); });
+    world.addEventListener('pointerdown', function () { over(null); });
+  }
+
+  function nameTag(el) {
+    var tag = world.querySelector('.st-prod-label');
+    var info = el && window.GemBasket && window.GemBasket.info(el.getAttribute('data-sku'));
+    if (!info) { if (tag) tag.hidden = true; return; }
+    if (!tag) {
+      tag = document.createElement('span');
+      tag.className = 'st-hot-label st-prod-label';
+      world.appendChild(tag);
+    }
+    var r = el.getBoundingClientRect(), w = world.getBoundingClientRect();
+    tag.textContent = info.name;   // from the database: text only
+    tag.style.left = pct(r.left + r.width / 2 - w.left, w.width);
+    tag.style.top = pct(r.top - w.top, w.height);
+    tag.hidden = false;
   }
 
   function bindProducts() {
@@ -3037,12 +3204,12 @@
       dragFrom(e, img, {
         start: function () { el.classList.add('is-lifted'); },
         cancel: function () { el.classList.remove('is-lifted'); },
-        tap: function () { productSheet(sku); },
+        tap: function () { productSheet(sku, pieceCut(el)); },
         drop: function (where, ghost) {
           el.classList.remove('is-lifted');
           var info = window.GemBasket && window.GemBasket.info(sku);
           if (!info || !info.inStock) { say('studio.prod_out', 3000); return false; }
-          window.GemBasket.add(sku, ghost);
+          window.GemBasket.add(sku, ghost, null, pieceCut(el));
           ghost.remove();
           say(where === 'cart' ? 'studio.prod_in_cart' : 'studio.prod_in_basket', 2600);
           return true;
@@ -3270,11 +3437,10 @@
       goScene('in', function () { visit(id, open); });
       return;
     }
-    var h = hotById(id);
-    if (!h || spotOff(id)) return;
-    var cfg = spotSet(id), act = cfg.act || (cfg.link ? 'link' : id);
-    if (open === false) { walkTo(standX(h)); return; }
-    runAct(act, cfg.link, standX(h));   // the spot's own action, another spot's, a page, or nothing
+    var pl = placeFor(id);   // the spot's box, or (that box hidden) the owner's piece for it
+    if (!pl) return;
+    if (open === false) { walkTo(pl.x); return; }
+    runAct(pl.act, pl.link, pl.x);   // the spot's own action, another spot's, a page, or nothing
   }
 
   // Walk to x and do an action (ACTS in studio-layout.js). Shared by the
@@ -3308,6 +3474,7 @@
      ====================================================================== */
   function bind() {
     bindSwipe();
+    bindHover();
     bindProducts();
     bindThings();
     bindSheetDrag();
@@ -3319,6 +3486,10 @@
       if (sceneInHistory && sceneName === 'in') { sceneInHistory = false; goScene('out', null, true); }
     });
     world.addEventListener('click', function (e) {
+      // A tap leaves no piece "focused": the browser focuses whatever box was
+      // under the finger, and the next key press would light that piece up.
+      var held = e.detail !== 0 && document.activeElement;
+      if (held && held.classList && held.classList.contains('st-thing')) held.blur();
       if (Date.now() - swiped < 350) return;   // the end of a swipe, not a tap
       // keyboard (detail 0): the focused element; a tap: what's under the finger, by the picture
       var at = e.detail === 0 ? { piece: e.target.closest('.st-thing, .st-shelf-prod'), hot: e.target.closest('.st-hot') }
@@ -3362,7 +3533,7 @@
       var add = e.target.closest('[data-add]');
       if (add && window.GemBasket) {
         var card = add.closest('.st-prod, .fit-item');
-        if (window.GemBasket.add(add.getAttribute('data-add'), card && card.querySelector('img'))) {
+        if (window.GemBasket.add(add.getAttribute('data-add'), card && card.querySelector('img'), null, add.getAttribute('data-cut'))) {
           add.textContent = t('studio.added');
           add.classList.add('is-added');
           setTimeout(function () {
@@ -3507,6 +3678,7 @@
       bg: LAYOUT ? LAYOUT.bg.src : 'images/studio/bg/strip.webp' };
     loadWorn();
     bind();
+    shareCuts();
     cartCount = window.GemBasket ? window.GemBasket.count() : 0;
     loadNotes();   // pins on the memo board
 

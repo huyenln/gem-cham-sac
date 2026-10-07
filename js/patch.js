@@ -878,9 +878,12 @@
   // puffs and the scrunchie gathers whatever fabric is on it.
   // box: where the fabric sits in the 340 square (printed by the tool);
   // c: the centre the petals turn round; band: the middle strip of "hai";
-  // top: rings / clasps painted over the fabric
+  // top: rings / clasps painted over the fabric;
+  // seams: a painting quilted on lines of its own — [x of its two upright
+  // seams, y of its two level ones], 0-100 (measured on the -bong picture)
   var ART = {
-    cushion: { n: 'goi' }, coaster: { n: 'lotcoc' }, coasterSq: { n: 'lotcocv' }, scrunchie: { n: 'scrunchie' },
+    cushion: { n: 'goi', seams: [[34.9, 64.9], [34, 62]] },
+    coaster: { n: 'lotcoc' }, coasterSq: { n: 'lotcocv' }, scrunchie: { n: 'scrunchie' },
     shirt: { n: 'oxford', box: [47, 1, 292, 339] },
     origami: { n: 'origami', top: 1, c: [187, 201] },
     // like the real charm: the stem, its knots and the middle bud in one
@@ -892,6 +895,20 @@
     bookmark: { n: 'bookmark', diag: 1 }
   };
   var SEAM = '" stroke="' + STITCH + '" stroke-width="1.8" stroke-dasharray="6 5" stroke-opacity="0.4" fill="none"/>';
+
+  // The cushion is painted quilted 3 x 3, its seams not quite on the thirds
+  // (the lower one sits well above two thirds). A layout drawn on thirds is
+  // bent onto those seams, so the patches meet in the painted dips instead
+  // of beside them. Returns the point mapping, or null when there is no fit.
+  function onSeams(A, layout, grid) {
+    if (!A.seams || !(layout === 'sao' || (layout === 'vuong' && grid === 3))) return null;
+    var t = 100 / 3;
+    var bend = function (v, s) {
+      return v <= t ? v / t * s[0] : v <= 2 * t ? s[0] + (v - t) / t * (s[1] - s[0]) : s[1] + (v - 2 * t) / t * (100 - s[1]);
+    };
+    return function (q) { return [bend(q[0], A.seams[0]), bend(q[1], A.seams[1])]; };
+  }
+
   function artPiece(d, p, fill, pre) {
     var A = ART[p.shape], name = A.n, out = '';
     out += '<mask id="' + pre + 'mk" maskUnits="userSpaceOnUse" x="0" y="0" width="340" height="340">' +
@@ -941,9 +958,11 @@
         '<path d="M170 0V340' + SEAM;
     } else {
       var bx = A.box || [0, 0, 340, 340], sx = (bx[2] - bx[0]) / 100, sy = (bx[3] - bx[1]) / 100;
+      var bend = onSeams(A, d.layout, p.grid);
       patches(d.layout, p.grid).forEach(function (pt, n) {
         var i = d.layout === 'sao' || d.layout === 'chong' ? pt.i : n;
-        out += '<path d="M' + pt.pts.map(function (q) { return (bx[0] + q[0] * sx).toFixed(1) + ' ' + (bx[1] + q[1] * sy).toFixed(1); }).join('L') +
+        var pts = bend ? pt.pts.map(bend) : pt.pts;
+        out += '<path d="M' + pts.map(function (q) { return (bx[0] + q[0] * sx).toFixed(1) + ' ' + (bx[1] + q[1] * sy).toFixed(1); }).join('L') +
           'Z" fill="' + fill(i) + '" stroke="' + STITCH + '" stroke-width="1.8" stroke-dasharray="6 5" stroke-opacity="0.4" stroke-linejoin="round"/>';
       });
     }

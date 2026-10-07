@@ -26,7 +26,13 @@ and walks through what broke before:
   kinds    (owner) a piece's "Loại": story, zone, talk, board, dates to show
            it, own tap boxes — set in the editor, played in the studio
   layers   "Sau người" / "Trước người": a piece stays on its side of the
-           character whatever its kind
+           character whatever its kind; on one side the pieces are painted in
+           the owner's order (a decoration set on a "Khu vực" stays on it)
+  zones    built-in boxes hidden, their jobs given to pieces: lit by the
+           picture (not its see-through sheet), no frame, the nav and the
+           memo notes follow the piece, a story in hand has a place to go
+  cart     what rides in the cart / the basket: the cut-out of the very piece
+           picked up, never the catalogue photo when the Studio has a cut-out
   topbar   the top bar fits a phone (320px up), in Vietnamese and English
   motion   a device asking for less motion: no walking, "Hiệu ứng" turns it on
 
@@ -36,7 +42,7 @@ crashed and the counts add up.
     python3 tools/check-studio.py            all checks
     python3 tools/check-studio.py wear       one check (street | wear | shop | spots | editor |
                                              library | product | design | catalog | kinds |
-                                             layers | topbar | motion)
+                                             layers | zones | cart | topbar | motion)
 
 Needs: pip install playwright. Chromium: PLAYWRIGHT_BROWSERS_PATH or
 CHROMIUM=/path/to/chrome (the cloud sessions have /opt/pw-browsers/chromium).
@@ -127,6 +133,8 @@ class FakeDB:
         self.info = {}       # studio_info by src
         self.sessions = []   # sessions_public
         self.posts = []
+        self.notes = []      # approved notes (the memo board)
+        self.gone = set()    # categories whose products are all hidden / deleted
 
     async def route(self, r):
         u, m = r.request.url, r.request.method
@@ -164,11 +172,14 @@ class FakeDB:
             return await r.fulfill(status=200, content_type='application/json', body=json.dumps(self.sessions))
         if '/rest/v1/posts' in u:
             return await r.fulfill(status=200, content_type='application/json', body=json.dumps(self.posts))
+        if '/rest/v1/notes' in u:
+            return await r.fulfill(status=200, content_type='application/json', body=json.dumps(self.notes))
         if '/rest/v1/products' in u:
             if m == 'PATCH':
                 self.patches.append(json.loads(r.request.post_data))
                 return await r.fulfill(status=200, content_type='application/json', body='[{}]')
-            return await r.fulfill(status=200, content_type='application/json', body=json.dumps(product_rows()))
+            return await r.fulfill(status=200, content_type='application/json',
+                                   body=json.dumps([p for p in product_rows() if p['category'] not in self.gone]))
         if '/rest/v1/studio_assets' in u:
             i = (re.search(r'id=eq\.([^&]+)', u) or [None, None])[1]
             if m == 'POST':
@@ -459,9 +470,20 @@ async def shop(browser, db):
     await js_click(pg, '[data-go="shelves"]')
     await pg.wait_for_timeout(2000)
     o = await center(pg, '.st-shelf-prod[data-sku="origami"]')
+    shown = "(() => { const t = document.querySelector('.st-prod-label'); return t && !t.hidden ? t.textContent : ''; })()"
+    await pg.mouse.move(o[0] - 40, o[1])
+    await pg.mouse.move(*o)
+    await pg.wait_for_timeout(150)
+    name = await pg.evaluate(shown)
+    check('Origami' in name, f'the mouse over a shelf product shows its name ({name})')
+    await pg.screenshot(path=OUT / 'shop-name.png')
+    await pg.mouse.move(o[0], 20)   # up to the top bar
+    await pg.wait_for_timeout(150)
+    check(await pg.evaluate(shown) == '', 'and the name goes when the mouse leaves')
     await pg.mouse.click(*o)
     await pg.wait_for_timeout(600)
     check('Origami' in (await pg.evaluate("document.getElementById('st-sheet-body').textContent")), 'tap a shelf product opens its card')
+    check(await pg.evaluate(shown) == '', 'no name left behind under the card')
     await pg.keyboard.press('Escape')
     await pg.wait_for_timeout(300)
     await drag(pg, o, await center(pg, '.gb-widget'))
@@ -909,6 +931,31 @@ async def catalog(browser, db):
         check(not pg.errors, f'{name}: no script errors {pg.errors}')
         await pg.context.close()
 
+    # a category with nothing left (all hidden / deleted in admin) goes from the page and from both lists
+    shown = """() => {
+      const vis = el => !!el && getComputedStyle(el).display !== 'none' && !el.closest('[hidden]');
+      const out = {};
+      for (const id of ['phu-kien-vai-vun', 'van-phong-pham', 'quan-ao-2hand', 'gom-su-nhat', 'set-qua', 'dich-vu']) {
+        const sec = document.getElementById(id), head = sec.querySelector('.category-header') || sec.querySelector('h2');
+        out[id] = [vis(head), [...document.querySelectorAll('.toc-item[href="#' + id + '"]')].map(vis)];
+      }
+      return out;
+    }"""
+    for gone, name in (({'vpp'}, 'one category emptied'), ({c for _, c, *_ in PRODUCTS}, 'every product gone')):
+        db.gone = gone
+        pg = await page(browser, db, 1440, 900)
+        await pg.goto(f'{BASE}/san-pham.html')
+        await pg.wait_for_timeout(1500)
+        got = await pg.evaluate(shown)
+        emptied = {'vai-vun': 'phu-kien-vai-vun', 'vpp': 'van-phong-pham', 'gom': 'gom-su-nhat', 'set-qua': 'set-qua'}
+        want = {i: i not in {emptied[c] for c in gone} for i in got}
+        ok = all(got[i][0] == want[i] and all(v == want[i] for v in got[i][1]) and len(got[i][1]) == 2 for i in got)
+        check(ok, f'{name}: its block and both list entries are hidden, the rest stays ({ {i: got[i][0] for i in got} })')
+        await pg.screenshot(path=OUT / f'catalog-{"all" if len(gone) > 1 else "vpp"}-gone.png')
+        check(not pg.errors, f'{name}: no script errors {pg.errors}')
+        await pg.context.close()
+    db.gone = set()
+
 
 async def kinds(browser, db):
     """What a piece does ("Loại"): set in the editor, played in the studio."""
@@ -967,6 +1014,15 @@ async def kinds(browser, db):
     bx = (d.get('boxes') or [{}])[0]
     check(bx.get('vi') == 'Gối trên tủ' and bx.get('act') == 'shop:cabinet', f'editor: an own tap box is saved ({bx})')
     check((d.get('spots') or {}).get('sofa', {}).get('off') is True, 'editor: a built-in box can be hidden from the list')
+    drawn = await pg.evaluate("""['.se-hot[data-id="sofa"]', '.se-hot-tag[data-id="sofa"]', '.se-stand[data-id="sofa"]', '.se-hot[data-id="rail"]']
+      .map(s => !!document.querySelector(s))""")
+    check(drawn == [False, False, False, True], f'editor: a hidden box is off the stage — no frame, name or pin ({drawn})')
+    pins = await pg.evaluate("[...document.querySelectorAll('.se-stand')].map(p => (p.querySelector('.se-stand-name') || {}).textContent || '')")
+    check(len(pins) > 3 and all(pins) and 'Gối trên tủ' in pins, f'editor: every stop pin says whose it is ({pins[:4]}…)')
+    await js_click(pg, '[data-box-pick="sofa"]')
+    await pg.wait_for_timeout(300)
+    check(await pg.evaluate("!!document.querySelector('.se-hot[data-id=\"sofa\"].is-sel')"), 'editor: "Chọn" in the list brings a hidden box up to adjust')
+    await pg.keyboard.press('Escape')
     await js_click(pg, '[data-box-del="' + bx.get('id', '') + '"]')
     await pg.wait_for_timeout(200)
     check(await pg.evaluate("document.querySelectorAll('.se-hot.is-own').length") == 0, 'editor: an own box can be deleted')
@@ -1047,13 +1103,16 @@ async def kinds(browser, db):
 async def layers(browser, db):
     """"Sau người" / "Trước người": a piece stays on its side of the character
     whatever its kind. Products and pieces with a "Loại" used to be drawn over
-    the character from behind."""
+    the character from behind. On one side, the pieces are painted in the
+    owner's order whatever their kind: a decoration hung on a "Khu vực" piece
+    used to end up behind it."""
     print('layers')
     db.rows.clear(); db.info.clear()
     cay = lambda n: f'images/studio/cay/cay-{n:02d}.webp'
     piece = lambda src, x, y, w, h, layer='back', **kw: dict(src=src, x=x, y=y, w=w, h=h, rot=0, flip=False, layer=layer, frame=False, **kw)
     # the character stands at 780: the product and the zone are right behind it,
-    # the small plant right in front
+    # the small plant right in front; the last "Sau người" piece is a plain
+    # decoration set on the zone and the board
     db.rows['live'] = {
         'v': 1, 'bg': {'src': 'images/studio/bg/strip-tron.webp', 'w': 5792, 'h': 1024},
         'items': [
@@ -1061,41 +1120,289 @@ async def layers(browser, db):
             piece('images/studio/sp/origami.webp', 690, 780, 230, 266, sku='origami'),
             piece(cay(5), 870, 770, 150, 333, kind='zone', zone={'act': 'memo', 'vi': 'Khu'}),
             piece(cay(4), 1080, 770, 150, 328, kind='board', board={'feed': 'workshop'}),
+            piece(cay(10), 975, 720, 260, 150),
             piece(cay(10), 790, 890, 140, 160, 'front'),
             piece(cay(7), 1300, 770, 200, 300, 'front', kind='zone', zone={'act': 'memo'}),
             piece(cay(8), 1500, 770, 200, 300, 'front', kind='board', board={'feed': 'workshop'}),
         ],
         'udon': {'x': 2400, 'y': 560, 'w': 128, 'h': 140}, 'start': 780,
     }
-    names = ['decoration', 'product', 'zone', 'board', 'decoration', 'zone', 'board']
+    names = ['decoration', 'product', 'zone', 'board', 'decoration', 'decoration', 'zone', 'board']
+    back = 5
     for view, w, h in (('desktop', 1440, 900), ('mobile', 390, 844)):
         st = await page(browser, db, w, h, "sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1')")
         await st.goto(f'{BASE}/studio.html')
         await st.wait_for_timeout(2000)
-        got = await st.evaluate("""() => {
+        got = await st.evaluate("""(back) => {
           const z = el => parseInt(getComputedStyle(el).zIndex, 10) || 0;
           // painted over: a higher z-index, or the same and later in the page
           const over = (a, b) => z(a) !== z(b) ? z(a) > z(b) : !!(b.compareDocumentPosition(a) & Node.DOCUMENT_POSITION_FOLLOWING);
           const who = document.querySelector('.st-player'), hot = document.querySelector('.st-hot');
           const items = [...document.querySelectorAll('.st-item')], writing = [...document.querySelectorAll('.st-board')];
+          // what the browser really paints on top at a point: the hit-test order,
+          // with the pieces (plain ones take no taps) made hittable for a moment
+          items.forEach(el => { el.dataset.pe = el.style.pointerEvents; el.style.pointerEvents = 'auto'; });
+          const deco = items[back - 1], zone = items[2], r = deco.getBoundingClientRect(), zr = zone.getBoundingClientRect();
+          const x = Math.max(r.left, zr.left) + 4, y = Math.max(r.top, zr.top) + 4;   // inside both boxes
+          const stack = document.elementsFromPoint(x, y).filter(el => items.includes(el));
+          items.forEach(el => { el.style.pointerEvents = el.dataset.pe; });
           return {
             n: items.length,
             items: items.map(el => over(el, who)),
             writing: writing.map(el => over(el, who)),
             onPicture: writing.map(el => over(el, document.querySelector('.st-item[data-thing="' + el.getAttribute('data-thing') + '"]'))),
             overHot: items.filter(el => el.matches('.st-thing, .st-shelf-prod')).every(el => over(el, hot)),
+            inOrder: items.every((el, i) => !i || (i >= back) !== (i - 1 >= back) || over(el, items[i - 1])),
+            painted: stack.map(el => items.indexOf(el)),
+            labelsUp: [...document.querySelectorAll('.st-hot-label')].every(el => over(el, who) && items.every(it => over(el, it))),
           };
-        }""")
-        check(got['n'] == 7, f'{view}: seven pieces in the studio ({got["n"]})')
+        }""", back)
+        check(got['n'] == 8, f'{view}: eight pieces in the studio ({got["n"]})')
         for i, name in enumerate(names):
-            front = i >= 4
+            front = i >= back
             check(got['items'][i] == front, f'{view}: a {name} set "{"Trước" if front else "Sau"} người" is {"in front of" if front else "behind"} the character')
         check(got['writing'] == [False, True], f'{view}: a board\'s writing is on the same side as its picture ({got["writing"]})')
         check(all(got['onPicture']), f'{view}: a board\'s writing is over its picture ({got["onPicture"]})')
         check(got['overHot'], f'{view}: pieces that take taps stay over the tap boxes')
+        check(got['inOrder'], f'{view}: on one side of the character the pieces are painted in the owner\'s order, whatever their kind')
+        check(got['painted'][:2] == [back - 1, 2], f'{view}: a decoration set on a "Khu vực" piece is painted over it ({got["painted"]})')
+        check(got['labelsUp'], f'{view}: the name tags stay over every piece')
         await st.screenshot(path=OUT / f'layers-{view}.png')
         check(not st.errors, f'{view}: no script errors {st.errors}')
         await st.context.close()
+
+
+async def zones(browser, db):
+    """The owner hides built-in tap boxes and gives their jobs to pieces
+    ("Khu vực"), often uploads that sit in a much wider see-through sheet.
+    The studio goes by the pictures: what lights up, where the character
+    stops, the nav, the notes on the board; no frame round a piece."""
+    print('zones')
+    from PIL import Image
+    db.rows.clear(); db.info.clear()
+    bucket = 'https://dxdovvqsfjeizsoprrfn.supabase.co/storage/v1/object/public/gem-media/'
+
+    def sheet(name, pic, size, at, canvas=(1000, 707)):
+        im = Image.new('RGBA', canvas, (0, 0, 0, 0))
+        im.alpha_composite(Image.open(ROOT / pic).convert('RGBA').resize(size), at)
+        buf = io.BytesIO()
+        im.save(buf, 'WEBP', quality=85)
+        db.files[name] = ('image/webp', buf.getvalue())
+        return bucket + name
+    sofa = sheet('z-sofa.webp', 'images/studio/cay/cay-06.webp', (254, 351), (373, 300))      # picture in the middle of its sheet
+    table = sheet('z-table.webp', 'images/studio/cay/cay-05.webp', (183, 351), (700, 300))    # picture far right in its sheet
+    pa = sheet('z-pa.webp', 'images/studio/sp/origami.webp', (150, 173), (30, 110), (400, 400))    # product pictures: left / right of
+    pb = sheet('z-pb.webp', 'images/studio/cay/cay-10.webp', (150, 172), (220, 110), (400, 400))   # their sheets, the sheets overlap
+    story = 'images/studio/cay/cay-04.webp'
+    piece = lambda src, x, y, w, h, **kw: dict(src=src, x=x, y=y, w=w, h=h, rot=0, flip=False, layer='back', frame=False, **kw)
+    db.rows['live'] = {
+        'v': 1, 'bg': {'src': 'images/studio/bg/strip-tron.webp', 'w': 5792, 'h': 1024},
+        'items': [
+            piece(sofa, 900, 640, 1000, 707, kind='zone', zone={'act': 'sofa'}),
+            piece('images/studio/cay/cay-10.webp', 900, 781, 80, 91),   # a plain decoration set on the sofa: after it in the list
+            piece(table, 2300, 640, 1000, 707, kind='zone', zone={'act': 'sewing'}),
+            piece('images/studio/props/bang-treo.webp', 1560, 330, 300, 230, kind='zone', zone={'act': 'memo'}),
+            piece(pa, 1900, 600, 400, 400, sku='origami'),
+            piece(pb, 1960, 600, 400, 400, sku='oxford'),
+            piece(story, 1260, 700, 120, 262, kind='story'),
+        ],
+        'udon': {'x': 5200, 'y': 560, 'w': 128, 'h': 140}, 'start': 1380,
+        'spots': {k: {'off': True} for k in ('sofa', 'sewing', 'memo', 'counter')},
+    }
+    db.info = {story: {'src': story, 'kind': 'story', 'title_vi': 'Mặt nạ giấy bồi', 'body_vi': 'Chuyện kể.', 'lines': []}}
+    db.notes = [{'id': f'n{i}', 'body': f'Lời nhắn {i}', 'name': None, 'created_at': '2026-10-01T00:00:00Z'} for i in range(3)]
+    st = await page(browser, db, 1440, 900, "sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1')")
+    await st.goto(f'{BASE}/studio.html')
+    await st.wait_for_timeout(2500)
+    await st.add_style_tag(content='.lang-hint{display:none!important}')
+    rect = "s => { const r = document.querySelector(s).getBoundingClientRect(); return [r.x, r.y, r.width, r.height]; }"
+    lit = "s => document.querySelector(s).classList.contains('is-over')"
+    zsofa = f'.st-thing[src$="z-sofa.webp"]'
+
+    # the nav goes by what can be reached, box or piece
+    nav = await st.evaluate("Object.fromEntries([...document.querySelectorAll('.st-nav [data-go]')].map(b => [b.dataset.go, !b.classList.contains('is-off')]))")
+    check(nav.get('sewing') is True, 'nav: "Bàn thiết kế" stays, a piece does that job now')
+    check(nav.get('counter') is False, 'nav: "Quầy" goes, nothing does that job')
+
+    # lit by the picture, not by the sheet round it
+    b = await st.evaluate(rect, zsofa)
+    await st.mouse.move(b[0] + b[2] * 0.12, b[1] + b[3] * 0.25)
+    await st.wait_for_timeout(150)
+    check(not await st.evaluate(lit, zsofa), 'the mouse on the see-through part of a piece lights nothing')
+    await st.mouse.move(b[0] + b[2] * 0.5, b[1] + b[3] * 0.7)   # where the decoration lies on it
+    await st.wait_for_timeout(150)
+    check(await st.evaluate(lit, zsofa), 'the mouse on its picture lights it (a decoration lying on it takes nothing)')
+    # the decoration is painted over the zone it was set on: the hit-test order
+    # (what the browser paints on top) with the decoration made hittable for a moment
+    on_top = await st.evaluate("""() => {
+      const d = document.querySelector('.st-item[src$="cay/cay-10.webp"]'), z = document.querySelector('.st-thing[src$="z-sofa.webp"]');
+      const r = d.getBoundingClientRect();
+      d.style.pointerEvents = 'auto';
+      const stack = document.elementsFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      d.style.pointerEvents = '';
+      return stack.indexOf(d) >= 0 && stack.indexOf(d) < stack.indexOf(z);
+    }""")
+    check(on_top, 'a decoration set on a "Khu vực" piece shows over it')
+    a = await st.evaluate(rect, '.st-shelf-prod[src$="z-pa.webp"]')
+    await st.mouse.move(a[0] + a[2] * 0.3, a[1] + a[3] * 0.5)   # on A's picture, inside B's sheet
+    await st.wait_for_timeout(150)
+    over = await st.evaluate("[...document.querySelectorAll('.st-shelf-prod.is-over')].map(e => e.dataset.sku)")
+    tag = await st.evaluate("(() => { const t = document.querySelector('.st-prod-label'); return t && !t.hidden ? t.textContent : ''; })()")
+    check(over == ['origami'] and 'Origami' in tag, f'two products whose sheets overlap: only the one under the mouse lights up ({over}, "{tag}")')
+    await st.screenshot(path=OUT / 'zones-hover.png')
+
+    # the notes sit on the board piece
+    pins = await st.evaluate("""() => {
+      const p = document.querySelector('.st-pins'), bd = document.querySelector('.st-thing[src$="bang-treo.webp"]');
+      if (!p || !bd) return null;
+      const a = p.getBoundingClientRect(), b = bd.getBoundingClientRect();
+      return { n: p.children.length, inside: a.left >= b.left && a.right <= b.right && a.top >= b.top && a.bottom <= b.bottom,
+               over: (parseInt(getComputedStyle(p).zIndex) || 0) >= (parseInt(getComputedStyle(bd).zIndex) || 0) && !!(bd.compareDocumentPosition(p) & Node.DOCUMENT_POSITION_FOLLOWING) };
+    }""")
+    check(bool(pins) and pins['n'] == 3 and pins['inside'] and pins['over'], f'memo box hidden: the notes are pinned on the board piece ({pins})')
+
+    # a tap, then a key: no frame round the piece
+    await st.mouse.click(b[0] + b[2] * 0.5, b[1] + b[3] * 0.7)
+    await st.wait_for_timeout(2600)
+    opened = await st.evaluate("!document.getElementById('st-modal').hidden")
+    await st.keyboard.press('Escape')
+    await st.wait_for_timeout(400)
+    ring = await st.evaluate(f"(() => {{ const e = document.querySelector('{zsofa}'); return [e.matches(':focus-visible'), getComputedStyle(e).outlineStyle]; }})()")
+    check(opened and ring == [False, 'none'], f'tap a piece, close with Escape: no frame left round it (opened {opened}, {ring})')
+    await st.keyboard.press('Tab')
+    for _ in range(14):
+        if await st.evaluate("!!document.activeElement && document.activeElement.matches('.st-thing')"):
+            break
+        await st.keyboard.press('Tab')
+    kb = await st.evaluate("(() => { const e = document.activeElement, c = getComputedStyle(e); return [e.matches('.st-thing:focus-visible'), c.outlineStyle, c.filter.includes('drop-shadow')]; })()")
+    check(kb == [True, 'none', True], f'reached with Tab: a rim along its outline, no box ({kb})')
+
+    # a story in hand: Udon's bubble comes up as the place to drop it
+    await st.mouse.move(600, 80)
+    s = await center(st, '.st-thing[data-kind="story"]')
+    await st.mouse.move(*s)
+    await st.mouse.down()
+    await st.mouse.move(s[0] - 60, s[1] - 120, steps=6)
+    await st.wait_for_timeout(200)
+    drop = await st.evaluate("(() => { const b = document.getElementById('st-bubble'); return [!b.hidden && b.classList.contains('is-drop'), b.textContent.trim()]; })()")
+    check(drop[0] and 'Udon' in drop[1], f'dragging a story: the bubble says where to drop it ({drop[1][:40]})')
+    await st.screenshot(path=OUT / 'zones-story-drag.png')
+    bb = await center(st, '#st-bubble')
+    await st.mouse.move(*bb, steps=8)
+    await st.mouse.up()
+    await st.wait_for_timeout(700)
+    check(await st.evaluate("!!document.querySelector('#st-sheet-body .st-story-udon')"), 'dropped on the bubble: Udon tells the story')
+    check(await st.evaluate("document.getElementById('st-bubble').hidden"), 'and the bubble goes')
+    await st.keyboard.press('Escape')
+    await st.wait_for_timeout(400)
+
+    # the nav button walks to the middle of the picture, not of its sheet
+    await js_click(st, '.st-nav [data-go="sewing"]')
+    await st.wait_for_timeout(6000)
+    x = await st.evaluate("parseFloat(document.querySelector('.st-player').style.left) / (document.getElementById('st-world').getBoundingClientRect().height / 1024)")
+    check(await st.evaluate("!!document.querySelector('#st-sheet-body .pt')"), 'nav "Bàn thiết kế" opens the design table through the piece')
+    check(abs(x - 2591.5) < 14, f'and the character stops at the middle of the picture (x {x:.0f}, picture 2500-2683, sheet middle 2300)')
+    check(not st.errors, f'no script errors {st.errors}')
+    await st.context.close()
+
+
+async def cart(browser, db):
+    """What the basket shows (the cart the character pushes, the basket
+    widget, its rows): a cut-out wherever the Studio has one — the very piece
+    picked up, else the product's own, else a piece of it standing in the
+    Studio — and the catalogue photo only when there is none. One product can
+    hang as several pictures (a green shirt, a yellow one)."""
+    print('cart')
+    from PIL import Image, ImageDraw
+    db.rows.clear(); db.info.clear()
+    bucket = 'https://dxdovvqsfjeizsoprrfn.supabase.co/storage/v1/object/public/gem-media/'
+
+    def shirt(name, colour):
+        im = Image.new('RGBA', (300, 340), (0, 0, 0, 0))
+        ImageDraw.Draw(im).rounded_rectangle((40, 30, 260, 310), 40, fill=colour)
+        buf = io.BytesIO()
+        im.save(buf, 'WEBP', quality=85)
+        db.files[name] = ('image/webp', buf.getvalue())
+        return bucket + name
+    green, yellow = shirt('ao-xanh.webp', (95, 150, 110, 255)), shirt('ao-vang.webp', (225, 190, 80, 255))
+    cushion, photo = 'images/studio/cay/cay-10.webp', 'images/products/vai-vun-bia-so-thumb.jpg'
+    piece = lambda src, x, y, w, h, **kw: dict(src=src, x=x, y=y, w=w, h=h, rot=0, flip=False, layer='back', frame=False, **kw)
+    db.rows['live'] = {
+        'v': 1, 'bg': {'src': 'images/studio/bg/strip-tron.webp', 'w': 5792, 'h': 1024},
+        'items': [
+            piece(green, 1050, 560, 150, 170, sku='oxford'),
+            piece(yellow, 1260, 560, 150, 170, sku='oxford'),
+            piece(cushion, 1460, 580, 140, 160, sku='goi'),
+            dict(piece(photo, 1660, 560, 150, 150, sku='biaso'), frame=True),   # a framed photo is no cut-out
+        ],
+        'udon': {'x': 5200, 'y': 560, 'w': 128, 'h': 140}, 'start': 700,
+    }
+    # two things already in the basket (picked on the products page): no piece of their own
+    init = ("sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1');"
+            "if(!localStorage.getItem('t-set')){localStorage.setItem('t-set','1');"
+            "localStorage.setItem('gem-basket',JSON.stringify([{sku:'goi',qty:1},{sku:'biaso',qty:1}]))}")
+    st = await page(browser, db, 1440, 900, init)
+    await st.goto(f'{BASE}/studio.html')
+    await st.wait_for_timeout(2500)
+    await st.add_style_tag(content='.lang-hint{display:none!important}')
+    cargo = "[...document.querySelector('.st-cargo').querySelectorAll('img')].map(i => [i.className, i.getAttribute('src')])"
+    pile = "[...document.querySelectorAll('.gb-pile-item img')].map(i => [i.className, i.getAttribute('src')])"
+    stored = "JSON.parse(localStorage.getItem('gem-basket')).find(i => i.sku === 'oxford')"
+    want = [['is-cut', cushion], ['is-photo', photo]]
+    got = await st.evaluate(cargo)
+    check(got == want, f'a product with no cut-out of its own rides as its Studio piece; one with none anywhere keeps its photo ({got})')
+    check(await st.evaluate(pile) == want, 'the basket widget shows the same pictures')
+
+    # the yellow shirt dragged into the cart: that shirt, not the first "oxford" piece
+    await drag(st, await center(st, '.st-shelf-prod[src$="ao-vang.webp"]'), await center(st, '.st-fr:not([hidden])'))
+    await st.wait_for_timeout(1300)
+    got = await st.evaluate(cargo)
+    check(await st.evaluate('window.GemBasket.count()') == 3 and got[-1] == ['is-cut', yellow], f'the piece dragged into the cart is the one that rides in it ({got[-1:]})')
+    # the green one tapped, then "Thêm vào giỏ" on its card
+    await st.mouse.click(*(await center(st, '.st-shelf-prod[src$="ao-xanh.webp"]')))
+    await st.wait_for_timeout(600)
+    await js_click(st, '#st-sheet-body [data-add="oxford"]')
+    await st.wait_for_timeout(1300)
+    await st.keyboard.press('Escape')
+    await st.wait_for_timeout(300)
+    got = await st.evaluate(cargo)
+    line = await st.evaluate(stored)
+    check(got[-2:] == [['is-cut', yellow], ['is-cut', green]], f'tap a piece, add from its card: that piece too ({got[-2:]})')
+    check(line == {'sku': 'oxford', 'qty': 2, 'pics': [yellow, green]}, f'one basket line, a picture per piece picked ({line})')
+    await st.screenshot(path=OUT / 'cart-pieces.png')
+
+    # it is the same basket on every page, and after a reload
+    await st.reload()
+    await st.wait_for_timeout(2500)
+    check((await st.evaluate(cargo))[-2:] == [['is-cut', yellow], ['is-cut', green]], 'after a reload the cart still shows the pieces picked')
+    await st.evaluate('window.GemBasket.open()')
+    await st.wait_for_timeout(400)
+    row = await st.evaluate("document.querySelector('.gb-row[data-key=\"oxford\"] .gb-row-sprite img').getAttribute('src')")
+    check(row == yellow, f'the basket row shows the first piece picked ({row[-14:]})')
+    await js_click(st, '.gb-row[data-key="oxford"] [data-act="minus"]')
+    await st.wait_for_timeout(300)
+    line = await st.evaluate(stored)
+    check(line == {'sku': 'oxford', 'qty': 1, 'pics': [yellow]}, f'one taken out: its picture goes with it ({line})')
+    await st.keyboard.press('Escape')
+    other = await page(browser, db, 1440, 900)
+    await other.goto(f'{BASE}/san-pham.html')
+    await other.evaluate("""([y]) => localStorage.setItem('gem-basket', JSON.stringify([{sku: 'oxford', qty: 1, pics: [y]}]))""", [yellow])
+    await other.reload()
+    await other.wait_for_timeout(1200)
+    got = await other.evaluate(pile)
+    check(got == [['is-cut', yellow]], f'products page: the basket shows the piece picked in the Studio ({got})')
+    await other.context.close()
+
+    # a picture address that is not ours (storage can be tampered with) is dropped
+    await st.evaluate("""() => localStorage.setItem('gem-basket', JSON.stringify([{sku: 'oxford', qty: 2,
+      pics: ['https://evil.example/x.png', 'images/studio/../../x.png']}]))""")
+    await st.reload()
+    await st.wait_for_timeout(2500)
+    got = await st.evaluate(cargo)
+    check(got == [['is-cut', green]] * 2, f'a picture that is not one of ours is dropped: the product\'s Studio piece instead ({got})')
+    check(not await st.evaluate("!!document.querySelector('img[src*=\"evil\"], img[src*=\"..\"]')"), 'and it reaches no <img>')
+    check(not st.errors, f'no script errors {st.errors}')
+    await st.context.close()
 
 
 async def topbar(browser, db):
@@ -1173,7 +1480,7 @@ async def main(which):
         browser = await launch(p)
         for name, fn in (('street', street), ('wear', wear), ('shop', shop), ('spots', spots), ('editor', editor),
                          ('library', library), ('product', product), ('design', design), ('catalog', catalog), ('kinds', kinds),
-                         ('layers', layers), ('topbar', topbar), ('motion', motion)):
+                         ('layers', layers), ('zones', zones), ('cart', cart), ('topbar', topbar), ('motion', motion)):
             if which in (None, name):
                 await fn(browser, db)
         await browser.close()
