@@ -141,6 +141,8 @@ class FakeDB:
         self.posts = []
         self.notes = []      # approved notes (the memo board)
         self.gone = set()    # categories whose products are all hidden / deleted
+        self.wtypes = []     # workshop_types
+        self.wt_patches = []
 
     async def route(self, r):
         u, m = r.request.url, r.request.method
@@ -174,6 +176,16 @@ class FakeDB:
                 self.info[b['src']] = b
                 return await r.fulfill(status=201, body='')
             return await r.fulfill(status=200, content_type='application/json', body=json.dumps(list(self.info.values())))
+        if '/rest/v1/workshop_types' in u:
+            if m == 'PATCH':
+                b = json.loads(r.request.post_data)
+                self.wt_patches.append(b)
+                i = re.search(r'id=eq\.([^&]+)', u).group(1)
+                for t in self.wtypes:
+                    if t['id'] == i:
+                        t.update(b)
+                return await r.fulfill(status=200, content_type='application/json', body='[{}]')
+            return await r.fulfill(status=200, content_type='application/json', body=json.dumps(self.wtypes))
         if '/rest/v1/sessions_public' in u:
             return await r.fulfill(status=200, content_type='application/json', body=json.dumps(self.sessions))
         if '/rest/v1/posts' in u:
@@ -269,7 +281,7 @@ async def wear(browser, db):
     print('wear')
     for who in ('p1', 'p2', 'p3', 'p4'):
         init = (f"sessionStorage.setItem('gem-scene','in');sessionStorage.setItem('gem-mac',{json.dumps(json.dumps(WEAR))});"
-                f"localStorage.setItem('gem-char','{who}');localStorage.setItem('gem-studio-intro','1')")
+                f"localStorage.setItem('gem-char','{who}');localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-studio-intro-touch','1')")
         pg = await page(browser, db, 1600, 1100, init)
         await pg.goto(f'{BASE}/studio.html')
         await pg.wait_for_timeout(1500)
@@ -466,7 +478,7 @@ async def shop(browser, db):
     print('shop')
     ctx = await browser.new_context(viewport={'width': 1300, 'height': 760})
     await ctx.route('**/*.supabase.co/**', lambda r: r.abort())   # built-in catalogue
-    await ctx.add_init_script("sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1')")
+    await ctx.add_init_script("sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-studio-intro-touch','1')")
     pg = await ctx.new_page()
     errs = []
     pg.on('pageerror', lambda e: errs.append(str(e)))
@@ -554,7 +566,7 @@ async def spots(browser, db):
     check(live.get('spots', {}).get('memo', {}).get('off') is True, f'spot settings saved ({live.get("spots")})')
     check(any(it.get('sku') == 'origami' for it in live.get('items', [])), 'product piece saved with its sku')
     check(not pg.errors, f'no script errors {pg.errors}')
-    st = await page(browser, db, 1300, 760, "sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1')")
+    st = await page(browser, db, 1300, 760, "sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-studio-intro-touch','1')")
     await st.goto(f'{BASE}/studio.html')
     await st.wait_for_timeout(1800)
     check(await st.evaluate('!document.querySelector(".st-hot[data-hot=memo]")'), 'spot turned off is gone from the studio')
@@ -722,10 +734,68 @@ async def product(browser, db):
     await pg.context.close()
 
 
+async def workshop(browser, db):
+    """Workshop types: cover + photo library in admin (shrunk before upload),
+    and the type cards on workshop.html (photo, "+N ảnh", next-session line)
+    — with and without sessions on the calendar."""
+    print('workshop')
+    db.files.clear(); db.wt_patches.clear(); db.sessions = []
+    db.wtypes = [
+        {'id': 't1', 'slug': 'bia-so-vai-vun', 'name_vi': 'Bìa sổ vải vụn', 'name_en': 'Scrap-fabric notebook cover',
+         'desc_vi': 'Ghép vải vụn thành bìa sổ của riêng bạn.', 'desc_en': None, 'long_vi': 'Đoạn một.',
+         'duration_minutes': 120, 'price': None, 'cover': None, 'images': [], 'sort_order': 1, 'is_published': True},
+        {'id': 't2', 'slug': 'giay-tai-che', 'name_vi': 'Giấy tái chế', 'name_en': 'Recycled paper',
+         'desc_vi': 'Xeo giấy từ giấy vụn.', 'desc_en': None, 'long_vi': 'Đoạn một.',
+         'duration_minutes': 150, 'price': 250000, 'cover': None, 'images': [], 'sort_order': 2, 'is_published': True},
+    ]
+    photo = test_photo(OUT / 'ws-photo.jpg', 3000, 2000)
+    pg = await admin_page(browser, db, 412, 900)
+    await js_click(pg, '[data-tab="sessions"]')
+    await pg.wait_for_timeout(800)
+    await pg.evaluate("document.querySelector('.ad-wtypes').open = true")
+    card = '.ad-wt[data-id="t1"] '
+    await pg.set_input_files(card + '.wt-cover-in', photo)
+    await pg.wait_for_timeout(2500)
+    await pg.set_input_files(card + '.wt-gal-in', [photo, photo])
+    await pg.wait_for_timeout(4000)
+    check(await pg.evaluate(f"document.querySelectorAll('{card}.wt-gal img').length") == 2, 'two photos in the workshop library')
+    await pg.screenshot(path=OUT / 'workshop-admin.png', full_page=True)
+    await js_click(pg, card + '.wt-save')
+    await pg.wait_for_timeout(1500)
+    body = db.wt_patches[-1] if db.wt_patches else {}
+    check('/gem-media/' in (body.get('cover') or ''), 'cover saved')
+    check(len(body.get('images') or []) == 2, f'library saved ({len(body.get("images") or [])})')
+    f = db.files.get((body.get('cover') or '').split('/gem-media/')[-1])
+    check(f and max(decode(f[1]).size) == 1280, f'cover shrunk to 1280px ({len(f[1]) // 1024 if f else "?"} KB)')
+    check(not pg.errors, f'no script errors {pg.errors}')
+    await pg.context.close()
+
+    for sessions, tag in (([], 'empty'), ([{'id': 's1', 'slug': 'giay-tai-che', 'name_vi': 'Giấy tái chế', 'name_en': 'Recycled paper',
+                                             'duration_minutes': 150, 'price': 250000, 'starts_at': '2030-10-16T02:00:00Z',
+                                             'seats_left': 4, 'capacity': 8}], 'sessions')):
+        db.sessions = sessions
+        for w, h in ((375, 844), (1440, 900)):
+            pg = await page(browser, db, w, h)
+            await pg.goto(f'{BASE}/workshop.html')
+            await pg.wait_for_timeout(1200)
+            n = await pg.evaluate("document.querySelectorAll('.ws-type').length")
+            check(n == 2, f'{tag} {w}px: both workshop cards shown ({n})')
+            pic = await pg.evaluate("(() => { const i = document.querySelector('.ws-type-pic img'); return i && i.complete && i.naturalWidth })()")
+            check(pic, f'{tag} {w}px: card photo loaded')
+            cnt = await pg.evaluate("(document.querySelector('.ws-type-count') || {}).textContent")
+            check(cnt == '+2 ảnh', f'{tag} {w}px: photo count ({cnt})')
+            nxt = await pg.evaluate("[...document.querySelectorAll('.ws-type-next')].map(e => e.textContent)")
+            want = 'Buổi gần nhất' if sessions else 'Chưa có lịch'
+            check(len(nxt) == 2 and want in nxt[1], f'{tag} {w}px: next-session line ({nxt})')
+            await pg.locator('#ws-root').screenshot(path=OUT / f'workshop-{tag}-{w}.png')
+            check(not pg.errors, f'no script errors {pg.errors}')
+            await pg.context.close()
+
+
 async def design(browser, db):
     print('design')
     for name, w, h in (('mobile', 393, 852), ('desktop', 1440, 900)):
-        pg = await page(browser, db, w, h, "sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1');localStorage.removeItem('gem-designer')")
+        pg = await page(browser, db, w, h, "sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-studio-intro-touch','1');localStorage.removeItem('gem-designer')")
         await pg.goto(f'{BASE}/studio.html')
         await pg.wait_for_timeout(1500)
         await pg.add_style_tag(content='.lang-hint{display:none!important}')
@@ -866,7 +936,7 @@ async def design(browser, db):
         await pg.context.close()
 
     # round / square coaster
-    pg = await page(browser, db, 393, 852, "sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1')")
+    pg = await page(browser, db, 393, 852, "sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-studio-intro-touch','1')")
     await pg.goto(f'{BASE}/studio.html')
     await pg.wait_for_timeout(1500)
     await js_click(pg, '[data-go="sewing"]')
@@ -886,7 +956,7 @@ async def design(browser, db):
     await pg.context.close()
 
     # a friend opens the shared link
-    pg = await page(browser, db, 393, 852, "localStorage.setItem('gem-studio-intro','1')")
+    pg = await page(browser, db, 393, 852, "localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-studio-intro-touch','1')")
     await pg.goto(f'{BASE}/studio.html')
     await pg.wait_for_timeout(800)
     spec = await pg.evaluate("(() => { const P = window.GemPatch, d = P.blank('goi'); P.applyMood(d, P.MOODS[2]); return P.encode(d); })()")
@@ -1056,7 +1126,7 @@ async def kinds(browser, db):
         src(4): {'src': src(4), 'kind': 'talk', 'lines': [{'vi': 'Câu một'}, {'vi': 'Câu hai'}]},
     }
     db.sessions = [{'slug': 'tui-vai', 'name_vi': 'Workshop túi vải', 'starts_at': '2099-05-02T09:00:00+07:00', 'seats_left': 4, 'capacity': 8}]
-    st = await page(browser, db, 1440, 900, "sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1')")
+    st = await page(browser, db, 1440, 900, "sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-studio-intro-touch','1')")
     await st.goto(f'{BASE}/studio.html')
     await st.wait_for_timeout(2000)
     check(await st.evaluate("document.querySelectorAll('.st-item').length") == 4, 'studio: a piece outside its dates is not there')
@@ -1139,7 +1209,7 @@ async def layers(browser, db):
     names = ['decoration', 'product', 'zone', 'board', 'decoration', 'decoration', 'zone', 'board']
     back = 5
     for view, w, h in (('desktop', 1440, 900), ('mobile', 390, 844)):
-        st = await page(browser, db, w, h, "sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1')")
+        st = await page(browser, db, w, h, "sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-studio-intro-touch','1')")
         await st.goto(f'{BASE}/studio.html')
         await st.wait_for_timeout(2000)
         got = await st.evaluate("""(back) => {
@@ -1220,7 +1290,7 @@ async def zones(browser, db):
     }
     db.info = {story: {'src': story, 'kind': 'story', 'title_vi': 'Mặt nạ giấy bồi', 'body_vi': 'Chuyện kể.', 'lines': []}}
     db.notes = [{'id': f'n{i}', 'body': f'Lời nhắn {i}', 'name': None, 'created_at': '2026-10-01T00:00:00Z'} for i in range(3)]
-    st = await page(browser, db, 1440, 900, "sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1')")
+    st = await page(browser, db, 1440, 900, "sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-studio-intro-touch','1')")
     await st.goto(f'{BASE}/studio.html')
     await st.wait_for_timeout(2500)
     await st.add_style_tag(content='.lang-hint{display:none!important}')
@@ -1355,7 +1425,7 @@ async def cart(browser, db):
         'udon': {'x': 5200, 'y': 560, 'w': 128, 'h': 140}, 'start': 700,
     }
     # two things already in the basket (picked on the products page): no piece of their own
-    init = ("sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1');"
+    init = ("sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-studio-intro-touch','1');"
             "if(!localStorage.getItem('t-set')){localStorage.setItem('t-set','1');"
             "localStorage.setItem('gem-basket',JSON.stringify([{sku:'goi',qty:1},{sku:'biaso',qty:1}]))}")
     st = await page(browser, db, 1440, 900, init)
@@ -1462,7 +1532,7 @@ async def motion(browser, db):
     print('motion')
     ctx = await browser.new_context(viewport={'width': 390, 'height': 844}, reduced_motion='reduce', is_mobile=True, has_touch=True)
     await ctx.route('**/*.supabase.co/**', lambda r: r.abort())
-    await ctx.add_init_script("sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1')")
+    await ctx.add_init_script("sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-studio-intro-touch','1')")
     pg = await ctx.new_page()
     errs = []
     pg.on('pageerror', lambda e: errs.append(str(e)))
@@ -1540,7 +1610,7 @@ async def taps(browser, db):
         'spots': {k: {'off': True} for k in ('door', 'sofa', 'rail', 'fitting', 'pegboard', 'display', 'sewing', 'tu', 'counter', 'memo')},
         'udon': {'x': 5500, 'y': 560, 'w': 128, 'h': 140}, 'start': 363,
     }
-    INSIDE = "sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-motion','off');"
+    INSIDE = "sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-studio-intro-touch','1');localStorage.setItem('gem-motion','off');"
     OPEN = """(() => { const m = document.getElementById('st-modal'); if (m.hidden) return null;
       const b = document.getElementById('st-sheet-body'), h = b.querySelector('#st-sheet-title');
       return h ? h.getAttribute('data-i18n') : b.querySelector('.st-prod') ? 'product' : 'sheet'; })()"""
@@ -1677,8 +1747,49 @@ async def taps(browser, db):
             await pg.wait_for_timeout(300)
             got = await pg.evaluate(OPEN)
             on = 'on a "Khu vực" piece' if behind else 'on the wall'
-            check(got == ('product' if view == 'phone' else None), f'{view}: a tap 8 px off a small product {on} {"opens it" if view == "phone" else "is not on it"} ({got})')
+            if view == 'phone':
+                # touch: the first tap names it (no hover to show it can be tapped), its tag opens it
+                tag = await pg.evaluate("""() => { const l = document.querySelector('.st-pick-label'); if (!l || l.hidden) return null;
+                  const r = l.getBoundingClientRect(); return { name: l.textContent, x: r.left + r.width / 2, y: r.top + r.height / 2 }; }""")
+                check(got is None and tag and tag['name'], f'phone: a tap 8 px off a small product {on} names it, opens nothing ({got}, {tag and tag["name"]})')
+                await pg.wait_for_timeout(1500)   # let the walk end: the tag moves with the world
+                tag = await pg.evaluate("""() => { const r = document.querySelector('.st-pick-label').getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; }""")
+                await tap(pg, tag['x'], tag['y'], strip=False)
+                await pg.wait_for_timeout(300)
+                check(await pg.evaluate(OPEN) == 'product', f'phone: its name tag opens it')
+            else:
+                check(got is None, f'{view}: a tap 8 px off a small product {on} is not on it ({got})')
             await pg.context.close()
+
+    # E2. touch: a second tap on the thing itself opens it too; a tap anywhere else lets the name go
+    PICK = "(() => { const l = document.querySelector('.st-pick-label'); return l && !l.hidden ? l.textContent : null; })()"
+    PROD = "s => { const r = document.querySelector('.st-shelf-prod[data-sku=\"' + s + '\"]').getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; }"
+    pg = await fresh(2000)
+    await tap(pg, *(await pg.evaluate(PROD, 'origami')), strip=False)
+    await pg.wait_for_timeout(1500)
+    check(await pg.evaluate(OPEN) is None and await pg.evaluate(PICK) == 'Origami Pouch', 'phone: first tap on a product names it')
+    await pg.screenshot(path=OUT / 'taps-named.png')
+    await tap(pg, 2150, 960)
+    check(await pg.evaluate(PICK) is None, 'phone: a tap elsewhere lets the name go (and walks)')
+    await pg.wait_for_timeout(1500)
+    await tap(pg, *(await pg.evaluate(PROD, 'origami')), strip=False)
+    await pg.wait_for_timeout(1500)
+    await tap(pg, *(await pg.evaluate(PROD, 'origami')), strip=False)
+    await pg.wait_for_timeout(400)
+    check(await pg.evaluate(OPEN) == 'product' and await pg.evaluate(PICK) is None, 'phone: a second tap on the product opens it')
+    check(not pg.errors, f'no script errors {pg.errors}')
+    await pg.context.close()
+    pg = await fresh(2000, 1440, 900)
+    await tap(pg, *(await pg.evaluate(PROD, 'origami')), strip=False)
+    await pg.wait_for_timeout(400)
+    check(await pg.evaluate(OPEN) == 'product', 'desktop: one click on a product opens it, as before')
+    await pg.context.close()
+
+    # E3. the one-time hint on a phone tells the two-tap rule
+    pg = await fresh(2000, init="sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-motion','off');")
+    txt = await pg.evaluate("(() => { const b = document.getElementById('st-bubble'); return b && !b.hidden ? b.textContent : null; })()")
+    check(txt and 'chạm lần nữa' in txt, f'phone: the hint shows once, even to a visitor who saw the old one ({txt})')
+    await pg.context.close()
 
     # F. the street door always opens, even with the character brought to rest in front of it
     pg = await fresh(363, init="localStorage.setItem('gem-studio-out','1');localStorage.setItem('gem-motion','off');")
@@ -1764,7 +1875,7 @@ async def main(which):
     async with async_playwright() as p:
         browser = await launch(p)
         for name, fn in (('street', street), ('wear', wear), ('shop', shop), ('spots', spots), ('editor', editor),
-                         ('library', library), ('product', product), ('design', design), ('catalog', catalog), ('kinds', kinds),
+                         ('library', library), ('product', product), ('workshop', workshop), ('design', design), ('catalog', catalog), ('kinds', kinds),
                          ('layers', layers), ('zones', zones), ('cart', cart), ('topbar', topbar), ('motion', motion),
                          ('taps', taps)):
             if which in (None, name):

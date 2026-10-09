@@ -355,6 +355,12 @@
                   '<input type="file" accept="image/*" hidden class="wt-cover-in"></label>' +
               '</div>' +
             '</div>' +
+            '<div class="ad-f">' +
+              '<span>Thư viện ảnh — hiện ở trang giới thiệu, thẻ ngoài danh sách báo “+N ảnh”</span>' +
+              '<ul class="ad-gal wt-gal"></ul>' +
+              '<label class="ad-btn ad-upload">Thêm ảnh' +
+                '<input type="file" accept="image/*" multiple hidden class="wt-gal-in"></label>' +
+            '</div>' +
             '<div class="ad-f-row">' +
               '<label class="ad-f"><span>Thời lượng (phút)</span>' +
                 '<input type="number" class="wt-dur" min="15" max="480" step="15"></label>' +
@@ -396,11 +402,49 @@
         var lbl = e.target.closest('.ad-upload');
         var was = lbl.firstChild.nodeValue;
         lbl.firstChild.nodeValue = 'Đang tải…';
-        window.GemDB.uploadImage(file).then(function (url) {
+        // Thu nhỏ trước khi tải: ảnh bìa nằm trên thẻ ngoài trang Workshop,
+        // ảnh gốc từ điện thoại 3–6 MB thì trang tải rất chậm.
+        window.GemImg.shrink(file).then(window.GemDB.uploadImage).then(function (url) {
           cover = url; prev.src = url; prev.hidden = false;
           toast('Đã tải ảnh — nhớ bấm Lưu');
         }).catch(function (err) { toast('Tải ảnh không được: ' + (err.message || ''), true); })
           .then(function () { lbl.firstChild.nodeValue = was; e.target.value = ''; });
+      });
+
+      var gallery = (t.images || []).slice();
+      var galUl = d.querySelector('.wt-gal');
+      function renderGal() {
+        galUl.innerHTML = gallery.map(function (src, i) {
+          return '<li><img src="' + esc(src) + '" alt="" loading="lazy">' +
+            (i ? '<button type="button" class="ad-gal-b" data-gal-up="' + i + '" aria-label="Lên trước">‹</button>' : '') +
+            '<button type="button" class="ad-gal-b" data-gal-del="' + i + '" aria-label="Bỏ ảnh này">×</button></li>';
+        }).join('') || '<li class="ad-hint">Chưa có ảnh.</li>';
+      }
+      renderGal();
+      galUl.addEventListener('click', function (e) {
+        var b = e.target.closest('[data-gal-up],[data-gal-del]');
+        if (!b) return;
+        var mv = b.getAttribute('data-gal-up'), del = b.getAttribute('data-gal-del');
+        if (mv != null) { var i = +mv; gallery.splice(i - 1, 0, gallery.splice(i, 1)[0]); }
+        else gallery.splice(+del, 1);
+        renderGal();
+      });
+      d.querySelector('.wt-gal-in').addEventListener('change', function (e) {
+        var files = Array.prototype.slice.call(e.target.files || []);
+        if (!files.length) return;
+        var lbl = e.target.closest('.ad-upload');
+        var was = lbl.firstChild.nodeValue;
+        lbl.firstChild.nodeValue = 'Đang tải…';
+        e.target.disabled = true;
+        // từng ảnh một: điện thoại hết bộ nhớ nếu giải mã nhiều ảnh lớn cùng lúc
+        files.reduce(function (chain, file) {
+          return chain.then(function () {
+            return window.GemImg.shrink(file).then(window.GemDB.uploadImage)
+              .then(function (url) { gallery.push(url); renderGal(); });
+          });
+        }, Promise.resolve()).then(function () { toast('Đã thêm ' + files.length + ' ảnh — nhớ bấm Lưu'); })
+          .catch(function (err) { toast('Có ảnh không tải được: ' + (err.message || ''), true); })
+          .then(function () { lbl.firstChild.nodeValue = was; e.target.disabled = false; e.target.value = ''; });
       });
       d.querySelector('.wt-dur').value   = t.duration_minutes == null ? '' : t.duration_minutes;
       d.querySelector('.wt-price').value = t.price == null ? '' : t.price;
@@ -418,6 +462,7 @@
           what_vi: d.querySelector('.wt-what').value.trim() || null,
           note_vi: d.querySelector('.wt-note').value.trim() || null,
           cover: cover,
+          images: gallery,
           duration_minutes: dur > 0 ? dur : 90,
           price: pr === '' ? null : parseInt(pr, 10)
         }).then(function () { toast('Đã lưu'); return load(); })

@@ -321,6 +321,11 @@
 /* a product's name while the mouse is over it (studio.js nameTag) */
 .st-prod-label { pointer-events: none; }
 .st-prod-label[hidden] { display: none; }
+/* touch: a thing tapped once is named (studio.js pickTap); the tag opens it */
+.st-pick-label[hidden] { display: none; }
+.st-thing.is-picked, .st-shelf-prod.is-picked {
+  filter: brightness(1.06) drop-shadow(0 0 6px rgba(251, 246, 238, 0.9));
+}
 .st-shelf-prod.is-lifted { opacity: 0.25; }
 /* a cut-out product stands on the shelf as itself, no frame */
 .st-shelf-item.is-cut { aspect-ratio: auto; background: none; border: 0; box-shadow: none; }
