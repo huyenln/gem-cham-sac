@@ -1212,7 +1212,7 @@
       if (!n.classList.contains('st-bg')) n.remove();   // .st-bgx too: paintBg redraws it
     });
     udonEl = null; memoPins = null; THINGS = []; OWN_HOT = [];
-    restX = null; walkGoal = null; hovered = null;   // a scene starts with nowhere "visited"
+    restX = null; hovered = null;   // a scene starts with nowhere "visited"
     if (name === 'out') {
       var O = outsideScene();
       SCENE.width = O.bg.w; SCENE.height = O.bg.h; SCENE.startX = O.start;
@@ -1446,7 +1446,6 @@
     var dist = Math.abs(target - from);
     if (dist > 4) player.facing = target > from ? 1 : -1;
     player.moved = true;
-    walkGoal = { x: target, token: token };
 
     if (reduceMotion || dist < 4) {
       player.x = target;
@@ -1461,7 +1460,6 @@
     var dur = Math.max(250, Math.min(1400, dist / SCENE.speed * 1000));
     var start = performance.now();
     player.moving = true;
-    markHere();   // lit by where the walk is heading
 
     function step(now) {
       if (token !== walkToken) return;          // a newer walk took over
@@ -1598,8 +1596,6 @@
         if (Math.abs(dx) < 12 || Math.abs(dx) < Math.abs(dy)) return;
         st.on = true;
         walkToken++;                 // stop any walk in progress
-        restX = null;                // on the move: no place is "here" until they let go
-        markHere();
         try { stage.setPointerCapture(e.pointerId); } catch (x) { /* fine */ }
       }
       var now = performance.now();
@@ -3692,18 +3688,13 @@
 
   /* ---------- where the character stands ----------
      The place(s) the character has walked to: its tag lights up ("Tên ›").
-     Not where a scene starts, never the way in. A walk in progress counts as
-     being where it is heading. */
-  var restX = null;      // where the visitor last brought the character to rest; null at a scene's start
-  var walkGoal = null;   // { x, token } of the walk in progress
-
-  function standAt() {
-    return walkGoal && walkGoal.token === walkToken && player.moving ? walkGoal.x : restX;
-  }
+     Not where a scene starts, never the way in. It changes only when the
+     character comes to rest: a walk or a swipe in progress leaves the tags as
+     they are, so they don't flicker as the character passes under them. */
+  var restX = null;   // where the visitor last brought the character to rest; null at a scene's start
 
   function rest() {
     restX = player.x;
-    walkGoal = null;
     markHere();
   }
 
@@ -3723,14 +3714,14 @@
   }
 
   function isHere(el, x) {
-    if (x === undefined) x = standAt();
+    if (x === undefined) x = restX;
     var p = x != null && placeOf(el);
     return !!p && p.act !== 'enter' && x >= p.x0 && x <= p.x1;
   }
 
   function markHere() {
     if (!world) return;
-    var x = standAt();
+    var x = restX;
     world.querySelectorAll('.st-hot, .st-thing[data-kind="zone"]').forEach(function (el) {
       var on = isHere(el, x), p = placeOf(el);
       el.classList.toggle('is-here', on);

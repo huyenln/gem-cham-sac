@@ -1643,6 +1643,31 @@ async def taps(browser, db):
         await pg.keyboard.press('Escape')
         await pg.wait_for_timeout(400)
 
+    async def swipe(pg, dx, steps=12):
+        # a finger dragged across the stage (touch events, so touch pointers)
+        cdp = await pg.context.new_cdp_session(pg)
+        x, y = await pg.evaluate("(() => { const r = document.getElementById('st-stage').getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height * 0.85]; })()")
+        pt = lambda i: [{'x': x + dx * i / steps, 'y': y, 'id': 1}]
+        await cdp.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': pt(0)})
+        for i in range(1, steps + 1):
+            await pg.wait_for_timeout(30)
+            await cdp.send('Input.dispatchTouchEvent', {'type': 'touchMove', 'touchPoints': pt(i)})
+        await cdp.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []})
+        await cdp.detach()
+
+    # every frame from now: is the tag lit (G/w), is the character moving (m/s)
+    REC = """(name) => { const l = [...document.querySelectorAll('.st-zone-label')].find(e => e.textContent === name), p = document.querySelector('.st-player');
+      window.__rec = []; window.__on = true;
+      (function f() { if (!window.__on) return; window.__rec.push((l && l.classList.contains('is-here') ? 'G' : 'w') + (p.classList.contains('is-moving') ? 'm' : 's')); requestAnimationFrame(f); })(); }"""
+    STOP = "(() => { window.__on = false; return window.__rec; })()"
+
+    def runs(rec):
+        out = []
+        for f in rec:
+            if out and out[-1][0] == f: out[-1][1] += 1
+            else: out.append([f, 1])
+        return ' '.join(f'{f}{n}' for f, n in out)
+
     # A. where the scene starts is not "visited": the door opens with one tap;
     #    every piece has a tag on top of its picture, and the tags take taps
     pg = await fresh(363)
@@ -1701,6 +1726,30 @@ async def taps(browser, db):
         await tap(pg, t['x'], t['y'], strip=False)
     check(await pg.evaluate(OPEN) == 'studio.sofa_h', 'a tap on the lit tag opens the piece again')
     await close(pg)
+    check(not pg.errors, f'no script errors {pg.errors}')
+    await pg.context.close()
+
+    # B2. a tag changes only when the character comes to rest, so it never
+    #     flickers: walking into a piece lights it once, after the character
+    #     stops; a swipe or a walk within the piece keeps it lit in every frame
+    #     (a swipe used to turn it white, the fling lit it again)
+    pg = await fresh(720, init=INSIDE.replace("'gem-motion','off'", "'gem-motion','on'"))
+    await pg.evaluate(REC, 'Góc nghỉ chân')
+    await tap(pg, 980, 680)
+    await pg.wait_for_timeout(1600)
+    rec = await pg.evaluate(STOP)
+    flips = sum(1 for a, b in zip(rec, rec[1:]) if a[0] != b[0])
+    check('wm' in rec and 'Gm' not in rec and rec[-1] == 'Gs' and flips == 1,
+          f'walking into a piece: its tag lights once, after the character stops ({runs(rec)})')
+    for what, act in (('a swipe', lambda: swipe(pg, -60)), ('a walk', lambda: tap(pg, x0 - 120, 800))):   # back, away from the product on it
+        x0 = await pg.evaluate(X)
+        await pg.evaluate(REC, 'Góc nghỉ chân')
+        await act()
+        await pg.wait_for_timeout(1600)
+        rec = await pg.evaluate(STOP)
+        x1 = await pg.evaluate(X)
+        check(abs(x1 - x0) > 40 and 'Gm' in rec and all(f[0] == 'G' for f in rec) and await pg.evaluate(OPEN) is None,
+              f'{what} within the piece: its tag stays lit in every frame ({x0:.0f} → {x1:.0f}; {runs(rec)})')
     check(not pg.errors, f'no script errors {pg.errors}')
     await pg.context.close()
 

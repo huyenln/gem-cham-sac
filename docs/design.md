@@ -1799,9 +1799,11 @@ Luật chạm (điện thoại và máy tính như nhau; `tap()` trong `js/studi
 - **Nhãn:** Khu vực nào cũng có — tên chủ đặt, không thì tên theo hành động (`ACT_NAME`;
   "Không làm gì" thì không có). Nằm trên đỉnh hình (`tagAt`, đặt lại khi đọc xong ảnh),
   vùng chạm ~47px.
-- **Khu đang đứng:** khu có hình chứa chỗ nhân vật vừa dừng (`restX`; đang đi thì tính chỗ
-  đang tới; kể cả khu treo phía trên như cửa sổ) → nhãn sáng "Tên ›" và luôn nằm trong
-  màn hình. Không tính chỗ bắt đầu cảnh.
+- **Khu đang đứng:** khu có hình chứa chỗ nhân vật vừa dừng (`restX`, kể cả khu treo phía
+  trên như cửa sổ) → nhãn sáng "Tên ›" và luôn nằm trong màn hình. Không tính chỗ bắt đầu
+  cảnh. **Chỉ đổi khi nhân vật dừng hẳn:** đang đi hay đang vuốt thì nhãn giữ nguyên, nên
+  vuốt qua lại trong cùng một khu nhãn xanh suốt; sang khu khác thì đổi một lần lúc dừng,
+  mờ dần 0,2 giây. (Trước đây vuốt là xoá trạng thái rồi bật lại → nhãn nháy trắng.)
 - **Nhãn không đè nhân vật** (`placeTags`): khi nhân vật đứng yên, nhãn nào nằm trên nét vẽ
   nhân vật ở đúng độ cao của nhãn (`playerSpan`, theo alpha của khung: ngang đầu thì chỉ là
   cái đầu, không tính xe ở dưới) thì dịch ngang dọc theo đỉnh món, sang phía gần hơn. Lúc
