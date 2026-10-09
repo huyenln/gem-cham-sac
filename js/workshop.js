@@ -13,7 +13,7 @@
     'ws.hero_sub':      { vi: `Mỗi buổi chỉ nhận một nhóm nhỏ để ai cũng được chỉ tận tay. Chọn buổi bạn đi được, để lại tên và số điện thoại — chúng mình nhắn lại trước một ngày.`, en: `Each session takes a small group so everyone gets shown hands-on. Pick a session that suits you and leave your name and phone — we'll message you the day before.` },
 
     'ws.loading':       { vi: `Đang tải lịch...`, en: `Loading sessions...` },
-    'ws.empty':         { vi: `Hiện chưa có buổi nào được mở. Nhắn cho chúng mình để hẹn một buổi riêng nhé.`, en: `No sessions are open right now. Message us to arrange one.` },
+    'ws.empty':         { vi: `Hiện chưa có buổi nào trên lịch. Bạn xem các workshop ở trên rồi nhắn cho chúng mình để hẹn một buổi riêng nhé.`, en: `No sessions on the calendar right now. Have a look at the workshops above and message us to arrange one.` },
     'ws.error':         { vi: `Chưa tải được lịch. Bạn thử lại sau, hoặc nhắn trực tiếp cho chúng mình nhé.`, en: `Couldn't load the schedule. Please try again later, or message us directly.` },
     'ws.retry':         { vi: `Thử lại`, en: `Try again` },
 
@@ -56,6 +56,9 @@
     'ws.other_zalo':    { vi: `Nhắn Zalo`, en: `Message on Zalo` },
 
     'ws.type_more':     { vi: `Xem chi tiết`, en: `See details` },
+    'ws.type_next':     { vi: `Buổi gần nhất: {when}`, en: `Next session: {when}` },
+    'ws.type_nosess':   { vi: `Chưa có lịch — nhắn để hẹn riêng`, en: `Not scheduled yet — message us to arrange one` },
+    'ws.type_allfull':  { vi: `Các buổi sắp tới đã đủ chỗ`, en: `Upcoming sessions are fully booked` },
     'ws.type_back':     { vi: `Về danh sách workshop`, en: `All workshops` },
     'ws.type_what':     { vi: `Bạn sẽ làm gì`, en: `What you'll do` },
     'ws.type_note':     { vi: `Cần biết trước`, en: `Good to know` },
@@ -157,11 +160,12 @@
 
   /* ---------- mã màu theo loại workshop ----------
      Xếp theo slug rồi mới gán màu, để một loại luôn giữ đúng màu đó dù tuần
-     này có buổi hay không. CSS định nghĩa 5 màu, nhiều loại hơn thì quay vòng. */
+     này có buổi hay không. CSS định nghĩa 5 màu, nhiều loại hơn thì quay vòng.
+     Gán trên danh sách loại đầy đủ (allTypes), không chỉ loại đang có buổi. */
   function colorMap(list) {
     var keys = [];
     list.forEach(function (s) {
-      var k = s.slug || s.name_vi || '?';
+      var k = typeKey(s);
       if (keys.indexOf(k) < 0) keys.push(k);
     });
     keys.sort();
@@ -174,7 +178,7 @@
 
   var _colors = null;
   function colorFor(s) {
-    if (!_colors) _colors = colorMap(sessions);
+    if (!_colors) _colors = colorMap(allTypes());
     return _colors[typeKey(s)] || 1;
   }
 
@@ -221,6 +225,38 @@
 
   /* ---------- render ---------- */
   var root, sessions = [], types = [], current = null, openType = null;
+
+  // Mọi loại workshop để hiện thẻ: loại đã đăng (theo sort_order), cộng loại
+  // nào có buổi mà không nằm trong danh sách đó — thẻ của nó dựng từ dữ liệu
+  // buổi, như trước đây.
+  function allTypes() {
+    var out = types.slice(), seen = {};
+    out.forEach(function (ty) { seen[typeKey(ty)] = 1; });
+    sessions.forEach(function (s) {
+      var k = typeKey(s);
+      if (seen[k]) return;
+      seen[k] = 1;
+      out.push(s);
+    });
+    return out;
+  }
+
+  // Dòng "buổi gần nhất" trên thẻ loại. sessions đã sắp theo giờ nên buổi
+  // đầu tiên còn chỗ là buổi gần nhất đặt được.
+  function nextLine(k) {
+    var mine = sessions.filter(function (s) { return typeKey(s) === k; });
+    if (!mine.length) {
+      return '<p class="ws-type-next none" data-i18n="ws.type_nosess"></p>';
+    }
+    var open = mine.filter(function (s) { return s.seats_left > 0; })[0];
+    if (!open) {
+      return '<p class="ws-type-next none" data-i18n="ws.type_allfull"></p>';
+    }
+    var p = vnParts(open.starts_at);
+    var when = dayLabel(p.dow) + ' ' + p.date + ' · ' + p.time;
+    return '<p class="ws-type-next">' +
+      esc(fill(t('ws.type_next', 'Buổi gần nhất: {when}'), { when: when })) + '</p>';
+  }
 
   function typeBySlug(slug) {
     if (!slug) return null;
@@ -369,26 +405,19 @@
   }
 
   function renderList() {
-    if (!sessions.length) {
+    var list = allTypes();
+    if (!list.length && !sessions.length) {
       root.innerHTML = '<p class="ws-empty" data-i18n="ws.empty"></p>';
       translate();
       return;
     }
 
-    var color = colorMap(sessions);
+    var color = colorMap(list);
 
-    // Mô tả loại workshop tách hẳn ra trên đầu: nói một lần cho mỗi loại,
-    // thay vì lặp lại y hệt dưới từng buổi — đó là thứ làm cả trang trông
-    // như một đống thẻ giống nhau.
-    var types = [], tSeen = {};
-    sessions.forEach(function (s) {
-      var k = typeKey(s);
-      if (tSeen[k]) return;
-      tSeen[k] = 1;
-      types.push(s);
-    });
-
-    var legend = '<ul class="ws-types">' + types.map(function (s) {
+    // Thẻ loại workshop luôn hiện, kể cả khi chưa có buổi nào trên lịch —
+    // khách vẫn cần biết ở đây có những workshop gì. Mô tả nói một lần cho
+    // mỗi loại, không lặp lại dưới từng buổi.
+    var legend = '<ul class="ws-types">' + list.map(function (s) {
       var name = lang() === 'en' && s.name_en ? s.name_en : s.name_vi;
       var desc = lang() === 'en' && s.desc_en ? s.desc_en : s.desc_vi;
       var slug = s.slug || '';
@@ -401,6 +430,7 @@
             fill(t('ws.duration', '{n} phút'), { n: s.duration_minutes }) +
             ' · ' + esc(money(s.price)) +
           '</p>' +
+          nextLine(typeKey(s)) +
           (hasPage ? '<span class="ws-type-more" data-i18n="ws.type_more"></span>' : '') +
         (hasPage ? '</a>' : '</div>') +
       '</li>';
@@ -424,6 +454,7 @@
         }).join('') +
       '</section>';
     }).join('');
+    if (!sessions.length) sched = '<p class="ws-empty" data-i18n="ws.empty"></p>';
 
     root.innerHTML = '<div class="ws-sched">' + legend + sched + '</div>';
 
@@ -574,6 +605,7 @@
     ]).then(function (r) {
       sessions = r[0] || [];
       types = r[1] || [];
+      _colors = null;
       route();
     }).catch(renderError);
   }

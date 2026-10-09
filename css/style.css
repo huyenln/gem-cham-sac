@@ -2320,6 +2320,8 @@ body.gb-lock { overflow: hidden; }
 }
 .ws-type p { font-size: var(--text-sm); color: var(--ink-body); line-height: 1.6; }
 .ws-type-meta { color: var(--ink-soft); margin-top: var(--space-2); }
+.ws-type .ws-type-next { color: var(--sage-deep); font-weight: 600; }
+.ws-type .ws-type-next.none { color: var(--ink-soft); font-weight: 400; font-style: italic; }
 
 /* ---------- lịch, gom theo tuần rồi theo ngày ---------- */
 .ws-week { margin-bottom: var(--space-10); }
