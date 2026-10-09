@@ -116,18 +116,20 @@
 }
 .st-bgx { position: absolute; top: 0; height: 100%; pointer-events: none; }
 
-/* ---------- HOTSPOTS ---------- */
+/* ---------- HOTSPOTS ----------
+   A tap on a place (its box, its picture) walks there; its tag opens it
+   (studio.js tap). So the box itself never looks like a button: under the
+   mouse only its tag lights up. The rim is for the keyboard. */
 .st-hot {
   position: absolute;
   padding: 0;
   border: 0;
   border-radius: 14px;
   background: transparent;
-  cursor: pointer;
+  cursor: default;
   transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.st-hot:hover,
 .st-hot:focus-visible {
   background: rgba(251, 246, 238, 0.18);
   box-shadow: 0 0 0 3px rgba(135, 150, 90, 0.75), 0 0 24px rgba(251, 246, 238, 0.6);
@@ -160,16 +162,16 @@
 }
 
 .st-hot:hover .st-hot-label,
-.st-hot:focus-visible .st-hot-label {
+.st-hot:focus-visible .st-hot-label,
+.st-hot-label:hover,
+.st-hot-label.is-hover {
   background: var(--sage-deep);
   border-color: var(--sage-deep);
   color: var(--paper-white);
 }
 
-/* The place the character stands at (studio.js markHere): a tap on it walks,
-   so it doesn't light up; its tag does, with an arrow, and opens it. */
-.st-hot.is-here { cursor: default; }
-.st-hot.is-here:hover { background: transparent; box-shadow: none; }
+/* The place the character stands at (studio.js markHere): its tag lights up,
+   with an arrow. */
 .st-hot-label.is-here {
   background: var(--sage-deep);
   border-color: var(--sage-deep);
@@ -185,7 +187,7 @@
   font-size: 1.15em;
   line-height: 1;
 }
-/* a tap on that place's picture: the tag nods (the way to open it again) */
+/* a tap on a place's picture walks there: its tag nods (that is what opens it) */
 .st-hot-label.is-nudge { animation: st-nudge 0.5s ease-in-out; }
 @keyframes st-nudge { 50% { transform: translate(-50%, -60%) scale(1.14); } }
 
@@ -277,7 +279,7 @@
 /* Lit by its own outline, never by its box: an uploaded picture can sit in a
    sheet much wider than itself. .is-over = the mouse is on the picture
    (studio.js over()); a piece reached with the keyboard gets a firmer rim. */
-.st-thing.is-over[data-kind="story"], .st-thing.is-over[data-kind="zone"], .st-shelf-prod.is-over {
+.st-thing.is-over[data-kind="story"], .st-shelf-prod.is-over {
   filter: brightness(1.06) drop-shadow(0 0 6px rgba(251, 246, 238, 0.9));
 }
 .st-thing.is-over { cursor: pointer; }

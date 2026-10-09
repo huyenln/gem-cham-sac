@@ -187,7 +187,7 @@
     'studio.go_sewing':    { vi: `Bàn thiết kế`, en: `Design table` },
     'studio.go_counter':   { vi: `Quầy`, en: `Counter` },
     'studio.go_tu':        { vi: `Tủ của bạn`, en: `Your cabinet` },
-    'studio.sr_help':      { vi: `Chạm vào đồ vật trong studio để xem hàng. Bấm Tab để đi qua từng điểm.`, en: `Tap things in the studio to look around. Press Tab to move between them.` },
+    'studio.sr_help':      { vi: `Chạm vào nhãn tên để mở từng góc, chạm chỗ khác để đi dạo. Bấm Tab để đi qua từng điểm.`, en: `Tap a name tag to open a corner, anywhere else to walk around. Press Tab to move between them.` },
     'studio.close':        { vi: `Đóng`, en: `Close` },
 
     'studio.hot_door':     { vi: `Chọn nhân vật`, en: `Choose character` },
@@ -203,7 +203,7 @@
     'studio.hot_counter':  { vi: `Quầy thu ngân`, en: `Counter` },
     'studio.tag_link':     { vi: `Xem thêm`, en: `See more` },
 
-    'studio.intro':        { vi: `Chào bạn! Chạm vào kệ để xem đồ nhé. Bàn thiết kế ở gần cuối phòng đó.`, en: `Hi! Tap a shelf to look around. The design table is near the far end.` },
+    'studio.intro':        { vi: `Chào bạn! Chạm vào nhãn tên để mở từng góc, chạm chỗ khác để đi dạo nhé.`, en: `Hi! Tap a name tag to open a corner, or anywhere else to walk around.` },
     'studio.cart_empty':   { vi: `Xe còn trống nè, dạo thêm chút nhé.`, en: `Your cart is still empty — have another look around.` },
 
     'studio.add':          { vi: `Thêm vào giỏ`, en: `Add to cart` },
@@ -509,13 +509,6 @@
 
   function pct(v, of) { return (v / of * 100).toFixed(3) + '%'; }
 
-  // The floor, from the character's knees down. The built-in boxes were
-  // drawn above it so it stays free for walking; pieces standing on it (a
-  // sofa, a rug) don't take taps there either: a tap on the floor walks.
-  var KNEE = 0.28;   // knee height, share of the character's height
-  function floorY() { return SCENE.feetY - KNEE * SCENE.playerH; }
-  function onFloor(y) { return (y - stage.getBoundingClientRect().top) / k >= floorY(); }
-
   /* ======================================================================
      STATE + DOM
      ====================================================================== */
@@ -815,6 +808,7 @@
       lab.textContent = name;
       tagAt(lab, it);
       world.appendChild(lab);
+      it._tag = lab;
     }
     if (it.kind === 'board') board(it, n);
   }
@@ -1119,8 +1113,6 @@
   function addHot(h) {
     var b = boxOf(h), name = spotName(h);
     var custom = spotSet(h.id).vi || spotSet(h.id).en;
-    // the floor is for walking: a box reaching below the character's knees stops there
-    var y1 = b.y0 < floorY() && b.y1 > floorY() ? floorY() : b.y1;
     var btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'st-hot';
@@ -1130,7 +1122,7 @@
     btn.style.left = pct(b.x0, SCENE.width);
     btn.style.top = pct(b.y0, SCENE.height);
     btn.style.width = pct(b.x1 - b.x0, SCENE.width);
-    btn.style.height = pct(y1 - b.y0, SCENE.height);
+    btn.style.height = pct(b.y1 - b.y0, SCENE.height);
     if (name) {
       var lab = document.createElement('span');
       lab.className = 'st-hot-label';
@@ -1215,7 +1207,7 @@
       if (!n.classList.contains('st-bg')) n.remove();   // .st-bgx too: paintBg redraws it
     });
     udonEl = null; memoPins = null; THINGS = []; OWN_HOT = [];
-    restX = null; walkGoal = null; litTags = [];   // a scene starts with nowhere "visited"
+    restX = null; walkGoal = null; hovered = null;   // a scene starts with nowhere "visited"
     if (name === 'out') {
       var O = outsideScene();
       SCENE.width = O.bg.w; SCENE.height = O.bg.h; SCENE.startX = O.start;
@@ -1435,7 +1427,7 @@
     var worldW = SCENE.width * k;
     cam = Math.max(0, Math.min(player.x * k - viewW / 2, worldW - viewW));
     world.style.transform = 'translate3d(' + (-cam) + 'px,0,0)';
-    clampTags();
+    placeTags(viewW);
   }
 
   /* ======================================================================
@@ -1501,12 +1493,13 @@
   // A sheet is a history step, like a dialog in an app: the phone's Back
   // gesture / button closes it instead of leaving the studio.
   var sheetInHistory = false;
-  var sheetAt = 0;   // when the sheet last opened (see the guard in bind)
+  var sheetAt = 0, sheetFrom = null;   // when the sheet last opened, and where the tap that opened it was (the guard in bind)
 
   // full: the sheet takes the whole screen (the design table: things are
   // dragged inside it, so only the grab handle pulls it down)
   function openSheet(html, full) {
     sheetAt = Date.now();
+    sheetFrom = lastDown;
     if (modal.hidden) lastFocus = document.activeElement;
     sheetEl.classList.toggle('is-full', !!full);
     modal.classList.toggle('is-full', !!full);
@@ -1581,6 +1574,7 @@
      some speed carries them a bit further. A tap still walks to the spot. */
   var swiped = 0;   // time of the last swipe: the click that follows is not a tap
   var lastPointer = 'mouse';   // 'mouse' | 'touch' | 'pen', of the last press on the stage
+  var lastDown = null;         // where the last press anywhere was (the sheet's double-tap guard)
   function bindSwipe() {
     var st = null;
     stage.addEventListener('pointerdown', function (e) { lastPointer = e.pointerType || 'mouse'; }, true);
@@ -3267,13 +3261,22 @@
   function bindHover() {
     world.addEventListener('pointermove', function (e) {
       if (e.pointerType !== 'mouse') return;
-      var pc = e.buttons ? null : pickAt(e.clientX, e.clientY).piece || null;
-      // lit = a click opens it: not the place the character stands at, nor a piece's foot on the floor
-      if (pc && pc.getAttribute('data-kind') === 'zone' && (isHere(pc) || onFloor(e.clientY))) pc = null;
-      over(pc);
+      var at = e.buttons ? {} : pickAt(e.clientX, e.clientY), pc = at.piece || null;
+      var zone = !!pc && pc.getAttribute('data-kind') === 'zone';
+      over(zone ? null : pc);              // lit = a click does it
+      hoverTag(zone ? pc : at.hot || null);   // a click on a place walks: its tag is what opens it
     });
-    world.addEventListener('pointerleave', function () { over(null); });
-    world.addEventListener('pointerdown', function () { over(null); });
+    world.addEventListener('pointerleave', function () { over(null); hoverTag(null); });
+    world.addEventListener('pointerdown', function () { over(null); hoverTag(null); });
+  }
+
+  var hovered = null;   // the tag lit by the mouse over its place
+  function hoverTag(el) {
+    var p = el && placeOf(el), tag = p && p.tag || null;
+    if (tag === hovered) return;
+    if (hovered) hovered.classList.remove('is-hover');
+    if (tag) tag.classList.add('is-hover');
+    hovered = tag;
   }
 
   function nameTag(el) {
@@ -3562,9 +3565,10 @@
   //  - a name tag opens its place;
   //  - a product, a story: their own pointer handlers took it (drag & drop);
   //  - a piece that talks, a board: does its thing;
-  //  - a place (a "Khu vực" piece, a tap box): the character walks there and
-  //    it opens, unless the character already stands at it or the tap is on
-  //    the floor: then it walks, like a tap on the wall or on the character.
+  //  - anything else walks there: the wall, the floor, the character, and a
+  //    place's own picture (a "Khu vực" piece, a tap box), whose tag nods to
+  //    show what opens it. The street door is the one place that opens with
+  //    a tap: going in is all there is to do out there.
   function tap(x, y) {
     var at = pickAt(x, y, lastPointer !== 'mouse');
     if (at.udon) return;
@@ -3575,14 +3579,13 @@
       if (pc.classList.contains('st-thing') && pc.getAttribute('data-kind') !== 'story') thingTap(pc);
       return;
     }
-    var here = !!place && isHere(place);
-    if (place && !here && !onFloor(y)) {
+    if (place && (placeOf(place) || {}).act === 'enter') {
       if (place === pc) thingTap(pc);
       else visit(place.getAttribute('data-hot'));
       return;
     }
     ring(x, y);
-    if (here) nudge(place);
+    if (place) nudge(place);
     walkTo((x - stage.getBoundingClientRect().left + cam) / k);
   }
 
@@ -3622,14 +3625,11 @@
   }
 
   /* ---------- where the character stands ----------
-     The place(s) the character has walked to. A tap on its picture walks
-     (in front, behind) instead of opening it again, and its tag lights up
-     ("Tên ›") to open it. Not where a scene starts (the street door opens
-     with one tap) and never the way in. A walk in progress counts as being
-     where it is heading. */
+     The place(s) the character has walked to: its tag lights up ("Tên ›").
+     Not where a scene starts, never the way in. A walk in progress counts as
+     being where it is heading. */
   var restX = null;      // where the visitor last brought the character to rest; null at a scene's start
   var walkGoal = null;   // { x, token } of the walk in progress
-  var litTags = [];      // the tags lit now: { tag, p, hot }
 
   function standAt() {
     return walkGoal && walkGoal.token === walkToken && player.moving ? walkGoal.x : restX;
@@ -3641,18 +3641,19 @@
     markHere();
   }
 
-  // A place (a tap box, or a "Khu vực" piece): its span, what it does, its tag.
+  // A place (a tap box, or a "Khu vực" piece): its span, what it does, its
+  // tag and the height its tag sits at.
   function placeOf(el) {
     if (el.classList.contains('st-hot')) {
       var h = hotById(el.getAttribute('data-hot'));
       if (!h) return null;
       var b = boxOf(h), pl = placeFor(h.id);
-      return { x0: b.x0, x1: b.x1, act: pl ? pl.act : h.id, tag: el.querySelector('.st-hot-label'), hot: true };
+      return { x0: b.x0, x1: b.x1, top: b.y0, act: pl ? pl.act : h.id, tag: el.querySelector('.st-hot-label'), hot: true };
     }
-    var n = el.getAttribute('data-thing'), it = THINGS[+n];
+    var it = THINGS[+el.getAttribute('data-thing')];
     if (!it || it.kind !== 'zone') return null;
     var p = picBox(it);
-    return { x0: p.x0, x1: p.x1, act: it.zone.act, tag: world.querySelector('[data-thing-label="' + n + '"]'), it: it };
+    return { x0: p.x0, x1: p.x1, top: Math.max(p.y0, 40), act: it.zone.act, tag: it._tag || null, it: it };
   }
 
   function isHere(el, x) {
@@ -3664,32 +3665,67 @@
   function markHere() {
     if (!world) return;
     var x = standAt();
-    litTags = [];
     world.querySelectorAll('.st-hot, .st-thing[data-kind="zone"]').forEach(function (el) {
       var on = isHere(el, x), p = placeOf(el);
       el.classList.toggle('is-here', on);
+      if (p && p.tag) p.tag.classList.toggle('is-here', on);
+    });
+    placeTags();
+  }
+
+  // Where the tags go, whenever the character comes to rest: over the middle
+  // of their place; a lit one kept on screen (a place can be wider than a
+  // phone's view); and none sitting on the character: one in the way steps
+  // aside along its place's top, to the nearer side of the character as drawn
+  // at that height (the head, not the cart below it). Tags stay put while the
+  // character walks, so they don't hop about under it.
+  function placeTags(viewW) {
+    if (!world || !stage || player.moving) return;
+    var mm = 10 / k;
+    var m = 70 / k, L = cam / k + m, R = (cam + (viewW || stage.clientWidth)) / k - m;
+    world.querySelectorAll('.st-hot, .st-thing[data-kind="zone"]').forEach(function (el) {
+      var p = placeOf(el);
       if (!p || !p.tag) return;
-      p.tag.classList.toggle('is-here', on);
-      if (on) litTags.push({ tag: p.tag, p: p });
-      else if (p.hot) p.tag.style.left = '';
-      else tagAt(p.tag, p.it);
-    });
-    clampTags();
-  }
-
-  // A lit tag stays on screen: a place can be wider than a phone's view.
-  function clampTags() {
-    if (!litTags.length) return;
-    var m = 70 / k, L = cam / k + m, R = (cam + stage.clientWidth) / k - m;
-    litTags.forEach(function (o) {
-      var x = Math.max(L, Math.min(R, (o.p.x0 + o.p.x1) / 2));
-      if (o.p.hot) o.tag.style.left = ((x - o.p.x0) / (o.p.x1 - o.p.x0) * 100).toFixed(2) + '%';
-      else o.tag.style.left = pct(x, SCENE.width);
+      var lit = p.tag.classList.contains('is-here'), x = (p.x0 + p.x1) / 2;
+      if (lit) x = Math.max(L, Math.min(R, x));
+      var w = p.tag.offsetWidth / k, h = p.tag.offsetHeight / k;   // drawn at translate(-50%, -60%) from (x, top)
+      var c = w && playerSpan(p.top - 0.6 * h - mm, p.top + 0.4 * h + mm);
+      if (c && x + w / 2 > c[0] - mm && x - w / 2 < c[1] + mm) {
+        var a = c[0] - mm - w / 2, b = c[1] + mm + w / 2;
+        x = Math.abs(a - x) <= Math.abs(b - x) ? a : b;
+        if (lit) x = Math.max(L, Math.min(R, x));
+      }
+      if (p.hot) p.tag.style.left = ((x - p.x0) / (p.x1 - p.x0) * 100).toFixed(2) + '%';
+      else p.tag.style.left = pct(x, SCENE.width);
     });
   }
 
-  // A tap on the place the character stands at walks; its tag gives a little
-  // nod, so the way to open it again is plain to see.
+  // Where the character is drawn between two heights (strip px): from its
+  // leftmost to its rightmost solid pixel there, cart included; null when
+  // nothing of it is there. Its frame's box while the picture isn't read.
+  function playerSpan(y0, y1) {
+    var fr = frameEls[player.frame], img = fr && !fr.hidden && fr.querySelector('img');
+    if (!img) return null;
+    var w = fr.offsetWidth / k, top = SCENE.feetY - SCENE.playerH;
+    var an = ANCHOR[who + '-' + player.frame] || 0.5, left = player.x - (player.facing < 0 ? 1 - an : an) * w;
+    if (y1 < top || y0 > SCENE.feetY || !w) return null;
+    var m = alphaOf(img.getAttribute('src'));
+    if (typeof m === 'string') return [left, left + w];
+    var r0 = Math.max(0, Math.floor((y0 - top) / SCENE.playerH * m.h)), r1 = Math.min(m.h - 1, Math.ceil((y1 - top) / SCENE.playerH * m.h));
+    var c0 = m.w, c1 = -1;
+    for (var r = r0; r <= r1; r++) {
+      for (var c = 0; c < m.w; c++) {
+        if (m.a[r * m.w + c] > 40) { if (c < c0) c0 = c; if (c > c1) c1 = c; }
+      }
+    }
+    if (c1 < 0) return null;
+    var u0 = c0 / m.w, u1 = (c1 + 1) / m.w;
+    if (player.facing < 0) { var u = u0; u0 = 1 - u1; u1 = 1 - u; }   // the frame is mirrored
+    return [left + u0 * w, left + u1 * w];
+  }
+
+  // A tap on a place's picture walks; its tag gives a little nod, so the way
+  // to open it is plain to see.
   function nudge(el) {
     var p = placeOf(el), tag = p && p.tag;
     if (!tag) return;
@@ -3754,11 +3790,16 @@
       });
     });
 
-    // The second tap of a double tap (or an impatient one) lands on the sheet
-    // the first just opened: on its backdrop, closing it at once, or on a
-    // button in it. Taps in the first moments after it opens are let go.
+    // The second tap of a double tap lands on the sheet the first one just
+    // opened: on its backdrop, closing it at once, or on a button in it. A tap
+    // in the first moments after it opens, right where the first one was, is
+    // let go; anywhere else (the ✕) it counts at once.
+    document.addEventListener('pointerdown', function (e) { lastDown = { x: e.clientX, y: e.clientY }; }, true);
     modal.addEventListener('click', function (e) {
-      if (e.detail && Date.now() - sheetAt < 400) { e.preventDefault(); e.stopImmediatePropagation(); }
+      if (e.detail && Date.now() - sheetAt < 400 && sheetFrom &&
+          Math.abs(e.clientX - sheetFrom.x) < 40 && Math.abs(e.clientY - sheetFrom.y) < 40) {
+        e.preventDefault(); e.stopImmediatePropagation();
+      }
     }, true);
     modal.addEventListener('click', function (e) {
       if (e.target === modal || e.target.closest('.st-close') || e.target.closest('[data-close]')) {
