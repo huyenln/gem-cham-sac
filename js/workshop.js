@@ -58,6 +58,7 @@
     'ws.type_more':     { vi: `Xem chi tiết`, en: `See details` },
     'ws.type_next':     { vi: `Buổi gần nhất: {when}`, en: `Next session: {when}` },
     'ws.type_nosess':   { vi: `Chưa có lịch — nhắn để hẹn riêng`, en: `Not scheduled yet — message us to arrange one` },
+    'ws.type_photos':   { vi: `+{n} ảnh`, en: `+{n} photos` },
     'ws.type_allfull':  { vi: `Các buổi sắp tới đã đủ chỗ`, en: `Upcoming sessions are fully booked` },
     'ws.type_back':     { vi: `Về danh sách workshop`, en: `All workshops` },
     'ws.type_what':     { vi: `Bạn sẽ làm gì`, en: `What you'll do` },
@@ -422,8 +423,19 @@
       var desc = lang() === 'en' && s.desc_en ? s.desc_en : s.desc_vi;
       var slug = s.slug || '';
       var hasPage = !!typeBySlug(slug);
-      return '<li class="ws-type" data-c="' + color[typeKey(s)] + '">' +
+      // Ảnh bìa, không có thì lấy ảnh đầu thư viện. Còn bao nhiêu ảnh khác thì
+      // báo "+N ảnh" — xem hết ở trang giới thiệu, không làm carousel trong thẻ.
+      var imgs = s.images || [];
+      var pic = s.cover || imgs[0] || null;
+      var more = imgs.filter(function (x) { return x !== pic; }).length;
+      return '<li class="ws-type' + (pic ? ' has-pic' : '') + '" data-c="' + color[typeKey(s)] + '">' +
         (hasPage ? '<a href="?loai=' + encodeURIComponent(slug) + '" data-slug="' + esc(slug) + '">' : '<div>') +
+          (pic
+            ? '<div class="ws-type-pic"><img src="' + esc(pic) + '" alt="" loading="lazy">' +
+                (more ? '<span class="ws-type-count">' +
+                  esc(fill(t('ws.type_photos', '+{n} ảnh'), { n: more })) + '</span>' : '') +
+              '</div>'
+            : '') +
           '<h3>' + esc(name) + '</h3>' +
           (desc ? '<p>' + esc(desc) + '</p>' : '') +
           '<p class="ws-type-meta">' +

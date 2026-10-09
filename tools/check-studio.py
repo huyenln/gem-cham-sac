@@ -141,6 +141,8 @@ class FakeDB:
         self.posts = []
         self.notes = []      # approved notes (the memo board)
         self.gone = set()    # categories whose products are all hidden / deleted
+        self.wtypes = []     # workshop_types
+        self.wt_patches = []
 
     async def route(self, r):
         u, m = r.request.url, r.request.method
@@ -174,6 +176,16 @@ class FakeDB:
                 self.info[b['src']] = b
                 return await r.fulfill(status=201, body='')
             return await r.fulfill(status=200, content_type='application/json', body=json.dumps(list(self.info.values())))
+        if '/rest/v1/workshop_types' in u:
+            if m == 'PATCH':
+                b = json.loads(r.request.post_data)
+                self.wt_patches.append(b)
+                i = re.search(r'id=eq\.([^&]+)', u).group(1)
+                for t in self.wtypes:
+                    if t['id'] == i:
+                        t.update(b)
+                return await r.fulfill(status=200, content_type='application/json', body='[{}]')
+            return await r.fulfill(status=200, content_type='application/json', body=json.dumps(self.wtypes))
         if '/rest/v1/sessions_public' in u:
             return await r.fulfill(status=200, content_type='application/json', body=json.dumps(self.sessions))
         if '/rest/v1/posts' in u:
@@ -720,6 +732,64 @@ async def product(browser, db):
     check(sizes['cutout'] and sizes['cutout'][0][0] < 1024, f'cut-out uploaded on Lưu, trimmed {sizes["cutout"]}')
     check(not pg.errors, f'no script errors {pg.errors}')
     await pg.context.close()
+
+
+async def workshop(browser, db):
+    """Workshop types: cover + photo library in admin (shrunk before upload),
+    and the type cards on workshop.html (photo, "+N ảnh", next-session line)
+    — with and without sessions on the calendar."""
+    print('workshop')
+    db.files.clear(); db.wt_patches.clear(); db.sessions = []
+    db.wtypes = [
+        {'id': 't1', 'slug': 'bia-so-vai-vun', 'name_vi': 'Bìa sổ vải vụn', 'name_en': 'Scrap-fabric notebook cover',
+         'desc_vi': 'Ghép vải vụn thành bìa sổ của riêng bạn.', 'desc_en': None, 'long_vi': 'Đoạn một.',
+         'duration_minutes': 120, 'price': None, 'cover': None, 'images': [], 'sort_order': 1, 'is_published': True},
+        {'id': 't2', 'slug': 'giay-tai-che', 'name_vi': 'Giấy tái chế', 'name_en': 'Recycled paper',
+         'desc_vi': 'Xeo giấy từ giấy vụn.', 'desc_en': None, 'long_vi': 'Đoạn một.',
+         'duration_minutes': 150, 'price': 250000, 'cover': None, 'images': [], 'sort_order': 2, 'is_published': True},
+    ]
+    photo = test_photo(OUT / 'ws-photo.jpg', 3000, 2000)
+    pg = await admin_page(browser, db, 412, 900)
+    await js_click(pg, '[data-tab="sessions"]')
+    await pg.wait_for_timeout(800)
+    await pg.evaluate("document.querySelector('.ad-wtypes').open = true")
+    card = '.ad-wt[data-id="t1"] '
+    await pg.set_input_files(card + '.wt-cover-in', photo)
+    await pg.wait_for_timeout(2500)
+    await pg.set_input_files(card + '.wt-gal-in', [photo, photo])
+    await pg.wait_for_timeout(4000)
+    check(await pg.evaluate(f"document.querySelectorAll('{card}.wt-gal img').length") == 2, 'two photos in the workshop library')
+    await pg.screenshot(path=OUT / 'workshop-admin.png', full_page=True)
+    await js_click(pg, card + '.wt-save')
+    await pg.wait_for_timeout(1500)
+    body = db.wt_patches[-1] if db.wt_patches else {}
+    check('/gem-media/' in (body.get('cover') or ''), 'cover saved')
+    check(len(body.get('images') or []) == 2, f'library saved ({len(body.get("images") or [])})')
+    f = db.files.get((body.get('cover') or '').split('/gem-media/')[-1])
+    check(f and max(decode(f[1]).size) == 1280, f'cover shrunk to 1280px ({len(f[1]) // 1024 if f else "?"} KB)')
+    check(not pg.errors, f'no script errors {pg.errors}')
+    await pg.context.close()
+
+    for sessions, tag in (([], 'empty'), ([{'id': 's1', 'slug': 'giay-tai-che', 'name_vi': 'Giấy tái chế', 'name_en': 'Recycled paper',
+                                             'duration_minutes': 150, 'price': 250000, 'starts_at': '2030-10-16T02:00:00Z',
+                                             'seats_left': 4, 'capacity': 8}], 'sessions')):
+        db.sessions = sessions
+        for w, h in ((375, 844), (1440, 900)):
+            pg = await page(browser, db, w, h)
+            await pg.goto(f'{BASE}/workshop.html')
+            await pg.wait_for_timeout(1200)
+            n = await pg.evaluate("document.querySelectorAll('.ws-type').length")
+            check(n == 2, f'{tag} {w}px: both workshop cards shown ({n})')
+            pic = await pg.evaluate("(() => { const i = document.querySelector('.ws-type-pic img'); return i && i.complete && i.naturalWidth })()")
+            check(pic, f'{tag} {w}px: card photo loaded')
+            cnt = await pg.evaluate("(document.querySelector('.ws-type-count') || {}).textContent")
+            check(cnt == '+2 ảnh', f'{tag} {w}px: photo count ({cnt})')
+            nxt = await pg.evaluate("[...document.querySelectorAll('.ws-type-next')].map(e => e.textContent)")
+            want = 'Buổi gần nhất' if sessions else 'Chưa có lịch'
+            check(len(nxt) == 2 and want in nxt[1], f'{tag} {w}px: next-session line ({nxt})')
+            await pg.locator('#ws-root').screenshot(path=OUT / f'workshop-{tag}-{w}.png')
+            check(not pg.errors, f'no script errors {pg.errors}')
+            await pg.context.close()
 
 
 async def design(browser, db):
@@ -1764,7 +1834,7 @@ async def main(which):
     async with async_playwright() as p:
         browser = await launch(p)
         for name, fn in (('street', street), ('wear', wear), ('shop', shop), ('spots', spots), ('editor', editor),
-                         ('library', library), ('product', product), ('design', design), ('catalog', catalog), ('kinds', kinds),
+                         ('library', library), ('product', product), ('workshop', workshop), ('design', design), ('catalog', catalog), ('kinds', kinds),
                          ('layers', layers), ('zones', zones), ('cart', cart), ('topbar', topbar), ('motion', motion),
                          ('taps', taps)):
             if which in (None, name):
