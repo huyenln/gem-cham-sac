@@ -204,6 +204,11 @@
     'studio.tag_link':     { vi: `Xem thêm`, en: `See more` },
 
     'studio.intro':        { vi: `Chào bạn! Chạm vào nhãn tên để mở từng góc, chạm chỗ khác để đi dạo nhé.`, en: `Hi! Tap a name tag to open a corner, or anywhere else to walk around.` },
+    'studio.intro_touch':  { vi: `Chào bạn! Chạm vào một món để xem tên, chạm lần nữa để mở. Chạm chỗ khác để đi dạo nhé.`, en: `Hi! Tap a thing to see its name, tap again to open it. Tap anywhere else to walk around.` },
+    'studio.pick_story':   { vi: `Câu chuyện`, en: `A story` },
+    'studio.pick_talk':    { vi: `Trò chuyện`, en: `Say hi` },
+    'studio.pick_post':    { vi: `Bản tin`, en: `News` },
+    'studio.pick_workshop': { vi: `Workshop`, en: `Workshops` },
     'studio.cart_empty':   { vi: `Xe còn trống nè, dạo thêm chút nhé.`, en: `Your cart is still empty — have another look around.` },
 
     'studio.add':          { vi: `Thêm vào giỏ`, en: `Add to cart` },
@@ -982,7 +987,7 @@
         where: function (x, y) { return (udonEl && overEl(udonEl, x, y, 20)) || overEl(bubble, x, y, 12) ? 'udon' : null; },
         start: function () { el.classList.add('is-lifted'); storyDrop(true); },
         cancel: function () { el.classList.remove('is-lifted'); storyDrop(false); },
-        tap: function () { storySheet(it, false); },
+        tap: function () { pickTap(el, function () { storySheet(it, false); }); },
         drop: function () {
           storyDrop(false);
           udonPose('ud-vay');
@@ -1230,6 +1235,7 @@
   function goScene(name, then, fromHistory) {
     if (name === sceneName) { if (then) then(); return; }
     closeSheet();
+    unpick();
     if (name === 'in' && !sceneInHistory) {
       try { history.pushState({ st: 'in' }, ''); sceneInHistory = true; } catch (e) { /* old browser */ }
     } else if (name === 'out' && sceneInHistory && !fromHistory) {
@@ -3305,7 +3311,7 @@
       dragFrom(e, img, {
         start: function () { el.classList.add('is-lifted'); },
         cancel: function () { el.classList.remove('is-lifted'); },
-        tap: function () { productSheet(sku, pieceCut(el)); },
+        tap: function () { pickTap(el, function () { productSheet(sku, pieceCut(el)); }); },
         drop: function (where, ghost) {
           el.classList.remove('is-lifted');
           var info = window.GemBasket && window.GemBasket.info(sku);
@@ -3571,12 +3577,16 @@
   //    a tap: going in is all there is to do out there.
   function tap(x, y) {
     var at = pickAt(x, y, lastPointer !== 'mouse');
+    if (at.label && at.label === pickTag) { pickOpen(); return; }
+    var pc = at.piece || null;
+    if (pc !== picked) unpick();
     if (at.udon) return;
     if (at.label) { openTag(at.label); return; }
-    var pc = at.piece || null;
     var place = pc && pc.getAttribute('data-kind') === 'zone' ? pc : at.hot || null;
     if (pc && !place) {
-      if (pc.classList.contains('st-thing') && pc.getAttribute('data-kind') !== 'story') thingTap(pc);
+      if (pc.classList.contains('st-thing') && pc.getAttribute('data-kind') !== 'story') {
+        pickTap(pc, function () { thingTap(pc); });
+      }
       return;
     }
     if (place && (placeOf(place) || {}).act === 'enter') {
@@ -3587,6 +3597,62 @@
     ring(x, y);
     if (place) nudge(place);
     walkTo((x - stage.getBoundingClientRect().left + cam) / k);
+  }
+
+  /* ---------- touch: first tap names a thing, second tap opens it ----------
+     Products, stories, talking pieces and boards look like the rest of the
+     drawing, and a finger has no hover to light them up. So on touch the
+     first tap walks over and shows the thing's name tag ("Tên ›"); a tap on
+     the tag or on the thing again opens it. The mouse keeps one click: its
+     hover already shows what can be clicked. */
+  var picked = null, pickTag = null, pickDo = null;
+
+  function pickName(el) {
+    if (el.classList.contains('st-shelf-prod')) {
+      var info = window.GemBasket && window.GemBasket.info(el.getAttribute('data-sku'));
+      return info ? info.name : '';
+    }
+    var it = THINGS[+el.getAttribute('data-thing')];
+    if (!it) return '';
+    var o = INFO[it.src];
+    var title = o ? infoText(o, 'title') : '';
+    if (title) return title;
+    if (it.kind === 'story') return t('studio.pick_story');
+    if (it.kind === 'talk') return t('studio.pick_talk');
+    if (it.kind === 'board') return t(it.board.feed === 'post' ? 'studio.pick_post' : 'studio.pick_workshop');
+    return '';
+  }
+
+  function pickTap(el, open) {
+    if (lastPointer === 'mouse' || el === picked) { unpick(); open(); return; }
+    unpick();
+    var name = pickName(el);
+    if (!name) { open(); return; }   // nothing to call it by: just open, as before
+    picked = el; pickDo = open;
+    if (!pickTag) {
+      pickTag = document.createElement('span');
+      pickTag.className = 'st-hot-label st-pick-label is-here';
+    }
+    world.appendChild(pickTag);
+    var r = el.getBoundingClientRect(), w = world.getBoundingClientRect();
+    pickTag.textContent = name;   // from the database: text only
+    pickTag.style.left = pct(r.left + r.width / 2 - w.left, w.width);
+    pickTag.style.top = pct(r.top - w.top, w.height);
+    pickTag.hidden = false;
+    el.classList.add('is-picked');
+    walkTo((r.left + r.width / 2 - stage.getBoundingClientRect().left + cam) / k);
+  }
+
+  function pickOpen() {
+    var open = pickDo;
+    unpick();
+    if (open) open();
+  }
+
+  function unpick() {
+    if (picked) picked.classList.remove('is-picked');
+    if (pickTag) pickTag.hidden = true;
+    picked = null; pickDo = null;
   }
 
   // A name tag: a "Khu vực" piece's or a tap box's. It always opens its place.
@@ -3995,12 +4061,17 @@
   }
 
   // First time inside: Udon says where things are.
+  // Once per device. On touch the tap rule differs (a thing is named first,
+  // opened on the second tap), so phones get their own line, under a new key:
+  // visitors who saw the old one see this once too.
   function hello() {
+    var touch = window.matchMedia && window.matchMedia('(hover: none)').matches;
+    var key = touch ? 'gem-studio-intro-touch' : 'gem-studio-intro';
     var seen = false;
-    try { seen = localStorage.getItem('gem-studio-intro') === '1'; } catch (e) { /* private mode */ }
+    try { seen = localStorage.getItem(key) === '1'; } catch (e) { /* private mode */ }
     if (!seen) {
-      setTimeout(function () { say('studio.intro', 7000); }, 600);
-      try { localStorage.setItem('gem-studio-intro', '1'); } catch (e) { /* ignore */ }
+      setTimeout(function () { say(touch ? 'studio.intro_touch' : 'studio.intro', 7000); }, 600);
+      try { localStorage.setItem(key, '1'); } catch (e) { /* ignore */ }
     }
   }
 })();

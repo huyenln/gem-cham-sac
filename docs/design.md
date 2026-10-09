@@ -1786,8 +1786,16 @@ Luật chạm (điện thoại và máy tính như nhau; `tap()` trong `js/studi
 - **Chạm vào hình = đi tới chỗ đó, chạm vào nhãn = mở.** Hình của Khu vực, khung bấm, tường,
   sàn, nhân vật: đều là đi (tới đúng chỗ chạm). Chạm hình một khu thì nhãn của nó gật nhẹ
   (chỉ chỗ mở). Riêng cửa mặt tiền (`enter`) mở bằng một chạm: ngoài đó chỉ có việc vào.
-  Sản phẩm, câu chuyện, lời thoại, bảng tin, Udon: chạm là ra, như cũ. Bàn phím (Enter
-  trên món / khung đang chọn) và thanh menu dưới vẫn mở thẳng.
+  Sản phẩm, câu chuyện, lời thoại, bảng tin: **trên điện thoại chạm hai lần** (10/2026) —
+  chạm lần đầu thì nhân vật đi tới và hiện nhãn tên "Tên ›" trên món (`pickTap`), chạm
+  nhãn hoặc chạm lại món thì mở; chạm chỗ khác thì nhãn tắt. Lý do: các món này trông y
+  như phần tranh trang trí, điện thoại không có hover để báo bấm được, nên chạm định đi
+  lại mở luôn món bên cạnh. **Chuột vẫn một cú bấm** (hover đã sáng món + hiện tên). Kéo
+  món vào giỏ không đổi. Udon: chạm là ra. Bàn phím (Enter trên món / khung đang chọn) và
+  thanh menu dưới vẫn mở thẳng.
+- **Lời chào lần đầu** (`hello`): điện thoại có câu riêng nói luật hai lần chạm
+  (`studio.intro_touch`, khoá `gem-studio-intro-touch` — khách đã thấy câu cũ cũng được
+  thấy câu này một lần).
 - **Nhãn:** Khu vực nào cũng có — tên chủ đặt, không thì tên theo hành động (`ACT_NAME`;
   "Không làm gì" thì không có). Nằm trên đỉnh hình (`tagAt`, đặt lại khi đọc xong ảnh),
   vùng chạm ~47px.
