@@ -1762,6 +1762,53 @@ studio đi theo **hình**, không theo khung.
 Kiểm tra: `layers`, `zones`, `cart`, `kinds`, `catalog`, `shop` trong
 `tools/check-studio.py`.
 
+### Studio: luật chạm (10/2026)
+
+Góp ý: trên điện thoại, đứng gần một món "Khu vực" thì chạm hoặc không có phản ứng,
+hoặc mở nhầm khu. Dựng lại bố cục đang chạy và chạm thử từng điểm trên màn 390px: đứng
+ở một khu thì 21–43% màn hình mở lại chính khu đó, 13–28% không phản ứng (quanh nhân
+vật; đẩy xe thì rộng gấp ba). Ở đoạn trống, 92% số lần chạm đi đúng chỗ.
+
+Nguyên nhân:
+1. Chạm gần nhân vật đang đứng trước Khu vực → `if (at.piece) return` → không đi, không mở.
+2. Khung bấm có sẵn được vẽ phía trên dải sàn, để sàn dành cho việc đi. Hình Khu vực là
+   đồ đứng trên sàn nên phủ kín dải ngang tầm nhân vật. Điện thoại thấy ~550px tranh,
+   mỗi khu rộng 650–870px.
+3. Khu không tên thì không có nhãn: bẫy vô hình (ở Bàn thiết kế, cửa sổ phía trên là "Tủ").
+4. Nhãn Khu vực không nhận chạm (`pointer-events: none`) và nằm ở mép tấm trong suốt.
+5. Chạm đúp: lần hai rơi vào nền mờ phía trên tấm vừa mở → đóng ngay.
+
+Luật chạm (điện thoại và máy tính như nhau; `tap()` trong `js/studio.js`):
+- **Sàn = đi:** từ đầu gối nhân vật trở xuống (`KNEE`, `onFloor`), kể cả khi có món nằm
+  đó, trừ sản phẩm / câu chuyện / lời thoại. Khung bấm chạm xuống sàn bị cắt ở đầu gối.
+- **Khu đang đứng không tự mở lại:** mọi khu có hình chứa chỗ nhân vật vừa dừng
+  (`restX`; đang đi thì tính chỗ đang tới; kể cả khu treo phía trên như cửa sổ) → chạm
+  lên hình = đi, nhãn sáng lên "Tên ›" và gật nhẹ khi chạm; chạm nhãn = mở. Không tính
+  chỗ bắt đầu cảnh (cửa mặt tiền vẫn một chạm), không bao giờ tính cửa vào studio.
+- **Khu khác:** một chạm = đi tới + mở ngay, như cũ.
+- **Nhãn:** Khu vực nào cũng có — tên chủ đặt, không thì tên theo hành động (`ACT_NAME`;
+  "Không làm gì" thì không có). Nằm trên đỉnh hình (`tagAt`, đặt lại khi đọc xong ảnh),
+  vùng chạm ~47px, nhãn đang sáng luôn nằm trong màn hình (`clampTags`).
+- **Nhân vật che món phía sau nó:** chạm lên chính nét vẽ nhân vật, cả xe đẩy (`onPlayer`,
+  theo alpha của khung, không theo khung chữ nhật) = đi. Không còn chỗ chết.
+- **Vòng phản hồi** (`ring`, `.st-tap`) ở mỗi lần chạm làm nhân vật đi, kể cả khi không
+  nhích; tắt Hiệu ứng thì là chấm mờ dần.
+- **Chặn chạm xuyên:** 0,4 giây đầu sau khi mở tấm (và bảng giỏ hàng, `js/basket.js`),
+  chạm vào tấm hoặc nền không có tác dụng.
+- **Món nhỏ** (sản phẩm, câu chuyện…): ngón tay cách hình ≤ 11px vẫn trúng, kể cả khi
+  món nằm trên một Khu vực (túi treo trên bình phong): món nhỏ thắng khu phía sau
+  (`nearSmall`, chỉ màn cảm ứng).
+- **Nhấn giữ** không bật menu "Lưu ảnh" (`-webkit-touch-callout`; chặn `contextmenu`
+  khi không phải chuột).
+- **Máy tính:** chỉ sáng lên và hiện bàn tay trên thứ bấm vào sẽ mở; khu đang đứng và
+  chân món trên sàn thì không.
+- **Điểm dừng lạc:** khung bấm có điểm dừng cách khung quá max(bề rộng khung, 400px)
+  → dừng giữa khung (`standNear`). Bố cục đang chạy có một chỗ như vậy: khung "Gối, thảm
+  & quà" (cabinet) trên tủ kệ x 3249–4054, điểm dừng ở x 6078. Nên kéo lại trong trình lắp.
+
+Chưa làm: vuốt bắt đầu trên sản phẩm thì nhấc sản phẩm thay vì đi (đợi góp ý thử nghiệm).
+Kiểm tra: `taps` trong `tools/check-studio.py`.
+
 ### Góp ý đợt 3 (10/2026)
 
 - **Bàn thiết kế gọn lại:** trên cùng là các món + "Gợi ý ngẫu nhiên". Lần đầu chỉ

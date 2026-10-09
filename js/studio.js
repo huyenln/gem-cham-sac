@@ -201,6 +201,7 @@
     'studio.hot_memo':     { vi: `Bảng lời nhắn`, en: `Message board` },
     'studio.hot_tu':       { vi: `Tủ sưu tầm`, en: `Your cabinet` },
     'studio.hot_counter':  { vi: `Quầy thu ngân`, en: `Counter` },
+    'studio.tag_link':     { vi: `Xem thêm`, en: `See more` },
 
     'studio.intro':        { vi: `Chào bạn! Chạm vào kệ để xem đồ nhé. Bàn thiết kế ở gần cuối phòng đó.`, en: `Hi! Tap a shelf to look around. The design table is near the far end.` },
     'studio.cart_empty':   { vi: `Xe còn trống nè, dạo thêm chút nhé.`, en: `Your cart is still empty — have another look around.` },
@@ -494,13 +495,26 @@
   }
 
   function standX(h) {
-    if (h.standAbs != null) return h.standAbs;
-    if (h.stand != null) return zoneX(h.zone, h.stand);
     var b = boxOf(h);
-    return (b.x0 + b.x1) / 2;
+    return standNear(h.standAbs != null ? h.standAbs : h.stand != null ? zoneX(h.zone, h.stand) : null, b.x0, b.x1);
+  }
+
+  // The editor lets a stop point be dragged anywhere. One left far from its
+  // box is taken as a slip (a box moved without its stop): the character
+  // stops at the middle of the box instead of walking off behind the sheet.
+  function standNear(s, x0, x1) {
+    var far = Math.max(x1 - x0, 400);
+    return s == null || s < x0 - far || s > x1 + far ? (x0 + x1) / 2 : s;
   }
 
   function pct(v, of) { return (v / of * 100).toFixed(3) + '%'; }
+
+  // The floor, from the character's knees down. The built-in boxes were
+  // drawn above it so it stays free for walking; pieces standing on it (a
+  // sofa, a rug) don't take taps there either: a tap on the floor walks.
+  var KNEE = 0.28;   // knee height, share of the character's height
+  function floorY() { return SCENE.feetY - KNEE * SCENE.playerH; }
+  function onFloor(y) { return (y - stage.getBoundingClientRect().top) / k >= floorY(); }
 
   /* ======================================================================
      STATE + DOM
@@ -631,6 +645,7 @@
         // box: where the picture sits in its image (fractions), see-through margins left out
         ALPHA[src] = { w: w, h: h, a: a, box: x1 < 0 ? [0, 0, 1, 1] : [x0 / w, y0 / h, (x1 + 1) / w, (y1 + 1) / h] };
         if (src === memoSrc) placePins();   // the memo board's picture is known now
+        retag(src);                         // so is where the tags of its pieces go
       } catch (e) { ALPHA[src] = 'solid'; }   // can't read it: the whole box counts
     };
     im.onerror = function () { ALPHA[src] = 'solid'; };
@@ -666,19 +681,53 @@
     return false;
   }
 
-  // What a tap at (x, y) is on: { piece } (a product or a piece that does
-  // something, where its picture is), { hot } (a hotspot box), or {}.
-  function pickAt(x, y) {
+  // What a tap at (x, y) is on, by what is painted there, top first:
+  // { label } a name tag · { piece } a product or a piece that does
+  // something, where its picture is · { player } the character (drawn over
+  // the pieces behind it, so a tap there is on the character) · { hot } a
+  // tap box · { udon } · {} the wall or the floor.
+  // touch: a finger is not a point. A small thing (product, story…) whose
+  // picture is a few px away still counts, before the place (a "Khu vực"
+  // piece, a tap box) or the wall behind it: a bag hung on a screen.
+  function pickAt(x, y, touch) {
+    var me = onPlayer(x, y), hit = {};
     var list = document.elementsFromPoint(x, y);
     for (var i = 0; i < list.length; i++) {
       var n = list[i];
       if (!world.contains(n)) continue;
+      if (n.closest('.st-udon')) return { udon: true };
+      var lab = n.closest('.st-hot-label');
+      if (lab) return { label: lab };
       var pc = n.closest('.st-thing, .st-shelf-prod');
-      if (pc) { if (solidAt(pc, x, y)) return { piece: pc }; continue; }
-      var hot = n.closest('.st-hot');
-      if (hot) return { hot: hot };
+      if (pc) {
+        if (me && !pc.classList.contains('is-front')) break;   // hidden behind the character
+        if (solidAt(pc, x, y)) { hit = { piece: pc }; break; }
+        continue;
+      }
+      if (n.closest('.st-hot')) { if (!me) hit = { hot: n.closest('.st-hot') }; break; }
     }
-    return {};
+    if (hit.piece && hit.piece.getAttribute('data-kind') !== 'zone') return hit;   // a thing right under the finger
+    if (me && !hit.piece) return { player: true };
+    var near = touch ? nearSmall(x, y) : null;
+    return near ? { piece: near } : hit;
+  }
+
+  // A small thing near a finger: its picture within a few px of (x, y) and
+  // not hidden by the character. Rings of 6 and 11 px, the nearer first.
+  var SMALL = '.st-shelf-prod, .st-thing:not([data-kind="zone"])';
+  function nearSmall(x, y) {
+    for (var r = 6; r <= 11; r += 5) {
+      for (var a = 0; a < 8; a++) {
+        var px = x + r * Math.cos(a * Math.PI / 4), py = y + r * Math.sin(a * Math.PI / 4);
+        var list = document.elementsFromPoint(px, py);
+        for (var i = 0; i < list.length; i++) {
+          var pc = list[i].closest(SMALL);
+          if (!pc || !world.contains(pc)) continue;
+          if (solidAt(pc, px, py) && (pc.classList.contains('is-front') || !onPlayer(px, py))) return pc;
+        }
+      }
+    }
+    return null;
   }
   function prepAlpha(el) {
     var img = el.tagName === 'IMG' ? el : null;
@@ -722,7 +771,8 @@
         }
       }
       for (var j = 0; j < boxes.length; j++) {
-        if (boxes[j].act === acts[a]) return { x: boxes[j].stand, act: boxes[j].act, link: boxes[j].link, box: boxes[j].box };
+        var bx = boxes[j].box;
+        if (boxes[j].act === acts[a]) return { x: standNear(boxes[j].stand, bx[0], bx[2]), act: boxes[j].act, link: boxes[j].link, box: bx };
       }
     }
     return null;
@@ -756,24 +806,51 @@
     el.setAttribute('data-kind', it.kind);
     el.setAttribute('role', 'button');
     el.setAttribute('tabindex', '0');
-    var name = it.kind === 'zone' ? (it.zone[lng()] || it.zone.vi || '') : '';
+    var name = it.kind === 'zone' ? zoneName(it) : '';
     if (name) {
       el.setAttribute('aria-label', name);
       var lab = document.createElement('span');   // the owner's text: textContent only
       lab.className = 'st-hot-label st-zone-label';
       lab.setAttribute('data-thing-label', n);
       lab.textContent = name;
-      lab.style.left = pct(it.x, SCENE.width);
-      lab.style.top = pct(it.y - it.h / 2, SCENE.height);
+      tagAt(lab, it);
       world.appendChild(lab);
     }
     if (it.kind === 'board') board(it, n);
   }
 
+  // A "Khu vực" always has a tag (on touch there is no hover to show what can
+  // be tapped): the owner's name, else the name of what it does. A piece that
+  // does nothing has none.
+  var ACT_NAME = { door: 'studio.hot_door', sofa: 'studio.hot_sofa', rail: 'studio.hot_rail', fitting: 'studio.hot_fitting',
+    'shop:pegboard': 'studio.hot_pegboard', 'shop:display': 'studio.hot_display', 'shop:cabinet': 'studio.hot_cabinet',
+    'shop:all': 'studio.go_shelves', sewing: 'studio.hot_sewing', tu: 'studio.hot_tu', counter: 'studio.hot_counter',
+    memo: 'studio.hot_memo', enter: 'studio.hot_enter', link: 'studio.tag_link' };
+  function actName(act) { return ACT_NAME[act] ? t(ACT_NAME[act]) : ''; }
+  function zoneName(it) { return it.zone[lng()] || it.zone.vi || actName(it.zone.act); }
+
+  // The tag sits on top of the picture, not of the see-through sheet round it
+  // (moved again once the picture has been read, retag).
+  function tagAt(lab, it) {
+    var b = picBox(it);
+    lab.style.left = pct((b.x0 + b.x1) / 2, SCENE.width);
+    lab.style.top = pct(Math.max(b.y0, 40), SCENE.height);
+  }
+  function retag(src) {
+    if (!world) return;
+    world.querySelectorAll('[data-thing-label]').forEach(function (lab) {
+      var it = THINGS[+lab.getAttribute('data-thing-label')];
+      if (it && it.src === src) tagAt(lab, it);
+    });
+    markHere();   // its picture's span is known now too
+  }
+
   function relabelThings() {
     world.querySelectorAll('[data-thing-label]').forEach(function (lab) {
       var it = THINGS[+lab.getAttribute('data-thing-label')];
-      lab.textContent = it.zone[lng()] || it.zone.vi || '';
+      var el = world.querySelector('.st-thing[data-thing="' + lab.getAttribute('data-thing-label') + '"]');
+      lab.textContent = zoneName(it);
+      if (el) el.setAttribute('aria-label', zoneName(it));
     });
     world.querySelectorAll('.st-board').forEach(function (b) { fillBoard(b, THINGS[+b.getAttribute('data-thing')]); });
   }
@@ -902,7 +979,7 @@
 
   function bindThings() {
     world.addEventListener('pointerdown', function (e) {
-      var el = pickAt(e.clientX, e.clientY).piece;
+      var el = pickAt(e.clientX, e.clientY, e.pointerType !== 'mouse').piece;
       if (!el || el.getAttribute('data-kind') !== 'story' || (e.pointerType === 'mouse' && e.button !== 0)) return;
       e.preventDefault();
       var it = THINGS[+el.getAttribute('data-thing')];
@@ -1035,38 +1112,43 @@
   }
   function spotOff(id) { return !!spotSet(id).off; }
   function spotName(h) {
-    return spotSet(h.id)[lng()] || (h.label ? t(h.label) : spotSet(h.id).vi || '');   // no English set: the built-in English / the Vietnamese
+    var c = spotSet(h.id);
+    return c[lng()] || (h.label ? t(h.label) : c.vi || actName(c.act));   // no English set: the built-in English / the Vietnamese / what it does
   }
 
   function addHot(h) {
-    var b = boxOf(h);
+    var b = boxOf(h), name = spotName(h);
     var custom = spotSet(h.id).vi || spotSet(h.id).en;
+    // the floor is for walking: a box reaching below the character's knees stops there
+    var y1 = b.y0 < floorY() && b.y1 > floorY() ? floorY() : b.y1;
     var btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'st-hot';
     btn.setAttribute('data-hot', h.id);
     if (!custom && h.label) btn.setAttribute('data-i18n-attr', 'aria-label:' + h.label);
-    btn.setAttribute('aria-label', spotName(h));
+    btn.setAttribute('aria-label', name);
     btn.style.left = pct(b.x0, SCENE.width);
     btn.style.top = pct(b.y0, SCENE.height);
     btn.style.width = pct(b.x1 - b.x0, SCENE.width);
-    btn.style.height = pct(b.y1 - b.y0, SCENE.height);
-    var lab = document.createElement('span');
-    lab.className = 'st-hot-label';
-    if (!custom && h.label) lab.setAttribute('data-i18n', h.label);
-    lab.textContent = spotName(h);   // the owner's text: textContent only
-    btn.appendChild(lab);
+    btn.style.height = pct(y1 - b.y0, SCENE.height);
+    if (name) {
+      var lab = document.createElement('span');
+      lab.className = 'st-hot-label';
+      if (!custom && h.label) lab.setAttribute('data-i18n', h.label);
+      lab.textContent = name;   // the owner's text: textContent only
+      btn.appendChild(lab);
+    }
     world.appendChild(btn);
   }
 
-  // Owner-set labels follow the language switch by hand (no data-i18n key).
+  // Labels without a data-i18n key (the owner's own names; own boxes named
+  // after what they do) follow the language switch by hand.
   function relabelSpots() {
     world.querySelectorAll('.st-hot').forEach(function (btn) {
-      var h = hotById(btn.getAttribute('data-hot'));
-      var c = h && spotSet(h.id);
-      if (!h || !(c.vi || c.en)) return;
+      var h = hotById(btn.getAttribute('data-hot')), lab = btn.querySelector('.st-hot-label');
+      if (!h || !lab || lab.hasAttribute('data-i18n')) return;
       btn.setAttribute('aria-label', spotName(h));
-      btn.querySelector('.st-hot-label').textContent = spotName(h);
+      lab.textContent = spotName(h);
     });
   }
 
@@ -1133,6 +1215,7 @@
       if (!n.classList.contains('st-bg')) n.remove();   // .st-bgx too: paintBg redraws it
     });
     udonEl = null; memoPins = null; THINGS = []; OWN_HOT = [];
+    restX = null; walkGoal = null; litTags = [];   // a scene starts with nowhere "visited"
     if (name === 'out') {
       var O = outsideScene();
       SCENE.width = O.bg.w; SCENE.height = O.bg.h; SCENE.startX = O.start;
@@ -1221,6 +1304,7 @@
       }
       frameEls[name] = fr;
       bobEl.appendChild(fr);
+      alphaOf(img.getAttribute('src'));   // a tap on the character goes by its picture (onPlayer)
     });
     dressWear();
     renderCargo();
@@ -1351,6 +1435,7 @@
     var worldW = SCENE.width * k;
     cam = Math.max(0, Math.min(player.x * k - viewW / 2, worldW - viewW));
     world.style.transform = 'translate3d(' + (-cam) + 'px,0,0)';
+    clampTags();
   }
 
   /* ======================================================================
@@ -1363,10 +1448,12 @@
     var dist = Math.abs(target - from);
     if (dist > 4) player.facing = target > from ? 1 : -1;
     player.moved = true;
+    walkGoal = { x: target, token: token };
 
     if (reduceMotion || dist < 4) {
       player.x = target;
       player.moving = false;
+      rest();
       render();
       if (then) then();
       return;
@@ -1376,6 +1463,7 @@
     var dur = Math.max(250, Math.min(1400, dist / SCENE.speed * 1000));
     var start = performance.now();
     player.moving = true;
+    markHere();   // lit by where the walk is heading
 
     function step(now) {
       if (token !== walkToken) return;          // a newer walk took over
@@ -1387,6 +1475,7 @@
         requestAnimationFrame(step);
       } else {
         player.moving = false;
+        rest();
         render(now);
         if (then) then();
       }
@@ -1412,10 +1501,12 @@
   // A sheet is a history step, like a dialog in an app: the phone's Back
   // gesture / button closes it instead of leaving the studio.
   var sheetInHistory = false;
+  var sheetAt = 0;   // when the sheet last opened (see the guard in bind)
 
   // full: the sheet takes the whole screen (the design table: things are
   // dragged inside it, so only the grab handle pulls it down)
   function openSheet(html, full) {
+    sheetAt = Date.now();
     if (modal.hidden) lastFocus = document.activeElement;
     sheetEl.classList.toggle('is-full', !!full);
     modal.classList.toggle('is-full', !!full);
@@ -1489,12 +1580,14 @@
      the finger (like a map) and the character walks along; letting go with
      some speed carries them a bit further. A tap still walks to the spot. */
   var swiped = 0;   // time of the last swipe: the click that follows is not a tap
+  var lastPointer = 'mouse';   // 'mouse' | 'touch' | 'pen', of the last press on the stage
   function bindSwipe() {
     var st = null;
+    stage.addEventListener('pointerdown', function (e) { lastPointer = e.pointerType || 'mouse'; }, true);
     stage.addEventListener('pointerdown', function (e) {
       if (e.pointerType === 'mouse' && e.button !== 0) return;
       if (e.target.closest('.st-udon')) return;   // dragged itself
-      var pc = pickAt(e.clientX, e.clientY).piece;   // so are products and stories (where their picture is)
+      var pc = pickAt(e.clientX, e.clientY, e.pointerType !== 'mouse').piece;   // so are products and stories (where their picture is)
       if (pc && (pc.classList.contains('st-shelf-prod') || pc.getAttribute('data-kind') === 'story')) return;
       st = { x: e.clientX, y: e.clientY, px: player.x, t: performance.now(), lastX: e.clientX, lastT: performance.now(), v: 0, on: false, id: e.pointerId };
     });
@@ -1505,6 +1598,8 @@
         if (Math.abs(dx) < 12 || Math.abs(dx) < Math.abs(dy)) return;
         st.on = true;
         walkToken++;                 // stop any walk in progress
+        restX = null;                // on the move: no place is "here" until they let go
+        markHere();
         try { stage.setPointerCapture(e.pointerId); } catch (x) { /* fine */ }
       }
       var now = performance.now();
@@ -1526,7 +1621,7 @@
       player.moving = false;
       var fling = -was.v * 260 / k;     // keep going a little in the swipe's direction
       if (Math.abs(fling) > 40 && performance.now() - was.lastT < 80) walkTo(player.x + fling);
-      else render();
+      else { rest(); render(); }
     };
     stage.addEventListener('pointerup', up);
     stage.addEventListener('pointercancel', up);
@@ -3172,7 +3267,10 @@
   function bindHover() {
     world.addEventListener('pointermove', function (e) {
       if (e.pointerType !== 'mouse') return;
-      over(e.buttons ? null : pickAt(e.clientX, e.clientY).piece || null);
+      var pc = e.buttons ? null : pickAt(e.clientX, e.clientY).piece || null;
+      // lit = a click opens it: not the place the character stands at, nor a piece's foot on the floor
+      if (pc && pc.getAttribute('data-kind') === 'zone' && (isHere(pc) || onFloor(e.clientY))) pc = null;
+      over(pc);
     });
     world.addEventListener('pointerleave', function () { over(null); });
     world.addEventListener('pointerdown', function () { over(null); });
@@ -3196,7 +3294,7 @@
 
   function bindProducts() {
     world.addEventListener('pointerdown', function (e) {
-      var el = pickAt(e.clientX, e.clientY).piece;
+      var el = pickAt(e.clientX, e.clientY, e.pointerType !== 'mouse').piece;
       if (!el || !el.classList.contains('st-shelf-prod') || (e.pointerType === 'mouse' && e.button !== 0)) return;
       e.preventDefault();
       var sku = el.getAttribute('data-sku');
@@ -3303,7 +3401,7 @@
     }
     // the cart: out it comes, Udon lands in the basket of it and rides along
     say('studio.udon_cart', 3600);
-    walkToken++; player.moving = false;
+    walkToken++; player.moving = false; rest();
     player.udon = true; render();
     var b = frameEls[player.frame].getBoundingClientRect();
     var a = ghost.getBoundingClientRect();
@@ -3460,13 +3558,156 @@
     else if (ACTIONS[act]) ACTIONS[act]();
   }
 
-  // Is a tap on (or right beside) the character? Then it means "walk",
-  // even when a shelf or sofa happens to be behind them.
-  function nearPlayer(x, y) {
-    var img = frameEls[player.frame];
-    if (!img || img.hidden) return false;
+  // A tap (a finger, the mouse), by what is painted under it:
+  //  - a name tag opens its place;
+  //  - a product, a story: their own pointer handlers took it (drag & drop);
+  //  - a piece that talks, a board: does its thing;
+  //  - a place (a "Khu vực" piece, a tap box): the character walks there and
+  //    it opens, unless the character already stands at it or the tap is on
+  //    the floor: then it walks, like a tap on the wall or on the character.
+  function tap(x, y) {
+    var at = pickAt(x, y, lastPointer !== 'mouse');
+    if (at.udon) return;
+    if (at.label) { openTag(at.label); return; }
+    var pc = at.piece || null;
+    var place = pc && pc.getAttribute('data-kind') === 'zone' ? pc : at.hot || null;
+    if (pc && !place) {
+      if (pc.classList.contains('st-thing') && pc.getAttribute('data-kind') !== 'story') thingTap(pc);
+      return;
+    }
+    var here = !!place && isHere(place);
+    if (place && !here && !onFloor(y)) {
+      if (place === pc) thingTap(pc);
+      else visit(place.getAttribute('data-hot'));
+      return;
+    }
+    ring(x, y);
+    if (here) nudge(place);
+    walkTo((x - stage.getBoundingClientRect().left + cam) / k);
+  }
+
+  // A name tag: a "Khu vực" piece's or a tap box's. It always opens its place.
+  function openTag(lab) {
+    var n = lab.getAttribute('data-thing-label');
+    if (n != null) {
+      var el = world.querySelector('.st-thing[data-thing="' + n + '"]');
+      if (el) thingTap(el);
+      return;
+    }
+    var hot = lab.closest('.st-hot');
+    if (hot) visit(hot.getAttribute('data-hot'));
+  }
+
+  // Is (x, y) on the character's own picture, cart included? The character
+  // is drawn over the pieces behind it, so a tap there is on the character
+  // and means walk. By the picture, not its box: a cart frame's box is wide
+  // and mostly empty.
+  function onPlayer(x, y) {
+    var fr = frameEls[player.frame], img = fr && !fr.hidden && fr.querySelector('img');
+    if (!img) return false;
     var r = img.getBoundingClientRect();
-    return x > r.left - 16 && x < r.right + 16 && y > r.top - 8 && y < r.bottom + 8;
+    if (!r.width || x < r.left || x > r.right || y < r.top || y > r.bottom) return false;
+    var m = alphaOf(img.getAttribute('src'));
+    if (typeof m === 'string') return true;   // not read yet: its box
+    var u = (x - r.left) / r.width, v = (y - r.top) / r.height;
+    if (player.facing < 0) u = 1 - u;         // the frame is mirrored
+    var cx = Math.floor(u * m.w), cy = Math.floor(v * m.h);
+    for (var dy = -2; dy <= 2; dy++) {
+      for (var dx = -2; dx <= 2; dx++) {
+        var xx = cx + dx, yy = cy + dy;
+        if (xx >= 0 && yy >= 0 && xx < m.w && yy < m.h && m.a[yy * m.w + xx] > 40) return true;
+      }
+    }
+    return false;
+  }
+
+  /* ---------- where the character stands ----------
+     The place(s) the character has walked to. A tap on its picture walks
+     (in front, behind) instead of opening it again, and its tag lights up
+     ("Tên ›") to open it. Not where a scene starts (the street door opens
+     with one tap) and never the way in. A walk in progress counts as being
+     where it is heading. */
+  var restX = null;      // where the visitor last brought the character to rest; null at a scene's start
+  var walkGoal = null;   // { x, token } of the walk in progress
+  var litTags = [];      // the tags lit now: { tag, p, hot }
+
+  function standAt() {
+    return walkGoal && walkGoal.token === walkToken && player.moving ? walkGoal.x : restX;
+  }
+
+  function rest() {
+    restX = player.x;
+    walkGoal = null;
+    markHere();
+  }
+
+  // A place (a tap box, or a "Khu vực" piece): its span, what it does, its tag.
+  function placeOf(el) {
+    if (el.classList.contains('st-hot')) {
+      var h = hotById(el.getAttribute('data-hot'));
+      if (!h) return null;
+      var b = boxOf(h), pl = placeFor(h.id);
+      return { x0: b.x0, x1: b.x1, act: pl ? pl.act : h.id, tag: el.querySelector('.st-hot-label'), hot: true };
+    }
+    var n = el.getAttribute('data-thing'), it = THINGS[+n];
+    if (!it || it.kind !== 'zone') return null;
+    var p = picBox(it);
+    return { x0: p.x0, x1: p.x1, act: it.zone.act, tag: world.querySelector('[data-thing-label="' + n + '"]'), it: it };
+  }
+
+  function isHere(el, x) {
+    if (x === undefined) x = standAt();
+    var p = x != null && placeOf(el);
+    return !!p && p.act !== 'enter' && x >= p.x0 && x <= p.x1;
+  }
+
+  function markHere() {
+    if (!world) return;
+    var x = standAt();
+    litTags = [];
+    world.querySelectorAll('.st-hot, .st-thing[data-kind="zone"]').forEach(function (el) {
+      var on = isHere(el, x), p = placeOf(el);
+      el.classList.toggle('is-here', on);
+      if (!p || !p.tag) return;
+      p.tag.classList.toggle('is-here', on);
+      if (on) litTags.push({ tag: p.tag, p: p });
+      else if (p.hot) p.tag.style.left = '';
+      else tagAt(p.tag, p.it);
+    });
+    clampTags();
+  }
+
+  // A lit tag stays on screen: a place can be wider than a phone's view.
+  function clampTags() {
+    if (!litTags.length) return;
+    var m = 70 / k, L = cam / k + m, R = (cam + stage.clientWidth) / k - m;
+    litTags.forEach(function (o) {
+      var x = Math.max(L, Math.min(R, (o.p.x0 + o.p.x1) / 2));
+      if (o.p.hot) o.tag.style.left = ((x - o.p.x0) / (o.p.x1 - o.p.x0) * 100).toFixed(2) + '%';
+      else o.tag.style.left = pct(x, SCENE.width);
+    });
+  }
+
+  // A tap on the place the character stands at walks; its tag gives a little
+  // nod, so the way to open it again is plain to see.
+  function nudge(el) {
+    var p = placeOf(el), tag = p && p.tag;
+    if (!tag) return;
+    tag.classList.remove('is-nudge');
+    void tag.offsetWidth;   // restart the animation
+    tag.classList.add('is-nudge');
+    setTimeout(function () { tag.classList.remove('is-nudge'); }, 600);
+  }
+
+  // Every tap that walks leaves a small ring where the finger was: a tap
+  // always shows it was felt, even one that doesn't move the character.
+  function ring(x, y) {
+    var r = stage.getBoundingClientRect(), el = document.createElement('span');
+    el.className = 'st-tap';
+    el.style.left = (x - r.left + cam) + 'px';
+    el.style.top = (y - r.top) + 'px';
+    world.appendChild(el);
+    setTimeout(function () { el.remove(); }, 600);
   }
 
   /* ======================================================================
@@ -3490,26 +3731,16 @@
       // under the finger, and the next key press would light that piece up.
       var held = e.detail !== 0 && document.activeElement;
       if (held && held.classList && held.classList.contains('st-thing')) held.blur();
-      if (Date.now() - swiped < 350) return;   // the end of a swipe, not a tap
-      // keyboard (detail 0): the focused element; a tap: what's under the finger, by the picture
-      var at = e.detail === 0 ? { piece: e.target.closest('.st-thing, .st-shelf-prod'), hot: e.target.closest('.st-hot') }
-        : e.target.closest('.st-hot-label') ? { hot: e.target.closest('.st-hot') } : pickAt(e.clientX, e.clientY);
-      var th = at.piece && at.piece.classList.contains('st-thing') ? at.piece : null;
-      if (th && th.getAttribute('data-kind') !== 'story' && (e.detail === 0 || !nearPlayer(e.clientX, e.clientY))) {
-        thingTap(th);
-        return;
-      }
-      if (at.piece) return;   // a product / story: their own pointer handlers took the tap
-      var hot = at.hot || null;
-      // A label, an object, or Enter/Space on a focused spot (detail 0):
-      // open it — unless the tap lands on the character, which means walk.
-      if (hot && (e.detail === 0 || e.target.closest('.st-hot-label') || !nearPlayer(e.clientX, e.clientY))) {
-        visit(hot.getAttribute('data-hot'));
-        return;
-      }
-      var rect = stage.getBoundingClientRect();
-      walkTo((e.clientX - rect.left + cam) / k);
+      if (Date.now() - swiped < 350) return;   // the end of a swipe or a drag, not a tap
+      if (e.detail !== 0) { tap(e.clientX, e.clientY); return; }
+      // keyboard (Enter / Space): open the focused spot or piece
+      var lab = e.target.closest('[data-thing-label]'), th = e.target.closest('.st-thing'), hot = e.target.closest('.st-hot');
+      if (lab) openTag(lab);
+      else if (th) { if (th.getAttribute('data-kind') !== 'story') thingTap(th); }
+      else if (hot) visit(hot.getAttribute('data-hot'));
     });
+    // Long press: no "save image" menu over the scene (iOS: -webkit-touch-callout).
+    stage.addEventListener('contextmenu', function (e) { if (lastPointer !== 'mouse') e.preventDefault(); });
 
     document.querySelectorAll('[data-go]').forEach(function (b) {
       b.addEventListener('click', function () {
@@ -3523,6 +3754,12 @@
       });
     });
 
+    // The second tap of a double tap (or an impatient one) lands on the sheet
+    // the first just opened: on its backdrop, closing it at once, or on a
+    // button in it. Taps in the first moments after it opens are let go.
+    modal.addEventListener('click', function (e) {
+      if (e.detail && Date.now() - sheetAt < 400) { e.preventDefault(); e.stopImmediatePropagation(); }
+    }, true);
     modal.addEventListener('click', function (e) {
       if (e.target === modal || e.target.closest('.st-close') || e.target.closest('[data-close]')) {
         closeSheet();
