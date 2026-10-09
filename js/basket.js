@@ -507,6 +507,7 @@
      DOM
      ====================================================================== */
   var widget, pile, badge, panel, panelBody, overlay, basketArt;
+  var openedAt = 0;   // when the panel last opened
   var view = 'basket';   // basket | form | chat | done
   var doneMode = 'sent'; // sent | mailto
   var orderCode = null;  // mã đơn database trả về, hiện ở màn cảm ơn
@@ -571,7 +572,10 @@
   function buildPanel() {
     overlay = document.createElement('div');
     overlay.className = 'gb-overlay';
-    overlay.addEventListener('click', closePanel);
+    overlay.addEventListener('click', function (e) {
+      if (e.detail && Date.now() - openedAt < 400) return;   // the second tap of the one that opened it
+      closePanel();
+    });
     document.body.appendChild(overlay);
 
     panel = document.createElement('div');
@@ -590,6 +594,11 @@
     document.body.appendChild(panel);
 
     panelBody = panel.querySelector('.gb-panel-body');
+    // A double tap on what opened the panel: the second tap lands in it (on a
+    // button, a "remove"). Taps in its first moments are let go.
+    panel.addEventListener('click', function (e) {
+      if (e.detail && Date.now() - openedAt < 400) { e.preventDefault(); e.stopImmediatePropagation(); }
+    }, true);
     panel.querySelector('.gb-close').addEventListener('click', closePanel);
 
     document.addEventListener('keydown', function (e) {
@@ -701,6 +710,7 @@
   /* ---------- panel views ---------- */
 
   function openPanel() {
+    openedAt = Date.now();
     if (view === 'done') view = 'basket';
     renderPanel();
     panel.classList.add('open');

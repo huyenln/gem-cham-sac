@@ -35,6 +35,11 @@ and walks through what broke before:
            picked up, never the catalogue photo when the Studio has a cut-out
   topbar   the top bar fits a phone (320px up), in Vietnamese and English
   motion   a device asking for less motion: no walking, "Hiệu ứng" turns it on
+  taps     taps on a phone (clicks on a desktop) near "Khu vực" pieces standing on
+           the floor: the place the character stands at walks (its tag opens it),
+           the floor walks, a tap on the character is never dead, every piece has
+           a tag on its picture, a double tap keeps the sheet, small products
+           forgive a finger, a stop point dragged far off its box is ignored
 
 Screenshots go to /tmp/gem-check/ — look at them, a pass only means nothing
 crashed and the counts add up.
@@ -42,7 +47,7 @@ crashed and the counts add up.
     python3 tools/check-studio.py            all checks
     python3 tools/check-studio.py wear       one check (street | wear | shop | spots | editor |
                                              library | product | design | catalog | kinds |
-                                             layers | zones | cart | topbar | motion)
+                                             layers | zones | cart | topbar | motion | taps)
 
 Needs: pip install playwright. Chromium: PLAYWRIGHT_BROWSERS_PATH or
 CHROMIUM=/path/to/chrome (the cloud sessions have /opt/pw-browsers/chromium).
@@ -1470,6 +1475,233 @@ async def motion(browser, db):
     await ctx.close()
 
 
+async def taps(browser, db):
+    """Taps near "Khu vực" pieces, which stand on the floor inside see-through
+    sheets like the owner's uploads. What went wrong on phones: a tap on the
+    character standing at a piece did nothing; a tap in front of / behind it
+    opened the piece again; a piece's tag took no taps (and most had none);
+    a double tap opened a sheet and closed it at once."""
+    print('taps')
+    from PIL import Image
+    db.rows.clear(); db.info.clear()
+    bucket = 'https://dxdovvqsfjeizsoprrfn.supabase.co/storage/v1/object/public/gem-media/'
+
+    def upload(name, im):
+        buf = io.BytesIO()
+        im.save(buf, 'WEBP', quality=85)
+        db.files[name] = ('image/webp', buf.getvalue())
+        return bucket + name
+
+    def sheet(name, prop, item, fh, floor):
+        # an upload like the owner's: 1280 px wide, the painted furniture in the
+        # middle of the sheet, standing on the floor (fh its height, floor its foot)
+        x, y, w, h = item
+        pic = Image.open(ROOT / 'images/studio/props' / prop).convert('RGBA')
+        s = 1280 / w
+        fw = fh * pic.width / pic.height
+        im = Image.new('RGBA', (1280, round(1280 * h / w)), (0, 0, 0, 0))
+        im.alpha_composite(pic.resize((round(fw * s), round(fh * s))), (round((w - fw) / 2 * s), round((floor - fh - (y - h / 2)) * s)))
+        return upload(name, im)
+
+    sofa = sheet('t-sofa.webp', 'sofa.webp', (1250, 739, 1006, 711), 337, 922)            # furniture x 815-1685, y 585-922
+    fit = sheet('t-fit.webp', 'thu-do-day.webp', (2428, 666, 1067, 754), 550, 865)
+    table = sheet('t-table.webp', 'ban-may-day.webp', (4637, 518, 1285, 909), 736, 898)   # x 4271-5003
+    rug = upload('t-rug.webp', Image.new('RGBA', (420, 200), (184, 153, 104, 255)))       # solid: x 3190-3610, y 750-950
+    dot = upload('t-dot.webp', Image.new('RGBA', (60, 60), (135, 150, 90, 255)))          # a small solid product
+    piece = lambda src, x, y, w, h, **kw: dict(src=src, x=x, y=y, w=w, h=h, rot=0, flip=False, layer='back', frame=False, **kw)
+    layout = {
+        'v': 1, 'bg': {'src': 'images/studio/bg/strip-tron.webp', 'w': 5792, 'h': 1024},
+        'items': [
+            piece('images/studio/props/cua-di.webp', 376, 432, 537, 760, kind='zone', zone={'act': 'door'}),
+            piece(sofa, 1250, 739, 1006, 711, kind='zone', zone={'act': 'sofa'}),
+            piece(fit, 2428, 666, 1067, 754, kind='zone', zone={'act': 'fitting', 'vi': 'Góc thử đồ'}),
+            piece(dot, 2000, 330, 60, 60, sku='origami'),
+            piece(dot, 1300, 700, 50, 50, sku='oxford'),   # a small product hung on the sofa piece
+            piece(rug, 3400, 850, 420, 200, kind='zone', zone={'act': 'rail'}),
+            piece('images/studio/props/cua-so-4.webp', 4900, 338, 932, 380, kind='zone', zone={'act': 'tu'}),
+            piece(table, 4637, 518, 1285, 909, kind='zone', zone={'act': 'sewing'}),
+        ],
+        # the live layout's slip: a built-in box moved, its stop point left far away
+        'hot': {'cabinet': {'box': [3200, 456, 3900, 623], 'stand': 5600}},
+        'spots': {k: {'off': True} for k in ('door', 'sofa', 'rail', 'fitting', 'pegboard', 'display', 'sewing', 'tu', 'counter', 'memo')},
+        'udon': {'x': 5500, 'y': 560, 'w': 128, 'h': 140}, 'start': 363,
+    }
+    INSIDE = "sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-motion','off');"
+    OPEN = """(() => { const m = document.getElementById('st-modal'); if (m.hidden) return null;
+      const b = document.getElementById('st-sheet-body'), h = b.querySelector('#st-sheet-title');
+      return h ? h.getAttribute('data-i18n') : b.querySelector('.st-prod') ? 'product' : 'sheet'; })()"""
+    X = "parseFloat(document.querySelector('.st-player').style.left) / (document.getElementById('st-world').getBoundingClientRect().height / 1024)"
+    AT = """(p) => { const s = document.getElementById('st-stage').getBoundingClientRect(), w = document.getElementById('st-world').getBoundingClientRect(), k = w.height / 1024;
+      return [w.left + p[0] * k, s.top + p[1] * k]; }"""
+    TAG = """(name) => { const l = [...document.querySelectorAll('.st-zone-label')].find(e => e.textContent === name); if (!l) return null;
+      const r = l.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2, here: l.classList.contains('is-here'),
+        nod: l.classList.contains('is-nudge'), left: parseFloat(l.style.left) * 57.92, top: parseFloat(l.style.top) * 10.24, pe: getComputedStyle(l).pointerEvents }; }"""
+    RINGS = "document.querySelectorAll('.st-tap').length"
+
+    async def fresh(start, w=390, h=844, init=INSIDE):
+        db.rows['live'] = dict(layout, start=start)
+        pg = await page(browser, db, w, h, init)
+        await pg.goto(f'{BASE}/studio.html')
+        await pg.wait_for_timeout(2500)
+        await pg.add_style_tag(content='.lang-hint{display:none!important}')
+        return pg
+
+    async def tap(pg, x, y, strip=True):
+        if strip:
+            x, y = await pg.evaluate(AT, [x, y])
+        if pg.viewport_size['width'] < 768:
+            await pg.touchscreen.tap(x, y)
+        else:
+            await pg.mouse.click(x, y)
+        await pg.wait_for_timeout(120)
+
+    async def close(pg):
+        await pg.keyboard.press('Escape')
+        await pg.wait_for_timeout(400)
+
+    # A. where the scene starts is not "visited": the door opens with one tap;
+    #    every piece has a tag on top of its picture, and the tags take taps
+    pg = await fresh(363)
+    tags = await pg.evaluate("[...document.querySelectorAll('.st-zone-label')].map(e => e.textContent)")
+    want = ['Chọn nhân vật', 'Góc nghỉ chân', 'Góc thử đồ', 'Đồ 2hand', 'Tủ sưu tầm', 'Bàn thiết kế']
+    check(sorted(tags) == sorted(want), f'every "Khu vực" has a tag, named after what it does when the owner gave none ({tags})')
+    t = await pg.evaluate(TAG, 'Góc nghỉ chân') or {'left': 0, 'top': 0, 'pe': None}
+    check(abs(t['left'] - 1250) < 6 and abs(t['top'] - 585) < 6 and t['pe'] == 'auto',
+          f'the tag sits on top of the picture, not of its see-through sheet, and takes taps (x {t["left"]:.0f}, y {t["top"]:.0f}, sheet top 384)')
+    await tap(pg, 376, 260)
+    first = await pg.evaluate(OPEN)
+    await tap(pg, 376, 260)   # a double tap: the second lands on the backdrop above the sheet
+    await pg.wait_for_timeout(500)
+    check(first == 'studio.door_h', 'standing where the scene starts, a tap on the door opens it')
+    check(await pg.evaluate(OPEN) == 'studio.door_h', 'a double tap keeps the sheet it opened')
+    await close(pg)
+    await pg.evaluate("""() => { const s = document.getElementById('st-stage'), r = s.getBoundingClientRect();
+      s.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'touch', clientX: r.left + 30, clientY: r.top + 30 })); }""")
+    menu = await pg.evaluate("document.getElementById('st-stage').dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }))")
+    check(menu is False, 'a long press brings up no "save image" menu')
+    check(not pg.errors, f'no script errors {pg.errors}')
+    await pg.context.close()
+
+    # B. at a piece: a tap in front of the character walks, a tap on the
+    #    character is never dead, the tag opens it again
+    pg = await fresh(720)
+    await tap(pg, 980, 680)
+    x = await pg.evaluate(X)
+    check(await pg.evaluate(OPEN) == 'studio.sofa_h' and abs(x - 1250) < 12, f'a tap on a piece from afar walks there and opens it (x {x:.0f})')
+    await close(pg)
+    check((await pg.evaluate(TAG, 'Góc nghỉ chân') or {}).get('here'), 'standing at the piece, its tag lights up')
+    fr = await pg.evaluate("(() => { const r = document.querySelector('.st-fr:not([hidden]) img').getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height * 0.3]; })()")
+    await tap(pg, *fr, strip=False)
+    rings = await pg.evaluate(RINGS)
+    check(await pg.evaluate(OPEN) is None and rings > 0, f'a tap on the character there: no sheet, a ring shows it was felt (rings {rings})')
+    await pg.wait_for_timeout(500)
+    x0 = await pg.evaluate(X)
+    await tap(pg, x0 + 130, 690)
+    x1 = await pg.evaluate(X)
+    t = await pg.evaluate(TAG, 'Góc nghỉ chân') or {}
+    check(await pg.evaluate(OPEN) is None and abs(x1 - x0 - 130) < 8, f'a tap on the piece in front of the character walks, no sheet ({x0:.0f} → {x1:.0f})')
+    check(t.get('nod'), 'and the tag nods: that is how it opens again')
+    await pg.screenshot(path=OUT / 'taps-here.png')
+    await close(pg)
+    if t:
+        await tap(pg, t['x'], t['y'], strip=False)
+    check(await pg.evaluate(OPEN) == 'studio.sofa_h', 'a tap on the lit tag opens the piece again')
+    await close(pg)
+    check(not pg.errors, f'no script errors {pg.errors}')
+    await pg.context.close()
+
+    # C. the floor walks, even on a piece; the same piece above the floor opens;
+    #    a stop point left far off its box is ignored
+    # (each on a fresh page: once the character has walked onto the rug, it is "here")
+    for what in ('floor', 'above', 'box'):
+        pg = await fresh(3080)
+        if what == 'floor':
+            await tap(pg, 3260, 905)
+            x = await pg.evaluate(X)
+            check(await pg.evaluate(OPEN) is None and abs(x - 3260) < 8, f'a tap on the floor walks, even on a piece lying there (x {x:.0f})')
+        elif what == 'above':
+            await tap(pg, 3250, 790)
+            check(await pg.evaluate(OPEN) == 'studio.rail_h', 'the same piece above the floor opens')
+        else:
+            await tap(pg, 3300, 540)
+            x = await pg.evaluate(X)
+            check(await pg.evaluate(OPEN) == 'studio.shop_h' and abs(x - 3550) < 12, f'a box whose stop point was left far away: the character stops at its middle (x {x:.0f}, stop 5600)')
+        await pg.context.close()
+
+    # D. two places one above the other: standing at the design table, the
+    #    window over it ("Tủ") walks too, and its tag opens it
+    pg = await fresh(4100)
+    await tap(pg, 4345, 470)
+    check(await pg.evaluate(OPEN) == 'studio.sewing_h', 'a tap on the design table opens it')
+    await close(pg)
+    await tap(pg, 4700, 330)
+    w = await pg.evaluate(TAG, 'Tủ sưu tầm') or {}
+    check(await pg.evaluate(OPEN) is None and w.get('here'), 'standing at the table, a tap on the window above walks; its tag is lit')
+    await close(pg)
+    if w:
+        await tap(pg, w['x'], w['y'], strip=False)
+    check(await pg.evaluate(OPEN) == 'studio.tu_h', 'and the tag opens "Tủ của bạn"')
+    await close(pg)
+    await pg.context.close()
+
+    # E. a small product forgives a finger, not a mouse: on the wall, and on
+    #    a "Khu vực" piece it hangs on (the piece behind would take the tap)
+    for view, w, h in (('phone', 390, 844), ('desktop', 1440, 900)):
+        for start, sku, behind in ((2000, 'origami', None), (1500, 'oxford', 'studio.sofa_h')):
+            pg = await fresh(start, w, h)
+            r = await pg.evaluate("s => { const r = document.querySelector('.st-shelf-prod[data-sku=\"' + s + '\"]').getBoundingClientRect(); return [r.left, r.top + r.height / 2]; }", sku)
+            await tap(pg, r[0] - 8, r[1], strip=False)
+            await pg.wait_for_timeout(300)
+            got = await pg.evaluate(OPEN)
+            on = 'on a "Khu vực" piece' if behind else 'on the wall'
+            check(got == ('product' if view == 'phone' else behind), f'{view}: a tap 8 px off a small product {on} {"opens it" if view == "phone" else "is not on it"} ({got})')
+            await pg.context.close()
+
+    # F. the street door always opens, even with the character brought to rest in front of it
+    pg = await fresh(363, init="localStorage.setItem('gem-studio-out','1');localStorage.setItem('gem-motion','off');")
+    await tap(pg, 1540, 930)   # walk a little: now at rest in front of the door
+    await tap(pg, 1630, 450)
+    await pg.wait_for_timeout(3000)
+    check('ngoai' not in (await bg(pg)), 'on the street, a tap on the door goes in even after walking up to it')
+    await pg.context.close()
+
+    # G. with something in the basket the character pushes a cart: the empty
+    #    part of the cart's frame no longer swallows taps on what is behind
+    pg = await fresh(1250, init=INSIDE + "localStorage.setItem('gem-basket', JSON.stringify([{sku:'goi',qty:1}]));")
+    p = await pg.evaluate("(() => { const r = document.querySelector('.st-fr:not([hidden]) img').getBoundingClientRect(); return [r.right - 6, r.top + r.height * 0.22, r.width / r.height]; })()")
+    await tap(pg, p[0], p[1], strip=False)
+    check(p[2] > 0.6 and await pg.evaluate(OPEN) == 'studio.sofa_h', f'pushing a cart: a tap on the sofa beside the character, inside the cart\'s frame box, opens it ({await pg.evaluate(OPEN)})')
+    await close(pg)
+    await pg.context.close()
+
+    # H. desktop: what lights up under the mouse is what a click opens
+    pg = await fresh(720, 1440, 900)
+    await tap(pg, 980, 680)
+    await close(pg)
+    sofa_px = await pg.evaluate(AT, [1450, 700])
+    door_px = await pg.evaluate(AT, [376, 300])
+    lit = "(s) => { const e = document.querySelector(s); return [e.classList.contains('is-over'), getComputedStyle(e).cursor]; }"
+    await pg.mouse.move(*sofa_px)
+    await pg.wait_for_timeout(150)
+    a = await pg.evaluate(lit, '.st-thing[src$="t-sofa.webp"]')
+    await pg.mouse.move(*door_px)
+    await pg.wait_for_timeout(150)
+    b = await pg.evaluate(lit, '.st-thing[src$="cua-di.webp"]')
+    wall = await pg.evaluate("getComputedStyle(document.getElementById('st-world')).cursor")
+    check(a == [False, 'default'] and b == [True, 'pointer'] and wall == 'default',
+          f'desktop: the piece the character stands at does not light up, another one does; the hand only over it (sofa {a}, door {b}, wall {wall})')
+    await pg.context.close()
+
+    # I. the basket panel: the second tap of a double tap does not close it
+    pg = await fresh(720)
+    shut = """async () => { window.GemBasket.open(); const o = document.querySelector('.gb-overlay'), click = () => o.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
+      click(); const a = document.querySelector('.gb-panel').classList.contains('open');
+      await new Promise(r => setTimeout(r, 500)); click(); return [a, document.querySelector('.gb-panel').classList.contains('open')]; }"""
+    check(await pg.evaluate(shut) == [True, False], 'the basket panel stays open on the second tap of a double tap, closes on a later one')
+    check(not pg.errors, f'no script errors {pg.errors}')
+    await pg.context.close()
+
+
 async def main(which):
     if hasattr(sys.stdout, 'reconfigure'):
         sys.stdout.reconfigure(encoding='utf-8', errors='replace')   # a Windows console's code page has no Vietnamese
@@ -1480,7 +1712,8 @@ async def main(which):
         browser = await launch(p)
         for name, fn in (('street', street), ('wear', wear), ('shop', shop), ('spots', spots), ('editor', editor),
                          ('library', library), ('product', product), ('design', design), ('catalog', catalog), ('kinds', kinds),
-                         ('layers', layers), ('zones', zones), ('cart', cart), ('topbar', topbar), ('motion', motion)):
+                         ('layers', layers), ('zones', zones), ('cart', cart), ('topbar', topbar), ('motion', motion),
+                         ('taps', taps)):
             if which in (None, name):
                 await fn(browser, db)
         await browser.close()
