@@ -1778,33 +1778,45 @@ Nguyên nhân:
 4. Nhãn Khu vực không nhận chạm (`pointer-events: none`) và nằm ở mép tấm trong suốt.
 5. Chạm đúp: lần hai rơi vào nền mờ phía trên tấm vừa mở → đóng ngay.
 
+Đợt 2 (sau khi chạy thật trên điện thoại): dấu ✕ phải bấm nhiều lần mới tắt (chặn chạm
+đúp nuốt cả chạm ✕ trong 0,4 giây đầu); cuối sofa chạm sang 2hand thì mở luôn (luật "khu
+khác một chạm là mở"); nhãn sofa nằm ngay trên mặt nhân vật (đỉnh sofa ngang đầu).
+
 Luật chạm (điện thoại và máy tính như nhau; `tap()` trong `js/studio.js`):
-- **Sàn = đi:** từ đầu gối nhân vật trở xuống (`KNEE`, `onFloor`), kể cả khi có món nằm
-  đó, trừ sản phẩm / câu chuyện / lời thoại. Khung bấm chạm xuống sàn bị cắt ở đầu gối.
-- **Khu đang đứng không tự mở lại:** mọi khu có hình chứa chỗ nhân vật vừa dừng
-  (`restX`; đang đi thì tính chỗ đang tới; kể cả khu treo phía trên như cửa sổ) → chạm
-  lên hình = đi, nhãn sáng lên "Tên ›" và gật nhẹ khi chạm; chạm nhãn = mở. Không tính
-  chỗ bắt đầu cảnh (cửa mặt tiền vẫn một chạm), không bao giờ tính cửa vào studio.
-- **Khu khác:** một chạm = đi tới + mở ngay, như cũ.
+- **Chạm vào hình = đi tới chỗ đó, chạm vào nhãn = mở.** Hình của Khu vực, khung bấm, tường,
+  sàn, nhân vật: đều là đi (tới đúng chỗ chạm). Chạm hình một khu thì nhãn của nó gật nhẹ
+  (chỉ chỗ mở). Riêng cửa mặt tiền (`enter`) mở bằng một chạm: ngoài đó chỉ có việc vào.
+  Sản phẩm, câu chuyện, lời thoại, bảng tin, Udon: chạm là ra, như cũ. Bàn phím (Enter
+  trên món / khung đang chọn) và thanh menu dưới vẫn mở thẳng.
 - **Nhãn:** Khu vực nào cũng có — tên chủ đặt, không thì tên theo hành động (`ACT_NAME`;
   "Không làm gì" thì không có). Nằm trên đỉnh hình (`tagAt`, đặt lại khi đọc xong ảnh),
-  vùng chạm ~47px, nhãn đang sáng luôn nằm trong màn hình (`clampTags`).
-- **Nhân vật che món phía sau nó:** chạm lên chính nét vẽ nhân vật, cả xe đẩy (`onPlayer`,
-  theo alpha của khung, không theo khung chữ nhật) = đi. Không còn chỗ chết.
+  vùng chạm ~47px.
+- **Khu đang đứng:** khu có hình chứa chỗ nhân vật vừa dừng (`restX`; đang đi thì tính chỗ
+  đang tới; kể cả khu treo phía trên như cửa sổ) → nhãn sáng "Tên ›" và luôn nằm trong
+  màn hình. Không tính chỗ bắt đầu cảnh.
+- **Nhãn không đè nhân vật** (`placeTags`): khi nhân vật đứng yên, nhãn nào nằm trên nét vẽ
+  nhân vật ở đúng độ cao của nhãn (`playerSpan`, theo alpha của khung: ngang đầu thì chỉ là
+  cái đầu, không tính xe ở dưới) thì dịch ngang dọc theo đỉnh món, sang phía gần hơn. Lúc
+  đang đi thì không dịch (nhãn không nhảy qua nhảy lại).
+- **Nhân vật che món phía sau nó** (`onPlayer`, theo nét vẽ, cả xe đẩy). Không còn chỗ chết.
 - **Vòng phản hồi** (`ring`, `.st-tap`) ở mỗi lần chạm làm nhân vật đi, kể cả khi không
   nhích; tắt Hiệu ứng thì là chấm mờ dần.
-- **Chặn chạm xuyên:** 0,4 giây đầu sau khi mở tấm (và bảng giỏ hàng, `js/basket.js`),
-  chạm vào tấm hoặc nền không có tác dụng.
+- **Chặn chạm đúp:** trong 0,4 giây sau khi mở tấm (và bảng giỏ hàng, `js/basket.js`), chỉ
+  chạm rơi **đúng chỗ** chạm vừa mở nó (lệch ≤ 40px) mới bị bỏ qua; chạm chỗ khác (✕) có
+  tác dụng ngay.
 - **Món nhỏ** (sản phẩm, câu chuyện…): ngón tay cách hình ≤ 11px vẫn trúng, kể cả khi
   món nằm trên một Khu vực (túi treo trên bình phong): món nhỏ thắng khu phía sau
   (`nearSmall`, chỉ màn cảm ứng).
 - **Nhấn giữ** không bật menu "Lưu ảnh" (`-webkit-touch-callout`; chặn `contextmenu`
   khi không phải chuột).
-- **Máy tính:** chỉ sáng lên và hiện bàn tay trên thứ bấm vào sẽ mở; khu đang đứng và
-  chân món trên sàn thì không.
+- **Máy tính:** rê chuột lên hình một khu thì nhãn của nó sáng (hình không sáng, con trỏ
+  thường: bấm là đi); bàn tay chỉ hiện trên nhãn, sản phẩm, câu chuyện. Khung bấm không
+  còn viền sáng khi rê chuột (viền chỉ cho bàn phím).
 - **Điểm dừng lạc:** khung bấm có điểm dừng cách khung quá max(bề rộng khung, 400px)
   → dừng giữa khung (`standNear`). Bố cục đang chạy có một chỗ như vậy: khung "Gối, thảm
   & quà" (cabinet) trên tủ kệ x 3249–4054, điểm dừng ở x 6078. Nên kéo lại trong trình lắp.
+- Câu chào của Udon và dòng hướng dẫn cho trình đọc màn hình đổi theo: "Chạm vào nhãn tên
+  để mở từng góc, chạm chỗ khác để đi dạo nhé."
 
 Chưa làm: vuốt bắt đầu trên sản phẩm thì nhấc sản phẩm thay vì đi (đợi góp ý thử nghiệm).
 Kiểm tra: `taps` trong `tools/check-studio.py`.

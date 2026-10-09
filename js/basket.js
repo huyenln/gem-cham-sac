@@ -507,7 +507,16 @@
      DOM
      ====================================================================== */
   var widget, pile, badge, panel, panelBody, overlay, basketArt;
-  var openedAt = 0;   // when the panel last opened
+  var openedAt = 0, openedFrom = null, lastDown = null;   // when the panel last opened, where the tap that opened it was
+
+  // The second tap of a double tap on what opened the panel (the basket
+  // button, the studio's counter) lands in it: on the overlay, closing it at
+  // once, or on a button ("remove"). Such a tap is let go; one anywhere else
+  // (the ✕) counts at once.
+  function secondTap(e) {
+    return !!e.detail && Date.now() - openedAt < 400 && !!openedFrom &&
+      Math.abs(e.clientX - openedFrom.x) < 40 && Math.abs(e.clientY - openedFrom.y) < 40;
+  }
   var view = 'basket';   // basket | form | chat | done
   var doneMode = 'sent'; // sent | mailto
   var orderCode = null;  // mã đơn database trả về, hiện ở màn cảm ơn
@@ -573,8 +582,7 @@
     overlay = document.createElement('div');
     overlay.className = 'gb-overlay';
     overlay.addEventListener('click', function (e) {
-      if (e.detail && Date.now() - openedAt < 400) return;   // the second tap of the one that opened it
-      closePanel();
+      if (!secondTap(e)) closePanel();
     });
     document.body.appendChild(overlay);
 
@@ -594,11 +602,10 @@
     document.body.appendChild(panel);
 
     panelBody = panel.querySelector('.gb-panel-body');
-    // A double tap on what opened the panel: the second tap lands in it (on a
-    // button, a "remove"). Taps in its first moments are let go.
     panel.addEventListener('click', function (e) {
-      if (e.detail && Date.now() - openedAt < 400) { e.preventDefault(); e.stopImmediatePropagation(); }
+      if (secondTap(e)) { e.preventDefault(); e.stopImmediatePropagation(); }
     }, true);
+    document.addEventListener('pointerdown', function (e) { lastDown = { x: e.clientX, y: e.clientY }; }, true);
     panel.querySelector('.gb-close').addEventListener('click', closePanel);
 
     document.addEventListener('keydown', function (e) {
@@ -711,6 +718,7 @@
 
   function openPanel() {
     openedAt = Date.now();
+    openedFrom = lastDown;
     if (view === 'done') view = 'basket';
     renderPanel();
     panel.classList.add('open');

@@ -36,10 +36,11 @@ and walks through what broke before:
   topbar   the top bar fits a phone (320px up), in Vietnamese and English
   motion   a device asking for less motion: no walking, "Hiệu ứng" turns it on
   taps     taps on a phone (clicks on a desktop) near "Khu vực" pieces standing on
-           the floor: the place the character stands at walks (its tag opens it),
-           the floor walks, a tap on the character is never dead, every piece has
-           a tag on its picture, a double tap keeps the sheet, small products
-           forgive a finger, a stop point dragged far off its box is ignored
+           the floor: a piece's picture walks there, its tag opens it; a tap on
+           the character is never dead; every piece has a tag on its picture, out
+           of the character's way; a double tap keeps the sheet, its ✕ works at
+           once; small products forgive a finger; a stop point dragged far off
+           its box is ignored
 
 Screenshots go to /tmp/gem-check/ — look at them, a pass only means nothing
 crashed and the counts add up.
@@ -1083,7 +1084,10 @@ async def kinds(browser, db):
     await st.wait_for_timeout(400)
     await st.mouse.click(*(await center(st, '.st-thing[data-kind="zone"]')))
     await st.wait_for_timeout(500)
-    check(await st.evaluate("!!document.querySelector('#st-sheet-body .mb-form')"), 'studio: a zone piece opens its action (memo board)')
+    check(await st.evaluate("document.getElementById('st-modal').hidden"), 'studio: a tap on a zone piece walks there')
+    await st.mouse.click(*(await center(st, '.st-zone-label')))
+    await st.wait_for_timeout(500)
+    check(await st.evaluate("!!document.querySelector('#st-sheet-body .mb-form')"), 'studio: its tag opens its action (memo board)')
     check(await st.evaluate("document.querySelector('.st-zone-label').textContent") == 'Bảng nhỏ', 'studio: the zone has its name')
     await st.keyboard.press('Escape')
     await st.wait_for_timeout(400)
@@ -1229,14 +1233,18 @@ async def zones(browser, db):
     check(nav.get('sewing') is True, 'nav: "Bàn thiết kế" stays, a piece does that job now')
     check(nav.get('counter') is False, 'nav: "Quầy" goes, nothing does that job')
 
-    # lit by the picture, not by the sheet round it
+    # by the picture, not by the sheet round it: a click on a "Khu vực" walks
+    # there, its tag opens it, so the mouse over the picture lights the tag
+    tag_lit = f"(() => {{ const t = document.querySelector('[data-thing-label=\"' + document.querySelector('{zsofa}').dataset.thing + '\"]'); return [document.querySelector('{zsofa}').classList.contains('is-over'), t.classList.contains('is-hover')]; }})()"
     b = await st.evaluate(rect, zsofa)
     await st.mouse.move(b[0] + b[2] * 0.12, b[1] + b[3] * 0.25)
     await st.wait_for_timeout(150)
-    check(not await st.evaluate(lit, zsofa), 'the mouse on the see-through part of a piece lights nothing')
+    got = await st.evaluate(tag_lit)
+    check(got == [False, False], f'the mouse on the see-through part of a piece lights nothing ({got})')
     await st.mouse.move(b[0] + b[2] * 0.5, b[1] + b[3] * 0.7)   # where the decoration lies on it
     await st.wait_for_timeout(150)
-    check(await st.evaluate(lit, zsofa), 'the mouse on its picture lights it (a decoration lying on it takes nothing)')
+    got = await st.evaluate(tag_lit)
+    check(got == [False, True], f'the mouse on its picture lights its tag, not the piece (a decoration lying on it takes nothing) ({got})')
     # the decoration is painted over the zone it was set on: the hit-test order
     # (what the browser paints on top) with the decoration made hittable for a moment
     on_top = await st.evaluate("""() => {
@@ -1266,14 +1274,18 @@ async def zones(browser, db):
     }""")
     check(bool(pins) and pins['n'] == 3 and pins['inside'] and pins['over'], f'memo box hidden: the notes are pinned on the board piece ({pins})')
 
-    # a tap, then a key: no frame round the piece
+    # a tap (it walks there), its tag (it opens), then a key: no frame round the piece
     await st.mouse.click(b[0] + b[2] * 0.5, b[1] + b[3] * 0.7)
     await st.wait_for_timeout(2600)
+    walked = await st.evaluate("document.getElementById('st-modal').hidden")
+    tag = await st.evaluate(f"(() => {{ const r = document.querySelector('[data-thing-label=\"' + document.querySelector('{zsofa}').dataset.thing + '\"]').getBoundingClientRect(); return [r.x + r.width / 2, r.y + r.height / 2]; }})()")
+    await st.mouse.click(*tag)
+    await st.wait_for_timeout(600)
     opened = await st.evaluate("!document.getElementById('st-modal').hidden")
     await st.keyboard.press('Escape')
     await st.wait_for_timeout(400)
     ring = await st.evaluate(f"(() => {{ const e = document.querySelector('{zsofa}'); return [e.matches(':focus-visible'), getComputedStyle(e).outlineStyle]; }})()")
-    check(opened and ring == [False, 'none'], f'tap a piece, close with Escape: no frame left round it (opened {opened}, {ring})')
+    check(walked and opened and ring == [False, 'none'], f'tap a piece (walks), its tag (opens), close with Escape: no frame left round it (walked {walked}, opened {opened}, {ring})')
     await st.keyboard.press('Tab')
     for _ in range(14):
         if await st.evaluate("!!document.activeElement && document.activeElement.matches('.st-thing')"):
@@ -1477,10 +1489,12 @@ async def motion(browser, db):
 
 async def taps(browser, db):
     """Taps near "Khu vực" pieces, which stand on the floor inside see-through
-    sheets like the owner's uploads. What went wrong on phones: a tap on the
-    character standing at a piece did nothing; a tap in front of / behind it
-    opened the piece again; a piece's tag took no taps (and most had none);
-    a double tap opened a sheet and closed it at once."""
+    sheets like the owner's uploads. The rule: a tap on a piece's picture walks
+    there, its tag opens it. What went wrong on phones: a tap on the character
+    standing at a piece did nothing; a tap in front of / behind it, or on the
+    piece next to it, opened a piece; a piece's tag took no taps (most had
+    none); a double tap opened a sheet and closed it at once; then the guard
+    against that ate a quick tap on the sheet's ✕; a tag sat on the character."""
     print('taps')
     from PIL import Image
     db.rows.clear(); db.info.clear()
@@ -1568,13 +1582,24 @@ async def taps(browser, db):
     t = await pg.evaluate(TAG, 'Góc nghỉ chân') or {'left': 0, 'top': 0, 'pe': None}
     check(abs(t['left'] - 1250) < 6 and abs(t['top'] - 585) < 6 and t['pe'] == 'auto',
           f'the tag sits on top of the picture, not of its see-through sheet, and takes taps (x {t["left"]:.0f}, y {t["top"]:.0f}, sheet top 384)')
-    await tap(pg, 376, 260)
+    x0 = await pg.evaluate(X)
+    await tap(pg, 520, 300)
+    t = await pg.evaluate(TAG, 'Chọn nhân vật') or {}
+    check(await pg.evaluate(OPEN) is None and abs(await pg.evaluate(X) - 520) < 8 and t.get('nod'),
+          f'a tap on a piece\'s picture walks there, no sheet; its tag nods ({x0:.0f} → {await pg.evaluate(X):.0f})')
+    await tap(pg, t.get('x', 0), t.get('y', 0), strip=False)
     first = await pg.evaluate(OPEN)
-    await tap(pg, 376, 260)   # a double tap: the second lands on the backdrop above the sheet
+    await tap(pg, t.get('x', 0), t.get('y', 0), strip=False)   # a double tap on the tag: the second lands on the backdrop
     await pg.wait_for_timeout(500)
-    check(first == 'studio.door_h', 'standing where the scene starts, a tap on the door opens it')
+    check(first == 'studio.door_h', 'its tag opens it')
     check(await pg.evaluate(OPEN) == 'studio.door_h', 'a double tap keeps the sheet it opened')
     await close(pg)
+    await tap(pg, t.get('x', 0), t.get('y', 0), strip=False)
+    await pg.wait_for_timeout(150)
+    xb = await pg.evaluate("(() => { const r = document.querySelector('.st-close').getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; })()")
+    await tap(pg, *xb, strip=False)
+    await pg.wait_for_timeout(300)
+    check(await pg.evaluate(OPEN) is None, 'the sheet\'s ✕ closes it at once, even right after it opened')
     await pg.evaluate("""() => { const s = document.getElementById('st-stage'), r = s.getBoundingClientRect();
       s.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'touch', clientX: r.left + 30, clientY: r.top + 30 })); }""")
     menu = await pg.evaluate("document.getElementById('st-stage').dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }))")
@@ -1587,8 +1612,7 @@ async def taps(browser, db):
     pg = await fresh(720)
     await tap(pg, 980, 680)
     x = await pg.evaluate(X)
-    check(await pg.evaluate(OPEN) == 'studio.sofa_h' and abs(x - 1250) < 12, f'a tap on a piece from afar walks there and opens it (x {x:.0f})')
-    await close(pg)
+    check(await pg.evaluate(OPEN) is None and abs(x - 980) < 8, f'a tap on a piece from afar walks to where it was tapped, no sheet (x {x:.0f})')
     check((await pg.evaluate(TAG, 'Góc nghỉ chân') or {}).get('here'), 'standing at the piece, its tag lights up')
     fr = await pg.evaluate("(() => { const r = document.querySelector('.st-fr:not([hidden]) img').getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height * 0.3]; })()")
     await tap(pg, *fr, strip=False)
@@ -1612,29 +1636,28 @@ async def taps(browser, db):
 
     # C. the floor walks, even on a piece; the same piece above the floor opens;
     #    a stop point left far off its box is ignored
-    # (each on a fresh page: once the character has walked onto the rug, it is "here")
-    for what in ('floor', 'above', 'box'):
+    for where, y in (('on the floor', 905), ('above the floor', 790)):
         pg = await fresh(3080)
-        if what == 'floor':
-            await tap(pg, 3260, 905)
-            x = await pg.evaluate(X)
-            check(await pg.evaluate(OPEN) is None and abs(x - 3260) < 8, f'a tap on the floor walks, even on a piece lying there (x {x:.0f})')
-        elif what == 'above':
-            await tap(pg, 3250, 790)
-            check(await pg.evaluate(OPEN) == 'studio.rail_h', 'the same piece above the floor opens')
-        else:
-            await tap(pg, 3300, 540)
-            x = await pg.evaluate(X)
-            check(await pg.evaluate(OPEN) == 'studio.shop_h' and abs(x - 3550) < 12, f'a box whose stop point was left far away: the character stops at its middle (x {x:.0f}, stop 5600)')
+        await tap(pg, 3260, y)
+        x = await pg.evaluate(X)
+        check(await pg.evaluate(OPEN) is None and abs(x - 3260) < 8, f'a tap on a piece {where} walks (x {x:.0f})')
         await pg.context.close()
+    pg = await fresh(3080)
+    await tap(pg, 3300, 540)
+    check(await pg.evaluate(OPEN) is None, 'a tap in a tap box walks too')
+    lab = await center(pg, '.st-hot[data-hot="cabinet"] .st-hot-label')
+    await tap(pg, *lab, strip=False)
+    x = await pg.evaluate(X)
+    check(await pg.evaluate(OPEN) == 'studio.shop_h' and abs(x - 3550) < 12, f'its tag opens it; a stop point left far off the box: the character stops at its middle (x {x:.0f}, stop 5600)')
+    await pg.context.close()
 
     # D. two places one above the other: standing at the design table, the
     #    window over it ("Tủ") walks too, and its tag opens it
-    pg = await fresh(4100)
-    await tap(pg, 4345, 470)
-    check(await pg.evaluate(OPEN) == 'studio.sewing_h', 'a tap on the design table opens it')
-    await close(pg)
-    await tap(pg, 4700, 330)
+    pg = await fresh(4400)
+    await tap(pg, 4600, 600)
+    t = await pg.evaluate(TAG, 'Bàn thiết kế') or {}
+    check(await pg.evaluate(OPEN) is None and t.get('here'), 'a tap on the design table walks there; its tag lights up')
+    await tap(pg, 4650, 330)
     w = await pg.evaluate(TAG, 'Tủ sưu tầm') or {}
     check(await pg.evaluate(OPEN) is None and w.get('here'), 'standing at the table, a tap on the window above walks; its tag is lit')
     await close(pg)
@@ -1647,14 +1670,14 @@ async def taps(browser, db):
     # E. a small product forgives a finger, not a mouse: on the wall, and on
     #    a "Khu vực" piece it hangs on (the piece behind would take the tap)
     for view, w, h in (('phone', 390, 844), ('desktop', 1440, 900)):
-        for start, sku, behind in ((2000, 'origami', None), (1500, 'oxford', 'studio.sofa_h')):
+        for start, sku, behind in ((2000, 'origami', False), (1500, 'oxford', True)):
             pg = await fresh(start, w, h)
             r = await pg.evaluate("s => { const r = document.querySelector('.st-shelf-prod[data-sku=\"' + s + '\"]').getBoundingClientRect(); return [r.left, r.top + r.height / 2]; }", sku)
             await tap(pg, r[0] - 8, r[1], strip=False)
             await pg.wait_for_timeout(300)
             got = await pg.evaluate(OPEN)
             on = 'on a "Khu vực" piece' if behind else 'on the wall'
-            check(got == ('product' if view == 'phone' else behind), f'{view}: a tap 8 px off a small product {on} {"opens it" if view == "phone" else "is not on it"} ({got})')
+            check(got == ('product' if view == 'phone' else None), f'{view}: a tap 8 px off a small product {on} {"opens it" if view == "phone" else "is not on it"} ({got})')
             await pg.context.close()
 
     # F. the street door always opens, even with the character brought to rest in front of it
@@ -1665,39 +1688,69 @@ async def taps(browser, db):
     check('ngoai' not in (await bg(pg)), 'on the street, a tap on the door goes in even after walking up to it')
     await pg.context.close()
 
-    # G. with something in the basket the character pushes a cart: the empty
-    #    part of the cart's frame no longer swallows taps on what is behind
-    pg = await fresh(1250, init=INSIDE + "localStorage.setItem('gem-basket', JSON.stringify([{sku:'goi',qty:1}]));")
-    p = await pg.evaluate("(() => { const r = document.querySelector('.st-fr:not([hidden]) img').getBoundingClientRect(); return [r.right - 6, r.top + r.height * 0.22, r.width / r.height]; })()")
-    await tap(pg, p[0], p[1], strip=False)
-    check(p[2] > 0.6 and await pg.evaluate(OPEN) == 'studio.sofa_h', f'pushing a cart: a tap on the sofa beside the character, inside the cart\'s frame box, opens it ({await pg.evaluate(OPEN)})')
-    await close(pg)
-    await pg.context.close()
+    # G. a tag never sits on the character at rest (the sofa's top is at head
+    #    height): it steps aside along the sofa's top. Pushing a cart, after a walk.
+    for view, w, h in (('phone', 390, 844), ('desktop', 1440, 900)):
+        pg = await fresh(1100, w, h, init=INSIDE + "localStorage.setItem('gem-basket', JSON.stringify([{sku:'goi',qty:1}]));")
+        await tap(pg, 1250, 905)   # come to rest right under the tag's own spot (the sofa's middle)
+        await pg.wait_for_timeout(300)
+        got = await pg.evaluate("""() => {
+          const t = [...document.querySelectorAll('.st-zone-label')].find(e => e.textContent === 'Góc nghỉ chân').getBoundingClientRect();
+          const img = document.querySelector('.st-fr:not([hidden]) img'), c = img.getBoundingClientRect(), s = document.getElementById('st-stage').getBoundingClientRect();
+          // the character's painted pixels under the tag (its picture redrawn as on screen)
+          const cv = document.createElement('canvas'), g = cv.getContext('2d');
+          cv.width = Math.round(c.width); cv.height = Math.round(c.height);
+          if (getComputedStyle(document.querySelector('.st-player')).transform.startsWith('matrix(-1')) { g.translate(cv.width, 0); g.scale(-1, 1); }
+          g.drawImage(img, 0, 0, cv.width, cv.height);
+          const x0 = Math.max(0, Math.floor(t.left - c.left)), x1 = Math.min(cv.width, Math.ceil(t.right - c.left));
+          const y0 = Math.max(0, Math.floor(t.top - c.top)), y1 = Math.min(cv.height, Math.ceil(t.bottom - c.top));
+          let under = 0;
+          if (x1 > x0 && y1 > y0) { const d = g.getImageData(x0, y0, x1 - x0, y1 - y0).data; for (let i = 3; i < d.length; i += 4) if (d[i] > 40) under++; }
+          return { under, cart: c.width / c.height > 0.6, onScreen: t.left >= s.left && t.right <= s.right,
+                   dy: Math.round(t.top + t.height * 0.6 - (s.top + 585 * s.height / 1024)) };
+        }""")
+        check(got['cart'] and got['under'] < 5 and got['onScreen'] and abs(got['dy']) < 4,
+              f'{view}: at rest under it, the sofa\'s tag steps aside along the sofa\'s top, off the character ({got})')
+        await pg.screenshot(path=OUT / f'taps-tag-{view}.png')
+        await pg.context.close()
 
     # H. desktop: what lights up under the mouse is what a click opens
     pg = await fresh(720, 1440, 900)
-    await tap(pg, 980, 680)
-    await close(pg)
-    sofa_px = await pg.evaluate(AT, [1450, 700])
     door_px = await pg.evaluate(AT, [376, 300])
     lit = "(s) => { const e = document.querySelector(s); return [e.classList.contains('is-over'), getComputedStyle(e).cursor]; }"
-    await pg.mouse.move(*sofa_px)
-    await pg.wait_for_timeout(150)
-    a = await pg.evaluate(lit, '.st-thing[src$="t-sofa.webp"]')
     await pg.mouse.move(*door_px)
     await pg.wait_for_timeout(150)
     b = await pg.evaluate(lit, '.st-thing[src$="cua-di.webp"]')
+    t = await pg.evaluate(TAG, 'Chọn nhân vật') or {}
+    lit_tag = await pg.evaluate("[...document.querySelectorAll('.st-zone-label')].find(e => e.textContent === 'Chọn nhân vật').classList.contains('is-hover')")
     wall = await pg.evaluate("getComputedStyle(document.getElementById('st-world')).cursor")
-    check(a == [False, 'default'] and b == [True, 'pointer'] and wall == 'default',
-          f'desktop: the piece the character stands at does not light up, another one does; the hand only over it (sofa {a}, door {b}, wall {wall})')
+    await pg.mouse.move(t.get('x', 0), t.get('y', 0))
+    await pg.wait_for_timeout(150)
+    hand = await pg.evaluate("getComputedStyle([...document.querySelectorAll('.st-zone-label')].find(e => e.textContent === 'Chọn nhân vật')).cursor")
+    check(b == [False, 'default'] and lit_tag and wall == 'default' and hand == 'pointer',
+          f'desktop: the mouse over a piece lights its tag, not the piece (a click walks); the hand only on the tag (piece {b}, tag lit {lit_tag}, wall {wall}, tag {hand})')
     await pg.context.close()
 
     # I. the basket panel: the second tap of a double tap does not close it
     pg = await fresh(720)
-    shut = """async () => { window.GemBasket.open(); const o = document.querySelector('.gb-overlay'), click = () => o.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
-      click(); const a = document.querySelector('.gb-panel').classList.contains('open');
-      await new Promise(r => setTimeout(r, 500)); click(); return [a, document.querySelector('.gb-panel').classList.contains('open')]; }"""
-    check(await pg.evaluate(shut) == [True, False], 'the basket panel stays open on the second tap of a double tap, closes on a later one')
+    shut = """async () => {
+      const open = () => document.querySelector('.gb-panel').classList.contains('open');
+      const at = (el, x, y) => el.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1, clientX: x, clientY: y }));
+      document.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: 30, clientY: 40 }));   // the tap that opens it
+      window.GemBasket.open();
+      at(document.querySelector('.gb-overlay'), 32, 41);   // its second tap, right there
+      const kept = open();
+      const x = document.querySelector('.gb-close').getBoundingClientRect();
+      at(document.querySelector('.gb-close'), x.left + 5, x.top + 5);   // the ✕ at once
+      const shut = !open();
+      document.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: 30, clientY: 40 }));
+      window.GemBasket.open();
+      await new Promise(r => setTimeout(r, 500));
+      at(document.querySelector('.gb-overlay'), 32, 41);   // the same spot a moment later
+      return [kept, shut, !open()];
+    }"""
+    got = await pg.evaluate(shut)
+    check(got == [True, True, True], f'the basket panel: a double tap keeps it, its ✕ closes it at once, the overlay later ({got})')
     check(not pg.errors, f'no script errors {pg.errors}')
     await pg.context.close()
 
