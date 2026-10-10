@@ -1831,6 +1831,224 @@ Luật chạm (điện thoại và máy tính như nhau; `tap()` trong `js/studi
 Chưa làm: vuốt bắt đầu trên sản phẩm thì nhấc sản phẩm thay vì đi (đợi góp ý thử nghiệm).
 Kiểm tra: `taps` trong `tools/check-studio.py`.
 
+### Studio: Nhặt cúc — giai đoạn 1 (kế hoạch, chờ duyệt, 10/2026)
+
+Khách đi quanh studio nhặt cúc áo rơi, gom cúc đổi **túi mù vải vụn** ở quầy, mỗi túi
+một **mảnh vải hiếm** dùng được ở Bàn thiết kế. Mục đích: cho khách lý do đi dạo và nhìn
+kỹ studio — nơi bày sản phẩm. Chưa có code. Prompt vẽ: `docs/prompts.md` → "Prompt vẽ —
+Nhặt cúc".
+
+**Đã chốt (10/2026):**
+- Quà chỉ nằm trong studio (vải hiếm cho Bàn thiết kế). Không tiền thật, không mã giảm
+  giá, không quà thật: bốc thăm có quà thật là "khuyến mại mang tính may rủi", phải đăng
+  ký với Sở Công Thương trước (NĐ 81/2018, sửa bởi NĐ 128/2024); và dữ liệu nằm trong
+  trình duyệt nên ai cũng sửa được.
+- Cúc thay cho xu; túi mù ở quầy thay cho máy gacha.
+- Cúc rơi lại mỗi ngày, ở các chỗ giấu owner đặt trong trình lắp (mỗi ngày chọn ngẫu
+  nhiên vài chỗ).
+- Không tài khoản, không gửi gì lên server, không theo dõi.
+
+**Vòng chơi**
+1. Ngày đầu, một chiếc cúc nằm gần chỗ bắt đầu ngoài phố, thỉnh thoảng lấp lánh.
+2. Chạm → nhân vật đi tới, nhặt lên; cúc bay vào **ô đếm** ở góc trên bên trái sân khấu
+   (ô này chỉ hiện từ lần nhặt đầu tiên). Lần đầu tiên: bóng nghĩ trên đầu nhân vật
+   "Ồ, một chiếc cúc! Để làm gì nhỉ?", rồi Udon (bong bóng dưới) trả lời.
+3. Mỗi ngày 5 chiếc ở 5 chỗ giấu (trong + ngoài studio). Chạm ô đếm → tấm nhỏ "Cúc của
+   bạn": hôm nay nhặt được mấy/5, đổi ở đâu, nút "Đến quầy" và "Nhờ Udon tìm".
+4. Đủ 5 cúc → rổ túi mù trên quầy → bốc → mảnh hiếm hiện trên thẻ sưu tầm → "Mang ra
+   Bàn thiết kế".
+5. Nhặt hết trong ngày thì Udon báo, mai có cúc mới. Không chuỗi ngày, không đếm ngược,
+   không nhắc quay lại.
+
+**Con số** (hằng số đầu `js/hunt.js`, chỉnh được)
+
+| | |
+|---|---|
+| Cúc mỗi ngày | 5 (ít chỗ giấu hơn thì bằng số chỗ) |
+| Cúc đồng | mỗi chiếc có 10% là cúc đồng, tính bằng 3 |
+| Giá một túi | 5 cúc |
+| Bộ mảnh hiếm | 12 mảnh: 6 Thường · 4 Hiếm · 2 Quý |
+| Tỉ lệ | Thường 60% · Hiếm 30% · Quý 10%; bậc nào hết mảnh thì bốc ở bậc còn lại |
+| Trùng | không bao giờ: túi nào cũng ra mảnh chưa có → đủ bộ sau đúng 12 túi (60 cúc, khoảng 10 ngày) |
+| Udon tìm giúp | 1 lần mỗi ngày |
+| "Ngày" | theo đồng hồ máy khách, sang ngày lúc 0 giờ |
+| Chỗ giấu hôm nay | ngẫu nhiên theo từng máy (hạt giống = chuỗi ngẫu nhiên lưu trong trình duyệt + ngày), cố định trong ngày: tải lại trang không đổi chỗ, không "cày" được |
+
+**Chạm & bấm** (theo "Studio: luật chạm")
+- Cúc là món nhỏ: chạm lệch ≤ 11px vẫn trúng (`nearSmall`, chỉ màn cảm ứng); cúc thắng
+  hình Khu vực phía sau nó; nhãn tên thắng cúc.
+- **Một chạm là nhặt** — ngoại lệ của luật "chạm lần đầu chỉ hiện tên": nhặt không mở gì,
+  chạm nhầm cũng không mất gì. Nhân vật đi tới rồi mới nhặt; đang đi mà có chạm / vuốt
+  khác thì thôi nhặt.
+- Vuốt bắt đầu trên cúc vẫn là vuốt để đi.
+- Cúc "nấp sau đồ": chỉ phần ló ra mới bấm được.
+- Máy tính: không đổi con trỏ, không sáng khi rê chuột (không thì quét chuột là thấy hết);
+  bấm = đi tới + nhặt.
+- Bàn phím: cúc không nằm trong thứ tự Tab (trò tìm đồ); Udon thì có, Enter trên Udon =
+  tìm giúp.
+
+**Udon tìm giúp**
+- Chạm Udon ở quầy (hoặc nút "Nhờ Udon tìm") → Udon ngửi không khí → nhảy xuống, chạy dọc
+  sàn tới chiếc cúc chưa nhặt trong studio **gần nhân vật nhất** → đứng chỉ vào nó (dáng
+  chó săn); chiếc cúc lấp lánh liên tục.
+- Udon ra khỏi màn hình thì mép màn hình hiện dấu chân chỉ hướng.
+- Nhặt xong (hoặc sau 30 giây) Udon chạy về quầy. Kéo Udon giữa chừng = thôi tìm, rồi như
+  kéo thả hiện nay.
+- Hết lượt trong ngày, còn cúc ngoài phố mà trong studio hết, hay hết cúc: Udon nói một câu
+  (bảng chữ bên dưới). Ngoài phố không có Udon nên không có tìm giúp.
+
+**Túi mù vải vụn**
+- Món mới trong thư viện ảnh của trình lắp: rổ túi mù (`tui-mu/`). Owner đặt lên quầy,
+  Loại "Khu vực", hành động mới **Túi mù vải vụn** (`tuimu` trong `ACTS` của
+  `js/studio-layout.js`). Đặt cách nhãn "Quầy thu ngân" để hai nhãn không chồng nhau.
+- Tấm "Túi mù vải vụn": số cúc đang có; nút "Bốc một túi · 5 cúc" (thiếu thì "Còn thiếu
+  n cúc"); lưới 12 mảnh — có rồi thì hiện vải, chưa có thì khung trống + tên bậc; dòng
+  tỉ lệ + "Không bao giờ ra mảnh trùng".
+- Bốc: túi rung nhẹ, mở ra, mảnh vải trồi lên thẻ sưu tầm (`ui/the-suu-tam`) có tên + dấu
+  bậc (`ui/dau-xanh` Thường, `dau-nau` Hiếm, `dau-hong` Quý). Nút "Mang ra Bàn thiết kế"
+  / "Để sau".
+- Đủ 12 mảnh: nút tắt, có dòng báo mùa sau thêm mảnh. Cúc vẫn cộng dồn cho mùa sau.
+- Nhặt cúc đang tắt thì rổ túi mù cũng ẩn.
+
+**Mảnh hiếm ở Bàn thiết kế**
+- Có ít nhất một mảnh thì hàng tâm trạng thêm ô **Mảnh hiếm** (hình túi mù mở). Chọn → rổ
+  vải là các mảnh hiếm đang có (quá 8 thì "Lục rổ" xoay vòng); trộn với vải khác như mọi
+  tâm trạng.
+- Mã thiết kế: mảnh hiếm đi vào danh sách màu riêng (trường 12) dạng `r<số>`. Trường này
+  hiện là `<kind><hex>`, nên mã cũ đọc như cũ; mảnh hiếm dùng chung 19 chỗ của màu riêng.
+- Người mở link thiết kế có mảnh hiếm vẫn xem và đặt may được; chỉ người có mảnh mới lấy
+  được nó vào rổ.
+- Ghi chú đơn: "mảnh hiếm: <tên>". Như mọi vải: Gem chọn vải vụn thật gần nhất và nhắn
+  ảnh duyệt trước khi may (câu `studio.pt_note` đang có).
+
+**12 mảnh hiếm** (tên đề xuất — Anna duyệt; nên chọn mảnh Gem có vải thật gần giống,
+nhất là Gấm, Nhung, Chăn con công — không thì đổi mảnh khác trước khi vẽ)
+
+| # | id | VI | EN | Bậc |
+|---|---|---|---|---|
+| 1 | `hoa-do-bo` | Hoa đồ bộ | House-dress florals | Thường |
+| 2 | `soc-pyjama` | Sọc pyjama | Pyjama stripes | Thường |
+| 3 | `bao-bot` | Vải bao bột | Flour-sack cotton | Thường |
+| 4 | `denim-bac` | Denim bạc màu | Faded denim | Thường |
+| 5 | `caro-khan` | Caro khăn rằn | Scarf check | Thường |
+| 6 | `lanh-khau` | Lanh khâu tay | Hand-stitched linen | Thường |
+| 7 | `gam-cuc` | Gấm hoa cúc | Chrysanthemum brocade | Hiếm |
+| 8 | `lua-van` | Lụa vân sóng | Wave-figured silk | Hiếm |
+| 9 | `len-tartan` | Len kẻ ô | Wool tartan | Hiếm |
+| 10 | `theu-bong` | Thêu bông nhí | Tiny embroidered blooms | Hiếm |
+| 11 | `nhung-do` | Nhung đỏ đô | Burgundy velvet | Quý |
+| 12 | `chan-cong` | Chăn con công | Peacock blanket | Quý |
+
+Chỉ có tên; câu chuyện thật của từng mảnh để giai đoạn 2.
+
+**Lưu ở đâu**
+- `localStorage['gem-cuc']` (như Tủ sưu tầm): `{ v: 1, id, day, found: [<id chỗ giấu>],
+  cuc, sniff, rare: [<id mảnh>], seen }`. `id` = chuỗi ngẫu nhiên làm hạt giống, không
+  gửi đi đâu.
+- Đọc lại thì kiểm từng trường (số nguyên 0–9999, id mảnh phải có trong bảng): khách tự
+  sửa được dữ liệu này; chữ chỉ vào trang qua `textContent`.
+- Chế độ riêng tư / chặn lưu: chơi được trong lượt đó rồi mất.
+- **iPhone (Safari):** 7 ngày không ghé thì Safari xoá dữ liệu của trang → mất cúc và mảnh
+  hiếm. Chấp nhận ở giai đoạn 1 (quà ảo, cúc rơi lại mỗi ngày). Nếu khách tiếc thì giai
+  đoạn sau gắn mảnh hiếm vào mã đơn như Tủ sưu tầm.
+- Ai sửa localStorage để có 999 cúc cũng chỉ được vải ảo: không cần chống gian lận.
+
+**Trình lắp (owner)**
+- Ô mới **Nhặt cúc** trong tab Lắp studio: bật / tắt; "Thêm chỗ giấu" (hiện giữa màn hình
+  rồi kéo). Mỗi chỗ: cảnh (trong / ngoài); lớp **Nổi trên đồ** hoặc **Nấp sau đồ** (đồ lớp
+  sau che một phần, cúc chỉ ló ra). Đánh dấu một chỗ là **Chỗ lần đầu** (gần chỗ bắt đầu
+  ngoài phố, nhìn thấy ngay).
+- Cảnh báo: chỗ bị che kín (không lộ điểm ảnh nào), nằm dưới nhãn, ngoài đoạn đi được
+  (x < 120 hoặc > bề rộng − 120); dưới 8 chỗ thì nhắc "ngày nào cũng gần giống nhau".
+- Lưu trong bố cục (`studio_layout`), trường mới `hunt: { on, spots: [{ id, scene, x, y, z,
+  first }] }` → `sanitize()` trong `js/studio-layout.js` phải biết trường này (trường lạ
+  bị bỏ). Không thêm bảng, không migration, không đụng GRANT / RLS.
+- Bật trong nháp, xem thử, rồi phát hành như mọi thay đổi bố cục.
+
+**Chuyển động** (tắt Hiệu ứng = bản tĩnh)
+- Lấp lánh: mỗi 6–9 giây, một chiếc cúc đang trong màn hình lóe 0,6 giây (mỗi lần một
+  chiếc). Tắt hiệu ứng: dấu lấp lánh vẽ tĩnh, mờ, cạnh mỗi chiếc.
+- Nhặt: cúc bay vòng cung vào ô đếm (0,45 giây), số nhảy. Tắt: số đổi ngay.
+- Túi mù: rung 2 nhịp → mở → mảnh trồi lên (dưới 1 giây). Tắt: hiện ngay.
+- Udon chạy tối đa khoảng 2 giây cho cả quãng; tắt hiệu ứng thì Udon hiện luôn ở chỗ cúc.
+- Không âm thanh, không rung máy, không pháo giấy.
+
+**Chữ trên màn hình** — khoá `studio.cuc_*` / `studio.bag_*` trong `STRINGS` của
+`js/studio.js`. EN là bản đầu, Anna duyệt.
+
+| Khoá | VI | EN |
+|---|---|---|
+| `cuc_first` | Ồ, một chiếc cúc! Để làm gì nhỉ? | Oh, a button! What's it for? |
+| `cuc_explain` | Gom đủ 5 chiếc, đổi một túi mù vải vụn ở quầy nhé. Mỗi ngày quanh studio lại rơi vài chiếc. | Collect 5 and swap them for a blind bag of scraps at the counter. A few more drop around the studio every day. |
+| `cuc_brass` | Cúc đồng! Tính bằng 3 chiếc đấy. | A brass button! It counts as 3. |
+| `cuc_done` | Hôm nay bạn nhặt hết cúc rồi. Mai ghé lại nhé. | That's all of today's buttons. Come back tomorrow. |
+| `cuc_title` | Cúc của bạn | Your buttons |
+| `cuc_today` | Hôm nay: {n}/{t} chiếc | Today: {n} of {t} |
+| `cuc_go` | Đến quầy | Go to the counter |
+| `cuc_ask` | Nhờ Udon tìm | Ask Udon |
+| `cuc_sniff` | Để Udon đánh hơi… | Let Udon sniff it out… |
+| `cuc_tired` | Udon mỏi mũi rồi. Mai Udon tìm giúp tiếp nhé. | Udon's nose is tired. Udon will help again tomorrow. |
+| `cuc_outside` | Udon ngửi thấy mùi cúc ngoài cửa kìa. | Udon smells a button out by the door. |
+| `cuc_sr` | Nhặt được một chiếc cúc. Bạn có {n} chiếc. | Picked up a button. You have {n}. |
+| `bag_title` | Túi mù vải vụn | Blind bag of scraps |
+| `bag_sub` | Mỗi túi một mảnh vải hiếm, may được ở Bàn thiết kế. | Each bag holds one rare scrap to sew with at the design table. |
+| `bag_open` | Bốc một túi · 5 cúc | Open a bag · 5 buttons |
+| `bag_short` | Còn thiếu {n} cúc. Tìm quanh studio nhé. | {n} more buttons to go. Have a look around the studio. |
+| `bag_odds` | Thường 60% · Hiếm 30% · Quý 10%. Không bao giờ ra mảnh trùng. | Common 60% · Rare 30% · Treasured 10%. Never a repeat. |
+| `bag_full` | Bạn đã có đủ 12 mảnh. Mùa sau Gem thêm mảnh mới nhé. | You have all 12. Gem adds new scraps next season. |
+| `bag_take` | Mang ra Bàn thiết kế | Take it to the design table |
+| `bag_later` | Để sau | Later |
+| `pt_rare` | Mảnh hiếm | Rare scraps |
+
+**Tranh cần vẽ** (tách bằng tool có sẵn; file nguồn để trên Drive như các bộ trước)
+
+| File nguồn | Ra | Cách tách |
+|---|---|---|
+| `sheet-cuc.png` | `cuc/cuc-01..08`: 4 cúc có sợi chỉ, 2 cúc nằm nghiêng, 2 cúc đồng | `studio-assets.py --batch` |
+| `sheet-lap-lanh.png` | `lap-lanh/lap-lanh-01..04`: 3 lấp lánh + dấu chân Udon | `--batch` |
+| `sheet-tui-mu.png` | `tui-mu/tui-mu-01..03`: túi đóng, túi mở, rổ túi trên quầy | `--batch` |
+| `sheet-ud-cuc.png` | `udon/ud-ngui-gio`, `ud-chay-1`, `ud-chay-2`, `ud-ngui`, `ud-chi` | `--batch` rồi đổi tên; `clean-white.py --ink 5` |
+| `vai-hiem-1.png`, `vai-hiem-2.png` | `vai/hiem-01..12` (320 px, lặp liền) | `design-assets.py`, thêm kiểu tờ 2 × 3 |
+
+Dùng lại tranh có sẵn: ô đếm = `cuc-01` trên nền `ui/cham-kem`; bóng nghĩ =
+`ui/bong-bong-s`; thẻ + dấu bậc như trên. Cúc vẽ sẵn `may/may-31`, `may-32` là đồ trang
+trí: cúc nhặt được có sợi chỉ để khách phân biệt; đừng bày hai món đó gần chỗ giấu.
+
+**Làm gì trong code** (khi được duyệt)
+- `js/hunt.js` mới: chọn chỗ theo ngày, vẽ cúc trong `#st-world`, nhặt, ô đếm, Udon tìm,
+  tấm túi mù; `window.GemHunt` cho bàn thiết kế.
+- `js/studio.js`: lớp cúc trong cảnh, thứ tự chạm (nhãn > cúc > hình), chạm Udon, hành
+  động `tuimu`, bóng nghĩ trên đầu nhân vật.
+- `js/patch.js`: 12 mảnh hiếm + khoá `r<số>` (mã cũ không đổi).
+- `js/studio-layout.js`: `hunt` trong `sanitize()`, `tuimu` trong `ACTS`;
+  `js/studio-editor.js`: ô Nhặt cúc.
+- `css/studio.css`: mục `/* NHẶT CÚC */`; `studio.html` + `admin.html`: nhúng file, đổi `?v=`.
+- `tools/studio-assets.py` (nhóm thư viện "Nhặt cúc"), `tools/design-assets.py` (tờ vải 2 × 3).
+
+**Kiểm tra** — `hunt` trong `tools/check-studio.py` (ngày + chuỗi hạt giống cố định qua
+init script):
+- cùng ngày cùng chỗ, sang ngày đổi chỗ; Chỗ lần đầu có trong ngày đầu;
+- điện thoại một chạm là nhặt, lệch 8px vẫn nhặt; máy tính bấm là nhặt, con trỏ không đổi;
+  vuốt trên cúc không nhặt; nhãn đè cúc thì nhãn thắng; cúc nấp sau đồ chỉ bấm được phần ló;
+- câu lần đầu chỉ một lần; cúc đồng +3; nhặt hết thì có câu báo;
+- Udon tới đúng chiếc gần nhân vật nhất, một lần mỗi ngày, có dấu chân khi ra khỏi màn hình;
+- túi mù trừ 5 cúc, 12 lần không trùng, đủ bộ thì tắt nút;
+- ô Mảnh hiếm ở bàn thiết kế; mã có `r<số>` đi qua giỏ hàng + Tủ sưu tầm; mã cũ vẫn đọc được;
+- `gem-cuc` bị sửa bậy không làm vỡ trang; tắt hiệu ứng; không lỗi script;
+- trình lắp: thêm / kéo / xoá chỗ, cảnh báo, phát hành vẫn giữ `hunt`.
+
+**Không làm ở giai đoạn 1:** đồ sưu tầm có câu chuyện + "Sổ nhặt nhạnh" (giai đoạn 2); cúc
+giấu trong thẻ sản phẩm; quà ở cửa hàng; lưu lên server / đồng bộ giữa các máy; bảng xếp
+hạng, chia sẻ; âm thanh.
+
+**Cần biết**
+- Trò tìm đồ dựa vào mắt nhìn: người dùng trình đọc màn hình không chơi được. Chấp nhận vì
+  đây là phần thêm — không khoá thông tin, giá hay vải cơ bản nào sau nó.
+- Chỉ bật khi đủ tranh và owner đã đặt ít nhất 8 chỗ giấu. Studio chưa lên menu nên thử
+  trước với khách tại cửa hàng.
+- Sau này nếu muốn quà thật: chỉ theo mốc cố định (đủ N cúc → một sticker), nhân viên nhìn
+  màn hình xác nhận; không bốc thăm quà thật.
+
 ### Góp ý đợt 3 (10/2026)
 
 - **Bàn thiết kế gọn lại:** trên cùng là các món + "Gợi ý ngẫu nhiên". Lần đầu chỉ
