@@ -1825,11 +1825,43 @@ Luật chạm (điện thoại và máy tính như nhau; `tap()` trong `js/studi
 - **Điểm dừng lạc:** khung bấm có điểm dừng cách khung quá max(bề rộng khung, 400px)
   → dừng giữa khung (`standNear`). Bố cục đang chạy có một chỗ như vậy: khung "Gối, thảm
   & quà" (cabinet) trên tủ kệ x 3249–4054, điểm dừng ở x 6078. Nên kéo lại trong trình lắp.
+  **Nguyên nhân (12/10/2026, chưa sửa — chờ Anna báo, vì em gái đang lắp bố cục):** kéo
+  cả khung trong trình lắp chỉ dời `box`, không dời `stand` (`move()` trong
+  `js/studio-editor.js`, nhánh `kind === 'hot'`). Khung này từng ở x 5487–6179 (bố cục
+  vintage), bị kéo sang trái, điểm dừng ở lại. Bản `live`, `draft`, `p-202610-interior-kyo0`
+  và `p-ban-truoc` đều mang 6078. Khi sửa: cộng `dx` vào `stand` lúc kéo cả khung, và đặt
+  lại 6078 → giữa khung trong cả 4 dòng — **làm lúc không ai mở trình lắp** (trình lắp
+  giữ bố cục trong bộ nhớ và tự lưu đè `draft` 2 giây sau mỗi thay đổi).
 - Câu chào của Udon và dòng hướng dẫn cho trình đọc màn hình đổi theo: "Chạm vào nhãn tên
   để mở từng góc, chạm chỗ khác để đi dạo nhé."
 
 Chưa làm: vuốt bắt đầu trên sản phẩm thì nhấc sản phẩm thay vì đi (đợi góp ý thử nghiệm).
 Kiểm tra: `taps` trong `tools/check-studio.py`.
+
+### Studio: ra mắt thử (12/10/2026)
+
+Chốt với Anna: **chưa lên menu**, mở cửa bằng ba đường (phương án B + C + D):
+- **Trang chủ:** khối "Studio 2D" (nhãn "Bản thử") giữa Sản phẩm và Workshop. Ảnh là
+  bản tĩnh `images/studio/xem-truoc-mat-tien.webp` (cắt 4:5 từ `bg/mat-tien.webp`,
+  720×900) — **không nhúng studio thật** vào trang chủ: studio tải ~3 MB tranh, và vuốt để
+  đi tranh với cuộn trang.
+- **Link tại chỗ:** Sản phẩm (dưới đầu trang: "Hoặc dạo xem trong Studio 2D"), Ghé thăm
+  (dưới nút Google Maps), Season 02 (dòng cuối "Nơi bạn có thể").
+- **Ngoài web:** thẻ QR A6 ở quầy → `https://gemchamsac.com/studio.html?src=qr`.
+  `js/basket.js` đọc `?src=` (chỉ chữ thường / số / gạch, ≤ 24 ký tự) vào
+  `sessionStorage gem-src`, nên đơn đặt trong cùng phiên — kể cả sang trang khác — ghi
+  `[nguồn: qr]`. Thẻ khác (tờ rơi…) thì đổi chữ sau `src=`. Không theo dõi gì thêm.
+- Vẫn `noindex` khi còn là bản thử.
+
+**Tranh hiện là bản tạm (ChatGPT), sẽ thay bằng tranh vẽ tay.** Nên chữ mới **không**
+nói "vẽ tay"; khối trang chủ có dòng "Tranh trong studio là bản tạm, chúng mình đang
+vẽ lại bằng tay." Khi có tranh vẽ tay: làm lại `xem-truoc-mat-tien.webp` + thẻ QR (có
+tranh mặt tiền), bỏ dòng "bản tạm" (`home.studio_note`), cân nhắc bỏ nhãn "Bản thử"
+và `noindex`.
+
+Đo hiệu quả: đếm đơn có `[nguồn: studio]` / `[nguồn: qr]` trong ghi chú đơn, cộng lời
+nhắn trên bảng. Sau 3–4 tuần thì quyết có đưa lên menu không (menu 7 mục vừa từ 1100px;
+1024–1099px phải chỉnh header).
 
 ### Studio: Nhặt cúc — giai đoạn 1 (kế hoạch, chờ duyệt, 10/2026)
 
