@@ -362,11 +362,18 @@
                 '<input type="file" accept="image/*" multiple hidden class="wt-gal-in"></label>' +
             '</div>' +
             '<div class="ad-f-row">' +
-              '<label class="ad-f"><span>Thời lượng (phút)</span>' +
-                '<input type="number" class="wt-dur" min="15" max="480" step="15"></label>' +
+              '<label class="ad-f"><span>Thời lượng từ (phút)</span>' +
+                '<input type="number" class="wt-dur" min="15" max="600" step="15"></label>' +
+              '<label class="ad-f"><span>đến (phút) — trống nếu cố định</span>' +
+                '<input type="number" class="wt-dmax" min="15" max="600" step="15"></label>' +
+            '</div>' +
+            '<div class="ad-f-row">' +
               '<label class="ad-f"><span>Giá</span>' +
                 '<input type="number" class="wt-price" min="0" step="1000" placeholder="Liên hệ"></label>' +
+              '<label class="ad-f"><span>Từ mấy tuổi — 0 là mọi lứa tuổi</span>' +
+                '<input type="number" class="wt-age" min="0" max="99" placeholder="Không ghi"></label>' +
             '</div>' +
+            '<label class="ad-check"><input type="checkbox" class="wt-pfrom"> Ghi “Từ” trước giá (giá khởi điểm, tuỳ mẫu)</label>' +
             '<div class="ad-acts">' +
               '<button type="button" class="ad-btn ad-primary wt-save">Lưu</button>' +
               '<button type="button" class="ad-btn' + (t.is_published === false ? ' on' : '') +
@@ -447,13 +454,23 @@
           .then(function () { lbl.firstChild.nodeValue = was; e.target.disabled = false; e.target.value = ''; });
       });
       d.querySelector('.wt-dur').value   = t.duration_minutes == null ? '' : t.duration_minutes;
+      d.querySelector('.wt-dmax').value  = t.duration_max == null ? '' : t.duration_max;
       d.querySelector('.wt-price').value = t.price == null ? '' : t.price;
+      d.querySelector('.wt-age').value   = t.age_min == null ? '' : t.age_min;
+      d.querySelector('.wt-pfrom').checked = !!t.price_from;
 
       d.querySelector('.wt-save').addEventListener('click', function () {
         var name = d.querySelector('.wt-vi').value.trim();
         if (!name) return toast('Loại workshop cần có tên tiếng Việt', true);
         var dur = parseInt(d.querySelector('.wt-dur').value, 10);
         var pr  = d.querySelector('.wt-price').value.trim();
+        // Database chỉ nhận 15–600 phút và tuổi 0–99: kẹp lại ở đây để không
+        // phải đọc câu lỗi tiếng Anh. "Đến" không lớn hơn "từ" thì coi như cố định.
+        var from = dur > 0 ? Math.min(600, Math.max(15, dur)) : 90;
+        var dmax = parseInt(d.querySelector('.wt-dmax').value, 10);
+        dmax = dmax > from ? Math.min(600, dmax) : null;
+        var age = d.querySelector('.wt-age').value.trim();
+        age = age === '' ? null : Math.min(99, Math.max(0, parseInt(age, 10) || 0));
         window.GemDB.saveWorkshopType(id, {
           name_vi: name,
           name_en: d.querySelector('.wt-en').value.trim() || null,
@@ -463,8 +480,11 @@
           note_vi: d.querySelector('.wt-note').value.trim() || null,
           cover: cover,
           images: gallery,
-          duration_minutes: dur > 0 ? dur : 90,
-          price: pr === '' ? null : parseInt(pr, 10)
+          duration_minutes: from,
+          duration_max: dmax,
+          age_min: age,
+          price: pr === '' ? null : parseInt(pr, 10),
+          price_from: d.querySelector('.wt-pfrom').checked
         }).then(function () { toast('Đã lưu'); return load(); })
           .catch(function (e) { toast(e.message || 'Không lưu được', true); });
       });

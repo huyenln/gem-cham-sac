@@ -56,7 +56,10 @@ Static website cho cửa hàng **Gem Chạm Sắc** — pop-up store sustainabil
 ├── images/
 │   ├── logo/                 Logo Gem variants
 │   ├── mascot/               6 pose Udon (PNG transparent)
-│   └── products/             Product photos (full + thumb; -2/-3… cho ảnh thêm góc)
+│   ├── products/             Product photos (full + thumb; -2/-3… cho ảnh thêm góc)
+│   ├── space/                Ảnh studio + sự kiện (WebP, từ Portfolio 2026)
+│   ├── workshop/             Ảnh workshop / Chạm Mùa (WebP)
+│   └── partners/             Logo đối tác (mo-hinh.html)
 ├── docs/
 │   ├── design.md             Nguồn sự thật: quyết định, sprint, cấu hình, bảo mật
 │   └── prompts.md            Ghi chú prompt
@@ -144,6 +147,8 @@ Quick reference:
 - **Season 02 — A Space To Stay** (đang diễn ra). Studio dài hạn, Open Studio 09:00–19:00 hàng ngày.
 - Địa điểm hiện tại: Tầng 3, Trung tâm Văn hóa - Thông tin và Thể thao Phường Hai Bà Trưng, 114 Lê Gia Đỉnh, Hà Nội. (Season 01 pop-up ở Nguyễn Văn Huyên đã kết thúc.)
 - Season 02 được kiến tạo bởi: Gem Chạm Sắc × Cool Vietnam × Âm Nhạc Vân Long. Trang `season-02.html` link tới FB reel `https://web.facebook.com/reel/1935073537146672`.
+- "CLB Nghệ Uyển" (tên trong Portfolio) chỉ là tên hợp tác — **không** dùng làm tên không gian trên web.
+- **Chạm Mùa** — chuỗi workshop cuối tuần 25/09 – 27/12/2026 (`workshop.html`, khoá `cm.*` trong `js/workshop.js`). Hết mùa thì gỡ — xem `docs/design.md` → "Portfolio 2026 + Chạm Mùa". Trải nghiệm âm nhạc / trang phục của Vân Long chỉ nhắc, không ghi giá.
 - Roadmap ở `mo-hinh.html`: card `.active` = Season đang diễn ra, card `.done` = season đã qua (badge "✓ đã qua"). Card Season 02 là `<a>` link sang `season-02.html`.
 - 4 seasons total: 01 Pop-up, 02 A Space To Stay, 03 Circular Creative Community, 04 Social Enterprise & Learning Space.
 - Địa chỉ/giờ mở cửa là chữ dịch trong `js/i18n.js` (`footer.address`, `home.season_addr`, `visit.addr_value`, `visit.hours_value`, `s2.*`…) — sửa ở đó, nhớ cập nhật cả fallback HTML + link Google Maps trong các trang.
@@ -176,6 +181,8 @@ Quick reference:
 - Threads: `threads.com/@gemchamsac_studio`
 - YouTube: `youtube.com/channel/UCupMv7SO3-XLMTfST1RufHw`
 - Footer (icon) trên 5 trang chính + danh sách text ở `ghe-tham.html`.
+- Email: `gemchamsac@gmail.com` (footer + `ghe-tham.html`). TikTok: chưa có link.
+- Không đưa tiểu sử / liên hệ riêng của founder lên web.
 
 ---
 

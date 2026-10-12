@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title data-i18n="title.workshop">Workshop · Gem Chạm Sắc</title>
-  <meta name="description" content="Workshop thủ công tái chế tại Gem Chạm Sắc, Hà Nội — làm bìa sổ từ vải vụn, làm giấy tái chế. Nhóm nhỏ, đặt chỗ trực tuyến.">
+  <meta name="description" content="Workshop thủ công tái chế tại Gem Chạm Sắc, Hà Nội: thiệp và sổ từ vải vụn, tranh kinusaiga, khắc gỗ, tô mặt nạ giấy bồi… Chạm Mùa mỗi cuối tuần đến 27/12/2026. Đặt chỗ trực tuyến.">
 
   <link rel="icon" type="image/png" href="images/logo/gem_logo_icon_120.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -66,10 +66,97 @@
     </div>
   </section>
 
+  <!-- CHẠM MÙA — chuỗi workshop cuối tuần 25/09 – 27/12/2026.
+       Hết mùa thì gỡ khối này và khối #cham-mua bên dưới (chữ: khoá cm.* trong js/workshop.js). -->
+  <section class="section-sm">
+    <div class="container">
+      <div class="season-banner cm-banner">
+        <div class="season-grid">
+          <div class="season-text">
+            <p class="season-label"><span class="pulse"></span> <span data-i18n="cm.label">Cuối tuần · 25/09 – 27/12/2026</span></p>
+            <h2>Chạm Mùa</h2>
+            <p class="lead" data-i18n="cm.lead">Mỗi cuối tuần, mời bạn và người thương ghé chơi: chọn một chất liệu quen thuộc, học một cách làm mới và tự tay làm nên một món đồ.</p>
+            <p class="cm-by">Gem Chạm Sắc × Cool Vietnam × Âm Nhạc Vân Long</p>
+            <div class="cm-actions">
+              <a href="https://zalo.me/g/wqbhta2x1fpqnm4wix9l" target="_blank" rel="noopener" class="btn btn-primary" data-i18n="cm.zalo_btn">Xem lịch trên Zalo</a>
+              <a href="#cham-mua" class="btn btn-ghost" data-i18n="cm.info_btn">Ưu đãi &amp; đường đi</a>
+            </div>
+          </div>
+          <div class="season-image">
+            <img src="images/workshop/cham-mua-vao-hoi.webp" data-i18n-attr="alt:cm.img_alt"
+                 alt="Hai bạn mặc áo truyền thống, một bạn cầm quạt, một bạn đội nón lá, trong đêm Đón Trăng ở studio"
+                 width="1280" height="960">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- DANH SÁCH BUỔI + FORM GIỮ CHỖ (dựng bởi js/workshop.js) -->
   <section class="section">
     <div class="container">
+      <div class="section-header" id="ws-list-head">
+        <span class="hand" data-i18n="home.ws_eyebrow">Workshop,</span>
+        <h2 data-i18n="ws.list_h">Chọn một món để làm.</h2>
+        <p data-i18n="ws.list_p">Bấm vào từng workshop để xem nguyên liệu, độ tuổi và buổi sắp tới.</p>
+      </div>
       <div id="ws-root" class="ws-root"></div>
+    </div>
+  </section>
+
+  <!-- CHẠM MÙA — hành trình, ưu đãi, đường đi -->
+  <section class="section" id="cham-mua">
+    <div class="container">
+      <div class="section-header">
+        <span class="hand" data-i18n="cm.eyebrow">Chạm Mùa,</span>
+        <h2 data-i18n="cm.title">Hóa thân thành một người nông dân.</h2>
+        <p data-i18n="cm.sub">Từ xa xưa, người nông dân Việt sống gắn bó với tự nhiên: quan sát, tận dụng những gì sẵn có, và cùng nhau vun trồng cho một mùa bội thu.</p>
+      </div>
+
+      <ol class="cm-steps">
+        <li class="cm-step">
+          <span class="cm-step-name" data-i18n="cm.s1_name">Ra Đồng</span>
+          <h3 data-i18n="cm.s1_h">Tham gia workshop</h3>
+          <p data-i18n="cm.s1_p">Chọn một chất liệu quen thuộc, học một cách làm mới và tự tay làm nên một món đồ. Không giới hạn thời gian, làm chậm cũng được.</p>
+        </li>
+        <li class="cm-step">
+          <span class="cm-step-name" data-i18n="cm.s2_name">Vào Hội</span>
+          <h3 data-i18n="cm.s2_h">Trải nghiệm đa sắc</h3>
+          <p data-i18n="cm.s2_p">Chụp ảnh với mặt nạ giấy bồi, đóng dấu trải nghiệm. Muốn mặc trang phục truyền thống hay thử đàn tranh thì có Âm Nhạc Vân Long, hỏi thêm khi bạn ghé.</p>
+        </li>
+        <li class="cm-step">
+          <span class="cm-step-name" data-i18n="cm.s3_name">Du Uyển</span>
+          <h3 data-i18n="cm.s3_h">Kết nối và sẻ chia</h3>
+          <p data-i18n="cm.s3_p">Cùng ngồi lại thưởng trà, xem tác phẩm hoàn thiện, trò chuyện và kết nối.</p>
+        </li>
+      </ol>
+
+      <div class="cm-info">
+        <div class="cm-box">
+          <h3 data-i18n="cm.offers_h">Ưu đãi</h3>
+          <ul class="cm-offers">
+            <li data-i18n-html="cm.off1"><b>−10%</b> khi đăng ký từ 2 workshop</li>
+            <li data-i18n-html="cm.off2"><b>−15%</b> cho nhóm từ 4 người</li>
+            <li data-i18n="cm.off3">Chia sẻ trải nghiệm Chạm Mùa lên mạng xã hội hoặc Google Maps, tặng bạn 01 lượt làm thiệp từ vải vụn (39K): làm ngay trong buổi, hoặc để dành lúc nào ghé cũng được.</li>
+            <li data-i18n="cm.off4">Chụp ảnh miễn phí với mặt nạ giấy bồi và không gian studio.</li>
+          </ul>
+          <p class="cm-note" data-i18n="cm.off_note">Ưu đãi được trừ khi bạn thanh toán tại studio.</p>
+        </div>
+
+        <div class="cm-box">
+          <h3 data-i18n="cm.go_h">Lịch &amp; đường đi</h3>
+          <p data-i18n="cm.go_sched">Lịch từng cuối tuần được cập nhật trong nhóm Zalo “Thông tin workshop Chạm Mùa”.</p>
+          <a href="https://zalo.me/g/wqbhta2x1fpqnm4wix9l" target="_blank" rel="noopener" class="btn btn-primary" data-i18n="cm.zalo_btn">Xem lịch trên Zalo</a>
+          <dl class="cm-facts">
+            <dt data-i18n="cm.go_addr">Địa chỉ</dt>
+            <dd><a href="https://www.google.com/maps/search/?api=1&query=114+Lê+Gia+Đỉnh+Hai+Bà+Trưng+Hà+Nội" target="_blank" rel="noopener" data-i18n-html="home.season_addr">Tầng 3, Trung tâm Văn hóa - Thông tin và Thể thao Phường Hai Bà Trưng<br>114 Lê Gia Đỉnh, Hà Nội</a></dd>
+            <dt data-i18n="cm.go_park">Gửi xe</dt>
+            <dd><span data-i18n="cm.park_moto">Xe máy: gửi tại Trung tâm Văn hóa, 114 Lê Gia Đỉnh</span><br><span data-i18n="cm.park_car">Ô tô: gửi vào Trường Tiểu học &amp; THCS Đoàn Kết</span></dd>
+            <dt data-i18n="cm.go_phone">Điện thoại</dt>
+            <dd><a href="tel:+84824964996">(84) 82 496 4996</a></dd>
+          </dl>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -105,6 +192,7 @@
         <div>
           <h4 data-i18n="footer.contact">Liên hệ</h4>
           <a href="tel:+84824964996">(84) 82 496 4996</a>
+          <a href="mailto:gemchamsac@gmail.com">gemchamsac@gmail.com</a>
           <a href="https://www.google.com/maps/search/?api=1&query=114+Lê+Gia+Đỉnh+Hai+Bà+Trưng+Hà+Nội" target="_blank" rel="noopener" data-i18n="footer.address">Tầng 3, Trung tâm Văn hóa - Thông tin và Thể thao Phường Hai Bà Trưng, 114 Lê Gia Đỉnh, Hà Nội</a>
         </div>
         <div>
