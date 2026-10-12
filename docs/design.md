@@ -2139,6 +2139,56 @@ Trigger `gem_auto_assign_owners` tự gán vai `owner` khi một trong ba email 
 Thêm người sau: tạo user trong Supabase rồi thêm một dòng vào bảng `staff` với
 `role = 'staff'`.
 
+### Portfolio 2026 + Chạm Mùa (10/2026)
+
+Nguồn: Portfolio_GemChamSac_2026_Update_T10 + "Thông tin Workshop Chạm Mùa"
+(VI + EN). Ba file PDF/RAR **không** để trong repo: thư mục `docs/` được GitHub
+Pages phát công khai, mà Portfolio có email riêng của Mai và mã số thuế.
+
+**Chốt với Anna (12/10/2026):**
+- Giữ khung **Season 02**. "CLB Nghệ Uyển" chỉ là tên hợp tác — web ghi
+  "Gem Chạm Sắc × Cool Vietnam × Âm Nhạc Vân Long", không dùng tên CLB.
+- Workshop trong **database**, đặt chỗ cả online (buổi thêm ở admin) lẫn
+  ghé thẳng / nhóm Zalo. Không có buổi thì thẻ ghi "Chưa có lịch — nhắn để hẹn riêng".
+- Không đưa tiểu sử / liên hệ riêng của founder lên web.
+- Trải nghiệm âm nhạc + trang phục của Vân Long: **chỉ nhắc**, không ghi giá.
+- TikTok: chưa có link, thêm sau.
+- "Bìa sổ vải vụn" chính là "Sổ còng từ vải vụn" → sửa dòng cũ, giữ slug.
+  "Giấy tái chế" không có trong bảng giá → để "Liên hệ".
+- Không dùng: khung "4.9 ★ (999)" giả Google Maps trong bản in.
+- Đối tác chính: Trung tâm VH-TT&TT phường Hai Bà Trưng, Âm Nhạc Vân Long,
+  Cool Vietnam. **BUV là đối tác khác** (theo sự kiện), không phải đối tác
+  thường xuyên — dù bản Portfolio xếp BUV vào "đối tác chính".
+
+**Database** (migration `gem_workshop_cham_mua`, file
+`supabase/migrations/20261012_workshop_cham_mua.sql`): 3 cột mới trên
+`workshop_types` — `duration_max` (phút, trống = cố định), `age_min` (0 = mọi
+lứa tuổi, trống = không ghi), `price_from` (ghi "Từ" trước giá). 15 loại
+workshop, `sort_order` theo bản in. Nguyên liệu + dụng cụ nằm ở "Cần biết
+trước". Không cần GRANT mới (cột thêm vào bảng đã GRANT); câu kiểm
+GRANT-vs-policy vẫn 3 dòng cố ý như cũ. Đã kiểm 3 vai: `anon` ghi →
+`permission denied`; đăng nhập không phải owner → sửa 0 dòng; owner → sửa được.
+
+**Ảnh bìa workshop:** `supabase/migrations/20261012b_workshop_covers.sql` —
+**chạy SAU khi PR lên `main`** (ảnh nằm trong repo, chạy trước là ảnh vỡ).
+
+**Trang:**
+- `workshop.html`: dải Chạm Mùa đầu trang → thẻ workshop (thời lượng · tuổi ·
+  giá) → lịch → hành trình Ra Đồng / Vào Hội / Du Uyển, ưu đãi, gửi xe. Chữ
+  Chạm Mùa là khoá `cm.*` trong `js/workshop.js`. **Hết mùa (sau 27/12/2026)**:
+  gỡ 2 khối Chạm Mùa trong `workshop.html` + câu Chạm Mùa trong `home.ws_desc`
+  và mốc `model.ms6_*`.
+- Ưu đãi −10% / −15% chỉ là chữ: giữ chỗ online **không** tự trừ, trừ khi
+  khách trả tiền tại studio.
+- `mo-hinh.html`: "Tại Gem" dưới 6 bước, Hoạt động nổi bật, Mốc 2026 (+ ảnh
+  sự kiện), Đối tác (logo do đối tác gửi), Các gói hợp tác (`#hop-tac`).
+- `cau-chuyen.html`: ảnh bìa sổ "ghế nhựa đỏ"; "góc trao tặng đồ" đổi thành
+  "tủ đồ cộng đồng" theo Portfolio. Trang chủ: ảnh studio ở hero, câu giới
+  thiệu mới, câu dài dưới ba giá trị. `ghe-tham.html`: email + gửi xe. Email
+  `gemchamsac@gmail.com` thêm vào footer 8 trang.
+- Ảnh mới: `images/space/`, `images/workshop/`, `images/partners/` — WebP,
+  ảnh ≤1280px. Bản gốc không vào repo.
+
 ---
 
 ## 14. Còn phải chốt

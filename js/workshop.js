@@ -21,6 +21,11 @@
     'ws.seats_few':     { vi: `Chỉ còn {n} chỗ`, en: `Only {n} seats left` },
     'ws.full':          { vi: `Đã đủ chỗ`, en: `Fully booked` },
     'ws.duration':      { vi: `{n} phút`, en: `{n} min` },
+    'ws.dur_hr':        { vi: `{n} tiếng`, en: `{n} hours` },
+    'ws.dur_hr1':       { vi: `1 tiếng`, en: `1 hour` },
+    'ws.age_all':       { vi: `Mọi lứa tuổi`, en: `All ages` },
+    'ws.age_min':       { vi: `Từ {n} tuổi`, en: `Ages {n}+` },
+    'ws.price_from':    { vi: `Từ {p}`, en: `From {p}` },
     'ws.price_tbd':     { vi: `Liên hệ`, en: `Ask us` },
     'ws.book':          { vi: `Giữ chỗ`, en: `Reserve a seat` },
 
@@ -64,7 +69,45 @@
     'ws.type_what':     { vi: `Bạn sẽ làm gì`, en: `What you'll do` },
     'ws.type_note':     { vi: `Cần biết trước`, en: `Good to know` },
     'ws.type_when':     { vi: `Sắp có buổi nào`, en: `Upcoming sessions` },
-    'ws.type_none':     { vi: `Chưa có buổi nào cho loại này. Nhắn cho chúng mình để hẹn riêng nhé.`, en: `No sessions scheduled for this one yet. Message us to arrange a time.` }
+    'ws.type_none':     { vi: `Chưa có buổi nào cho loại này. Nhắn cho chúng mình để hẹn riêng nhé.`, en: `No sessions scheduled for this one yet. Message us to arrange a time.` },
+    'ws.list_h':        { vi: `Chọn một món để làm.`, en: `Pick something to make.` },
+    'ws.list_p':        { vi: `Bấm vào từng workshop để xem nguyên liệu, độ tuổi và buổi sắp tới.`, en: `Tap a workshop to see the materials, ages and upcoming sessions.` },
+
+    /* Chạm Mùa — chuỗi workshop cuối tuần 25/09 – 27/12/2026 (bản in "Thông tin
+       Workshop Chạm Mùa"). Hết mùa thì gỡ hai khối #cham-mua trong workshop.html. */
+    'cm.label':         { vi: `Cuối tuần · 25/09 – 27/12/2026`, en: `Weekends · 25 Sep – 27 Dec 2026` },
+    'cm.lead':          { vi: `Mỗi cuối tuần, mời bạn và người thương ghé chơi: chọn một chất liệu quen thuộc, học một cách làm mới và tự tay làm nên một món đồ.`, en: `Every weekend, come by with the people you love: pick a familiar material, learn a new way of making, and make something with your own hands.` },
+    'cm.zalo_btn':      { vi: `Xem lịch trên Zalo`, en: `Schedule on Zalo` },
+    'cm.info_btn':      { vi: `Ưu đãi & đường đi`, en: `Offers & directions` },
+    'cm.img_alt':       { vi: `Hai bạn mặc áo truyền thống, một bạn cầm quạt, một bạn đội nón lá, trong đêm Đón Trăng ở studio`, en: `Two guests in traditional dress, one with a palm-leaf fan and one in a conical hat, at the Moon Festival night in the studio` },
+
+    'cm.eyebrow':       { vi: `Chạm Mùa,`, en: `Chạm Mùa,` },
+    'cm.title':         { vi: `Hóa thân thành một người nông dân.`, en: `Step into a farmer's shoes.` },
+    'cm.sub':           { vi: `Từ xa xưa, người nông dân Việt sống gắn bó với tự nhiên: quan sát, tận dụng những gì sẵn có, và cùng nhau vun trồng cho một mùa bội thu.`, en: `Vietnamese farmers have long lived close to nature: watching it, making use of what was at hand, and working together toward a good harvest.` },
+    'cm.s1_name':       { vi: `Ra Đồng`, en: `To the fields` },
+    'cm.s1_h':          { vi: `Tham gia workshop`, en: `Join a workshop` },
+    'cm.s1_p':          { vi: `Chọn một chất liệu quen thuộc, học một cách làm mới và tự tay làm nên một món đồ. Không giới hạn thời gian, làm chậm cũng được.`, en: `Pick a familiar material, learn a new technique and make something with your own hands. No time limit, so take it slow.` },
+    'cm.s2_name':       { vi: `Vào Hội`, en: `To the festival` },
+    'cm.s2_h':          { vi: `Trải nghiệm đa sắc`, en: `A colourful festival` },
+    'cm.s2_p':          { vi: `Chụp ảnh với mặt nạ giấy bồi, đóng dấu trải nghiệm. Muốn mặc trang phục truyền thống hay thử đàn tranh thì có Âm Nhạc Vân Long, hỏi thêm khi bạn ghé.`, en: `Take photos with papier-mâché masks and collect experience stamps. To wear traditional dress or try the đàn tranh zither, ask Âm Nhạc Vân Long when you visit.` },
+    'cm.s3_name':       { vi: `Du Uyển`, en: `Through the garden` },
+    'cm.s3_h':          { vi: `Kết nối và sẻ chia`, en: `Connect and share` },
+    'cm.s3_p':          { vi: `Cùng ngồi lại thưởng trà, xem tác phẩm hoàn thiện, trò chuyện và kết nối.`, en: `Sit down together over tea, look at the finished pieces, talk and get to know each other.` },
+
+    'cm.offers_h':      { vi: `Ưu đãi`, en: `Offers` },
+    'cm.off1':          { vi: `<b>−10%</b> khi đăng ký từ 2 workshop`, en: `<b>−10%</b> when you sign up for 2 workshops` },
+    'cm.off2':          { vi: `<b>−15%</b> cho nhóm từ 4 người`, en: `<b>−15%</b> for groups of 4 or more` },
+    'cm.off3':          { vi: `Chia sẻ trải nghiệm Chạm Mùa lên mạng xã hội hoặc Google Maps, tặng bạn 01 lượt làm thiệp từ vải vụn (39K): làm ngay trong buổi, hoặc để dành lúc nào ghé cũng được.`, en: `Share your Chạm Mùa experience on social media or Google Maps and get one free fabric-scrap card session (39K): use it on the spot, or save it for any later visit.` },
+    'cm.off4':          { vi: `Chụp ảnh miễn phí với mặt nạ giấy bồi và không gian studio.`, en: `Free photos with papier-mâché masks and the studio space.` },
+    'cm.off_note':      { vi: `Ưu đãi được trừ khi bạn thanh toán tại studio.`, en: `Discounts are applied when you pay at the studio.` },
+
+    'cm.go_h':          { vi: `Lịch & đường đi`, en: `Schedule & getting here` },
+    'cm.go_sched':      { vi: `Lịch từng cuối tuần được cập nhật trong nhóm Zalo “Thông tin workshop Chạm Mùa”.`, en: `Each weekend's schedule is posted in the Zalo group “Thông tin workshop Chạm Mùa”.` },
+    'cm.go_addr':       { vi: `Địa chỉ`, en: `Address` },
+    'cm.go_park':       { vi: `Gửi xe`, en: `Parking` },
+    'cm.park_moto':     { vi: `Xe máy: gửi tại Trung tâm Văn hóa, 114 Lê Gia Đỉnh`, en: `Motorbikes: at the Culture Centre, 114 Lê Gia Đỉnh` },
+    'cm.park_car':      { vi: `Ô tô: gửi vào Trường Tiểu học & THCS Đoàn Kết`, en: `Cars: at Đoàn Kết Primary & Secondary School` },
+    'cm.go_phone':      { vi: `Điện thoại`, en: `Phone` }
   };
 
   if (window.GemI18n && window.GemI18n.add) window.GemI18n.add(STRINGS);
@@ -188,6 +231,41 @@
     return n.toLocaleString('vi-VN') + 'đ';
   }
 
+  /* ---------- dòng thông tin: thời lượng · tuổi · giá ----------
+     Ghi y như bản in Chạm Mùa: "1–1,5 tiếng", "30–60 phút", "Từ 59.000đ".
+     Buổi lấy từ sessions_public không có ba cột mới (duration_max, age_min,
+     price_from) — thiếu thì đơn giản là không ghi phần đó. */
+  function durText(o) {
+    var a = o.duration_minutes, b = o.duration_max;
+    if (!a) return '';
+    if (!b || b <= a) b = null;
+    // Tính theo tiếng khi cả hai đầu từ 1 tiếng trở lên và tròn nửa tiếng
+    if (a < 60 || a % 30 || (b && b % 30)) {
+      return fill(t('ws.duration', '{n} phút'), { n: b ? a + '–' + b : a });
+    }
+    var en = lang() === 'en';
+    function h(m) { var x = String(m / 60); return en ? x : x.replace('.', ','); }
+    if (!b && a === 60) return t('ws.dur_hr1', '1 tiếng');
+    return fill(t('ws.dur_hr', '{n} tiếng'), { n: b ? h(a) + '–' + h(b) : h(a) });
+  }
+
+  // 0 = mọi lứa tuổi; để trống = không ghi (bản in không nói thì web cũng không đoán)
+  function ageText(o) {
+    if (o.age_min == null) return '';
+    return o.age_min > 0
+      ? fill(t('ws.age_min', 'Từ {n} tuổi'), { n: o.age_min })
+      : t('ws.age_all', 'Mọi lứa tuổi');
+  }
+
+  function priceText(o) {
+    var m = money(o.price);
+    return o.price != null && o.price_from ? fill(t('ws.price_from', 'Từ {p}'), { p: m }) : m;
+  }
+
+  function metaText(o) {
+    return [durText(o), ageText(o), priceText(o)].filter(Boolean).join(' · ');
+  }
+
   function esc(s) {
     return String(s == null ? '' : s)
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -197,7 +275,10 @@
   /* ---------- .ics, sinh hoàn toàn phía trình duyệt ---------- */
   function icsFor(session) {
     function z(iso) { return new Date(iso).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, ''); }
-    var end = new Date(new Date(session.starts_at).getTime() + (session.duration_minutes || 120) * 60000);
+    // Giữ chỗ trong lịch theo thời lượng dài nhất, kẻo người ta hẹn việc khác sát giờ
+    var ty = typeBySlug(session.slug) || {};
+    var mins = ty.duration_max || session.duration_minutes || 120;
+    var end = new Date(new Date(session.starts_at).getTime() + mins * 60000);
     var name = lang() === 'en' && session.name_en ? session.name_en : session.name_vi;
     return [
       'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Gem Cham Sac//workshop//VI',
@@ -321,6 +402,7 @@
     if (!ty) return renderList();
     openType = ty;
     current = null;
+    listHead(false);
 
     var name = pickField(ty, 'name');
     var mine = sessions.filter(function (s) { return s.slug === slug; });
@@ -329,7 +411,8 @@
     // ghép vào innerHTML.
     var longBox = document.createElement('div');
     longBox.className = 'ws-long';
-    lines(pickField(ty, 'long')).forEach(function (para) {
+    // Chưa có bài giới thiệu dài thì dùng mô tả ngắn, để trang không trống đầu
+    lines(pickField(ty, 'long') || pickField(ty, 'desc')).forEach(function (para) {
       var el = document.createElement('p');
       el.textContent = para;
       longBox.appendChild(el);
@@ -358,10 +441,7 @@
         '<button type="button" class="ws-back-list" data-i18n="ws.type_back"></button>' +
         (ty.cover ? '<div class="ws-page-cover"><img src="' + esc(ty.cover) + '" alt=""></div>' : '') +
         '<h2 class="ws-page-h">' + esc(name) + '</h2>' +
-        '<p class="ws-page-meta">' +
-          fill(t('ws.duration', '{n} phút'), { n: ty.duration_minutes }) +
-          ' · ' + esc(money(ty.price)) +
-        '</p>' +
+        '<p class="ws-page-meta">' + esc(metaText(ty)) + '</p>' +
         '<div class="ws-long-slot"></div>' +
         '<div class="ws-boxes"></div>' +
         ((ty.images || []).length
@@ -387,16 +467,32 @@
       history.pushState({}, '', location.pathname);
       openType = null;
       renderList();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      scrollToRoot();
     });
     wirePick();
 
     if (pushState) {
       history.pushState({ loai: slug }, '', '?loai=' + encodeURIComponent(slug));
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      scrollToRoot();
     }
     document.title = name + ' · Gem Chạm Sắc';
     translate();
+  }
+
+  // Mở / đóng trang giới thiệu thì cuộn tới đầu khung workshop chứ không về
+  // đầu trang: phía trên còn dải Chạm Mùa, về đầu trang là phải cuộn lại tìm.
+  function scrollToRoot(instant) {
+    var header = document.querySelector('.site-header');
+    var y = root.getBoundingClientRect().top + window.pageYOffset -
+            (header ? header.offsetHeight : 0) - 16;
+    window.scrollTo({ top: Math.max(0, y), behavior: instant ? 'auto' : 'smooth' });
+  }
+
+  // Tiêu đề "Chọn một món để làm" chỉ hợp với danh sách: trong trang giới
+  // thiệu một loại hay form giữ chỗ thì nó nói sai việc đang làm.
+  function listHead(show) {
+    var h = document.getElementById('ws-list-head');
+    if (h) h.hidden = !show;
   }
 
   function route() {
@@ -406,6 +502,7 @@
   }
 
   function renderList() {
+    listHead(true);
     var list = allTypes();
     if (!list.length && !sessions.length) {
       root.innerHTML = '<p class="ws-empty" data-i18n="ws.empty"></p>';
@@ -438,10 +535,7 @@
             : '') +
           '<h3>' + esc(name) + '</h3>' +
           (desc ? '<p>' + esc(desc) + '</p>' : '') +
-          '<p class="ws-type-meta">' +
-            fill(t('ws.duration', '{n} phút'), { n: s.duration_minutes }) +
-            ' · ' + esc(money(s.price)) +
-          '</p>' +
+          '<p class="ws-type-meta">' + esc(metaText(s)) + '</p>' +
           nextLine(typeKey(s)) +
           (hasPage ? '<span class="ws-type-more" data-i18n="ws.type_more"></span>' : '') +
         (hasPage ? '</a>' : '</div>') +
@@ -485,6 +579,7 @@
   function openForm(id) {
     current = sessions.filter(function (s) { return s.id === id; })[0];
     if (!current) return;
+    listHead(false);
     var p = vnParts(current.starts_at);
     var name = lang() === 'en' && current.name_en ? current.name_en : current.name_vi;
     var max = Math.max(1, Math.min(current.seats_left, 10));
@@ -495,7 +590,7 @@
         '<div class="ws-chosen">' +
           '<h3>' + esc(name) + '</h3>' +
           '<p>' + esc(dayLabel(p.dow)) + ' ' + esc(p.date) + ' · ' + esc(p.time) + ' · ' +
-                  fill(t('ws.duration', '{n} phút'), { n: current.duration_minutes }) + '</p>' +
+                  esc(durText(typeBySlug(current.slug) || current)) + '</p>' +
         '</div>' +
         '<form class="ws-form" novalidate>' +
           '<label class="ws-field"><span data-i18n="ws.f_name"></span>' +
@@ -570,6 +665,7 @@
   }
 
   function renderDone(code) {
+    listHead(false);
     var p = vnParts(current.starts_at);
     var name = lang() === 'en' && current.name_en ? current.name_en : current.name_vi;
     root.innerHTML =
@@ -619,6 +715,9 @@
       types = r[1] || [];
       _colors = null;
       route();
+      // Mở thẳng link ?loai=… (gửi cho nhau qua Zalo): đưa người đọc tới
+      // trang giới thiệu luôn, khỏi phải cuộn qua phần đầu trang.
+      if (openType) scrollToRoot(true);
     }).catch(renderError);
   }
 

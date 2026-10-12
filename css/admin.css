@@ -382,6 +382,8 @@
   border-radius: var(--radius-md);
 }
 .ad-wt .ad-f textarea { min-height: 0; line-height: 1.5; resize: vertical; }
+/* hai hàng ô số (thời lượng · giá/tuổi) đứng liền nhau: chừa khoảng giữa */
+.ad-wt .ad-f-row { margin-bottom: var(--space-4); }
 .wt-cover-prev { width: 96px; height: 72px; object-fit: cover; border-radius: var(--radius-sm); }
 
 /* ==========================================================
