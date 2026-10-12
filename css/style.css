@@ -878,6 +878,64 @@ p:last-child { margin-bottom: 0; }
 .ws-teaser h2 { margin-bottom: var(--space-4); }
 .ws-teaser p { color: var(--ink-body); margin-bottom: var(--space-6); line-height: 1.75; }
 
+/* HOME STUDIO 2D TEASER — mirrors the workshop teaser (text left, picture
+   right) so the two cards in a row don't look like one repeated block */
+.studio-teaser {
+  display: grid;
+  gap: var(--space-8);
+  align-items: center;
+  background: var(--paper-white);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+  box-shadow: var(--shadow-paper);
+}
+@media (min-width: 800px) {
+  .studio-teaser { grid-template-columns: 1.1fr 1fr; gap: var(--space-12); padding: var(--space-12); }
+}
+/* phone: picture above the text, cropped to the doors + Udon */
+.studio-teaser-img {
+  order: -1;
+  display: block;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  background: var(--paper-cream);
+}
+@media (min-width: 800px) {
+  .studio-teaser-img { order: 0; aspect-ratio: 4 / 5; max-height: 520px; justify-self: center; }
+}
+.studio-teaser-img img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 78%; display: block; transition: transform 0.5s ease; }
+.studio-teaser-img:hover img { transform: scale(1.03); }
+.studio-teaser h2 { margin-bottom: var(--space-4); }
+.studio-teaser-text > p { color: var(--ink-body); margin-bottom: var(--space-6); line-height: 1.75; }
+.studio-teaser .studio-teaser-badge {
+  display: inline-block;
+  margin: 0 0 var(--space-3) var(--space-2);
+  padding: 0.15em 0.75em;
+  border: 1px solid var(--kraft);
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--kraft);
+  vertical-align: 0.35em;
+}
+.studio-teaser .studio-teaser-note {
+  margin: var(--space-4) 0 0;
+  font-size: var(--text-xs);
+  color: var(--ink-soft);
+}
+
+/* "Studio 2D" links on Sản phẩm / Ghé thăm (soft launch, not on the menu) */
+.page-hero .page-hero-alt { margin-top: var(--space-6); font-size: var(--text-base); }
+.visit-studio-link { margin-top: var(--space-5); font-size: var(--text-sm); color: var(--sage-deep); }
+/* plain link, not .btn-text: in the narrow banner column it wraps, and a wrapped
+   .btn-text draws one long rule under both lines */
+.visit-studio-link a { color: var(--sage-deep); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+.visit-studio-link a:hover { color: var(--ink-dark); }
+
 /* LANGUAGE HINT — offered to non-Vietnamese browsers, never auto-applied */
 .lang-hint {
   position: fixed;

@@ -24,7 +24,7 @@ Static website cho cửa hàng **Gem Chạm Sắc** — pop-up store sustainabil
 ├── workshop.html             Đặt lịch workshop (đọc từ Supabase)
 ├── ban-tin.html              Bản tin — bài viết đọc từ Supabase
 ├── admin.html                Trang quản trị cho Anna + nhân viên (noindex, không có link từ nav)
-├── studio.html               Studio Gem 2D — bản thử, tranh tạm từ ChatGPT (noindex, chưa có trên nav)
+├── studio.html               Studio Gem 2D — bản thử, tranh tạm từ ChatGPT (noindex, chưa lên nav; link từ trang chủ, Sản phẩm, Ghé thăm, Season 02 + QR ở quầy)
 ├── 404.html                  Fallback page (Udon lạc đường)
 ├── CNAME                     gemchamsac.com (cho GitHub Pages custom domain)
 ├── css/style.css             Single CSS file, design tokens ở đầu
@@ -370,7 +370,13 @@ Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
 - 🛍️ Ảnh cắt nền sản phẩm: giờ làm trong admin → Sản phẩm → Sửa → "Ảnh cắt nền"
   (nút "Xoá nền trắng"). `CUTOUT`/`THUMB`/`SHELVES` trong `js/studio.js` chỉ còn là
   bản dự phòng khi database chưa trả lời.
-- Ngoài studio: chưa gắn Studio lên menu (chờ Anna); Gmail secrets cho mail báo đơn
+- Ra mắt thử (12/10/2026): chưa lên menu; khối "Studio 2D" ở trang chủ + link ở Sản phẩm / Ghé thăm /
+  Season 02 + thẻ QR (`?src=qr` → đơn ghi `[nguồn: qr]`). Tranh còn là bản tạm → chữ không nói
+  "vẽ tay". Có tranh vẽ tay thì làm lại ảnh xem trước + thẻ QR (`docs/design.md` → "Studio: ra mắt thử").
+- Chờ Anna báo "go": sửa điểm dừng lạc của khung "Gối, thảm & quà" + lỗi kéo khung không kéo theo
+  điểm dừng (`docs/design.md` → "Studio: luật chạm" → Điểm dừng lạc). Không ghi vào `studio_layout`
+  khi em gái đang lắp.
+- Ngoài studio: Gmail secrets cho mail báo đơn
   (các bước: `docs/design.md` → "Bật gửi mail thật").
 
 **Còn lại:**

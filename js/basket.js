@@ -256,6 +256,15 @@
   var items = [];   // [{ sku, qty, spec?, pics? }]  spec = design code from js/patch.js
   var liveSkus = null;   // skus the database sells, in its order; null until it answers
 
+  // Where this visit came from, when the link says so (studio.html?src=qr on
+  // the QR card at the counter). Kept for this tab's session and written into
+  // the order note as [nguồn: …] — one word Anna already reads, no tracking.
+  // Only short lowercase tags: the note is free text, nothing else gets in.
+  try {
+    var srcTag = new URLSearchParams(location.search).get('src');
+    if (srcTag && /^[a-z0-9-]{1,24}$/.test(srcTag)) sessionStorage.setItem('gem-src', srcTag);
+  } catch (e) { /* old browser / private mode */ }
+
   // A custom design is its own line even when the product is the same.
   function keyOf(it) { return it.sku + (it.spec ? '|' + it.spec : ''); }
 
