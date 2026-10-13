@@ -1219,6 +1219,46 @@
       var id = NAV_SPOT[b.getAttribute('data-go')];
       b.classList.toggle('is-off', !!id && !hasPlace(id));
     });
+    streetNav();
+  }
+
+  // On the street the nav also has the owner's places out there (a tap box
+  // or a "Khu vực" piece that does something: "Chơi đàn tranh"), in street
+  // order round "Vào studio". A phone shows one stretch of the street, so
+  // the nav is where visitors learn what else is out there.
+  function streetNav() {
+    var nav = document.querySelector('.st-nav'), go = nav && nav.querySelector('.st-go-in');
+    if (!go) return;
+    nav.querySelectorAll('.st-go-out').forEach(function (b) { b.remove(); });
+    if (sceneName !== 'out' || !OUT_HOT[0].abs) return;
+    var list = [], seen = {}, door = standX(OUT_HOT[0]);
+    OWN_HOT.forEach(function (h) {
+      var c = h.own || {};
+      list.push({ id: h.id, act: c.act || (c.link ? 'link' : ''), link: c.link, name: spotName(h), x: standX(h) });
+    });
+    THINGS.forEach(function (it) {
+      if (it.kind === 'zone') list.push({ act: it.zone.act, link: it.zone.link, name: zoneName(it), x: standIn(it) });
+    });
+    list = list.sort(function (a, b) { return a.x - b.x; }).filter(function (p) {
+      var key = p.act + ' ' + (p.link || '');   // one button per thing to do: the one furthest left
+      var ok = p.name && p.act && p.act !== 'none' && p.act !== 'enter' && (p.act !== 'link' || p.link) && !seen[key];
+      if (ok) seen[key] = true;
+      return ok;
+    });
+    var right = list.filter(function (p) { return p.x > door; }).reverse();
+    list.filter(function (p) { return p.x <= door; }).forEach(function (p) { nav.insertBefore(navBtn(p), go); });
+    right.forEach(function (p) { nav.insertBefore(navBtn(p), go.nextSibling); });
+  }
+  function navBtn(p) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'st-go-out';
+    b.textContent = p.name;   // the owner's text: textContent only
+    b.addEventListener('click', function () {
+      if (p.id) visit(p.id, true);
+      else runAct(p.act, p.link, p.x);
+    });
+    return b;
   }
 
   // Character: one frame per pose, toggled — swapping src would flicker.
@@ -1289,6 +1329,7 @@
     walkToken++;
     player.x = SCENE.startX; player.facing = 1; player.moving = false; player.moved = false;
     layout();
+    syncNav();
     try { sessionStorage.setItem('gem-scene', name); } catch (e) { /* private mode */ }
   }
 
@@ -4420,7 +4461,7 @@
       e.target.closest('.mb-form').querySelector('.mb-count').textContent = e.target.value.length + '/280';
     });
 
-    document.addEventListener('gem:langchange', function () { renderDesigner(); renderTu(); relabelSpots(); relabelThings(); pdRender(); });
+    document.addEventListener('gem:langchange', function () { renderDesigner(); renderTu(); relabelSpots(); relabelThings(); pdRender(); streetNav(); });
     // an own-colour fabric finished dyeing: swap the plain colour for it
     var fabricTimer = null;
     document.addEventListener('gem:fabric', function () {

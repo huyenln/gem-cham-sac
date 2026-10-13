@@ -1753,6 +1753,21 @@ dùng lại phần thẻ chia sẻ của Bàn thiết kế, ảnh không rời m
 - Dùng **"Khung bấm"** ngoài cửa (Khi bấm "Chơi đàn tranh") cũng được. Lỗi đã sửa
   13/10: nhãn của mọi khung ngoài phố (trừ cửa) đưa khách vào studio trước — `visit()`
   coi nó như nút điều hướng. Giờ khung nằm ngoài phố thì mở ngay tại chỗ.
+- **Thanh dưới ngoài phố** (13/10, khách báo "trên iPhone chỉ thấy bên phải cửa, không
+  sang được chỗ đàn"): điện thoại dọc chỉ thấy ~740 px quanh cửa, đàn ở x 281–855 nằm
+  ngoài khung hình, và thanh dưới chỉ có "Vào studio". Vuốt ngang / chạm sàn bên trái vẫn đi
+  được (đã thử bằng ngón tay giả lập), nhưng không có gì báo bên trái còn đồ. Giờ
+  `streetNav()` thêm nút cho mọi **Khung bấm** / **Khu vực** ngoài phố có việc để làm (bỏ
+  "Không làm gì"), theo thứ tự trên phố quanh nút "Vào studio" (bên trái cửa thì đứng trước),
+  mỗi việc một nút, tên lấy từ "Tên hiện". Bấm = đi tới đó và mở luôn. Vào studio thì
+  các nút này rời thanh.
+- **Kiểm trên nền tảng khác (13/10):** WebKit (lõi Safari, bản WebKitGTK 2.52 trên Linux —
+  không có iPhone thật) + Chromium cỡ Android 360 / 412, iPad dọc / ngang, điện thoại
+  ngang, máy tính: không lỗi script, không tràn ngang, đàn mở đủ 16 / 19 dây. Firefox
+  không cài được (mạng chặn). Safari < 15.4 không hiểu `svh` / `:has()`: mọi dòng `svh`
+  trong `css/studio.css` có dòng `vh` đứng trước. **Còn lại:** điện thoại xoay ngang (cao
+  ~330 px) chỉ thấy ~7 dây, phải cuộn bảng ở mép ngoài dây; iOS vuốt từ mép trái màn hình
+  là "Quay lại" của Safari (không chặn được bằng JS).
 - **Kiểm:** `tools/check-studio.py zither` (đếm lời gọi Web Audio, không nghe thật), máy
   tính + điện thoại (ngón tay thật qua CDP): 16 dây có tên, hàng ≥ 30 px nằm trọn màn hình,
   chạm, ngón rung trên dây / lướt giữa hai dây không gảy thêm, vuốt đủ 16, giữ Mi → Fa
