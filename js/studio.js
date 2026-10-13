@@ -563,13 +563,62 @@
      owner's pieces on it; otherwise the painted strip above, unchanged. */
   var LAYOUT = null;
 
+  // The published layout. It used to be given up on after 2.5 s: on a slow
+  // phone connection (right after an update, when every file loads again)
+  // the built-in scene came up and stayed, as if the owner's layout were
+  // gone. Now: the last layout this browser saw is kept (gem-layout) and
+  // shown at once; the database is still asked, and what it answers — even
+  // late — replaces the scene if it differs (lateLayout). With nothing kept,
+  // the wait is up to 8 s.
+  var LAYOUT_KEY = 'gem-layout';
+  var layoutRaw = null;   // the JSON the scene was built from
+  var pendingLayout = null;   // came in while a sheet was open: built once it closes
+
   function loadLayout() {
     if (!window.GemLayout || !window.GemDB || !window.GemDB.studioLayout) return Promise.resolve(null);
     var draft = false;
     try { draft = new URLSearchParams(location.search).get('nhap') === '1' && window.GemDB.isSignedIn(); } catch (e) { /* old browser */ }
-    var get = window.GemDB.studioLayout(draft ? 'draft' : 'live').then(window.GemLayout.sanitize, function () { return null; });
-    var late = new Promise(function (res) { setTimeout(function () { res(null); }, 2500); });
-    return Promise.race([get, late]);
+    var kept = null;
+    if (!draft) {
+      try { kept = localStorage.getItem(LAYOUT_KEY); } catch (e) { /* private mode */ }
+    }
+    var keptL = null;
+    if (kept) {
+      try { keptL = window.GemLayout.sanitize(JSON.parse(kept)); } catch (e) { keptL = null; }
+      if (keptL) layoutRaw = kept;
+    }
+    var get = window.GemDB.studioLayout(draft ? 'draft' : 'live').then(function (data) {
+      if (!data) return null;
+      var raw = JSON.stringify(data), L = window.GemLayout.sanitize(data);
+      if (L && !draft) { try { localStorage.setItem(LAYOUT_KEY, raw); } catch (e) { /* full / private */ } }
+      return L ? { L: L, raw: raw } : null;
+    }, function () { return null; });
+    if (keptL) {
+      // the kept one now; a newer one when it comes
+      get.then(function (r) { if (r && r.raw !== layoutRaw) lateLayout(r.L, r.raw); });
+      return Promise.resolve(keptL);
+    }
+    var late = new Promise(function (res) { setTimeout(function () { res('late'); }, 8000); });
+    return Promise.race([get, late]).then(function (r) {
+      if (r === 'late') {
+        get.then(function (g) { if (g) lateLayout(g.L, g.raw); });   // the built-in scene until it comes
+        return null;
+      }
+      if (r) layoutRaw = r.raw;
+      return r ? r.L : null;
+    });
+  }
+
+  // A layout that came after the scene was built: build the scene again
+  // with it, where the visitor is (studio or street). Not under an open sheet.
+  function lateLayout(L, raw) {
+    if (!L || !started) return;
+    if (!modal.hidden) { pendingLayout = { L: L, raw: raw }; return; }
+    layoutRaw = raw;
+    applyLayout(L);
+    INSIDE = { width: SCENE.width, height: SCENE.height, startX: SCENE.startX, bg: L.bg.src };
+    shareCuts();
+    setScene(sceneName);
   }
 
   function applyLayout(L) {
@@ -1535,6 +1584,7 @@
     if (modal.hidden) return;
     modal.hidden = true;
     document.documentElement.classList.remove('zt-open');
+    if (pendingLayout) { var pl = pendingLayout; pendingLayout = null; setTimeout(function () { lateLayout(pl.L, pl.raw); }, 0); }
     sheetBody.innerHTML = '';
     sheetEl.classList.remove('is-full');
     modal.classList.remove('is-full');
@@ -4426,7 +4476,9 @@
     });
   });
 
+  var started = false;
   function start() {
+    started = true;
     syncNav();
     bindMotion();
     INSIDE = { width: SCENE.width, height: SCENE.height, startX: SCENE.startX,

@@ -50,6 +50,9 @@ and walks through what broke before:
            each string once, holding Mi reads Fa (+1/2 tone), La reads Si (+1),
            Enter plucks, "Rải dây" runs them all with the rung on (counted on the
            Web Audio calls, nothing is heard)
+  slow     the published layout on a slow connection: waited for (no built-in
+           scene first), kept for the next visit and shown at once, a newer one
+           swapped in when it comes, a very late one swapped in too
   topbar   the top bar fits a phone (320px up), in Vietnamese and English
   motion   a device asking for less motion: no walking, "Hiệu ứng" turns it on
   taps     taps on a phone (clicks on a desktop) near "Khu vực" pieces standing on
@@ -65,7 +68,7 @@ crashed and the counts add up.
     python3 tools/check-studio.py            all checks
     python3 tools/check-studio.py wear       one check (street | wear | shop | spots | editor |
                                              library | product | prodlib | design | catalog | kinds |
-                                             layers | zones | cart | choices | zither | topbar | motion | taps)
+                                             layers | zones | cart | choices | zither | slow | topbar | motion | taps)
 
 Needs: pip install playwright. Chromium: PLAYWRIGHT_BROWSERS_PATH or
 CHROMIUM=/path/to/chrome (the cloud sessions have /opt/pw-browsers/chromium).
@@ -161,6 +164,7 @@ class FakeDB:
         self.wtypes = []     # workshop_types
         self.wt_patches = []
         self.extra = []      # more products rows (the choices check)
+        self.layout_delay = 0   # seconds the live layout takes to come (a slow phone)
 
     async def route(self, r):
         u, m = r.request.url, r.request.method
@@ -186,6 +190,8 @@ class FakeDB:
                 return await r.fulfill(status=200, content_type='application/json', body=json.dumps(rows))
             mm = re.search(r'id=eq\.([^&]+)', u)
             i = mm.group(1) if mm else None
+            if self.layout_delay:
+                await asyncio.sleep(self.layout_delay)
             rows = [{'data': self.rows[i]}] if i in self.rows else []
             return await r.fulfill(status=200, content_type='application/json', body=json.dumps(rows))
         if '/rest/v1/studio_info' in u:
@@ -1984,6 +1990,63 @@ async def zither(browser, db):
         await pg.context.close()
 
 
+async def slow(browser, db):
+    """The owner's layout must win even on a slow phone (it used to be given up
+    on after 2.5 s, and the built-in street stayed)."""
+    print('slow')
+    db.rows.clear()
+    mine = 'images/studio/props/xe.webp'   # a piece only the owner's street has
+    def street(extra=None):
+        items = [dict(src=mine, x=900, y=850, w=146, h=150, rot=0, flip=False, layer='back', frame=False)]
+        if extra:
+            items.append(dict(src=extra, x=1300, y=850, w=146, h=150, rot=0, flip=False, layer='back', frame=False))
+        return {'v': 1, 'bg': {'src': 'images/studio/bg/strip-tron.webp', 'w': 5792, 'h': 1024}, 'items': [],
+                'udon': {'x': 5200, 'y': 560, 'w': 128, 'h': 140}, 'start': 700,
+                'outside': {'bg': {'src': 'images/studio/bg/ngoai.webp', 'w': 2686, 'h': 1024}, 'start': 600, 'items': items}}
+    pieces = "[...document.querySelectorAll('#st-world .st-item')].map(i => (i.getAttribute('src') || '').split('/').pop())"
+    ctx = await browser.new_context(viewport={'width': 1280, 'height': 800})
+    await ctx.route('**/*.supabase.co/**', db.route)
+    await ctx.add_init_script("localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-studio-intro-touch','1');sessionStorage.removeItem('gem-scene')")
+    pg = await ctx.new_page()
+    errs = []
+    pg.on('pageerror', lambda e: errs.append(str(e)))
+
+    # 1. first visit, the layout takes 4 s: wait for it, no built-in street in between
+    db.rows['live'] = street()
+    db.layout_delay = 4
+    await pg.goto(f'{BASE}/studio.html')
+    await pg.wait_for_timeout(3000)
+    hidden = await pg.evaluate("document.documentElement.classList.contains('st-wait')")
+    await pg.wait_for_timeout(2500)
+    got = await pg.evaluate(pieces)
+    check(hidden and got == ['xe.webp'], f'a layout 4 s late: the scene waits for it, then shows the owner\'s street ({got})')
+
+    # 2. next visit: the kept layout at once; a newer one swaps in when it comes
+    db.rows['live'] = street('images/studio/vn/vn-41.webp')
+    await pg.goto(f'{BASE}/studio.html')
+    await pg.wait_for_timeout(1500)
+    first = await pg.evaluate(pieces)
+    await pg.wait_for_timeout(4000)
+    later = await pg.evaluate(pieces)
+    check(first == ['xe.webp'] and later == ['xe.webp', 'vn-41.webp'],
+          f'next visit: the last layout at once ({first}), the newer one when it comes ({later})')
+
+    # 3. nothing kept and 10 s late: the built-in street, then the owner's
+    await pg.evaluate("localStorage.removeItem('gem-layout')")
+    db.rows['live'] = street()
+    db.layout_delay = 10
+    await pg.goto(f'{BASE}/studio.html')
+    await pg.wait_for_timeout(9000)
+    first = await pg.evaluate(pieces)
+    await pg.wait_for_timeout(2500)
+    later = await pg.evaluate(pieces)
+    check('xe.webp' not in first and len(first) > 3 and later == ['xe.webp'],
+          f'10 s late: the built-in street first ({len(first)} pieces), then the owner\'s ({later})')
+    check(not errs, f'no script errors {errs}')
+    db.layout_delay = 0
+    await ctx.close()
+
+
 async def topbar(browser, db):
     """The top bar on a phone: the logo and the three controls side by side,
     none on top of another, none past the edge, in both languages. (A fourth
@@ -2417,7 +2480,7 @@ async def main(which):
         browser = await launch(p)
         for name, fn in (('street', street), ('wear', wear), ('shop', shop), ('spots', spots), ('editor', editor),
                          ('library', library), ('product', product), ('prodlib', prodlib), ('workshop', workshop), ('design', design), ('catalog', catalog), ('kinds', kinds),
-                         ('layers', layers), ('zones', zones), ('cart', cart), ('choices', choices), ('zither', zither), ('topbar', topbar), ('motion', motion),
+                         ('layers', layers), ('zones', zones), ('cart', cart), ('choices', choices), ('zither', zither), ('slow', slow), ('topbar', topbar), ('motion', motion),
                          ('taps', taps)):
             if which in (None, name):
                 await fn(browser, db)
