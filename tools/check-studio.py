@@ -18,6 +18,9 @@ and walks through what broke before:
            at once, one dropped before saving, one refused by storage
   product  (owner) product form: photo -> shrunk + 600px thumb, gallery,
            "Xoá nền trắng" cut-out, Kệ; all saved in one PATCH
+  prodlib  (owner) "Sản phẩm thật" lists every product: a cut-out, or the photo
+           marked "chưa cắt nền" (placed framed, linked to its sku); the product
+           form's "Chọn từ thư viện" makes an uploaded picture the cut-out
   design   the design table: a mood dresses the piece, tap a scrap then a patch,
            drag a scrap onto a patch, "May xong" sews and makes the 9:16 card,
            the share link (with a name) opens the same design for a friend
@@ -51,7 +54,7 @@ crashed and the counts add up.
 
     python3 tools/check-studio.py            all checks
     python3 tools/check-studio.py wear       one check (street | wear | shop | spots | editor |
-                                             library | product | design | catalog | kinds |
+                                             library | product | prodlib | design | catalog | kinds |
                                              layers | zones | cart | choices | topbar | motion | taps)
 
 Needs: pip install playwright. Chromium: PLAYWRIGHT_BROWSERS_PATH or
@@ -737,6 +740,63 @@ async def product(browser, db):
     check(sizes['cutout'] and sizes['cutout'][0][0] < 1024, f'cut-out uploaded on Lưu, trimmed {sizes["cutout"]}')
     check(not pg.errors, f'no script errors {pg.errors}')
     await pg.context.close()
+
+
+async def prodlib(browser, db):
+    print('prodlib')
+    db.rows.clear(); db.patches.clear(); db.files.clear()
+    bucket = 'https://dxdovvqsfjeizsoprrfn.supabase.co/storage/v1/object/public/gem-media/'
+    db.assets = [{'id': 'a1', 'grp': 'products', 'name': 'nen-cupcake', 'src': bucket + '1-nen-cupcake-cut.webp', 'w': 300, 'h': 300},
+                 {'id': 'a2', 'grp': 'products', 'name': 'túi (6)', 'src': bucket + '2-tui-6-.webp', 'w': 300, 'h': 300}]
+    with_cut = sum(1 for r in product_rows() if r['cutout'])
+    for name, w, h in (('mobile', 412, 900), ('desktop', 1440, 900)):
+        db.rows.clear()
+        pg = await admin_page(browser, db, w, h)
+        await js_click(pg, '[data-tab="studio"]')
+        await pg.wait_for_timeout(1500)
+        await js_click(pg, '[data-group="sp"]')
+        await pg.wait_for_timeout(200)
+        got = await pg.evaluate("""[...document.querySelectorAll('.se-grid .se-asset')].map(b => [b.classList.contains('is-photo'), b.title])""")
+        photos = [t for p, t in got if p]
+        check(len(got) == len(PRODUCTS) and len(photos) == len(PRODUCTS) - with_cut and all('chưa cắt nền' in t for t in photos)
+              and not got[0][0], f'{name}: every product in "Sản phẩm thật", cut-outs first, photos marked ({len(got)}, {len(photos)} photos)')
+        await pg.screenshot(path=OUT / f'prodlib-{name}-editor.png')
+        i = [p for p, _ in got].index(True)
+        await js_click(pg, f'.se-grid .se-asset[data-asset="{i}"]')
+        await pg.wait_for_timeout(600)
+        it = await pg.evaluate("(() => { const n = [...document.querySelectorAll('.se-item')].pop(); return n ? n.className : ''; })()")
+        check('is-frame' in it and 'is-prod' in it, f'{name}: a photo goes on framed, as a product ({it})')
+        await pg.context.close()
+
+    # the product form: "Chọn từ thư viện"
+    pg = await admin_page(browser, db, 412, 900)
+    await js_click(pg, '[data-tab="products"]')
+    await pg.wait_for_timeout(800)
+    await js_click(pg, '.ad-edit-prod')
+    await pg.wait_for_timeout(300)
+    await js_click(pg, '.ad-cut-lib-go')
+    await pg.wait_for_timeout(500)
+    n = await pg.evaluate("document.querySelectorAll('.ad-cut-pick').length")
+    first = await pg.evaluate("(document.querySelector('.ad-cut-pick span') || {}).textContent")
+    check(n == 2 and first == 'túi (6)', f'"Chọn từ thư viện" lists the uploaded pictures, newest first ({n}, {first})')
+    await pg.fill('.ad-cut-find', 'cupcake')
+    await pg.wait_for_timeout(100)
+    check(await pg.evaluate("document.querySelectorAll('.ad-cut-pick').length") == 1, 'search by name')
+    await pg.screenshot(path=OUT / 'prodlib-form.png', full_page=True)
+    await js_click(pg, '.ad-cut-pick')
+    await pg.wait_for_timeout(200)
+    prev = await pg.evaluate("document.querySelector('.ad-cut-prev img').getAttribute('src')")
+    check(prev == bucket + '1-nen-cupcake-cut.webp' and await pg.evaluate("document.querySelector('.ad-cut-lib').hidden"),
+          f'picking shows it as the cut-out, the list closes ({prev})')
+    files0 = len(db.files)
+    await js_click(pg, '.ad-post-form [type="submit"]')
+    await pg.wait_for_timeout(1500)
+    body = db.patches[-1] if db.patches else {}
+    check(body.get('cutout') == bucket + '1-nen-cupcake-cut.webp' and len(db.files) == files0,
+          f'saved as that picture, nothing uploaded again ({body.get("cutout")}, {len(db.files) - files0} files)')
+    check(not pg.errors, f'no script errors {pg.errors}')
+    await pg.context.close()
+    db.assets = []
 
 
 async def workshop(browser, db):
@@ -2103,7 +2163,7 @@ async def main(which):
     async with async_playwright() as p:
         browser = await launch(p)
         for name, fn in (('street', street), ('wear', wear), ('shop', shop), ('spots', spots), ('editor', editor),
-                         ('library', library), ('product', product), ('workshop', workshop), ('design', design), ('catalog', catalog), ('kinds', kinds),
+                         ('library', library), ('product', product), ('prodlib', prodlib), ('workshop', workshop), ('design', design), ('catalog', catalog), ('kinds', kinds),
                          ('layers', layers), ('zones', zones), ('cart', cart), ('choices', choices), ('topbar', topbar), ('motion', motion),
                          ('taps', taps)):
             if which in (None, name):

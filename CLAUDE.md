@@ -370,7 +370,9 @@ Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
   Chi tiết: `docs/design.md` → "Bàn thiết kế — chơi". Đợt 2: Mảnh hiếm (vải thật).
 - 👕 Đợt 2 đồ mặc (áo) — chỉ làm nếu khách dùng nút "Đeo thử"; cần vẽ lại khung.
 - 🛍️ Ảnh cắt nền sản phẩm: giờ làm trong admin → Sản phẩm → Sửa → "Ảnh cắt nền"
-  (nút "Xoá nền trắng"). `CUTOUT`/`THUMB`/`SHELVES` trong `js/studio.js` chỉ còn là
+  (nút "Xoá nền trắng", hoặc "Chọn từ thư viện" lấy ảnh đã tải ở Lắp studio). Tab
+  "Sản phẩm thật" của trình lắp có mọi món (chưa cắt nền thì ảnh chụp trong khung).
+  `CUTOUT`/`THUMB`/`SHELVES` trong `js/studio.js` chỉ còn là
   bản dự phòng khi database chưa trả lời.
 - Ngoài studio: chưa gắn Studio lên menu (chờ Anna); Gmail secrets cho mail báo đơn
   (các bước: `docs/design.md` → "Bật gửi mail thật").

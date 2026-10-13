@@ -199,8 +199,9 @@ window.GemStudioEditor = (function () {
      Three sources, one list of tabs:
        - images/studio/assets.json  pictures shipped with the site (not editable here)
        - studio_assets              pictures uploaded here, each in the tab picked on upload
-       - products.cutout            "Sản phẩm thật": the cut-out set in the Sản phẩm form,
-                                    already linked to its sku */
+       - products                   "Sản phẩm thật": every product, already linked to its
+                                    sku: its cut-out (Sản phẩm form), or its photo in a
+                                    frame until it has one (marked "chưa cắt nền") */
   var PROD_GROUP = 'sp';   // the shipped "Sản phẩm thật" tab: cut-outs linked to a sku
 
   function mergeLib() {
@@ -210,12 +211,22 @@ window.GemStudioEditor = (function () {
     groups.forEach(function (g) { byId[g.id] = g; g.items.forEach(function (a) { seen[a.src] = 1; }); });
     var pg = byId[PROD_GROUP];
     if (!pg) { pg = byId[PROD_GROUP] = { id: PROD_GROUP, label: 'Sản phẩm thật', items: [] }; groups.push(pg); }
+    var skuIn = {}, photos = [];
+    pg.items.forEach(function (a) { if (a.sku) skuIn[a.sku] = 1; });
     prods.forEach(function (p) {
       if (p.cutout && L.srcOk(p.cutout) && !seen[p.cutout]) {
-        seen[p.cutout] = 1;
+        seen[p.cutout] = 1; skuIn[p.sku] = 1;
         pg.items.push({ src: p.cutout, sku: p.sku, name: p.name_vi });
       }
     });
+    // no cut-out yet: its photo, set in a frame (as "Đặt vào Studio" does), after the cut-outs
+    prods.forEach(function (p) {
+      if (skuIn[p.sku] || !p.image || !L.srcOk(p.image)) return;
+      skuIn[p.sku] = 1;
+      photos.push({ src: p.image, sku: p.sku, frame: true, photo: true,
+        name: p.name_vi + ' · chưa cắt nền' + (p.is_published === false ? ' · đang ẩn' : '') });
+    });
+    pg.items = pg.items.concat(photos);
     if (!pg.items.length) groups.splice(groups.indexOf(pg), 1);
     dbAssets.forEach(function (r) {
       if (!L.srcOk(r.src)) return;
@@ -1208,9 +1219,10 @@ window.GemStudioEditor = (function () {
       });
     } else shown = g.items;
     grid.innerHTML = shown.length ? shown.map(function (a, i) {
-      return '<button type="button" class="se-asset' + (a.db ? ' is-own' : '') + '" data-asset="' + i + '" title="' +
+      return '<button type="button" class="se-asset' + (a.db ? ' is-own' : '') + (a.photo ? ' is-photo' : '') + '" data-asset="' + i + '" title="' +
         esc(a.name || a.src.split('/').pop()) + '">' +
-        '<img src="' + esc(a.src) + '" alt="" loading="lazy"></button>';
+        '<img src="' + esc(a.src) + '" alt="" loading="lazy">' +
+        (a.photo ? '<span class="se-asset-tag">chưa cắt nền</span>' : '') + '</button>';
     }).join('') : '<span class="se-hint-s">Không có ảnh nào khớp.</span>';
   }
 
