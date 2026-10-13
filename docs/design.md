@@ -1493,6 +1493,18 @@ tải lên ở Lắp studio, mới nhất trước, có ô tìm theo tên; bấm
 nền, Lưu là xong, không tải lại file. 3 món nến (`nen-thom-120`, `nen-cupcake`,
 `nen-macaron`) đã được gán ảnh cắt nền có sẵn trong thư viện bằng SQL ngày 13/10.
 
+**Thay ảnh trên kệ (13/10/2026):** “Xoá nền trắng” chỉ xoá được nền trắng trơn —
+thử trên ảnh sản phẩm thật (poster túi / tất / nến, ảnh chụp có nền màu) thì ăn vào cả
+món mà vẫn sót chữ, nên không thêm nút cắt nền tự động trong trình lắp. Thay vào đó,
+**Lắp studio → “Sửa thư viện” → chạm một món trong “Sản phẩm thật”** (hoặc chọn món
+đang đặt trên kệ → “Thay ảnh trên kệ…”): chạm một ảnh trong thư viện (ảnh đã cắt nền /
+hình vẽ, vd tab “Ảnh sản phẩm”) hoặc “Tải ảnh đã cắt nền” (PNG / WebP, tự vào tab
+“Ảnh sản phẩm” để dùng lại) →
+- ảnh thành `products.cutout` của món (vẫn là món đó trong “Sản phẩm thật”, giữ sku);
+- món đó đang đặt trong bố cục bằng **ảnh chụp hoặc ảnh cắt nền cũ** (trong + ngoài
+  cửa) đổi sang ảnh mới, giữ chỗ và chiều cao, vẫn gắn sku (bỏ tick “Đổi luôn” nếu
+  không muốn); hình vẽ khác của món giữ nguyên. Nhớ Phát hành.
+
 **Kiểm:** `tools/check-studio.py library | product | prodlib | catalog` (Supabase giả lập có
 Storage giữ file tải lên, nên kiểm được cả cỡ ảnh lẫn độ trong suốt).
 

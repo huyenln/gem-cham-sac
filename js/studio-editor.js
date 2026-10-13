@@ -24,6 +24,8 @@ window.GemStudioEditor = (function () {
   var upForm = null;        // { files: [{ file, preview }], grp, newGrp, name, cut } while an upload is being set up
   var UP_MAX = 20;          // pictures per batch
   var manage = false;       // library in "Sửa thư viện" mode: tapping an own picture edits it
+  var cutFor = null;        // sku whose picture on the shelves is being replaced ("Thay ảnh trên kệ")
+  var cutSwap = true;       // …and the pieces of it in this layout take the new picture too
   var editAsset = null;     // studio_assets id being edited
   var data = null;          // the layout being edited
   var sel = null;           // { kind: 'item'|'hot'|'udon'|'stand'|'start', i | id }
@@ -195,6 +197,88 @@ window.GemStudioEditor = (function () {
     status('Đã thêm "' + sku + '" giữa màn hình — kéo lên kệ rồi Phát hành');
   }
 
+  /* ---------- "Thay ảnh trên kệ": a product's picture in the studio ----------
+     "Xoá nền trắng" only clears a plain white background: on posters and
+     photos with a coloured background it eats into the product. So a product
+     takes a picture cut elsewhere (or a drawing): one from the library, or a
+     file. It becomes products.cutout (its "Sản phẩm thật"), and the pieces of
+     that product showing its photo or old cut-out in this layout (inside and
+     the street) take it too, same height, same place. Drawings of it stay. */
+  function prodOf(sku) { return prods.filter(function (p) { return p.sku === sku; })[0] || null; }
+
+  function piecesOf(p) {
+    var olds = [p.image, p.cutout].filter(Boolean), out = [];
+    [data, data && data.outside].forEach(function (sc) {
+      if (sc && sc.items) sc.items.forEach(function (it) { if (it.sku === p.sku && olds.indexOf(it.src) >= 0) out.push(it); });
+    });
+    return out;
+  }
+
+  function natural(src, w, h) {
+    if (w && h) return Promise.resolve({ w: w, h: h });
+    return new Promise(function (ok, bad) {
+      var im = new Image();
+      im.onload = function () { ok({ w: im.naturalWidth, h: im.naturalHeight }); };
+      im.onerror = function () { bad(new Error('không mở được ảnh này')); };
+      im.src = src;
+    });
+  }
+
+  function openCutFor(sku) {
+    var p = prodOf(sku);
+    if (!p) { status('Chưa tải xong danh sách sản phẩm — thử lại sau chút.', true); return; }
+    cutFor = sku; cutSwap = true; editAsset = null;
+    renderPanel();
+    status('Thay ảnh trên kệ cho “' + p.name_vi + '”: chạm một ảnh trong thư viện, hoặc tải ảnh đã cắt nền lên.');
+  }
+
+  function pickCut(a) {
+    if (a.photo) { status('Ảnh này là ảnh chụp chưa cắt nền — chọn ảnh khác.', true); return; }
+    if (a.sku && a.sku !== cutFor) { status('Ảnh này đang là của món khác.', true); return; }
+    setCut(a.src, a.w, a.h);
+  }
+
+  function setCut(src, w, h) {
+    var p = prodOf(cutFor);
+    if (!p || !L.srcOk(src)) return;
+    status('Đang lưu ảnh cho “' + p.name_vi + '”…');
+    natural(src, w, h).then(function (d) {
+      return DB.updateProduct(p.id, { cutout: src }).then(function () { return d; });
+    }).then(function (d) {
+      var pieces = cutSwap ? piecesOf(p) : [];   // before p.cutout changes: the old one is looked for too
+      if (pieces.length) {
+        remember();
+        pieces.forEach(function (it) {
+          it.src = src;
+          it.frame = false;
+          it.w = Math.max(8, Math.round(it.h * d.w / d.h));
+        });
+      }
+      p.cutout = src;
+      cutFor = null;
+      mergeLib();
+      draw(); renderPanel();
+      status('Đã thay ảnh cho “' + p.name_vi + '”' +
+        (pieces.length ? ', đổi ' + pieces.length + ' món trong bố cục — xem lại cỡ rồi Phát hành.' : '.'));
+    }).catch(function (err) { status('Chưa lưu được: ' + (err.message || ''), true); });
+  }
+
+  function cutUpload(input) {
+    var file = input.files && input.files[0], p = prodOf(cutFor), IMG = window.GemImg, sz;
+    input.value = '';
+    if (!file || !p) return;
+    if (!IMG) { status('Thiếu js/img-tools.js — tải lại trang.', true); return; }
+    status('Đang thu nhỏ, tải lên…');
+    IMG.shrink(file, { max: 1024, alpha: true }).then(function (f) {
+      return IMG.size(f).then(function (d) { sz = d; return DB.uploadImage(f); });
+    }).then(function (url) {
+      // in the library too (tab Ảnh sản phẩm), to use again
+      DB.addStudioAsset({ src: url, w: sz.w, h: sz.h, grp: 'products', name: p.name_vi + ' (cắt nền)' })
+        .then(function (row) { if (row) { dbAssets.push(row); mergeLib(); renderPanel(); } }, function () { /* the cut-out is saved anyway */ });
+      setCut(url, sz.w, sz.h);
+    }).catch(function (err) { status('Chưa tải lên được: ' + (err.message || ''), true); });
+  }
+
   /* ---------- the library ----------
      Three sources, one list of tabs:
        - images/studio/assets.json  pictures shipped with the site (not editable here)
@@ -271,7 +355,7 @@ window.GemStudioEditor = (function () {
     var g = group === PROD_GROUP ? (baseGroups[0] && baseGroups[0].id) : group;
     upForm = { files: files.map(function (f) { return { file: f, preview: URL.createObjectURL(f) }; }),
       grp: g, newGrp: '', name: '', cut: false };
-    manage = false; editAsset = null;
+    manage = false; editAsset = null; cutFor = null;
     renderPanel();
   }
 
@@ -926,7 +1010,8 @@ window.GemStudioEditor = (function () {
         }).join('') +
         (it.sku && !prods.some(function (p) { return p.sku === it.sku; }) ? '<option selected value="' + esc(it.sku) + '">' + esc(it.sku) + '</option>' : '') +
         '</select></label>' +
-        '<span class="se-hint-s">Khách chạm để xem sản phẩm, kéo vào giỏ để mua.</span>';
+        '<span class="se-hint-s">Khách chạm để xem sản phẩm, kéo vào giỏ để mua.</span>' +
+        (it.sku && prodOf(it.sku) ? '<button type="button" class="ad-btn" data-cf-open="' + esc(it.sku) + '">Thay ảnh trên kệ…</button>' : '');
     } else if (kind === 'story' || kind === 'talk') {
       var f = infoOf(it.src), unsaved = !!drafts[it.src];
       h += kind === 'story'
@@ -1130,6 +1215,19 @@ window.GemStudioEditor = (function () {
             (many ? ' Tên ảnh lấy theo tên file, đổi sau ở "Sửa thư viện". Ảnh có nền trắng và không có nền thì tải thành hai lượt.' : '') +
           '</span>' +
         '</div></div>';
+    } else if (cutFor && prodOf(cutFor)) {
+      var cp = prodOf(cutFor), cn = piecesOf(cp).length, cur = cp.cutout || cp.image;
+      extra = '<div class="se-upform se-cutfor">' +
+        (cur ? '<img src="' + esc(cur) + '" alt="">' : '') +
+        '<div class="se-upform-f">' +
+          '<b>Thay ảnh trên kệ: ' + esc(cp.name_vi) + '</b>' +
+          '<span class="se-hint-s">' + (cp.cutout ? 'Đang dùng ảnh cắt nền.' : 'Đang dùng ảnh chụp, chưa cắt nền.') +
+            ' Chạm một ảnh trong thư viện bên dưới (vd tab “Ảnh sản phẩm”), hoặc tải ảnh đã cắt nền lên.</span>' +
+          '<label class="ad-btn se-cf-up">Tải ảnh đã cắt nền<input type="file" name="cf-file" accept="image/png,image/webp" hidden></label>' +
+          (cn ? '<label class="se-up-cut"><input type="checkbox" name="cf-swap"' + (cutSwap ? ' checked' : '') + '> Đổi luôn ' + cn +
+            ' món này đang đặt trong bố cục</label>' : '') +
+          '<div class="se-row"><button type="button" class="ad-btn" data-cf-close>Đóng</button></div>' +
+        '</div></div>';
     } else if (editAsset) {
       var row = dbAssets.filter(function (r) { return r.id === editAsset; })[0];
       if (row) {
@@ -1167,7 +1265,9 @@ window.GemStudioEditor = (function () {
         '<button type="button" class="se-chip' + (manage ? ' is-on' : '') + '" data-manage>Sửa thư viện</button>' +
         '</div>' +
         (manage ? '<span class="se-hint-s">Chạm ảnh có viền đứt (ảnh đã tải lên) để đổi tên, chuyển tab hoặc bỏ. ' +
-          'Ảnh có sẵn trong code và ảnh “Sản phẩm thật” sửa ở chỗ khác (tab Sản phẩm).</span>' : '') +
+          'Chạm một món trong “Sản phẩm thật” để thay ảnh trên kệ của món đó.</span>'
+          : g.id === PROD_GROUP && !cutFor && !findQ ? '<span class="se-hint-s">Muốn thay ảnh một món (vd ảnh chưa cắt nền): ' +
+            'bấm “Sửa thư viện” rồi chạm món đó.</span>' : '') +
         (boxView ? boxList() :
           '<input class="se-find" type="search" name="se-find" placeholder="Tìm ảnh theo tên hoặc tab…" autocomplete="off" value="' + esc(findQ) + '">' +
           '<div class="se-grid"></div>') +
@@ -1219,7 +1319,7 @@ window.GemStudioEditor = (function () {
       });
     } else shown = g.items;
     grid.innerHTML = shown.length ? shown.map(function (a, i) {
-      return '<button type="button" class="se-asset' + (a.db ? ' is-own' : '') + (a.photo ? ' is-photo' : '') + '" data-asset="' + i + '" title="' +
+      return '<button type="button" class="se-asset' + (a.db ? ' is-own' : '') + (a.sku ? ' is-prod' : '') + (a.photo ? ' is-photo' : '') + '" data-asset="' + i + '" title="' +
         esc(a.name || a.src.split('/').pop()) + '">' +
         '<img src="' + esc(a.src) + '" alt="" loading="lazy">' +
         (a.photo ? '<span class="se-asset-tag">chưa cắt nền</span>' : '') + '</button>';
@@ -1275,10 +1375,14 @@ window.GemStudioEditor = (function () {
     if ((b = e.target.closest('[data-asset-save]'))) { saveAsset(b.getAttribute('data-asset-save')); return; }
     if ((b = e.target.closest('[data-asset-del]'))) { deleteAsset(b.getAttribute('data-asset-del')); return; }
     if (e.target.closest('[data-asset-close]')) { editAsset = null; renderPanel(); return; }
+    if (e.target.closest('[data-cf-close]')) { cutFor = null; renderPanel(); status(''); return; }
+    if ((b = e.target.closest('[data-cf-open]'))) { openCutFor(b.getAttribute('data-cf-open')); return; }
     if ((b = e.target.closest('[data-asset]'))) {
       var a = shown[+b.dataset.asset];
       if (!a) return;
+      if (cutFor && !(manage && a.sku && a.sku !== cutFor)) { pickCut(a); return; }
       if (manage) {
+        if (a.sku) { openCutFor(a.sku); return; }
         if (a.db) { editAsset = a.db; upForm = null; renderPanel(); }
         else status('Ảnh này có sẵn trong code (hoặc là ảnh sản phẩm) — không sửa ở đây.', true);
         return;
@@ -1326,6 +1430,8 @@ window.GemStudioEditor = (function () {
     var nm = e.target.name || '';
     if (nm === 'se-find') return;
     if (nm === 'se-file') { startUpload(e.target.files); e.target.value = ''; return; }
+    if (nm === 'cf-file') { cutUpload(e.target); return; }
+    if (nm === 'cf-swap') { cutSwap = e.target.checked; return; }
     if (/^up-/.test(nm) && upForm) {
       if (nm === 'up-grp') upForm.grp = e.target.value;
       if (nm === 'up-new') upForm.newGrp = e.target.value;

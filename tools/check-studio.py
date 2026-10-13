@@ -20,7 +20,10 @@ and walks through what broke before:
            "Xoá nền trắng" cut-out, Kệ; all saved in one PATCH
   prodlib  (owner) "Sản phẩm thật" lists every product: a cut-out, or the photo
            marked "chưa cắt nền" (placed framed, linked to its sku); the product
-           form's "Chọn từ thư viện" makes an uploaded picture the cut-out
+           form's "Chọn từ thư viện" makes an uploaded picture the cut-out;
+           "Thay ảnh trên kệ" (Sửa thư viện → a product, or a selected piece):
+           a library picture or an uploaded file becomes the cut-out, and the
+           framed photo of it in the layout turns into it; a drawing of it stays
   design   the design table: a mood dresses the piece, tap a scrap then a patch,
            drag a scrap onto a patch, "May xong" sews and makes the 9:16 card,
            the share link (with a name) opens the same design for a friend
@@ -794,6 +797,67 @@ async def prodlib(browser, db):
     body = db.patches[-1] if db.patches else {}
     check(body.get('cutout') == bucket + '1-nen-cupcake-cut.webp' and len(db.files) == files0,
           f'saved as that picture, nothing uploaded again ({body.get("cutout")}, {len(db.files) - files0} files)')
+    check(not pg.errors, f'no script errors {pg.errors}')
+    await pg.context.close()
+
+    # "Thay ảnh trên kệ": a framed photo on the shelf becomes a cut-out
+    db.patches.clear()
+    frame = lambda src, x, sku, **kw: dict(dict(src=src, x=x, y=600, w=110, h=110, rot=0, flip=False, layer='back', frame=True, sku=sku), **kw)
+    db.rows.clear()
+    db.rows['draft'] = {
+        'v': 1, 'bg': {'src': 'images/studio/bg/strip-tron.webp', 'w': 5792, 'h': 1024},
+        'items': [frame('images/products/vai-vun-tui-9.jpg', 500, 'tui-moi'),
+                  frame('images/studio/cay/cay-10.webp', 700, 'tui-moi', frame=False, w=120, h=140),   # a drawing of it
+                  frame('images/products/vai-vun-bloom-charm-thumb.jpg', 900, 'bloom')],
+        'udon': {'x': 5200, 'y': 560, 'w': 128, 'h': 140}, 'start': 700,
+    }
+    piece = "i => { const n = document.querySelector(`.se-item[data-i='${i}']`); return [n.classList.contains('is-frame'), n.querySelector('img').getAttribute('src'), n.classList.contains('is-prod')]; }"
+    pg = await admin_page(browser, db, 1440, 900)
+    await js_click(pg, '[data-tab="studio"]')
+    await pg.wait_for_timeout(1500)
+    await js_click(pg, '[data-group="sp"]')
+    hint = await pg.evaluate("[...document.querySelectorAll('.se-lib .se-hint-s')].map(e => e.textContent).join(' ')")
+    check('Sửa thư viện' in hint, f'"Sản phẩm thật" says how to change a picture ({hint[:50]}…)')
+    await js_click(pg, '[data-manage]')
+    i = await pg.evaluate("[...document.querySelectorAll('.se-grid .se-asset')].findIndex(b => b.title.startsWith('Túi mới thử'))")
+    check(await pg.evaluate("document.querySelectorAll('.se-lib.is-manage .se-asset.is-prod').length") > 1, 'products stay lit in "Sửa thư viện"')
+    await js_click(pg, f'.se-grid .se-asset[data-asset="{i}"]')
+    await pg.wait_for_timeout(200)
+    form = await pg.evaluate("(document.querySelector('.se-cutfor') || {}).textContent || ''")
+    check('Túi mới thử' in form and 'Đổi luôn 1 món' in form, f'tapping it opens "Thay ảnh trên kệ", 1 piece to change ({form[:60]}…)')
+    await pg.screenshot(path=OUT / 'prodlib-replace.png')
+    await js_click(pg, '[data-group="products"]')
+    i = await pg.evaluate("[...document.querySelectorAll('.se-grid .se-asset')].findIndex(b => b.title === 'nen-cupcake')")
+    await js_click(pg, f'.se-grid .se-asset[data-asset="{i}"]')
+    await pg.wait_for_timeout(800)
+    body = db.patches[-1] if db.patches else {}
+    p0, p1 = await pg.evaluate(piece, 0), await pg.evaluate(piece, 1)
+    check(body == {'cutout': bucket + '1-nen-cupcake-cut.webp'}, f'a library picture becomes its cut-out ({body})')
+    check(p0 == [False, bucket + '1-nen-cupcake-cut.webp', True] and p1 == [False, 'images/studio/cay/cay-10.webp', True],
+          f'the framed photo on the shelf turns into it, still the product; the drawing stays ({p0}, {p1})')
+    sp = await pg.evaluate("(() => { document.querySelector('[data-group=\"sp\"]').click();"
+                           " const b = [...document.querySelectorAll('.se-grid .se-asset')].find(b => b.title === 'Túi mới thử');"
+                           " return b ? [b.classList.contains('is-prod'), b.classList.contains('is-photo'), b.querySelector('img').getAttribute('src')] : null; })()")
+    check(sp == [True, False, bucket + '1-nen-cupcake-cut.webp'], f'"Sản phẩm thật" shows it as that product\'s cut-out ({sp})')
+    check(not await pg.evaluate("!!document.querySelector('.se-cutfor')"), 'and the form closes')
+    # from a piece selected on the stage: upload a file already cut
+    await js_click(pg, '[data-manage]')
+    await pg.mouse.click(*(await center(pg, '.se-item[data-i="2"]')))
+    await pg.wait_for_timeout(300)
+    await js_click(pg, '[data-cf-open="bloom"]')
+    await pg.wait_for_timeout(200)
+    from PIL import Image
+    png = OUT / 'cut-up.png'
+    Image.new('RGBA', (200, 300), (200, 80, 90, 255)).save(png)
+    n0 = len(db.assets)
+    await pg.set_input_files('[name="cf-file"]', str(png))
+    await pg.wait_for_timeout(2500)
+    body = db.patches[-1] if db.patches else {}
+    up = (body.get('cutout') or '').split('/gem-media/')[-1]
+    p2 = await pg.evaluate(piece, 2)
+    check(up in db.files and p2[0] is False and p2[1] == body.get('cutout') and p2[2],
+          f'"Thay ảnh trên kệ…" on a selected piece: an uploaded file becomes its cut-out, the piece too ({up}, {p2[0]})')
+    check(len(db.assets) == n0 + 1 and db.assets[-1].get('name') == 'Bloom Charm (cắt nền)', 'the file goes in the library too')
     check(not pg.errors, f'no script errors {pg.errors}')
     await pg.context.close()
     db.assets = []
