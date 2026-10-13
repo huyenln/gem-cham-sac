@@ -1830,6 +1830,45 @@ dùng lại phần thẻ chia sẻ của Bàn thiết kế, ảnh không rời m
   (×1,0595), giữ La → Si (×1,1225), buông không gảy thêm, Enter, 19 dây từ La, Rải dây 19
   + rung, ghi chú Fa / Si, tắt tên nốt, nút giỏ ẩn rồi hiện lại, EN, không tràn ngang.
 
+### Hướng dẫn trong Studio + chuông cửa (13/10/2026)
+
+Thay 2 câu chào tự tắt (6–7 giây, mỗi máy một lần, không xem lại được) — khách báo không
+biết bên trái cửa có đàn tranh. Theo NN/g (mobile onboarding, instructional overlays,
+onboarding vs contextual help) và tài liệu làm game: không tour nhiều bước; mỗi lần một gợi
+ý, đúng lúc cần, tự tắt khi khách làm đúng việc đó, luôn có nút tắt, không chặn thao tác, và
+luôn xem lại được. Code: mục `GUIDE` + `THE SHOP BELL` trong `js/studio.js`, CSS mục `GUIDE`.
+
+- **Gợi ý lần đầu** (thẻ giấy viền đứt giữa cảnh, chạm xuyên qua được, trừ ✕ và "Bỏ qua
+  hướng dẫn"):
+  - `swipe` — ra phố: "Vuốt sang trái, phải để đi dạo." (chấm tròn trượt giữa ‹ ›; máy tính:
+    "Kéo chuột hoặc bấm phím ← →"). Tắt khi khách đi lần đầu (vuốt, chạm sàn, ← →, nhãn mép,
+    nút dưới).
+  - `door` — 1,5 giây sau lần đi đầu: "Chạm vào cửa để vào studio. Ngoài này còn có đàn tranh
+    để chơi." (vế sau chỉ khi ngoài phố có chỗ "Chơi đàn tranh"). Tắt khi vào cửa / mở bảng.
+  - `inside` — trong studio, sau lời chào: "Chạm một món để xem tên, chạm lần nữa để mở."
+    (máy tính: "Rê chuột…, bấm để mở"). Tắt khi mở bảng đầu tiên.
+  - Ghi trong `localStorage['gem-guide']` = `{seen: {swipe, door, inside}, off}`, theo trình
+    duyệt (ẩn danh / xoá dữ liệu / máy khác thì thấy lại). Gợi ý cho tính năng mới sau này =
+    id mới → khách cũ chỉ thấy đúng cái mới. ✕ tắt một gợi ý; "Bỏ qua hướng dẫn" tắt hết.
+  - Tắt hiệu ứng: chấm tròn đứng yên.
+- **Nhãn mép màn hình** (luôn có): chỗ gần nhất đang khuất mỗi bên ("‹ Chơi đàn tranh",
+  "Vào studio ›"), lấy từ mọi Khung bấm / Khu vực / điểm bấm có việc để làm, mỗi việc một
+  nhãn. Chạm = đi tới, nhãn của chỗ đó nhún lên. Chỗ đã gần khuất (giữa cách mép < 50 px) thì
+  nhãn gốc ẩn đi, nhường nhãn mép (trước đây nhãn gốc bị cắt nửa ở mép).
+- **Nút "?"** góc dưới trái (đối xứng nút giỏ): bảng "Cách chơi" — cách đi, cách mở, nhãn mép;
+  "Ở đây có gì" + "Đi tới" từng chỗ của cảnh đang đứng; "Xem lại hướng dẫn từ đầu".
+- **Chuông cửa + lời chào:** mỗi lần đi qua cửa vào studio: tiếng chuông đồng nhỏ gõ 2 tiếng
+  (G6 rồi E6, mỗi tiếng 4 họa âm sine tắt dần — Web Audio, không file) và Udon nói "Chào mừng
+  bạn đến Gem Studio 2D!" (3,2 giây), rồi mới tới gợi ý `inside` (lần đầu). Điện thoại chỉ cho
+  phát tiếng trong một cú chạm, nên cú chạm vào cửa "mở khoá" âm thanh (`bellReady`), chuông
+  kêu khi cảnh trong hiện ra. iPhone: chuông theo nút gạt im lặng (`audioSession` "ambient");
+  đàn tranh vẫn "playback". Tải lại trang khi đang ở trong: không chào lại, không chuông
+  (bong bóng chào che các nhãn phía trên trong 3 giây — chỉ đáng khi vừa bước vào).
+- **Kiểm:** `tools/check-studio.py guide` (điện thoại + máy tính): gợi ý vuốt + chạm xuyên
+  qua, vuốt là tắt và lưu, gợi ý cửa có đàn tranh, nhãn mép đi tới đàn, chuông (8 oscillator)
+  + lời chào, gợi ý trong studio, "?" + "Đi tới", lần sau không gợi ý / không chuông, xem lại,
+  bỏ qua, ← trên máy tính, ✕, EN, tắt hiệu ứng. Các nhóm kiểm khác tắt hướng dẫn (`GUIDE_OFF`).
+
 ### Studio hiện cảnh mặc định thay cho bố cục đã lắp (sửa 13/10/2026)
 
 **Triệu chứng:** mở `studio.html` thấy mặt phố mặc định (monstera, bình tưới, ghế gỗ,

@@ -259,11 +259,15 @@ async def launch(p):
     return await p.chromium.launch(executable_path=exe) if exe else await p.chromium.launch()
 
 
+# The first-visit tips would sit over what the other checks tap: off, except
+# where a check names gem-guide itself.
+GUIDE_OFF = "localStorage.setItem('gem-guide', JSON.stringify({seen: {}, off: true}));"
+
+
 async def page(browser, db, w, h, init=''):
     ctx = await browser.new_context(viewport={'width': w, 'height': h}, is_mobile=w < 768, has_touch=w < 768)
     await ctx.route('**/*.supabase.co/**', db.route)
-    if init:
-        await ctx.add_init_script(init)
+    await ctx.add_init_script(init if 'gem-guide' in init else GUIDE_OFF + init)
     pg = await ctx.new_page()
     pg.errors = []
     pg.on('pageerror', lambda e: pg.errors.append(str(e)))
@@ -502,7 +506,7 @@ async def shop(browser, db):
     print('shop')
     ctx = await browser.new_context(viewport={'width': 1300, 'height': 760})
     await ctx.route('**/*.supabase.co/**', lambda r: r.abort())   # built-in catalogue
-    await ctx.add_init_script("sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-studio-intro-touch','1')")
+    await ctx.add_init_script(GUIDE_OFF + "sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-studio-intro-touch','1')")
     pg = await ctx.new_page()
     errs = []
     pg.on('pageerror', lambda e: errs.append(str(e)))
@@ -2140,6 +2144,132 @@ async def zither(browser, db):
         await pg.context.close()
 
 
+async def guide(browser, db):
+    """First visit: tips one at a time (swipe, the door + the đàn, inside),
+    each gone once the visitor does the thing; the bell and the welcome on the
+    way in; the tags at the screen's edges; the "?" sheet; a second visit
+    quiet; "Bỏ qua hướng dẫn" ends them all."""
+    print('guide')
+    db.rows.clear(); db.info.clear()
+    db.rows['live'] = {
+        'v': 1, 'bg': {'src': 'images/studio/bg/strip-tron.webp', 'w': 5792, 'h': 1024}, 'items': [],
+        'udon': {'x': 5200, 'y': 560, 'w': 128, 'h': 140}, 'start': 700,
+        'outside': {'bg': {'src': 'images/studio/bg/ngoai.webp', 'w': 2686, 'h': 1024}, 'start': 1507, 'items': [],
+                    'boxes': [{'id': 'k-zt1', 'vi': 'Chơi đàn tranh', 'act': 'dantranh', 'box': [281, 683, 855, 776], 'stand': 555}]},
+    }
+    spy = ("window.__osc = 0; (() => { const A = window.AudioContext; if (!A) return; const o = A.prototype.createOscillator;"
+           " A.prototype.createOscillator = function () { window.__osc++; return o.apply(this, arguments); }; })();")
+    # a first visit on the first load only: a reload is the same visitor again
+    first = spy + ("if (!sessionStorage.getItem('t-first')) { localStorage.removeItem('gem-guide'); sessionStorage.removeItem('gem-scene');"
+                   " sessionStorage.setItem('t-first', '1'); }")
+    ST = """(() => { const t = document.getElementById('st-tip'), l = document.querySelector('.st-edge.is-l'), r = document.querySelector('.st-edge.is-r'),
+        b = document.getElementById('st-bubble');
+        return { tip: t.hidden ? null : document.getElementById('st-tip-text').textContent, swipe: t.classList.contains('is-swipe'),
+                 L: l.hidden ? null : l.textContent, R: r.hidden ? null : r.textContent, bubble: b.hidden ? null : b.textContent.trim(),
+                 osc: window.__osc, saved: JSON.parse(localStorage.getItem('gem-guide') || 'null'),
+                 world: Math.round(document.getElementById('st-world').getBoundingClientRect().left) }; })()"""
+
+    # --- a phone, first visit
+    pg = await page(browser, db, 390, 750, first)
+    await pg.goto(f'{BASE}/studio.html')
+    await pg.wait_for_timeout(2500)
+    await pg.add_style_tag(content='.lang-hint{display:none!important}')
+    got = await pg.evaluate(ST)
+    check(got['tip'] == 'Vuốt sang trái, phải để đi dạo.' and got['swipe'], f'phone, first visit: "swipe to walk", with the moving fingertip ({got["tip"]})')
+    check(got['L'] == '‹ Chơi đàn tranh', f'the đàn, out of view on the left, has a tag at the screen\'s edge ({got["L"]})')
+    through = await pg.evaluate("""(() => { const r = document.getElementById('st-tip-text').getBoundingClientRect();
+        const e = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return !e.closest('.st-tip'); })()""")
+    check(through, 'a tap on the tip goes through to the scene (only its two buttons take taps)')
+    cdp = await pg.context.new_cdp_session(pg)
+    await cdp.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': [{'x': 120, 'y': 420, 'id': 1}]})
+    for i in range(1, 9):
+        await pg.wait_for_timeout(16)
+        await cdp.send('Input.dispatchTouchEvent', {'type': 'touchMove', 'touchPoints': [{'x': 120 + 20 * i, 'y': 420, 'id': 1}]})
+    await cdp.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []})
+    await cdp.detach()
+    await pg.wait_for_timeout(300)
+    got = await pg.evaluate(ST)
+    check(got['tip'] is None and got['saved']['seen'].get('swipe') == 1, f'a swipe and the tip is gone, for good ({got["tip"]}, {got["saved"]})')
+    await pg.wait_for_timeout(1700)
+    got = await pg.evaluate(ST)
+    check(got['tip'] and 'cửa' in got['tip'] and 'đàn tranh' in got['tip'], f'then the next tip: the door, and the đàn out here ({got["tip"]})')
+    w0 = got['world']
+    await pg.touchscreen.tap(*(await pg.evaluate("(() => { const r = document.querySelector('.st-edge.is-l').getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; })()")))
+    await pg.wait_for_timeout(1800)
+    got = await pg.evaluate(ST)
+    tag = await pg.evaluate("(() => { const l = document.querySelector('.st-hot[data-hot=\"k-zt1\"] .st-hot-label'); const r = l.getBoundingClientRect(); return [getComputedStyle(l).visibility, Math.round(r.left), Math.round(r.right), innerWidth]; })()")
+    check(got['world'] > w0 and got['L'] is None and tag[0] == 'visible' and tag[1] >= 0 and tag[2] <= tag[3],
+          f'a tap on the edge tag walks there: the đàn and its own tag in view ({w0} -> {got["world"]}, tag {tag})')
+    check(got['tip'] and 'cửa' in got['tip'], 'walking does not end the door tip')
+    await pg.click('.st-nav .st-go-in')
+    await pg.wait_for_timeout(2800)
+    got = await pg.evaluate(ST)
+    check(got['osc'] == 8 and got['bubble'] == 'Chào mừng bạn đến Gem Studio 2D!' and got['tip'] is None,
+          f'through the door: the bell (2 strikes) and the welcome, the door tip done ({got["osc"]} oscillators, {got["bubble"]!r})')
+    await pg.wait_for_timeout(3600)
+    got = await pg.evaluate(ST)
+    check(got['tip'] == 'Chạm một món để xem tên, chạm lần nữa để mở.' and got['bubble'] is None,
+          f'after the welcome, the one tip inside ({got["tip"]})')
+    await pg.click('.st-help-b')
+    await pg.wait_for_timeout(500)
+    sheet = await pg.evaluate("""[document.querySelector('#st-sheet-body h2').textContent, [...document.querySelectorAll('.st-help-places li span')].map(s => s.textContent),
+        getComputedStyle(document.querySelector('.st-help-b')).display, document.getElementById('st-tip').hidden]""")
+    check(sheet[0] == 'Cách chơi' and 'Bàn thiết kế' in sheet[1] and len(sheet[1]) >= 5 and sheet[2] == 'none' and sheet[3],
+          f'"?" opens "Cách chơi": how to walk and open, what is here; the tip and the "?" step aside ({sheet[1]})')
+    idx = sheet[1].index('Bàn thiết kế')
+    w0 = (await pg.evaluate(ST))['world']
+    await pg.click(f'[data-help-go="{idx}"]')
+    await pg.wait_for_timeout(1800)
+    got = await pg.evaluate(ST)
+    check(await pg.evaluate("document.getElementById('st-modal').hidden") and got['world'] != w0, f'"Đi tới" walks to the design table ({w0} -> {got["world"]})')
+    await pg.reload()
+    await pg.wait_for_timeout(6500)
+    got = await pg.evaluate(ST)
+    check(got['tip'] is None and got['osc'] == 0, f'next visit (same browser): no tips, and no bell without the door ({got["tip"]}, {got["osc"]})')
+    await pg.click('.st-help-b')
+    await pg.wait_for_timeout(400)
+    await pg.click('[data-help-replay]')
+    await pg.wait_for_timeout(800)
+    got = await pg.evaluate(ST)
+    check(got['tip'] and 'chạm lần nữa' in got['tip'], f'"Xem lại hướng dẫn từ đầu" brings the tips back ({got["tip"]})')
+    await pg.click('.st-tip-skip')
+    await pg.wait_for_timeout(200)
+    got = await pg.evaluate(ST)
+    check(got['tip'] is None and got['saved']['off'] is True, f'"Bỏ qua hướng dẫn" ends them all ({got["saved"]})')
+    check(not pg.errors, f'no script errors {pg.errors}')
+    await pg.context.close()
+
+    # --- a computer: the mouse and the arrow keys; ✕; English
+    pg = await page(browser, db, 1440, 900, first)
+    await pg.goto(f'{BASE}/studio.html')
+    await pg.wait_for_timeout(2500)
+    got = await pg.evaluate(ST)
+    check(got['tip'] == 'Kéo chuột hoặc bấm phím ← → để đi dạo.', f'computer: "drag, or ← →" ({got["tip"]})')
+    await pg.evaluate("window.GemI18n.setLang('en')")
+    await pg.wait_for_timeout(200)
+    got = await pg.evaluate(ST)
+    check(got['tip'] == 'Drag, or press ← →, to walk around.', f'English ({got["tip"]})')
+    await pg.evaluate("window.GemI18n.setLang('vi')")
+    await pg.keyboard.press('ArrowLeft')
+    await pg.wait_for_timeout(2000)
+    got = await pg.evaluate(ST)
+    check(got['tip'] and 'cửa' in got['tip'], f'← walks: the swipe tip done, the door tip next ({got["tip"]})')
+    await pg.click('.st-tip-x')
+    await pg.wait_for_timeout(200)
+    got = await pg.evaluate(ST)
+    check(got['tip'] is None and got['saved']['seen'].get('door') == 1 and got['saved']['off'] is False, f'✕ closes that tip only ({got["saved"]})')
+    check(not pg.errors, f'no script errors {pg.errors}')
+    await pg.context.close()
+
+    # --- motion off: the fingertip stands still
+    pg = await page(browser, db, 390, 750, first + "localStorage.setItem('gem-motion','off');")
+    await pg.goto(f'{BASE}/studio.html')
+    await pg.wait_for_timeout(2500)
+    anim = await pg.evaluate("getComputedStyle(document.querySelector('#st-tip .st-swipe-dot')).animationName")
+    check(anim == 'none', f'"Hiệu ứng" off: the fingertip does not move ({anim})')
+    await pg.context.close()
+
+
 async def slow(browser, db):
     """The owner's layout must win even on a slow phone (it used to be given up
     on after 2.5 s, and the built-in street stayed)."""
@@ -2156,7 +2286,7 @@ async def slow(browser, db):
     pieces = "[...document.querySelectorAll('#st-world .st-item')].map(i => (i.getAttribute('src') || '').split('/').pop())"
     ctx = await browser.new_context(viewport={'width': 1280, 'height': 800})
     await ctx.route('**/*.supabase.co/**', db.route)
-    await ctx.add_init_script("localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-studio-intro-touch','1');sessionStorage.removeItem('gem-scene')")
+    await ctx.add_init_script(GUIDE_OFF + "localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-studio-intro-touch','1');sessionStorage.removeItem('gem-scene')")
     pg = await ctx.new_page()
     errs = []
     pg.on('pageerror', lambda e: errs.append(str(e)))
@@ -2237,7 +2367,7 @@ async def motion(browser, db):
     print('motion')
     ctx = await browser.new_context(viewport={'width': 390, 'height': 844}, reduced_motion='reduce', is_mobile=True, has_touch=True)
     await ctx.route('**/*.supabase.co/**', lambda r: r.abort())
-    await ctx.add_init_script("sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-studio-intro-touch','1')")
+    await ctx.add_init_script(GUIDE_OFF + "sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-studio-intro-touch','1')")
     pg = await ctx.new_page()
     errs = []
     pg.on('pageerror', lambda e: errs.append(str(e)))
@@ -2539,10 +2669,11 @@ async def taps(browser, db):
     check(await pg.evaluate(OPEN) == 'product', 'desktop: one click on a product opens it, as before')
     await pg.context.close()
 
-    # E3. the one-time hint on a phone tells the two-tap rule
-    pg = await fresh(2000, init="sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-motion','off');")
-    txt = await pg.evaluate("(() => { const b = document.getElementById('st-bubble'); return b && !b.hidden ? b.textContent : null; })()")
-    check(txt and 'chạm lần nữa' in txt, f'phone: the hint shows once, even to a visitor who saw the old one ({txt})')
+    # E3. the one-time tip on a phone tells the two-tap rule (after the welcome)
+    pg = await fresh(2000, init="localStorage.removeItem('gem-guide');sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-motion','off');")
+    await pg.wait_for_timeout(1500)
+    txt = await pg.evaluate("(() => { const b = document.getElementById('st-tip'); return b && !b.hidden ? b.textContent : null; })()")
+    check(txt and 'chạm lần nữa' in txt, f'phone: the tip shows once, even to a visitor who saw the old hint ({txt})')
     await pg.context.close()
 
     # F. the street door always opens, even with the character brought to rest in front of it
@@ -2630,7 +2761,7 @@ async def main(which):
         browser = await launch(p)
         for name, fn in (('street', street), ('wear', wear), ('shop', shop), ('spots', spots), ('editor', editor),
                          ('library', library), ('product', product), ('prodlib', prodlib), ('workshop', workshop), ('design', design), ('catalog', catalog), ('kinds', kinds),
-                         ('layers', layers), ('zones', zones), ('cart', cart), ('choices', choices), ('zither', zither), ('slow', slow), ('topbar', topbar), ('motion', motion),
+                         ('layers', layers), ('zones', zones), ('cart', cart), ('choices', choices), ('zither', zither), ('guide', guide), ('slow', slow), ('topbar', topbar), ('motion', motion),
                          ('taps', taps)):
             if which in (None, name):
                 await fn(browser, db)

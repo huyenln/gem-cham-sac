@@ -429,6 +429,110 @@
 .st-bubble img { flex: none; border-radius: 50%; background: var(--paper-cream); object-fit: cover; object-position: 50% 15%; }
 .st-bubble p { margin: 0; font-size: 1rem; color: var(--ink-dark); line-height: 1.45; }
 
+/* ---------- GUIDE (studio.js GUIDE) ----------
+   A tip is a dashed paper card over the middle of the scene, not part of
+   the painting (NN/g: a tip must not look like the interface); taps go
+   through it, except on its own two buttons. */
+.st-tip {
+  position: absolute;
+  left: 50%;
+  top: 30%;
+  transform: translate(-50%, -50%);
+  width: min(320px, calc(100% - 2 * var(--space-4)));
+  display: grid;
+  justify-items: center;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4) 0;
+  background: rgba(251, 247, 240, 0.95);
+  border: 1.5px dashed var(--kraft);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-paper);
+  text-align: center;
+  z-index: 6;
+  pointer-events: none;
+  animation: st-tip-in 0.3s ease-out;
+}
+.st-tip[hidden] { display: none; }
+.st-tip p { margin: 0; padding: 0 var(--space-5); font-family: var(--font-display); font-weight: 700; font-size: 1rem; line-height: 1.4; color: var(--ink-dark); }
+.st-tip button { pointer-events: auto; }
+.st-tip-skip {
+  min-height: 40px; padding: 0 var(--space-3); border: 0; background: none; cursor: pointer;
+  font: inherit; font-size: var(--text-xs); color: var(--ink-soft); text-decoration: underline; text-underline-offset: 3px;
+}
+.st-tip-x {
+  position: absolute; top: 2px; right: 2px; width: 40px; height: 40px;
+  border: 0; background: none; cursor: pointer; font-size: 22px; line-height: 1; color: var(--ink-soft);
+}
+.st-tip .st-swipe { display: none; }
+.st-tip.is-swipe .st-swipe { display: inline-flex; }
+@keyframes st-tip-in { from { opacity: 0; transform: translate(-50%, -44%); } to { opacity: 1; transform: translate(-50%, -50%); } }
+/* swipe: a fingertip going left and right between two arrows */
+.st-swipe { position: relative; align-items: center; justify-content: space-between; width: 116px; height: 30px; }
+.st-swipe-chev { font-family: var(--font-display); font-weight: 800; font-size: 24px; line-height: 1; color: var(--kraft); }
+.st-swipe-dot {
+  position: absolute; left: 50%; top: 50%; width: 20px; height: 20px; margin: -10px 0 0 -10px;
+  border-radius: 50%; background: var(--sage-deep); box-shadow: 0 0 0 6px rgba(135, 150, 90, 0.25);
+  animation: st-swipe 1.7s ease-in-out infinite alternate;
+}
+@keyframes st-swipe { from { transform: translateX(-32px); } to { transform: translateX(32px); } }
+.st-calm .st-swipe-dot, .st-calm .st-tip { animation: none; }
+/* the nearest place out of view on each side; tap to walk there */
+.st-edge {
+  position: absolute;
+  top: 58%;
+  max-width: 44%;
+  min-height: 40px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--sage-light);
+  border-radius: 999px;
+  background: rgba(251, 247, 240, 0.9);
+  box-shadow: 0 2px 8px rgba(61, 74, 46, 0.18);
+  font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--ink-dark);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  cursor: pointer; z-index: 4;
+  -webkit-tap-highlight-color: transparent;
+}
+.st-edge.is-l { left: var(--space-2); }
+.st-edge.is-r { right: var(--space-2); }
+.st-edge[hidden] { display: none; }
+.st-edge.is-dodged { visibility: hidden; }   /* every height would cover a place's own tag */
+.st-hot-label.is-offview { visibility: hidden; }   /* its place has an edge tag instead */
+.st-edge:active { background: var(--paper-cream); }
+/* "?": a round paper button, the basket's twin in the other corner */
+.st-help-b {
+  position: fixed;
+  left: var(--space-4);
+  bottom: calc(72px + env(safe-area-inset-bottom));
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  border: 2px solid var(--kraft);
+  background: rgba(251, 246, 238, 0.94);
+  box-shadow: 0 6px 18px rgba(61, 74, 46, 0.22);
+  font-family: var(--font-display); font-weight: 800; font-size: 22px; color: var(--ink-dark);
+  cursor: pointer; z-index: 40;
+  -webkit-tap-highlight-color: transparent;
+}
+.st-help-b:active { background: var(--paper-cream); }
+.st-lock .st-help-b, .zt-open .st-help-b { display: none; }
+/* the "?" sheet */
+.st-help-how { list-style: none; margin: var(--space-3) 0 0; padding: 0; display: grid; gap: var(--space-3); }
+.st-help-how li { display: grid; grid-template-columns: 116px 1fr; align-items: center; gap: var(--space-3); font-size: var(--text-sm); color: var(--ink-body); }
+.st-help-how .st-swipe { display: inline-flex; }
+.st-help-ico { display: inline-flex; justify-content: center; }
+.st-help-tag { padding: 2px 10px; border-radius: 999px; background: var(--paper-white); border: 1.5px solid var(--kraft); font-family: var(--font-display); font-weight: 700; font-size: var(--text-xs); color: var(--ink-dark); }
+.st-edge-demo { padding: 2px 12px; border-radius: 999px; background: var(--paper-white); border: 1px solid var(--sage-light); font-family: var(--font-display); font-weight: 800; color: var(--ink-dark); }
+.st-help-h { margin: var(--space-5) 0 var(--space-2); font-size: var(--text-base); }
+.st-help-places { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-1); }
+.st-help-go {
+  min-height: 40px; padding: 0 var(--space-4); border: 1.5px solid var(--sage-light); border-radius: 999px;
+  background: var(--paper-white); color: var(--ink-dark); cursor: pointer;
+  font-family: var(--font-display); font-weight: 700; font-size: var(--text-xs);
+}
+.st-help-go:hover, .st-help-go:active { border-color: var(--sage-deep); background: var(--paper-cream); }
+.st-help-places li { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-1) 0; border-bottom: 1px solid var(--paper-cream-warm); }
+.st-help-places span { font-weight: 600; color: var(--ink-dark); }
+.st-help-again { margin: var(--space-3) 0 72px; text-align: center; }   /* room to scroll past the basket button */
+
 @keyframes st-pop {
   from { opacity: 0; transform: translateY(-6px); }
   to   { opacity: 1; transform: translateY(0); }
