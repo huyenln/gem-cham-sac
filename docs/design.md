@@ -1546,8 +1546,28 @@ hương trước nhé.” Món không có lựa chọn / ký gửi / ghi chú v�
 
 **Giỏ** (`basket.js`): mỗi lựa chọn là một dòng (`opt` trong `gem-basket`), ảnh dòng
 là ảnh của lựa chọn đó. Khi database trả lời, dòng có lựa chọn đã hết / không còn bị
-bỏ ra. Studio không bán được món có lựa chọn (`GemBasket.add` từ chối) — admin chặn
-chọn Kệ và ẩn “Đặt vào Studio” cho món có lựa chọn.
+bỏ ra. `GemBasket.add` từ chối món có lựa chọn khi thiếu `opt` (hoặc lựa chọn đã hết).
+
+**Studio (bổ sung 13/10/2026):** món có lựa chọn / ký gửi / ghi chú bày được trong
+Studio. Trên kệ chỉ cần **một hình vẽ** cho cả dòng (một hũ nến cho 13 mùi, một đôi
+tất cho mọi cỡ); khách chạm vào thì mở **bảng chi tiết** (`pdSheet` trong
+`studio.js`) — na ná bảng ở trang Sản phẩm: nhãn “Ký gửi · …”, tên, giá, ảnh thật
+(`gallery`, mũi tên khi nhiều ảnh), ô lựa chọn (chọn mùi → ảnh hũ đó + mô tả), “Thêm
+vào giỏ”, Ghi chú. Ô lựa chọn, giá, ghi chú dùng chung class `.pg-*` của
+`style.css`; khung bảng là `.st-pd` (`studio.css`). Điện thoại: tên + giá, ảnh, rồi
+ô chọn; máy tính: ảnh trái, phần còn lại bên phải.
+- Chưa chọn mà bấm thêm → “Bạn chọn mùi hương trước nhé.”, con trỏ nhảy vào ô đầu.
+- **Kéo** món có lựa chọn vào giỏ → mở bảng và nhắc chọn (trước đây báo “đã vào giỏ”
+  mà không vào). Món không lựa chọn vẫn kéo thẳng được.
+- Ảnh trong giỏ: lựa chọn có ảnh riêng (mùi nến, mẫu túi) → ảnh đó; không có ảnh
+  riêng (cỡ tất) → hình của món trên kệ, như cũ.
+- Danh sách “Kệ hàng”: nút “Chọn mùi hương” mở bảng thay cho “Thêm vào giỏ”.
+- Món của Gem không ký gửi / ghi chú / lựa chọn (Origami Pouch…) giữ thẻ nhỏ cũ.
+- Admin bỏ chặn: chọn Kệ và “Đặt vào Studio” được cho mọi món.
+- Gắn hình trên kệ vào sản phẩm: admin → Lắp studio → bấm hình → Loại “Sản phẩm” →
+  chọn món → Phát hành. Hình đặt trước khi sản phẩm có trong database (vd nến,
+  `tui-6` đặt 12/10) đang là “Trang trí” — phải gắn lại như vậy.
+- Kiểm: `python3 tools/check-studio.py choices` (điện thoại + máy tính).
 
 **Admin → Sản phẩm → Sửa:** “Hàng ký gửi của”, khung “Lựa chọn cho khách” (tên
 lựa chọn VI / EN; mỗi ô: tên, mô tả ngắn, ảnh riêng, Còn hàng / Hết, Lên trước, Bỏ),

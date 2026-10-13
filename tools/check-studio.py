@@ -33,6 +33,10 @@ and walks through what broke before:
            memo notes follow the piece, a story in hand has a place to go
   cart     what rides in the cart / the basket: the cut-out of the very piece
            picked up, never the catalogue photo when the Studio has a cut-out
+  choices  a product with choices (scent / size / design) on a shelf: its sheet
+           shows the real photos, picking a chip shows that one, "Thêm vào giỏ"
+           asks for a pick first, a drag opens the sheet instead of adding; a
+           consignment product shows "Ký gửi · …" and its notes
   topbar   the top bar fits a phone (320px up), in Vietnamese and English
   motion   a device asking for less motion: no walking, "Hiệu ứng" turns it on
   taps     taps on a phone (clicks on a desktop) near "Khu vực" pieces standing on
@@ -48,7 +52,7 @@ crashed and the counts add up.
     python3 tools/check-studio.py            all checks
     python3 tools/check-studio.py wear       one check (street | wear | shop | spots | editor |
                                              library | product | design | catalog | kinds |
-                                             layers | zones | cart | topbar | motion | taps)
+                                             layers | zones | cart | choices | topbar | motion | taps)
 
 Needs: pip install playwright. Chromium: PLAYWRIGHT_BROWSERS_PATH or
 CHROMIUM=/path/to/chrome (the cloud sessions have /opt/pw-browsers/chromium).
@@ -143,6 +147,7 @@ class FakeDB:
         self.gone = set()    # categories whose products are all hidden / deleted
         self.wtypes = []     # workshop_types
         self.wt_patches = []
+        self.extra = []      # more products rows (the choices check)
 
     async def route(self, r):
         u, m = r.request.url, r.request.method
@@ -197,7 +202,7 @@ class FakeDB:
                 self.patches.append(json.loads(r.request.post_data))
                 return await r.fulfill(status=200, content_type='application/json', body='[{}]')
             return await r.fulfill(status=200, content_type='application/json',
-                                   body=json.dumps([p for p in product_rows() if p['category'] not in self.gone]))
+                                   body=json.dumps([p for p in product_rows() + self.extra if p['category'] not in self.gone]))
         if '/rest/v1/studio_assets' in u:
             i = (re.search(r'id=eq\.([^&]+)', u) or [None, None])[1]
             if m == 'POST':
@@ -1492,6 +1497,180 @@ async def cart(browser, db):
     await st.context.close()
 
 
+def choice_rows():
+    """Three products as admin saves them: 120g jars (a scent each, one sold
+    out, a photo each), socks (sizes, no photos of their own), a cupcake
+    candle (no choices, but a consignor and notes)."""
+    base = {'category': 'ky-gui', 'desc_vi': None, 'desc_en': None, 'price_max': None, 'in_stock': True,
+            'is_published': True, 'cutout': None, 'sprite': None}
+    jar = lambda k, vi, out=False: {'key': k, 'vi': vi, 'en': vi + ' EN', 'note_vi': 'Hương ' + vi, 'note_en': vi + ' notes',
+                                    'image': f'images/products/ky-gui-nen-{k}.webp', 'out': out}
+    return [
+        dict(base, id='k1', sku='nen-thom-120', sort_order=200, name_vi='Nến thơm hũ 120g', name_en='Scented candle, 120g jar',
+             price=170000, consignor="Tiny's Herbal", shelf='display',
+             image='images/products/ky-gui-nen-thom-thumb.webp',
+             gallery=['images/products/ky-gui-nen-matcha-latte.webp', 'images/products/ky-gui-nen-camp-fire.webp'],
+             options={'label_vi': 'Mùi hương', 'label_en': 'Scent',
+                      'choices': [jar('matcha-latte', 'Matcha Latte'), jar('camp-fire', 'Camp Fire'),
+                                  jar('rosie-blush', 'Rosie Blush', True), jar('lotus-grace', 'Lotus Grace')]},
+             notes_vi='Hũ thuỷ tinh 120g.\nĐốt 2–3 giờ mỗi lần.', notes_en='120g glass jar.\nBurn 2–3 hours at a time.'),
+        dict(base, id='k2', sku='tat-ha-noi', sort_order=250, name_vi='Tất Hà Nội', name_en='Hà Nội socks',
+             price=79000, consignor='Re.socks', shelf=None, image='images/products/ky-gui-tat-ha-noi-thumb.webp',
+             gallery=['images/products/ky-gui-tat-ha-noi.webp'],
+             options={'label_vi': 'Cỡ', 'label_en': 'Size',
+                      'choices': [{'key': k, 'vi': k.upper(), 'en': k.upper()} for k in ('s', 'm', 'l')]},
+             notes_vi='S: chân 35–38', notes_en='S: feet 35–38'),
+        dict(base, id='k3', sku='nen-cupcake', sort_order=210, name_vi='Nến cupcake', name_en='Cupcake candle',
+             price=179000, consignor="Tiny's Herbal", shelf=None, image='images/products/ky-gui-nen-cupcake-thumb.webp',
+             gallery=['images/products/ky-gui-nen-cupcake.webp'], options=None,
+             notes_vi='Sáp đậu nành.', notes_en='Soy wax.'),
+    ]
+
+
+async def choices(browser, db):
+    """One drawing on the shelf stands for a whole range; its sheet is where
+    people pick the real thing by its photo."""
+    print('choices')
+    db.rows.clear(); db.info.clear()
+    db.extra = choice_rows()
+    # close together and left of a phone's first screen; the character starts left of them
+    piece = lambda src, x, sku: dict(src=src, x=x, y=560, w=100, h=120, rot=0, flip=False, layer='back', frame=False, sku=sku)
+    jar_piece, sock_piece = 'images/studio/cay/cay-10.webp', 'images/studio/sp/origami.webp'
+    db.rows['live'] = {
+        'v': 1, 'bg': {'src': 'images/studio/bg/strip-tron.webp', 'w': 5792, 'h': 1024},
+        'items': [piece(jar_piece, 180, 'nen-thom-120'), piece(sock_piece, 300, 'tat-ha-noi'),
+                  piece('images/studio/cay/cay-10.webp', 420, 'nen-cupcake'), piece('images/studio/sp/origami.webp', 540, 'origami')],
+        'udon': {'x': 5200, 'y': 560, 'w': 128, 'h': 140}, 'start': 40,
+    }
+    init = ("sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1');"
+            "localStorage.setItem('gem-studio-intro-touch','1');localStorage.removeItem('gem-basket')")
+    stored = "JSON.parse(localStorage.getItem('gem-basket') || '[]')"
+    body = "document.getElementById('st-sheet-body')"
+    for name, w, h in (('desktop', 1440, 900), ('mobile', 390, 844)):
+        pg = await page(browser, db, w, h, init)
+        await pg.goto(f'{BASE}/studio.html')
+        await pg.wait_for_timeout(2500)
+        await pg.add_style_tag(content='.lang-hint{display:none!important}')
+
+        async def tap(sku):
+            c = await center(pg, f'.st-shelf-prod[data-sku="{sku}"]')
+            if name == 'mobile':   # a finger: the first tap names it, a tap on its name opens it
+                await pg.touchscreen.tap(*c)
+                await pg.wait_for_timeout(900)
+                await pg.touchscreen.tap(*(await center(pg, '.st-pick-label')))
+            else:
+                await pg.mouse.click(*c)
+            await pg.wait_for_timeout(700)
+
+        await tap('nen-thom-120')
+        got = await pg.evaluate(f"""(() => {{ const b = {body};
+            return {{ pd: !!b.querySelector('.st-pd'), title: b.querySelector('h2').textContent,
+                      consign: (b.querySelector('.pg-consign') || {{}}).textContent || '',
+                      chips: b.querySelectorAll('.pg-chip').length, off: b.querySelectorAll('.pg-chip:disabled').length,
+                      img: b.querySelector('.st-pd-img').getAttribute('src'),
+                      notes: (b.querySelector('.pg-notes-body') || {{}}).textContent || '' }}; }})()""")
+        check(got['pd'] and got['title'] == 'Nến thơm hũ 120g' and got['chips'] == 4 and got['off'] == 1,
+              f"{name}: the jar opens its sheet, 4 scents, 1 sold out ({got['title']}, {got['chips']}, {got['off']})")
+        check(got['img'].endswith('matcha-latte.webp') and "Tiny's Herbal" in got['consign'] and '2–3 giờ' in got['notes'],
+              f"{name}: real photo first, consignor tag, notes ({got['img']}, {got['consign']})")
+        await js_click(pg, '[data-pd-add]')
+        await pg.wait_for_timeout(200)
+        msg = await pg.evaluate(f"{body}.querySelector('.pg-msg').textContent")
+        focus = await pg.evaluate("document.activeElement.getAttribute('data-pd-pick')")
+        check('mùi hương' in msg and focus == 'matcha-latte' and await pg.evaluate(stored) == [],
+              f'{name}: "Thêm vào giỏ" before a pick asks for one, nothing added ({msg}, focus {focus})')
+        await pg.click('[data-pd-pick="camp-fire"]')
+        await pg.wait_for_timeout(200)
+        got = await pg.evaluate(f"""(() => {{ const b = {body};
+            return [b.querySelector('.st-pd-img').getAttribute('src'), b.querySelector('[data-pd-pick="camp-fire"]').getAttribute('aria-pressed'),
+                    b.querySelector('.pg-choice-note').textContent, document.activeElement.getAttribute('data-pd-pick'),
+                    b.querySelector('.pg-msg').textContent]; }})()""")
+        check(got[0].endswith('camp-fire.webp') and got[1] == 'true' and got[2] == 'Hương Camp Fire' and got[3] == 'camp-fire' and got[4] == '',
+              f'{name}: picking Camp Fire shows its photo and note, keeps the focus ({got})')
+        await pg.click('[data-pd-pick="lotus-grace"]')
+        await pg.wait_for_timeout(200)
+        check((await pg.evaluate(f"{body}.querySelector('.st-pd-img').getAttribute('src')")).endswith('lotus-grace.webp'),
+              f'{name}: a scent not in the gallery shows its own photo too')
+        await pg.screenshot(path=OUT / f'choices-{name}-jar.png')
+        wide = await pg.evaluate("(() => { const s = document.querySelector('.st-sheet'); return [s.scrollWidth, s.clientWidth]; })()")
+        check(wide[0] <= wide[1], f'{name}: the sheet has no sideways scroll ({wide})')
+        await pg.click('[data-pd-pick="camp-fire"]')
+        await js_click(pg, '[data-pd-add]')
+        await pg.wait_for_timeout(1200)
+        got = await pg.evaluate(stored)
+        check(got == [{'sku': 'nen-thom-120', 'qty': 1, 'opt': 'camp-fire'}],
+              f'{name}: added as Camp Fire, its photo (no piece picture) ({got})')
+        if name == 'desktop':
+            # the language changes while the sheet is open
+            await pg.evaluate("window.GemI18n.setLang('en')")
+            await pg.wait_for_timeout(300)
+            got = await pg.evaluate(f"""(() => {{ const b = {body};
+                return [b.querySelector('h2').textContent, b.querySelector('.pg-opts-label').textContent,
+                        b.querySelector('[data-pd-pick="camp-fire"]').textContent, b.querySelector('.pg-notes-h').textContent]; }})()""")
+            check(got == ['Scented candle, 120g jar', 'Scent', 'Camp Fire EN', 'Notes'], f'{name}: English while open ({got})')
+            await pg.evaluate("window.GemI18n.setLang('vi')")
+            await pg.wait_for_timeout(300)
+        await pg.keyboard.press('Escape')
+        await pg.wait_for_timeout(400)
+
+        if name == 'desktop':
+            # a drag into the basket: the sheet opens on the choices, nothing added
+            await drag(pg, await center(pg, '.st-shelf-prod[data-sku="nen-thom-120"]'), await center(pg, '.gb-widget'))
+            await pg.wait_for_timeout(900)
+            got = await pg.evaluate(f"[!!{body}.querySelector('.st-pd'), ({body}.querySelector('.pg-msg') || {{}}).textContent || '']")
+            n = len(await pg.evaluate(stored))
+            check(got[0] and 'mùi hương' in got[1] and n == 1, f'{name}: dragging the jar opens its sheet and asks for a scent ({got}, {n} line)')
+            await pg.keyboard.press('Escape')
+            await pg.wait_for_timeout(400)
+
+        # socks: sizes, no photos of their own — the piece's picture goes in the basket
+        await tap('tat-ha-noi')
+        await pg.click('[data-pd-pick="m"]')
+        await pg.wait_for_timeout(150)
+        img = await pg.evaluate(f"{body}.querySelector('.st-pd-img').getAttribute('src')")
+        await js_click(pg, '[data-pd-add]')
+        await pg.wait_for_timeout(1200)
+        line = [i for i in await pg.evaluate(stored) if i['sku'] == 'tat-ha-noi']
+        check(img.endswith('ky-gui-tat-ha-noi.webp') and line and line[0].get('opt') == 'm' and line[0].get('pics') == [sock_piece],
+              f'{name}: socks size M, the poster stays, the piece rides in the basket ({img}, {line})')
+        await pg.keyboard.press('Escape')
+        await pg.wait_for_timeout(400)
+
+        # cupcake: consignment and notes, no choices — added at once
+        await tap('nen-cupcake')
+        got = await pg.evaluate(f"[!!{body}.querySelector('.st-pd'), {body}.querySelectorAll('.pg-chip').length, ({body}.querySelector('.pg-consign') || {{}}).textContent || '', !!{body}.querySelector('.st-prod-tip')]")
+        await js_click(pg, '[data-pd-add]')
+        await pg.wait_for_timeout(1200)
+        n = sum(1 for i in await pg.evaluate(stored) if i['sku'] == 'nen-cupcake')
+        check(got[0] and got[1] == 0 and 'Ký gửi' in got[2] and got[3] and n == 1,
+              f'{name}: the cupcake candle: consignor, no chips, the drag tip, added at once ({got}, {n})')
+        await pg.screenshot(path=OUT / f'choices-{name}-cupcake.png')
+        await pg.keyboard.press('Escape')
+        await pg.wait_for_timeout(400)
+
+        # a product of Gem's own keeps the small card
+        await tap('origami')
+        got = await pg.evaluate(f"[!!{body}.querySelector('.st-pd'), !!{body}.querySelector('.st-prod [data-add]')]")
+        check(got == [False, True], f'{name}: Origami Pouch keeps its card ({got})')
+        await pg.keyboard.press('Escape')
+        await pg.wait_for_timeout(400)
+
+        # the shelves' list: "Chọn mùi hương" opens the sheet
+        await js_click(pg, '.st-hot[data-hot="display"]')
+        await pg.wait_for_timeout(3000)
+        await pg.evaluate(f"(() => {{ const t = {body}.querySelector('[data-shop=\"all\"]'); if (t) t.click(); }})()")
+        await pg.wait_for_timeout(300)
+        label = await pg.evaluate(f"({body}.querySelector('[data-pd-open=\"nen-thom-120\"]') || {{}}).textContent || ''")
+        check(label == 'Chọn mùi hương', f'{name}: the shelves list says "Chọn mùi hương" ({label!r})')
+        if label:
+            await js_click(pg, '[data-pd-open="nen-thom-120"]')
+            await pg.wait_for_timeout(300)
+            check(await pg.evaluate(f"!!{body}.querySelector('.st-pd .pg-chip')"), f'{name}: and it opens the sheet')
+        check(not pg.errors, f'{name}: no script errors {pg.errors}')
+        await pg.context.close()
+    db.extra = []
+
+
 async def topbar(browser, db):
     """The top bar on a phone: the logo and the three controls side by side,
     none on top of another, none past the edge, in both languages. (A fourth
@@ -1925,7 +2104,7 @@ async def main(which):
         browser = await launch(p)
         for name, fn in (('street', street), ('wear', wear), ('shop', shop), ('spots', spots), ('editor', editor),
                          ('library', library), ('product', product), ('workshop', workshop), ('design', design), ('catalog', catalog), ('kinds', kinds),
-                         ('layers', layers), ('zones', zones), ('cart', cart), ('topbar', topbar), ('motion', motion),
+                         ('layers', layers), ('zones', zones), ('cart', cart), ('choices', choices), ('topbar', topbar), ('motion', motion),
                          ('taps', taps)):
             if which in (None, name):
                 await fn(browser, db)

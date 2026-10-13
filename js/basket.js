@@ -386,6 +386,7 @@
       p.consignor = r.consignor || null;
       p.notesVi  = r.notes_vi || null;
       p.notesEn  = r.notes_en || null;
+      p.gallery  = Array.isArray(r.gallery) && r.gallery.length ? r.gallery.slice() : null;
       if (r.sprite) p.sprite = r.sprite;
       changed = true;
     });
@@ -1416,9 +1417,10 @@
         if (!p) return null;
         return { sku: sku, name: pName(p), price: priceLabel(p), inStock: p.inStock !== false,
                  image: p.image || null, cutout: p.cutout || null, shelf: p.shelf || null,
-                 // the product sheet (js/gallery.js): choices, whose it is, notes
+                 // the product sheet (js/gallery.js, the Studio's): choices, whose it is, notes, photos
                  options: p.options || null, consignor: p.consignor || null,
-                 notes: (isEn() && p.notesEn) || p.notesVi || null };
+                 notes: (isEn() && p.notesEn) || p.notesVi || null,
+                 gallery: p.gallery ? p.gallery.slice() : null };
       },
       // Skus on sale, in the shop's order — null until the database answers.
       skus: function () { return liveSkus ? liveSkus.slice() : null; },
@@ -1428,8 +1430,7 @@
       pieces: function () { return spriteQueue().map(function (it) { return { sku: it.sku, spec: it.spec || null, html: pic(it) }; }); },
       // cut (optional): the picture of the very piece picked up in the Studio
       // opt: the key of the scent / size picked — required, and still in
-      // stock, for a product with choices (the Studio can't pick one, so
-      // such a product is refused there)
+      // stock, for a product with choices
       add: function (sku, sourceEl, spec, cut, opt) {
         var p = bySku(sku);
         if (!p || p.inStock === false) return false;

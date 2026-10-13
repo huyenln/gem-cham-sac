@@ -627,6 +627,70 @@ html:has(.studio-page), .studio-page { overscroll-behavior: none; }
 
 .st-foot a:not(.st-btn) { min-height: 44px; display: inline-flex; align-items: center; }
 
+/* The detail sheet (studio.js pdSheet): real photos, choices, notes. Chips,
+   price, consignor tag and notes are the product page's (css/style.css .pg-*).
+   Phone: name and price, the photo, then what to pick. Wide: the photo on
+   the left, the rest beside it. */
+.st-pd { display: grid; gap: var(--space-4); }
+.st-pd-head .pg-consign { margin-bottom: var(--space-2); }
+.st-pd-head h2 { margin-bottom: var(--space-1); }
+.st-pd-media {
+  position: relative;
+  border-radius: var(--radius-md);
+  background: var(--paper-cream);
+  overflow: hidden;
+}
+.st-pd-img {
+  display: block;
+  width: 100%;
+  height: min(38svh, 360px);
+  object-fit: contain;   /* posters, jars, square crops: all of it shows */
+}
+.st-pd-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(251, 246, 238, 0.88);
+  color: var(--ink-dark);
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.st-pd-nav.is-prev { left: var(--space-2); }
+.st-pd-nav.is-next { right: var(--space-2); }
+.st-pd-nav:focus-visible { outline: 2px solid var(--sage-deep); outline-offset: 2px; }
+.st-pd-count {
+  position: absolute;
+  right: var(--space-2);
+  bottom: var(--space-2);
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: rgba(61, 74, 46, 0.6);
+  color: var(--paper-white);
+  font-size: var(--text-xs);
+}
+.st-pd-buy .pg-opts-label { margin-top: 0; }
+.st-pd-add { width: 100%; margin-top: var(--space-5); }
+.st-pd-buy .st-prod-tip { margin: 0; color: var(--ink-soft); }
+.st-pd-buy .st-design-from { padding-left: 0; }
+@media (min-width: 768px) {
+  .st-pd {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas: "media head" "media buy";
+    grid-template-rows: auto 1fr;
+    column-gap: var(--space-6);
+    row-gap: var(--space-3);
+  }
+  .st-pd-head { grid-area: head; }
+  .st-pd-buy { grid-area: buy; }
+  .st-pd-media { grid-area: media; align-self: start; position: sticky; top: 0; }
+  .st-pd-img { height: auto; aspect-ratio: 4 / 5; max-height: 62vh; }
+}
+
 .st-chars {
   list-style: none;
   margin: 0;
