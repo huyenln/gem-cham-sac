@@ -1735,12 +1735,35 @@ dùng lại phần thẻ chia sẻ của Bàn thiết kế, ảnh không rời m
   hoặc **19 dây** (đàn cải tiến, La² → Mi⁶), chọn ở đầu bảng. Hàng dây chia hết chiều cao
   màn hình (điện thoại 390×844: 36 px / dây với 16 dây, 30 px với 19 dây). Tên nốt (Đô Rê Mi
   Sol La, Đô tô xanh) ở đầu dây, tắt được. Nút giỏ hàng ẩn khi đang chơi (nó che mấy dây cao).
-- **Đàn tranh Việt Nam, không phải cổ tranh:** lên dây hơi Bắc Đô Rê Mi Sol La (cổ tranh
-  Trung Quốc thường lên Rê Mi Fa# La Si); dây thép, tiếng sáng (`ZT_BRIGHT` 0,42, lọc 9,5 kHz);
-  **rung** bật sẵn (chậm, rộng: 4,6 Hz, ±34 cent, vào sau ~0,2 giây); **nhấn**: giữ ngón trên
-  dây ~0,26 giây thì tiếng luyến lên — dây Mi lên nửa cung thành **Fa**, các dây khác lên một
-  cung (dây La → **Si**); nhãn dây đổi theo (Fa / Si, nền kraft); buông ra thì luyến về.
-  Mục "Về đàn tranh" (thu gọn) giải thích: đàn không có dây đánh thẳng ra Fa và Si.
+- **Đàn tranh Việt Nam, không phải cổ tranh:** lên dây Bắc theo ngũ cung Sol La Đô Rê Mi (cổ
+  tranh Trung Quốc thường lên Rê Mi Fa# La Si); dây thép, tiếng sáng (`ZT_BRIGHT` 0,42, lọc
+  9,5 kHz); **rung** bật sẵn (chậm, rộng: 4,6 Hz, ±34 cent, vào sau ~0,2 giây).
+- **Bản 3 (13/10, góp ý "Fa với Si hơi khó chuyển", tham khảo một trang cổ tranh trên mạng
+  nhưng làm khác đi):**
+  - **Vùng nhấn:** đàn thật tay phải gảy bên phải nhạn, tay trái nhấn bên trái nhạn. Dây nào
+    nhấn ra nốt *không dây nào có* thì có chữ nhỏ viền đứt ngay bên trái nhạn (dây Bắc: "Fa"
+    trên dây Mi, "Si" trên dây La). Chạm trong khoảng ≤ 96 px bên trái nhạn (không tính ô tên
+    dây) = gảy nốt nhấn luôn, có tiếng luyến ngắn (~0,1 giây) và **giữ** ở nốt đó khi buông.
+    Vuốt qua vùng này vẫn ra dây buông. Giữ ngón sau khi gảy (bên phải nhạn) vẫn luyến lên rồi
+    về như bản 2. Trang tham khảo dùng giữ phím Space + gảy; mình theo vị trí tay trên đàn.
+  - **Lên dây** (`ZT_HOI`): Bắc (Sol La Đô Rê Mi, mặc định) · Nam (Sol Si♭ Đô Rê Fa — Nam Ai,
+    Nam Xuân) · Đảo (Sol La Đô Rê Fa). Đổi dây = dây Mi / La lên nửa cung, như dời nhạn; nhấn
+    lên nốt kế tiếp trong 7 nốt của hơi (Bắc: Mi → Fa, La → Si · Nam: Sol → La, Rê → Mi♭ ·
+    Đảo: La → Si♭, Rê → Mi). Nguồn: diễn đàn Đam San, Nhạc cụ Tiến Mạnh — **chưa phải giáo
+    trình, cần người chơi đàn ở Gem nghe lại**; hơi Nam thật có nốt non / già (lệch dưới nửa
+    cung) chưa làm. Dây Oán chưa có nguồn đáng tin nên chưa làm.
+  - **Tông** −/+ từng nửa cung (±6), hiện "Tông Rê" (EN "Key D"); tên nốt giữ nguyên (Đô
+    vẫn là nốt chủ, kiểu "đổi tông" khi hát). Mỗi lần bấm gảy dây Đô giữa đàn cho nghe tông mới.
+  - **Tên nốt:** Đô Rê Mi · Hò Xự Xang · Ẩn. Hò Xự Xang tính từ Hò = Sol: Hò Xự Xang Xê Cống
+    = Sol La Đô Rê Mi, Xư = Si♭, Phan = Fa (theo bài Viện Âm nhạc về Dạ cổ hoài lang: Hò Xự
+    Xư Xang Xê Cống Phan cách nhau 0-2-3-5-7-9-10 nửa cung). Nốt không có tên cổ (Si, Mi♭)
+    thì ghi kiểu Đô Rê Mi. Dây Hò tô xanh thay dây Đô. **Cũng cần người chơi đàn xác nhận.**
+  - **Bàn phím máy tính:** A S D F G H J K L ; rồi Q W E R T Y U I O (dây trầm → cao), Shift
+    = nhấn. Tên phím hiện trên dây sau lần gõ đầu. Gõ khi đang ở ô chọn thì không gảy.
+  - Lựa chọn của khách (16/19, dây, tông, tên, rung) nhớ trong `localStorage['gem-zt']`.
+  - Chạm dây hiện ô xanh dương (góp ý 13/10): lớp tô mặc định của Chrome điện thoại cho nút
+    (`rgba(51,181,229,0.4)`) — mỗi dây là một `<button>`. Tắt bằng `-webkit-tap-highlight-color:
+    transparent` cho cả `.zt-wrap`; nút tông / 16-19 có màu `:active` riêng thay vào.
 - **Gảy:** dây kêu khi ngón **băng qua đường dây**, không phải mép hàng — ngón đặt trên dây
   rung nhẹ, hay lướt giữa hai dây, không gảy thêm. Vuốt nhanh vẫn kêu đủ từng dây đi qua.
   Chạm = gảy một dây; Tab + Enter cũng gảy; cú click cuối mỗi lần chạm / giữ bị bỏ (đã kêu
@@ -1753,6 +1776,29 @@ dùng lại phần thẻ chia sẻ của Bàn thiết kế, ảnh không rời m
 - Dùng **"Khung bấm"** ngoài cửa (Khi bấm "Chơi đàn tranh") cũng được. Lỗi đã sửa
   13/10: nhãn của mọi khung ngoài phố (trừ cửa) đưa khách vào studio trước — `visit()`
   coi nó như nút điều hướng. Giờ khung nằm ngoài phố thì mở ngay tại chỗ.
+- **Thanh dưới ngoài phố** (13/10, khách báo "trên iPhone chỉ thấy bên phải cửa, không
+  sang được chỗ đàn"): điện thoại dọc chỉ thấy ~740 px quanh cửa, đàn ở x 281–855 nằm
+  ngoài khung hình, và thanh dưới chỉ có "Vào studio". Vuốt ngang / chạm sàn bên trái vẫn đi
+  được (đã thử bằng ngón tay giả lập), nhưng không có gì báo bên trái còn đồ. Giờ
+  `streetNav()` thêm nút cho mọi **Khung bấm** / **Khu vực** ngoài phố có việc để làm (bỏ
+  "Không làm gì"), theo thứ tự trên phố quanh nút "Vào studio" (bên trái cửa thì đứng trước),
+  mỗi việc một nút, tên lấy từ "Tên hiện". Bấm = đi tới đó và mở luôn. Vào studio thì
+  các nút này rời thanh.
+- **Kiểm trên nền tảng khác (13/10):** WebKit (lõi Safari, bản WebKitGTK 2.52 trên Linux —
+  không có iPhone thật) + Chromium cỡ Android 360 / 412, iPad dọc / ngang, điện thoại
+  ngang, máy tính: không lỗi script, không tràn ngang, đàn mở đủ 16 / 19 dây. Firefox
+  không cài được (mạng chặn). Safari < 15.4 không hiểu `svh` / `:has()`: mọi dòng `svh`
+  trong `css/studio.css` có dòng `vh` đứng trước. **Còn lại:** điện thoại xoay ngang (cao
+  ~330 px) chỉ thấy ~7 dây, phải cuộn bảng ở mép ngoài dây; iOS vuốt từ mép trái màn hình
+  là "Quay lại" của Safari (không chặn được bằng JS).
+- **Kiểm:** `tools/check-studio.py zither` (đếm lời gọi Web Audio, không nghe thật), máy
+  tính + điện thoại (ngón tay thật qua CDP): 16 dây có tên, hàng ≥ 30 px nằm trọn màn hình,
+  chạm, ngón rung trên dây / lướt giữa hai dây không gảy thêm, vuốt đủ 16, giữ Mi → Fa
+  (×1,0595), giữ La → Si (×1,1225), buông không gảy thêm, Enter, chữ nhỏ Fa / Si đúng dây,
+  chạm "Fa" / "Si" ra ngay nốt nhấn, chạm tên dây ra dây buông, vuốt qua vùng nhấn ra dây buông,
+  19 dây từ La, Rải dây 19 + rung, dây Nam / Đảo, tông +2 / chặn ở +6 / về Đô, Hò Xự Xang, ẩn
+  tên, lưu lựa chọn rồi mở lại đúng như cũ, phím A / Shift+S / gõ trong ô chọn, EN, nút giỏ ẩn
+  rồi hiện lại, không tràn ngang.
 - **Thanh dưới ngoài phố** (13/10, khách báo "trên iPhone chỉ thấy bên phải cửa, không
   sang được chỗ đàn"): điện thoại dọc chỉ thấy ~740 px quanh cửa, đàn ở x 281–855 nằm
   ngoài khung hình, và thanh dưới chỉ có "Vào studio". Vuốt ngang / chạm sàn bên trái vẫn đi
