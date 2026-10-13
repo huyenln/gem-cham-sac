@@ -1759,6 +1759,23 @@ dùng lại phần thẻ chia sẻ của Bàn thiết kế, ảnh không rời m
   (×1,0595), giữ La → Si (×1,1225), buông không gảy thêm, Enter, 19 dây từ La, Rải dây 19
   + rung, ghi chú Fa / Si, tắt tên nốt, nút giỏ ẩn rồi hiện lại, EN, không tràn ngang.
 
+### Studio hiện cảnh mặc định thay cho bố cục đã lắp (sửa 13/10/2026)
+
+**Triệu chứng:** mở `studio.html` thấy mặt phố mặc định (monstera, bình tưới, ghế gỗ,
+chuồn chuồn trên bậu cửa) thay cho mặt phố đã lắp; dữ liệu `studio_layout` vẫn nguyên.
+**Nguyên nhân:** `loadLayout()` chờ bố cục tối đa 2,5 giây rồi dựng cảnh mặc định, và
+không bao giờ đổi lại khi bố cục về muộn. Máy chủ trả lời ~60–130 ms, nhưng mạng điện
+thoại (log: MobiFone, Hà Nội) + ngay sau một lần cập nhật web (mọi file tải lại) thì dễ quá
+2,5 giây. **Sửa:**
+- Bố cục khách vừa thấy được giữ trong `localStorage['gem-layout']` (dữ liệu công khai,
+  đã qua `sanitize()` khi đọc lại); lần sau dựng cảnh ngay bằng bản đó, vẫn hỏi database,
+  khác thì dựng lại (`lateLayout`).
+- Chưa có bản giữ: chờ tới 8 giây (màn hình chờ `st-wait`); quá 8 giây thì cảnh mặc định,
+  bố cục về lúc nào thì dựng lại lúc đó. Đang mở bảng thì đợi đóng bảng rồi mới dựng.
+- Chế độ xem nháp (`?nhap=1`) không dùng bản giữ.
+**Kiểm:** `tools/check-studio.py slow` (database trả lời chậm 4 / 10 giây); bản cũ trượt
+cả ba trường hợp, ra đúng cảnh mặc định như ảnh chụp lỗi.
+
 ### Lắp studio: lưu / mở / phát hành (10/2026)
 
 - **Lỗi cũ:** nút trong menu "Lưu" (Mở, Lưu vào…, Xoá) lọt xuống `barClick`, và
