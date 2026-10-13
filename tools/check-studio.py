@@ -1989,6 +1989,42 @@ async def zither(browser, db):
         check(not pg.errors, f'{name}: no script errors {pg.errors}')
         await pg.context.close()
 
+    # the street's places are in the bottom nav too: on a phone the đàn is off
+    # screen, left of the door, and visitors only saw "Vào studio"
+    db.rows['live']['outside']['items'] = [dict(src='images/studio/vn/vn-36.webp', x=560, y=820, w=312, h=200, rot=0, flip=False,
+                                                layer='back', frame=False, kind='zone', zone={'act': 'dantranh'})]
+    db.rows['live']['outside']['boxes'] = [
+        {'id': 'k-zt1', 'vi': 'Chơi đàn tranh', 'act': 'dantranh', 'box': [281, 683, 855, 776], 'stand': 555},
+        {'id': 'k-map', 'vi': 'Xem bản đồ', 'en': 'See the map', 'act': 'link', 'link': 'https://example.com/', 'box': [2300, 600, 2500, 800], 'stand': 2400},
+        {'id': 'k-quiet', 'vi': 'Cây', 'act': 'none', 'box': [2000, 600, 2100, 800], 'stand': 2050}]
+    shown = "[...document.querySelectorAll('.st-nav button')].filter(b => getComputedStyle(b).display !== 'none').map(b => b.textContent.trim())"
+    for name, w, h in (('desktop', 1440, 900), ('mobile', 390, 664)):
+        pg = await page(browser, db, w, h, spy)
+        await pg.goto(f'{BASE}/studio.html')
+        await pg.wait_for_timeout(2500)
+        await pg.add_style_tag(content='.lang-hint{display:none!important}')
+        got = await pg.evaluate(shown)
+        check(got == ['Chơi đàn tranh', 'Vào studio', 'Xem bản đồ'],
+              f'{name}: the street nav has its places in street order round "Vào studio", once each, none for a box that does nothing ({got})')
+        await pg.click('.st-nav .st-go-out')
+        await pg.wait_for_timeout(1500)
+        n = await pg.evaluate(f"{body}.querySelectorAll('.zt-str').length")
+        check(n in (16, 19) and 'ngoai' in (await bg(pg)), f'{name}: "Chơi đàn tranh" in the nav opens the đàn on the street ({n} strings)')
+        await pg.keyboard.press('Escape')
+        await pg.wait_for_timeout(400)
+        await pg.evaluate("window.GemI18n.setLang('en')")
+        got = await pg.evaluate(shown)
+        check(got == ['Chơi đàn tranh', 'Go in', 'See the map'], f'{name}: English, the owner\'s own names where set ({got})')
+        await pg.evaluate("window.GemI18n.setLang('vi')")
+        await pg.click('.st-nav .st-go-in')
+        await pg.wait_for_timeout(2500)
+        await pg.keyboard.press('Escape')
+        got = await pg.evaluate(shown)
+        check('Chơi đàn tranh' not in got and 'Vào studio' not in got and 'Kệ hàng' in got and 'ngoai' not in (await bg(pg)),
+              f'{name}: inside, the street places leave the nav ({got})')
+        check(not pg.errors, f'{name}: no script errors {pg.errors}')
+        await pg.context.close()
+
 
 async def slow(browser, db):
     """The owner's layout must win even on a slow phone (it used to be given up
