@@ -65,6 +65,8 @@ stacking context · animation chạy lại toàn bộ pile mỗi lần thêm · 
 | D6 | **2hand chưa cho vào giỏ** | 23 món riêng biệt, cần dữ liệu từng món |
 | D7 | **KHÔNG tự động trừ tồn kho** | Vì bán cả tại cửa hàng → số online sẽ sai theo hướng tệ nhất. Đặt tay: còn hàng / sắp hết / hết |
 | D8 | **Giữ GitHub Pages** | Backend ≠ đổi host |
+| D22 | **Hàng ký gửi là một mục riêng trên trang Sản phẩm**, mỗi thẻ ghi “Ký gửi · <nơi gửi>” | 13/10/2026. Một mục chung cho mọi nơi gửi: thêm người ký gửi chỉ cần admin, không sửa code. Giá bán = giá trên đơn ký gửi. Không hiện số tồn (giữ D7) |
+| D23 | **Món có nhiều mùi / cỡ / mẫu = một thẻ + lựa chọn kiểu Shopee** | 13/10/2026. Một nhóm lựa chọn, chung một giá; còn / hết đặt tay cho từng lựa chọn. Xem [Hàng ký gửi + lựa chọn](#hàng-ký-gửi--lựa-chọn-13102026) |
 
 ### Đặt lịch workshop
 
@@ -254,6 +256,11 @@ products
   is_published
   created_at, updated_at
 ```
+
+> Bản vẽ ban đầu — bảng thật khác vài tên cột (`sku`, `in_stock`, `gallery[]`,
+> `image`, `cutout`, `shelf`). Thêm 13/10/2026: `consignor`, `options` (jsonb),
+> `notes_vi` / `notes_en`, và `order_items.option_vi` — xem
+> [Hàng ký gửi + lựa chọn](#hàng-ký-gửi--lựa-chọn-13102026).
 
 ### Đơn hàng
 
@@ -1480,6 +1487,90 @@ Storage để bố cục đang dùng không vỡ. Ảnh cắt nền của sản 
 
 **Kiểm:** `tools/check-studio.py library | product | catalog` (Supabase giả lập có
 Storage giữ file tải lên, nên kiểm được cả cỡ ảnh lẫn độ trong suốt).
+
+### Hàng ký gửi + lựa chọn (13/10/2026)
+
+Quyết định D22, D23. Hàng ký gửi đầu tiên: nến Tiny's Herbal (đơn 01/10, 37 món),
+tất Re.socks (tồn cuối tháng 9: 44 đôi), sổ khâu tay Tiệm sổ Cún Con (chuyển từ
+Văn phòng phẩm sang).
+
+**Database** — `supabase/migrations/20261013_ky_gui_options.sql` (đã chạy, migration
+`gem_ky_gui_options`):
+- `products.consignor` (≤ 80 chữ, null = đồ Gem làm), `products.notes_vi/en` (≤ 4000),
+  `products.options` jsonb: `{ label_vi, label_en, choices: [{ key, vi, en, note_vi,
+  note_en, image, out }] }`. **`key` không bao giờ đổi** sau khi lưu: giỏ của khách
+  và đơn giữ key. `out: true` = lựa chọn tạm hết.
+- Hình dạng `options` kiểm bằng `product_options_ok()` trong CHECK: 1–60 lựa chọn,
+  key `[a-z0-9-]`, không trùng, tên ≤ 60, mô tả ≤ 300, ảnh chỉ là
+  `images/products/…` hoặc ảnh trong kho `gem-media`. Hàm chạy bằng quyền người
+  ghi nên `authenticated` có EXECUTE, `anon` thì không.
+- `create_order()`: món có lựa chọn thì mỗi dòng phải gửi `option` (key) → sai /
+  thiếu: `need_option`, đã hết: `option_out` (cả đơn không ghi). Tên lựa chọn chụp
+  vào `order_items.option_vi`. Món không có lựa chọn bỏ qua `option` — bản web cũ
+  (chỉ gửi sku + qty) vẫn đặt được như trước.
+- `notify_payload()` thêm `option` cho mỗi món; Edge Function `notify` (v5) in
+  “Nến thơm hũ 120g · Camp Fire × 2”.
+- Kiểm: câu GRANT-vs-policy vẫn đúng 3 dòng cũ. Ba vai sửa `options`: nhân sự →
+  ghi được; đăng nhập không phải nhân sự → 0 dòng (RLS); anon → `permission denied`.
+  `create_order` thử trong giao dịch rồi huỷ: thiếu lựa chọn, lựa chọn hết, key lạ,
+  đơn thường, `option` gửi kèm món thường — đều đúng; không để lại đơn nào.
+
+**Dữ liệu** — `supabase/migrations/20261013b_ky_gui_products.sql`, **chạy SAU KHI
+MERGE** (ảnh `images/products/ky-gui-*.webp` và khối HTML phải có trên web trước):
+9 món ký gửi + 3 thẻ túi tái chế + chuyển sổ Cún Con. Sinh từ một file dữ liệu soạn tay; chạy lại không sao
+(`on conflict do nothing`). Đã chạy thử trong giao dịch rồi huỷ: qua mọi CHECK.
+- Tiny's Herbal: **Nến thơm hũ 120g** — 13 mùi, 170.000đ (giá trên đơn ký gửi,
+  Gem giữ 30%); nến cupcake 179.000đ; nến macaron 108.000đ.
+- Re.socks: Tái Xinh cổ ngắn (Đen / Xám nhạt · S / M, 29.000đ) và Hà Nội sợi cà
+  phê (S / M / L, 79.000đ) hiện luôn, ảnh là poster Gem tự thiết kế. Tái Xinh trơn
+  (đen), Đất Nước (Tất Thắng / Suôn Sẻ), Học Đường (Bác Học / Gấu Che), hộp “Cái Thứ
+  Gì” **để ẩn** đến khi nhân sự tải ảnh trong admin.
+- Ảnh nến: cắt từ catalogue Tiny's Herbal (535px, đủ cho thẻ), Matcha Latte và
+  Lotus Grace là ảnh nét hơn chủ shop gửi. Mô tả mùi (hương đầu / giữa / cuối) đọc
+  từ nhãn hũ.
+- **Túi tái chế của Gem** (cùng file, mục Phụ kiện vải vụn, ngay sau Reimagine the
+  Denim): **Túi đi chơi** (6 mẫu, 80.000–300.000đ), **Túi đi chợ** (2 mẫu,
+  60.000–260.000đ), **Túi đựng laptop** (250.000–400.000đ). Mỗi túi chỉ có một chiếc
+  nên là một “Mẫu”: bán chiếc nào bấm Hết chiếc đó. Khoảng giá do chủ shop đưa; giá
+  đúng chốt khi nhắn khách (giỏ tự ghi “từ …”). Ảnh = poster Gem tự thiết kế, ảnh
+  thẻ là phần vuông của poster (bỏ logo). Ba túi jeans để trong Túi đi chơi như
+  poster ghi; thẻ Reimagine the Denim giữ nguyên.
+
+**Trang Sản phẩm:** khối `#hang-ky-gui` (`data-cat="ky-gui"`) và hai mục danh mục
+ẩn sẵn, `catalog.js` hiện khi có thẻ. Nhãn “Ký gửi · …” (`.pc-consign`) dựng từ
+`consignor`. Thẻ có lựa chọn: nút “Chọn mùi hương” / “Chọn cỡ” mở **bảng chi tiết**
+(`gallery.js`, cùng modal với lightbox): ảnh khung vuông cố định (đổi mùi không làm
+nút nhảy), giá, các ô lựa chọn (ô hết: viền đứt, không bấm được), mô tả lựa chọn,
+“Thêm vào giỏ”, “Xem giỏ hàng”, Ghi chú. Chưa chọn mà bấm thêm → nhắc “Bạn chọn mùi
+hương trước nhé.” Món không có lựa chọn / ký gửi / ghi chú vẫn mở lightbox cũ.
+
+**Giỏ** (`basket.js`): mỗi lựa chọn là một dòng (`opt` trong `gem-basket`), ảnh dòng
+là ảnh của lựa chọn đó. Khi database trả lời, dòng có lựa chọn đã hết / không còn bị
+bỏ ra. Studio không bán được món có lựa chọn (`GemBasket.add` từ chối) — admin chặn
+chọn Kệ và ẩn “Đặt vào Studio” cho món có lựa chọn.
+
+**Admin → Sản phẩm → Sửa:** “Hàng ký gửi của”, khung “Lựa chọn cho khách” (tên
+lựa chọn VI / EN; mỗi ô: tên, mô tả ngắn, ảnh riêng, Còn hàng / Hết, Lên trước, Bỏ),
+Ghi chú VI / EN. Danh sách ghi “Ký gửi · Tiny's Herbal · Mùi hương: 13 (1 hết)”.
+Tab Đơn hàng hiện lựa chọn: “Nến thơm hũ 120g · **Camp Fire** × 2”.
+
+**Còn treo:**
+- Cỡ M của Đất Nước / Học Đường: bảng giá Re.socks ghi Đất Nước (vớ nữ) M = chân
+  36–39, bảng size chung ghi M = 40–44. Ghi chú đang theo bảng giá — xem nhãn rồi
+  sửa trong admin trước khi bật hai món này.
+- Ảnh hũ nâu đều là cỡ 250g (nhãn in “250 grams”); ghi chú đã nói rõ hũ ở Gem là
+  120g. Có ảnh hũ 120g thì thay. Lavender Linen / Rosie Blush: catalogue ghi 100g,
+  đơn ghi 120g — đang theo đơn.
+- Shopee của Tiny's để giá từ 199.000đ; web Gem 170.000đ theo đơn ký gửi.
+
+**Kiểm:** Playwright với Supabase giả lập ở 375 / 768 / 1440 / 1920, VI + EN: khối
+hiện 6 thẻ (4 món Re.socks ẩn không lộ), không tràn ngang, không lỗi script; luồng
+mua trên điện thoại và máy tính: nút thẻ mở bảng, nhắc chọn trước, đổi ảnh + mô
+tả theo mùi, ô hết không chọn được, giỏ 2 dòng Camp Fire × 2 + Matcha Latte × 1,
+đơn gửi `option` đúng key; nến cupcake (không lựa chọn) thêm thẳng; Origami Pouch
+vẫn mở lightbox cũ; đổi EN khi đang mở bảng. Admin ở 390 / 1280: sửa, thêm lựa
+chọn (key tự sinh), Hết, lưu một PATCH, chặn Kệ, báo lựa chọn thiếu tên.
+`tools/check-studio.py`: all ok.
 
 ### Bàn thiết kế — "chơi" (đợt 1, 10/2026)
 
