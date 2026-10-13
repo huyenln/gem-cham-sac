@@ -132,7 +132,7 @@ Quick reference:
 - **Có giỏ hàng + đặt đơn** (`js/basket.js`): trả khi nhận (COD) hoặc chuyển khoản VietQR (D14). KHÔNG có cổng thẻ, KHÔNG có tài khoản khách — đăng nhập chỉ dành cho nhân sự (`admin.html`). Khách xem lại món đã mua qua "Tủ sưu tầm" bằng mã đơn + SĐT.
 
 **Products (6 categories):**
-1. Phụ kiện vải vụn (14 sản phẩm — tên thương hiệu in sẵn trên ảnh: Origami Pouch, Oxford Shirt, Reimagine the Denim, Bloom Charm, Túi bút kẹp sổ, Thảm/Gối Chắp Sắc, Lót Cốc, Túi đeo chéo, Bookmark, Ví & thẻ vải ghép, Bìa sổ, Dây đeo cổ tay, Dây buộc tóc)
+1. Phụ kiện vải vụn (14 sản phẩm — tên thương hiệu in sẵn trên ảnh: Origami Pouch, Oxford Shirt, Reimagine the Denim, Bloom Charm, Túi bút kẹp sổ, Thảm/Gối Chắp Sắc, Lót Cốc, Túi đeo chéo, Bookmark, Ví & thẻ vải ghép, Bìa sổ, Dây đeo cổ tay, Dây buộc tóc). Túi tái chế (13/10/2026): Túi đi chơi (6 mẫu), Túi đi chợ (2 mẫu), Túi đựng laptop — mỗi túi một chiếc, là một "Mẫu" trong thẻ, bán thì bấm Hết
 2. Văn phòng phẩm bền vững (Sổ kraft spiral)
 3. Quần áo 2hand (1 card → gallery 23 ảnh, mỗi ảnh tự ghi tên món)
 4. Gốm sứ Nhật (1 card → gallery)
@@ -385,7 +385,7 @@ Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
   Danh mục mới thì vẫn cần thêm khối HTML (`<div class="product-grid" data-cat="…">`)
   + `CATEGORIES` trong `js/admin.js`. Món có lựa chọn không bày được trong Studio.
 - 🕯️ Hàng ký gửi (13/10/2026): sau khi merge, chạy
-  `supabase/migrations/20261013b_ky_gui_products.sql` (9 món + chuyển sổ Cún Con).
+  `supabase/migrations/20261013b_ky_gui_products.sql` (9 món ký gửi + 3 thẻ túi tái chế + chuyển sổ Cún Con).
   4 mẫu tất Re.socks để ẩn chờ ảnh; cỡ M của Đất Nước / Học Đường cần xem nhãn.
   Chi tiết: `docs/design.md` → "Hàng ký gửi + lựa chọn".
 - 📝 Bản dịch EN là first-pass — Anna review & chỉnh trong `STRINGS` (`js/i18n.js`)

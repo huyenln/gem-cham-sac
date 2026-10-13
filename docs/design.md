@@ -1517,7 +1517,7 @@ Văn phòng phẩm sang).
 
 **Dữ liệu** — `supabase/migrations/20261013b_ky_gui_products.sql`, **chạy SAU KHI
 MERGE** (ảnh `images/products/ky-gui-*.webp` và khối HTML phải có trên web trước):
-9 món mới + chuyển sổ Cún Con. Sinh từ một file dữ liệu soạn tay; chạy lại không sao
+9 món ký gửi + 3 thẻ túi tái chế + chuyển sổ Cún Con. Sinh từ một file dữ liệu soạn tay; chạy lại không sao
 (`on conflict do nothing`). Đã chạy thử trong giao dịch rồi huỷ: qua mọi CHECK.
 - Tiny's Herbal: **Nến thơm hũ 120g** — 13 mùi, 170.000đ (giá trên đơn ký gửi,
   Gem giữ 30%); nến cupcake 179.000đ; nến macaron 108.000đ.
@@ -1528,6 +1528,13 @@ MERGE** (ảnh `images/products/ky-gui-*.webp` và khối HTML phải có trên 
 - Ảnh nến: cắt từ catalogue Tiny's Herbal (535px, đủ cho thẻ), Matcha Latte và
   Lotus Grace là ảnh nét hơn chủ shop gửi. Mô tả mùi (hương đầu / giữa / cuối) đọc
   từ nhãn hũ.
+- **Túi tái chế của Gem** (cùng file, mục Phụ kiện vải vụn, ngay sau Reimagine the
+  Denim): **Túi đi chơi** (6 mẫu, 80.000–300.000đ), **Túi đi chợ** (2 mẫu,
+  60.000–260.000đ), **Túi đựng laptop** (250.000–400.000đ). Mỗi túi chỉ có một chiếc
+  nên là một “Mẫu”: bán chiếc nào bấm Hết chiếc đó. Khoảng giá do chủ shop đưa; giá
+  đúng chốt khi nhắn khách (giỏ tự ghi “từ …”). Ảnh = poster Gem tự thiết kế, ảnh
+  thẻ là phần vuông của poster (bỏ logo). Ba túi jeans để trong Túi đi chơi như
+  poster ghi; thẻ Reimagine the Denim giữ nguyên.
 
 **Trang Sản phẩm:** khối `#hang-ky-gui` (`data-cat="ky-gui"`) và hai mục danh mục
 ẩn sẵn, `catalog.js` hiện khi có thẻ. Nhãn “Ký gửi · …” (`.pc-consign`) dựng từ

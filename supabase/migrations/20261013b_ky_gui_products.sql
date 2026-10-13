@@ -1,6 +1,6 @@
--- Hàng ký gửi: 9 sản phẩm + chuyển sổ Cún Con sang mục mới — 13/10/2026.
+-- Hàng ký gửi (9 món) + túi tái chế của Gem (3 thẻ) + chuyển sổ Cún Con — 13/10/2026.
 -- CHẠY SAU KHI MERGE (ảnh images/products/ky-gui-*.webp và mục "Hàng ký gửi"
--- trên san-pham.html phải có trên web trước). Cần 20261013_ky_gui_options.sql.
+-- trên san-pham.html phải có trên web trước; web cũ chưa biết chọn mẫu). Cần 20261013_ky_gui_options.sql.
 -- Sinh từ dữ liệu soạn tay; chạy lại không sao (on conflict do nothing).
 --
 -- Re.socks: Tái Xinh cổ ngắn + Hà Nội hiện luôn (ảnh poster Gem tự thiết kế); 4
@@ -226,6 +226,69 @@ Material: 50% cotton · 40% polyester · 5% spandex · 5% rubber.
 Machine wash below 60°C, ideally in a laundry bag. Dry in the shade.',
         true,
         false)
+on conflict (sku) do nothing;
+
+insert into public.products (sku, category, sort_order, name_vi, name_en, desc_vi, desc_en, price, price_max, image, gallery, options, notes_vi, notes_en, in_stock, is_published)
+values ('tui-di-choi',
+        'vai-vun',
+        22,
+        'Túi đi chơi',
+        'Day bag',
+        'Từ vải vụn & quần jeans cũ',
+        'From fabric scraps & old jeans',
+        80000,
+        300000,
+        'images/products/vai-vun-tui-di-choi-thumb.webp',
+        array['images/products/vai-vun-tui-di-choi-hoa-xanh.webp','images/products/vai-vun-tui-di-choi-den-charm.webp','images/products/vai-vun-tui-di-choi-do-den.webp','images/products/vai-vun-tui-di-choi-jeans-hong.webp','images/products/vai-vun-tui-di-choi-jeans-vang.webp','images/products/vai-vun-tui-di-choi-jeans-xanh.webp']::text[],
+        '{"label_vi": "Mẫu", "label_en": "Design", "choices": [{"key": "hoa-xanh", "vi": "Hoa hồng nền xanh", "en": "Roses on green", "note_vi": "Tái chế từ vải vụn, quai thắt nút.", "note_en": "From fabric scraps, knotted strap.", "image": "images/products/vai-vun-tui-di-choi-hoa-xanh.webp"}, {"key": "den-charm", "vi": "Đen – xanh, charm hoa", "en": "Black & blue, flower charm", "note_vi": "Tái chế từ vải vụn, kèm móc hoa vải.", "note_en": "From fabric scraps, with a fabric-flower charm.", "image": "images/products/vai-vun-tui-di-choi-den-charm.webp"}, {"key": "do-den", "vi": "Đỏ – đen", "en": "Red & black", "note_vi": "Tái chế từ vải vụn, đeo vai.", "note_en": "From fabric scraps, worn on the shoulder.", "image": "images/products/vai-vun-tui-di-choi-do-den.webp"}, {"key": "jeans-hong", "vi": "Jeans hồng – xanh nhạt", "en": "Pink & pale-blue jeans", "note_vi": "Tái chế từ quần jeans, thắt nơ đen.", "note_en": "From old jeans, tied with a black bow.", "image": "images/products/vai-vun-tui-di-choi-jeans-hong.webp"}, {"key": "jeans-vang", "vi": "Jeans vàng mù tạt", "en": "Mustard jeans", "note_vi": "Tái chế từ quần jeans, có khoá kéo, giữ nguyên túi sau.", "note_en": "From old jeans, zipped, back pocket kept.", "image": "images/products/vai-vun-tui-di-choi-jeans-vang.webp"}, {"key": "jeans-xanh", "vi": "Jeans xanh", "en": "Blue jeans", "note_vi": "Tái chế từ quần jeans, giữ nguyên túi sau.", "note_en": "From old jeans, back pocket kept.", "image": "images/products/vai-vun-tui-di-choi-jeans-xanh.webp"}]}'::jsonb,
+        'Mỗi chiếc chỉ có một — may từ vải vụn và quần jeans cũ, không chiếc nào giống chiếc nào.
+Giá tuỳ từng chiếc (kích cỡ, vải); chúng mình báo giá đúng khi nhắn lại.',
+        'Each one is the only one — sewn from fabric scraps and old jeans, no two alike.
+The price depends on the bag (size, fabric); we confirm it when we reply.',
+        true,
+        true)
+on conflict (sku) do nothing;
+
+insert into public.products (sku, category, sort_order, name_vi, name_en, desc_vi, desc_en, price, price_max, image, gallery, options, notes_vi, notes_en, in_stock, is_published)
+values ('tui-di-cho',
+        'vai-vun',
+        24,
+        'Túi đi chợ',
+        'Market tote',
+        'Từ vải vụn & bao cát mèo',
+        'From fabric scraps & a cat-litter sack',
+        60000,
+        260000,
+        'images/products/vai-vun-tui-di-cho-thumb.webp',
+        array['images/products/vai-vun-tui-di-cho-bao-cat-meo.webp','images/products/vai-vun-tui-di-cho-caro-hong.webp']::text[],
+        '{"label_vi": "Mẫu", "label_en": "Design", "choices": [{"key": "bao-cat-meo", "vi": "Bao cát mèo", "en": "Cat-litter sack", "note_vi": "Tái chế từ bao cát mèo, quai tím.", "note_en": "From a cat-litter sack, purple handles.", "image": "images/products/vai-vun-tui-di-cho-bao-cat-meo.webp"}, {"key": "caro-hong", "vi": "Caro hồng", "en": "Pink check", "note_vi": "Tái chế từ vải vụn caro.", "note_en": "From checked fabric scraps.", "image": "images/products/vai-vun-tui-di-cho-caro-hong.webp"}]}'::jsonb,
+        'Mỗi chiếc chỉ có một — may từ vải vụn và bao cũ, không chiếc nào giống chiếc nào.
+Giá tuỳ từng chiếc (kích cỡ, vải); chúng mình báo giá đúng khi nhắn lại.',
+        'Each one is the only one — sewn from fabric scraps and old sacks, no two alike.
+The price depends on the bag (size, fabric); we confirm it when we reply.',
+        true,
+        true)
+on conflict (sku) do nothing;
+
+insert into public.products (sku, category, sort_order, name_vi, name_en, desc_vi, desc_en, price, price_max, image, gallery, options, notes_vi, notes_en, in_stock, is_published)
+values ('tui-laptop',
+        'vai-vun',
+        26,
+        'Túi đựng laptop',
+        'Laptop sleeve',
+        'Từ quần jeans & vải vụn',
+        'From old jeans & fabric scraps',
+        250000,
+        400000,
+        'images/products/vai-vun-tui-laptop-thumb.webp',
+        array['images/products/vai-vun-tui-laptop.webp']::text[],
+        null,
+        'Túi đựng laptop có khoá kéo, ghép từ quần jeans cũ và vải vụn hoa văn.
+Giá tuỳ từng chiếc; chúng mình báo giá đúng khi nhắn lại.',
+        'Zipped laptop sleeve pieced from old jeans and patterned fabric scraps.
+The price depends on the sleeve; we confirm it when we reply.',
+        true,
+        true)
 on conflict (sku) do nothing;
 
 update public.products
