@@ -1482,10 +1482,18 @@ lượt (tối đa 20): bỏ bớt bằng ×, cả lượt chung một tab + m�
 tên lấy theo tên file; xử lý lần lượt từng ảnh, ảnh lỗi ở lại trong khung để thử lại.
 Một ảnh thì đặt luôn vào cảnh; nhiều ảnh thì chỉ mở tab (đặt hết vào giữa sẽ chồng lên nhau). "Sửa thư viện": đổi
 tên / chuyển tab / bỏ ảnh đã tải lên. Bỏ chỉ xoá dòng trong thư viện, file vẫn ở
-Storage để bố cục đang dùng không vỡ. Ảnh cắt nền của sản phẩm tự hiện ở tab
-"Sản phẩm thật", đã nối sẵn sku.
+Storage để bố cục đang dùng không vỡ. Tab "Sản phẩm thật" có **mọi** sản phẩm, đã
+nối sẵn sku: ảnh cắt nền trước; món chưa có ảnh cắt nền xếp sau, hiện ảnh chụp với
+nhãn "chưa cắt nền" (đặt vào thì thành ảnh trong khung gỗ, như "Đặt vào Studio";
+món đang ẩn ghi thêm "đang ẩn") — 13/10/2026, trước đó món mới không hiện ở tab này.
 
-**Kiểm:** `tools/check-studio.py library | product | catalog` (Supabase giả lập có
+**Ảnh cắt nền từ thư viện (13/10/2026):** admin → Sản phẩm → Sửa → "Ảnh cắt nền" →
+**Chọn từ thư viện** (chỉ owner, vì `studio_assets` chỉ owner đọc được): lưới ảnh đã
+tải lên ở Lắp studio, mới nhất trước, có ô tìm theo tên; bấm một ảnh → thành ảnh cắt
+nền, Lưu là xong, không tải lại file. 3 món nến (`nen-thom-120`, `nen-cupcake`,
+`nen-macaron`) đã được gán ảnh cắt nền có sẵn trong thư viện bằng SQL ngày 13/10.
+
+**Kiểm:** `tools/check-studio.py library | product | prodlib | catalog` (Supabase giả lập có
 Storage giữ file tải lên, nên kiểm được cả cỡ ảnh lẫn độ trong suốt).
 
 ### Hàng ký gửi + lựa chọn (13/10/2026)

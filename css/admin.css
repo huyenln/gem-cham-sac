@@ -547,6 +547,14 @@
 }
 .se-asset:hover { border-color: var(--sage-deep); }
 .se-asset img { width: 100%; height: 100%; object-fit: contain; }
+/* "Sản phẩm thật": a product with no cut-out yet goes on as its photo, framed */
+.se-asset.is-photo { position: relative; border-style: dashed; }
+.se-asset-tag {
+  position: absolute; left: 3px; right: 3px; bottom: 3px;
+  padding: 1px 4px; border-radius: 6px;
+  background: rgba(61, 74, 46, .78); color: #fff;
+  font-size: 10px; line-height: 1.3; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 
 @media (min-width: 1100px) {
   .se { grid-template-columns: minmax(0, 1fr) 340px; }
@@ -641,6 +649,18 @@
 .ad-cut-prev img { max-width: 100%; max-height: 100%; }
 .ad-cut-acts { display: flex; flex-direction: column; gap: var(--space-2); align-items: flex-start; }
 .ad-cut-tol { display: flex; align-items: center; gap: var(--space-2); font-size: .9rem; }
+/* "Chọn từ thư viện": the Lắp studio pictures, tap one to make it the cut-out */
+.ad-cut-lib { display: grid; gap: var(--space-2); margin-top: var(--space-3); padding: var(--space-3);
+  border: 1.5px dashed var(--sage-deep); border-radius: 10px; background: var(--paper-white); }
+.ad-cut-lib[hidden] { display: none; }
+.ad-cut-find { min-height: 40px; width: 100%; }
+.ad-cut-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 6px;
+  max-height: 300px; overflow-y: auto; }
+.ad-cut-pick { display: grid; gap: 2px; padding: 4px; border: 1.5px solid var(--sage-light); border-radius: 8px;
+  background: #f4ecdf; cursor: pointer; font: inherit; text-align: center; min-width: 0; }
+.ad-cut-pick:hover, .ad-cut-pick:focus-visible { border-color: var(--sage-deep); }
+.ad-cut-pick img { width: 100%; aspect-ratio: 1; object-fit: contain; }
+.ad-cut-pick span { font-size: 11px; line-height: 1.3; color: var(--ink-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* Layout editor: upload / edit a library picture */
 .se-upform { display: flex; gap: var(--space-3); align-items: flex-start; padding: var(--space-3);

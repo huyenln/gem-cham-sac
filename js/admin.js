@@ -910,8 +910,14 @@
               '<button type="button" class="ad-btn ad-cut-go">Xoá nền trắng</button>' +
               '<label class="ad-cut-tol">Mức xoá <input type="range" min="8" max="80" value="28"></label>' +
               '<label class="ad-btn ad-upload">Chọn ảnh đã tách nền<input type="file" accept="image/png,image/webp" hidden data-up="cutout"></label>' +
+              // the Lắp studio library is the owner's (studio_assets)
+              (me && me.role === 'owner' ? '<button type="button" class="ad-btn ad-cut-lib-go" aria-expanded="false">Chọn từ thư viện</button>' : '') +
               '<button type="button" class="ad-btn ad-cut-clear">Bỏ ảnh cắt</button>' +
             '</div>' +
+          '</div>' +
+          '<div class="ad-cut-lib" hidden>' +
+            '<input type="search" class="ad-cut-find" placeholder="Tìm theo tên ảnh…" aria-label="Tìm ảnh trong thư viện">' +
+            '<div class="ad-cut-grid"></div>' +
           '</div>' +
           '<p class="ad-hint">“Xoá nền trắng” dùng ảnh chính vừa chọn (hoặc ảnh đầu thư viện). Chụp ' +
             'trên giấy / tường trắng là xoá sạch nhất. Chỉ phần nền nối ra mép ảnh bị xoá, ' +
@@ -1134,6 +1140,48 @@
 
     form.querySelector('.ad-cut-clear').addEventListener('click', function () {
       pendingCut = null; cutout = null; showCut(null);
+    });
+
+    // "Chọn từ thư viện": a picture already uploaded in Lắp studio becomes the
+    // cut-out as it is, no second upload. Newest first; names are typed: esc().
+    var libBox = form.querySelector('.ad-cut-lib'), libGo = form.querySelector('.ad-cut-lib-go');
+    var libRows = null;   // null: not loaded yet
+    function libDraw() {
+      var q = slugify(form.querySelector('.ad-cut-find').value);
+      var grid = libBox.querySelector('.ad-cut-grid');
+      if (!libRows) { grid.innerHTML = '<span class="ad-hint">Đang tải thư viện…</span>'; return; }
+      var rows = libRows.filter(function (r) { return !q || slugify((r.name || '') + ' ' + r.src.split('/').pop()).indexOf(q) >= 0; });
+      grid.innerHTML = rows.length ? rows.map(function (r) {
+        var nm = r.name || r.src.split('/').pop();
+        return '<button type="button" class="ad-cut-pick" data-src="' + esc(r.src) + '" title="' + esc(nm) + '">' +
+          '<img src="' + esc(r.src) + '" alt="" loading="lazy"><span>' + esc(nm) + '</span></button>';
+      }).join('') : '<span class="ad-hint">Không có ảnh nào khớp.</span>';
+    }
+    if (libGo) libGo.addEventListener('click', function () {
+      libBox.hidden = !libBox.hidden;
+      libGo.setAttribute('aria-expanded', String(!libBox.hidden));
+      if (libBox.hidden) return;
+      libDraw();
+      if (libRows) return;
+      window.GemDB.studioAssets().then(function (rows) {
+        libRows = (rows || []).filter(function (r) { return r && typeof r.src === 'string'; }).reverse();
+        libDraw();
+      }, function (err) {
+        libRows = [];
+        libDraw();
+        toast(err.message || 'Không tải được thư viện', true);
+      });
+    });
+    libBox.addEventListener('input', libDraw);
+    libBox.addEventListener('click', function (e) {
+      var b = e.target.closest('.ad-cut-pick');
+      if (!b) return;
+      pendingCut = null;
+      cutout = b.getAttribute('data-src');
+      showCut(cutout);
+      libBox.hidden = true;
+      libGo.setAttribute('aria-expanded', 'false');
+      toast('Đã chọn — bấm Lưu để giữ');
     });
 
     el.main.querySelector('.ad-cancel').addEventListener('click', function () {
