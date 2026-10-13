@@ -674,6 +674,9 @@
 .se-upform-f .se-up-cut { display: flex; align-items: center; gap: var(--space-2); }
 .se-lib.is-manage .se-asset.is-own { border-style: dashed; border-color: var(--sage-deep); }
 .se-lib.is-manage .se-asset:not(.is-own) { opacity: .45; }
+/* "Sửa thư viện" on "Sản phẩm thật": a product is tapped to change its picture */
+.se-lib.is-manage .se-asset.is-prod { opacity: 1; border-style: dashed; border-color: var(--kraft); }
+.se-cutfor .se-cf-up { justify-self: start; display: inline-flex; align-items: center; }
 /* several pictures: thumbnails on top, the form below */
 .se-upform.is-many { flex-direction: column; align-items: stretch; }
 .se-up-strip { list-style: none; margin: 0; padding: 0; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: thin; }
