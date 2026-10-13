@@ -203,8 +203,6 @@
     'studio.hot_counter':  { vi: `Quầy thu ngân`, en: `Counter` },
     'studio.tag_link':     { vi: `Xem thêm`, en: `See more` },
 
-    'studio.intro':        { vi: `Chào bạn! Chạm vào nhãn tên để mở từng góc, chạm chỗ khác để đi dạo nhé.`, en: `Hi! Tap a name tag to open a corner, or anywhere else to walk around.` },
-    'studio.intro_touch':  { vi: `Chào bạn! Chạm vào một món để xem tên, chạm lần nữa để mở. Chạm chỗ khác để đi dạo nhé.`, en: `Hi! Tap a thing to see its name, tap again to open it. Tap anywhere else to walk around.` },
     'studio.pick_story':   { vi: `Câu chuyện`, en: `A story` },
     'studio.pick_talk':    { vi: `Trò chuyện`, en: `Say hi` },
     'studio.pick_post':    { vi: `Bản tin`, en: `News` },
@@ -237,6 +235,25 @@
     'studio.go_out':       { vi: `Ra ngoài cửa`, en: `Step outside` },
     'studio.hot_enter':    { vi: `Vào studio`, en: `Go in` },
     'studio.hot_dantranh': { vi: `Đàn tranh`, en: `Đàn tranh zither` },
+    'studio.welcome':      { vi: `Chào mừng bạn đến Gem Studio 2D!`, en: `Welcome to Gem Studio 2D!` },
+    'studio.tip_swipe':    { vi: `Vuốt sang trái, phải để đi dạo.`, en: `Swipe left or right to walk around.` },
+    'studio.tip_swipe_mouse': { vi: `Kéo chuột hoặc bấm phím ← → để đi dạo.`, en: `Drag, or press ← →, to walk around.` },
+    'studio.tip_door':     { vi: `Chạm vào cửa để vào studio nhé.`, en: `Tap the door to come in.` },
+    'studio.tip_door_zt':  { vi: `Chạm vào cửa để vào studio. Ngoài này còn có đàn tranh để chơi.`, en: `Tap the door to come in. Out here there's also a đàn tranh to play.` },
+    'studio.tip_inside':   { vi: `Chạm một món để xem tên, chạm lần nữa để mở.`, en: `Tap a thing to see its name, tap again to open it.` },
+    'studio.tip_inside_mouse': { vi: `Rê chuột lên một món để xem tên, bấm để mở.`, en: `Point at a thing to see its name, click to open it.` },
+    'studio.tip_close':    { vi: `Đóng gợi ý`, en: `Close the tip` },
+    'studio.tip_skip':     { vi: `Bỏ qua hướng dẫn`, en: `Skip the tips` },
+    'studio.edge_go':      { vi: `Đi tới {name}`, en: `Go to {name}` },
+    'studio.help':         { vi: `Hướng dẫn`, en: `How to play` },
+    'studio.help_h':       { vi: `Cách chơi`, en: `How to play` },
+    'studio.help_walk':    { vi: `Vuốt sang trái, phải để đi dạo, hoặc chạm sàn để đi tới chỗ đó.`, en: `Swipe left or right to walk around, or tap the floor to go there.` },
+    'studio.help_walk_mouse': { vi: `Kéo chuột hoặc bấm phím ← → để đi dạo, hoặc bấm sàn để đi tới chỗ đó.`, en: `Drag, or press ← →, to walk around, or click the floor to go there.` },
+    'studio.help_tag':     { vi: `Tên`, en: `Name` },
+    'studio.help_edge':    { vi: `Nhãn ở mép màn hình chỉ chỗ đang khuất; chạm vào để đi tới.`, en: `The tags at the screen's edges point to places out of view; tap one to go there.` },
+    'studio.help_here':    { vi: `Ở đây có gì`, en: `What's here` },
+    'studio.help_go':      { vi: `Đi tới`, en: `Go` },
+    'studio.help_replay':  { vi: `Xem lại hướng dẫn từ đầu`, en: `Show the tips again` },
     'studio.zt_h':         { vi: `Đàn tranh`, en: `Đàn tranh` },
     'studio.zt_p':         { vi: `Chạm để gảy · vuốt để rải · chạm chữ nhỏ bên trái nhạn để nhấn.`, en: `Tap to pluck · sweep for a run · tap a small name left of a bridge to press.` },
     'studio.zt_names':     { vi: `Tên nốt`, en: `Note names` },
@@ -263,7 +280,6 @@
     'studio.zt_mute':      { vi: `Không nghe tiếng? Xem âm lượng và chế độ im lặng của máy.`, en: `No sound? Check the volume and silent mode.` },
     'studio.zt_none':      { vi: `Trình duyệt này chưa phát được âm thanh.`, en: `This browser can't play sound.` },
     'studio.zt_string':    { vi: `Dây {n}`, en: `String {n}` },
-    'studio.out_intro':    { vi: `Chào bạn! Chạm vào cửa để vào studio nhé.`, en: `Hi! Tap the door to come in.` },
     'studio.wear_on':      { vi: `Đeo thử`, en: `Try it on` },
     'studio.wear_off':     { vi: `Tháo ra`, en: `Take it off` },
     'studio.wear_tag':     { vi: `Đang đeo`, en: `Wearing` },
@@ -1340,6 +1356,8 @@
       build();
       paintPins();
     }
+    edgeSet = null;
+    if (guide.cur && (guide.cur === 'inside') !== (name === 'in')) tipHide();   // not seen: it comes back
     walkToken++;
     player.x = SCENE.startX; player.facing = 1; player.moving = false; player.moved = false;
     layout();
@@ -1351,6 +1369,8 @@
   var sceneInHistory = false;
   function goScene(name, then, fromHistory) {
     if (name === sceneName) { if (then) then(); return; }
+    var inDoor = name === 'in' && sceneName === 'out';
+    if (inDoor) guideDid('enter');
     closeSheet();
     unpick();
     if (name === 'in' && !sceneInHistory) {
@@ -1367,6 +1387,7 @@
         if (shown) return;
         shown = true;
         html.classList.remove('st-wait');
+        if (inDoor) bell();
         if (then) setTimeout(then, 250);
       };
       if (bg.complete && bg.naturalWidth) show();
@@ -1375,7 +1396,8 @@
   }
 
   function enterStudio() {
-    walkTo(standX(hotById('enter')), function () { goScene('in', hello); });
+    bellReady();   // still inside the tap: a phone allows sound to start only there
+    walkTo(standX(hotById('enter')), function () { goScene('in', function () { hello(true); }); });
   }
 
   // (Re)build the frames for the chosen character. Each frame is a box the
@@ -1551,6 +1573,7 @@
     cam = Math.max(0, Math.min(player.x * k - viewW / 2, worldW - viewW));
     world.style.transform = 'translate3d(' + (-cam) + 'px,0,0)';
     placeTags(viewW);
+    edges(viewW);
   }
 
   /* ======================================================================
@@ -1609,6 +1632,280 @@
   }
 
   /* ======================================================================
+     THE SHOP BELL — rung as the visitor comes in through the door, with
+     Udon's welcome. Made here, no sound file: a small brass bell struck
+     twice as the door swings, each strike a few sine partials at a bell's
+     ratios fading at their own pace. A phone only lets sound start inside
+     a tap, so the tap that opens the door readies it (bellReady), and the
+     bell rings once the studio is in view. iPhone: the bell keeps to the
+     silent switch ("ambient"); the đàn, once played, asks to be heard.
+     ====================================================================== */
+  var sfxCtx = null;
+  function audioCtx() {   // one AudioContext for the bell and the đàn
+    if (sfxCtx) return sfxCtx;
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    try { sfxCtx = new AC(); } catch (e) { return null; }
+    return sfxCtx;
+  }
+  function bellReady() {
+    try { if (navigator.audioSession && navigator.audioSession.type !== 'playback') navigator.audioSession.type = 'ambient'; } catch (e) { /* older Safari */ }
+    var ctx = audioCtx();
+    if (ctx && ctx.state === 'suspended') ctx.resume();
+  }
+  function bell() {
+    var ctx = sfxCtx;
+    if (!ctx) return;
+    if (ctx.state === 'suspended') ctx.resume();
+    var now = ctx.currentTime + 0.03, out = ctx.createGain();
+    out.gain.value = 0.2;
+    out.connect(ctx.destination);
+    [[0, 1568], [0.14, 1318.5]].forEach(function (strike) {   // G6, then E6: "ting ting"
+      [[1, 1, 1.5], [2.76, 0.42, 0.55], [5.4, 0.2, 0.28], [8.93, 0.08, 0.16]].forEach(function (pt) {   // ratio, loudness, seconds
+        var o = ctx.createOscillator(), g = ctx.createGain(), t = now + strike[0];
+        o.type = 'sine';
+        o.frequency.value = strike[1] * pt[0];
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(pt[1], t + 0.004);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + pt[2]);
+        o.connect(g); g.connect(out);
+        o.start(t); o.stop(t + pt[2] + 0.05);
+      });
+    });
+  }
+
+  // In the studio. Through the door: the welcome (with the bell), then, the
+  // first time, a tip. Back on a reload: no welcome again, the tip if unseen.
+  function hello(door) {
+    if (door) say('studio.welcome', 3200);
+    clearTimeout(guide.timer);
+    guide.timer = setTimeout(function () { guide.timer = 0; guideTip('inside'); }, door ? 3400 : 800);
+  }
+
+  /* ======================================================================
+     GUIDE — first-visit tips, the tags at the screen's edges, the "?" sheet.
+     After NN/g on onboarding: no tour up front; one tip at a time, at the
+     moment it is needed, gone once the visitor does the thing, always
+     dismissable, never in the way of a tap; help to come back to.
+     Tips, once per browser (localStorage gem-guide = { seen: {id: 1}, off }):
+       swipe  — on the street, at once: swipe (mouse: drag, or ← →) to walk
+       door   — on the street, after the first walk: the door (and the đàn)
+       inside — in the studio, after the welcome: tap to see a name, again to open
+     A tip for a new feature gets a new id: visitors who have been see that
+     one only. "Bỏ qua hướng dẫn" ends them all; "?" can start them again.
+     ====================================================================== */
+  var guide = { seen: {}, off: false, cur: null, timer: 0, loaded: false };
+  var touchUI = !!(window.matchMedia && window.matchMedia('(hover: none)').matches);
+  var tipEl, tipText;
+
+  function guideLoad() {
+    if (guide.loaded) return;
+    guide.loaded = true;
+    try {
+      var o = JSON.parse(localStorage.getItem('gem-guide') || '{}');
+      guide.seen = o.seen && typeof o.seen === 'object' ? o.seen : {};
+      guide.off = o.off === true;
+    } catch (e) { /* private mode */ }
+  }
+  function guideSave() {
+    try { localStorage.setItem('gem-guide', JSON.stringify({ seen: guide.seen, off: guide.off })); } catch (e) { /* private mode */ }
+  }
+
+  function tipWords(id) {
+    if (id === 'swipe') return t(touchUI ? 'studio.tip_swipe' : 'studio.tip_swipe_mouse');
+    if (id === 'door') return t(scenePlaces().some(function (p) { return p.act === 'dantranh'; }) ? 'studio.tip_door_zt' : 'studio.tip_door');
+    if (id === 'inside') return t(touchUI ? 'studio.tip_inside' : 'studio.tip_inside_mouse');
+    return '';
+  }
+
+  function guideTip(id) {
+    guideLoad();
+    if (!tipEl || guide.off || guide.seen[id] || guide.cur || !modal.hidden) return;
+    if ((id === 'inside') !== (sceneName === 'in')) return;
+    guide.cur = id;
+    tipEl.classList.toggle('is-swipe', id === 'swipe');
+    tipText.textContent = tipWords(id);
+    tipEl.hidden = false;
+  }
+  function tipHide() {
+    guide.cur = null;
+    if (tipEl) tipEl.hidden = true;
+  }
+  function guideEnd(id) {   // done with: never again
+    guide.seen[id] = 1;
+    guideSave();
+    if (guide.cur === id) tipHide();
+  }
+  // What the visitor did: 'walk' (a tap on the floor, a swipe, ← →, an edge
+  // tag), 'open' (a sheet), 'enter' (through the door).
+  function guideDid(what) {
+    var cur = guide.cur;
+    if (what === 'walk') {
+      if (cur === 'swipe') guideEnd('swipe');
+      if (sceneName === 'out' && !guide.seen.door && !guide.timer) {
+        guide.timer = setTimeout(function () { guide.timer = 0; if (sceneName === 'out') guideTip('door'); }, 1500);
+      }
+    } else if (what === 'open') {
+      if (cur) guideEnd(cur);
+    } else if (what === 'enter') {
+      clearTimeout(guide.timer); guide.timer = 0;
+      if (sceneName === 'out') { guide.seen.swipe = guide.seen.door = 1; guideSave(); }
+      tipHide();
+    }
+  }
+  function guideRelang() {
+    if (guide.cur) tipText.textContent = tipWords(guide.cur);
+    edgeSet = null;
+    if (stage) render();
+  }
+
+  // This scene's places with something to do: the tap boxes (the built-in
+  // ones and the owner's) and the "Khu vực" pieces, one per thing to do,
+  // left to right. { name, act, x (where to stand), x0 / x1 (the picture), el }
+  var edgeSet = null;
+  function scenePlaces() {
+    if (edgeSet) return edgeSet;
+    var list = [], seen = {};
+    world.querySelectorAll('.st-hot, .st-thing[data-kind="zone"]').forEach(function (el) {
+      var p = placeOf(el);
+      if (!p) return;
+      var it = null, pl = null, name = '', act = '';
+      if (el.classList.contains('st-hot')) {
+        var id = el.getAttribute('data-hot'), h = hotById(id);
+        if (!h || spotOff(id)) return;
+        pl = placeFor(id);
+        if (!pl) return;
+        act = pl.act; name = spotName(h);
+      } else {
+        it = THINGS[+el.getAttribute('data-thing')];
+        if (!it || !it.zone) return;
+        act = it.zone.act; name = zoneName(it);
+        pl = { x: standIn(it), act: act, link: it.zone.link };
+      }
+      if (!name || !act || act === 'none' || /^k-/.test(act)) return;   // a box of the owner's that does nothing
+      var key = act + ' ' + (pl.link || '');
+      if (seen[key]) return;
+      seen[key] = true;
+      list.push({ name: name, act: act, x: pl.x, x0: p.x0, x1: p.x1, el: el, tag: p.tag });
+    });
+    edgeSet = list.sort(function (a, b) { return a.x - b.x; });
+    return edgeSet;
+  }
+  function goPlace(p) {   // walk there; its tag nods: "here, tap me"
+    guideDid('walk');
+    walkTo(p.x, function () { if (p.el.isConnected) nudge(p.el); });
+  }
+
+  // The tags at the screen's edges: the nearest place out of view on each
+  // side (its middle within 50px of the edge or past it: its own tag would
+  // be cut there, so that one steps aside for the edge tag).
+  var edgeL, edgeR;
+  function edges(viewW) {
+    if (!edgeL) return;
+    var list = sceneName ? scenePlaces() : [], m = 50 / k, L = cam / k + m, R = (cam + viewW) / k - m, left = null, right = null;
+    list.forEach(function (p) {
+      if (p.tag && p.tag.classList.contains('is-here')) return;   // where the character is: its own tag stays in view (placeTags)
+      var c = (p.x0 + p.x1) / 2;
+      if (c < L) left = p;
+      else if (c > R && !right) right = p;
+    });
+    edgeShow(edgeL, left, '‹ ');
+    edgeShow(edgeR, right, '', ' ›');
+    if (!player.moving) edgeDodge();
+  }
+  // At rest: an edge tag never covers a place's own tag (a tap there must
+  // open that place). It tries three heights; with none free it steps away.
+  var EDGE_TOPS = ['58%', '74%', '42%'];
+  function edgeDodge() {
+    var tags = null;
+    [edgeL, edgeR].forEach(function (el) {
+      el.classList.remove('is-dodged');
+      if (el.hidden) return;
+      if (!tags) {
+        tags = [];
+        world.querySelectorAll('.st-hot-label, .st-zone-label').forEach(function (t) {
+          if (t.hidden || t.classList.contains('is-offview') || !t.offsetWidth) return;
+          tags.push(t.getBoundingClientRect());
+        });
+      }
+      for (var i = 0; i < EDGE_TOPS.length; i++) {
+        el.style.top = EDGE_TOPS[i];
+        var r = el.getBoundingClientRect();
+        if (!tags.some(function (t) { return t.left < r.right + 4 && t.right > r.left - 4 && t.top < r.bottom + 4 && t.bottom > r.top - 4; })) return;
+      }
+      el.style.top = EDGE_TOPS[0];
+      el.classList.add('is-dodged');
+    });
+  }
+  function edgeTag(p, off) {
+    if (p && p.tag) p.tag.classList.toggle('is-offview', off);
+  }
+  function edgeShow(el, p, pre, post) {
+    var text = p ? (pre || '') + p.name + (post || '') : '';
+    if (el.ztPlace === p && el.textContent === text) return;
+    if (el.ztPlace !== p) { edgeTag(el.ztPlace, false); edgeTag(p, true); }
+    el.ztPlace = p;
+    el.hidden = !p;
+    if (!p) return;
+    el.textContent = text;   // the owner's text: textContent only
+    el.setAttribute('aria-label', t('studio.edge_go').replace('{name}', p.name));
+  }
+
+  // "?": how to walk and open, what is here (walk there), the tips again.
+  function helpSheet() {
+    var how = touchUI ? ['studio.help_walk', 'studio.tip_inside'] : ['studio.help_walk_mouse', 'studio.tip_inside_mouse'];
+    var list = scenePlaces();
+    openSheet(
+      head('studio.help_h') +
+      '<ul class="st-help-how">' +
+        '<li><span class="st-swipe" aria-hidden="true"><span class="st-swipe-chev">‹</span><span class="st-swipe-dot"></span><span class="st-swipe-chev">›</span></span>' + tr('span', how[0]) + '</li>' +
+        '<li><span class="st-help-ico" aria-hidden="true"><span class="st-help-tag">' + esc(t('studio.help_tag')) + '</span></span>' + tr('span', how[1]) + '</li>' +
+        '<li><span class="st-help-ico" aria-hidden="true"><span class="st-edge-demo">‹</span></span>' + tr('span', 'studio.help_edge') + '</li>' +
+      '</ul>' +
+      (list.length ? tr('h3', 'studio.help_here', ' class="st-help-h"') +
+        '<ul class="st-help-places">' + list.map(function (p, i) {
+          return '<li><span>' + esc(p.name) + '</span><button type="button" class="st-help-go" data-help-go="' + i + '" data-i18n="studio.help_go">' +
+            esc(t('studio.help_go')) + '</button></li>';
+        }).join('') + '</ul>' : '') +
+      '<p class="st-help-again"><button type="button" class="st-link" data-help-replay data-i18n="studio.help_replay">' + esc(t('studio.help_replay')) + '</button></p>'
+    );
+    sheetBody.querySelectorAll('[data-help-go]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var p = list[+b.getAttribute('data-help-go')];
+        closeSheet();
+        if (p) goPlace(p);
+      });
+    });
+    sheetBody.querySelector('[data-help-replay]').addEventListener('click', function () {
+      guide.seen = {}; guide.off = false; guideSave();
+      clearTimeout(guide.timer); guide.timer = 0;
+      closeSheet();
+      setTimeout(function () { guideTip(sceneName === 'in' ? 'inside' : 'swipe'); }, 300);
+    });
+  }
+
+  function bindGuide() {
+    tipEl = document.getElementById('st-tip');
+    tipText = document.getElementById('st-tip-text');
+    edgeL = stage.querySelector('.st-edge.is-l');
+    edgeR = stage.querySelector('.st-edge.is-r');
+    // the tip's buttons and the edge tags are not taps on the scene
+    [tipEl, edgeL, edgeR].forEach(function (el) {
+      ['pointerdown', 'click'].forEach(function (ev) { el.addEventListener(ev, function (e) { e.stopPropagation(); }); });
+    });
+    tipEl.querySelector('.st-tip-x').addEventListener('click', function () { if (guide.cur) guideEnd(guide.cur); });
+    tipEl.querySelector('.st-tip-skip').addEventListener('click', function () {
+      guide.off = true; guideSave();
+      clearTimeout(guide.timer); guide.timer = 0;
+      tipHide();
+    });
+    [edgeL, edgeR].forEach(function (el) {
+      el.addEventListener('click', function () { if (el.ztPlace) goPlace(el.ztPlace); });
+    });
+    document.querySelector('.st-help-b').addEventListener('click', helpSheet);
+  }
+
+  /* ======================================================================
      SHEETS (pop-ups)
      ====================================================================== */
   // A sheet is a history step, like a dialog in an app: the phone's Back
@@ -1619,6 +1916,7 @@
   // full: the sheet takes the whole screen (the design table: things are
   // dragged inside it, so only the grab handle pulls it down)
   function openSheet(html, full) {
+    guideDid('open');
     sheetAt = Date.now();
     sheetFrom = lastDown;
     if (modal.hidden) lastFocus = document.activeElement;
@@ -1734,6 +2032,7 @@
       st = null;
       if (!was.on) return;
       swiped = Date.now();
+      guideDid('walk');
       player.moving = false;
       var fling = -was.v * 260 / k;     // keep going a little in the swipe's direction
       if (Math.abs(fling) > 40 && performance.now() - was.lastT < 80) walkTo(player.x + fling);
@@ -2000,11 +2299,10 @@
 
   function ztAudio() {
     if (zt.ctx) return zt.ctx;
-    var AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC) return null;
     // iPhone: let it sound with the silent switch on (Safari 17+)
     try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) { /* older Safari */ }
-    try { zt.ctx = new AC(); } catch (e) { return null; }
+    zt.ctx = audioCtx();   // shared with the shop bell
+    if (!zt.ctx) return null;
     var lp = zt.ctx.createBiquadFilter(), comp = zt.ctx.createDynamicsCompressor(), g = zt.ctx.createGain();
     lp.type = 'lowpass';
     lp.frequency.value = 9500;
@@ -4256,6 +4554,7 @@
     }
     ring(x, y);
     if (place) nudge(place);
+    guideDid('walk');
     walkTo((x - stage.getBoundingClientRect().left + cam) / k);
   }
 
@@ -4502,6 +4801,7 @@
     document.querySelectorAll('[data-go]').forEach(function (b) {
       b.addEventListener('click', function () {
         var go = b.getAttribute('data-go');
+        guideDid('walk');
         if (go === 'shelves') {
           visit('display', false);
         } else {
@@ -4583,8 +4883,8 @@
       if (e.key === 'Escape') { closeSheet(); return; }
       if (!modal.hidden || document.body.classList.contains('gb-lock')) return;
       if (e.target.closest && e.target.closest('input, textarea, select')) return;
-      if (e.key === 'ArrowRight') { e.preventDefault(); walkTo(player.x + 300); }
-      if (e.key === 'ArrowLeft')  { e.preventDefault(); walkTo(player.x - 300); }
+      if (e.key === 'ArrowRight') { e.preventDefault(); guideDid('walk'); walkTo(player.x + 300); }
+      if (e.key === 'ArrowLeft')  { e.preventDefault(); guideDid('walk'); walkTo(player.x - 300); }
     });
 
     // Keyboard focus on a hotspot (or Udon) brings it into view (not a tap's focus).
@@ -4616,7 +4916,7 @@
       e.target.closest('.mb-form').querySelector('.mb-count').textContent = e.target.value.length + '/280';
     });
 
-    document.addEventListener('gem:langchange', function () { renderDesigner(); renderTu(); relabelSpots(); relabelThings(); pdRender(); streetNav(); ztRelabel(); });
+    document.addEventListener('gem:langchange', function () { renderDesigner(); renderTu(); relabelSpots(); relabelThings(); pdRender(); streetNav(); ztRelabel(); guideRelang(); });
     // an own-colour fabric finished dyeing: swap the plain colour for it
     var fabricTimer = null;
     document.addEventListener('gem:fabric', function () {
@@ -4658,6 +4958,7 @@
     stage = document.getElementById('st-stage');
     world = document.getElementById('st-world');
     bubble = document.getElementById('st-bubble');
+    bindGuide();
     bubbleText = document.getElementById('st-bubble-text');
     modal = document.getElementById('st-modal');
     sheetBody = document.getElementById('st-sheet-body');
@@ -4708,29 +5009,9 @@
     var was = null;
     try { was = sessionStorage.getItem('gem-scene'); } catch (e) { /* private mode */ }
     setScene(was === 'in' ? 'in' : 'out');
-    if (sceneName === 'in') { hello(); return; }
+    if (sceneName === 'in') { hello(false); return; }
     // the studio wall, fetched while they look at the street
     new Image().src = INSIDE.bg;
-    var seenOut = false;
-    try { seenOut = localStorage.getItem('gem-studio-out') === '1'; } catch (e) { /* private mode */ }
-    if (!seenOut) {
-      setTimeout(function () { say('studio.out_intro', 6000); }, 600);
-      try { localStorage.setItem('gem-studio-out', '1'); } catch (e) { /* ignore */ }
-    }
-  }
-
-  // First time inside: Udon says where things are.
-  // Once per device. On touch the tap rule differs (a thing is named first,
-  // opened on the second tap), so phones get their own line, under a new key:
-  // visitors who saw the old one see this once too.
-  function hello() {
-    var touch = window.matchMedia && window.matchMedia('(hover: none)').matches;
-    var key = touch ? 'gem-studio-intro-touch' : 'gem-studio-intro';
-    var seen = false;
-    try { seen = localStorage.getItem(key) === '1'; } catch (e) { /* private mode */ }
-    if (!seen) {
-      setTimeout(function () { say(touch ? 'studio.intro_touch' : 'studio.intro', 7000); }, 600);
-      try { localStorage.setItem(key, '1'); } catch (e) { /* ignore */ }
-    }
+    setTimeout(function () { guideTip('swipe'); }, 700);   // first visit: swipe to walk
   }
 })();
