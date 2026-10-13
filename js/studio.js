@@ -236,6 +236,15 @@
     'studio.door_go':      { vi: `Vào studio`, en: `Step inside` },
     'studio.go_out':       { vi: `Ra ngoài cửa`, en: `Step outside` },
     'studio.hot_enter':    { vi: `Vào studio`, en: `Go in` },
+    'studio.hot_dantranh': { vi: `Đàn tranh`, en: `Đàn tranh zither` },
+    'studio.zt_h':         { vi: `Đàn tranh`, en: `Đàn tranh` },
+    'studio.zt_p':         { vi: `Chạm một dây để gảy. Vuốt dọc qua các dây để rải cả chuỗi.`, en: `Tap a string to pluck it. Sweep across the strings for a run.` },
+    'studio.zt_run':       { vi: `Rải dây`, en: `Sweep` },
+    'studio.zt_vib':       { vi: `Rung dây`, en: `Vibrato` },
+    'studio.zt_note':      { vi: `16 dây, lên theo ngũ cung: gảy dây nào cũng ra tiếng hợp nhau.`, en: `16 strings tuned to a five-note scale: any string sounds right with the others.` },
+    'studio.zt_mute':      { vi: `Không nghe tiếng? Xem lại âm lượng hoặc chế độ im lặng của máy.`, en: `No sound? Check the volume or silent mode.` },
+    'studio.zt_none':      { vi: `Trình duyệt này chưa phát được âm thanh.`, en: `This browser can't play sound.` },
+    'studio.zt_string':    { vi: `Dây {n}`, en: `String {n}` },
     'studio.out_intro':    { vi: `Chào bạn! Chạm vào cửa để vào studio nhé.`, en: `Hi! Tap the door to come in.` },
     'studio.wear_on':      { vi: `Đeo thử`, en: `Try it on` },
     'studio.wear_off':     { vi: `Tháo ra`, en: `Take it off` },
@@ -824,7 +833,7 @@
   var ACT_NAME = { door: 'studio.hot_door', sofa: 'studio.hot_sofa', rail: 'studio.hot_rail', fitting: 'studio.hot_fitting',
     'shop:pegboard': 'studio.hot_pegboard', 'shop:display': 'studio.hot_display', 'shop:cabinet': 'studio.hot_cabinet',
     'shop:all': 'studio.go_shelves', sewing: 'studio.hot_sewing', tu: 'studio.hot_tu', counter: 'studio.hot_counter',
-    memo: 'studio.hot_memo', enter: 'studio.hot_enter', link: 'studio.tag_link' };
+    memo: 'studio.hot_memo', enter: 'studio.hot_enter', link: 'studio.tag_link', dantranh: 'studio.hot_dantranh' };
   function actName(act) { return ACT_NAME[act] ? t(ACT_NAME[act]) : ''; }
   function zoneName(it) { return it.zone[lng()] || it.zone.vi || actName(it.zone.act); }
 
@@ -1542,7 +1551,7 @@
       if (e.touches.length !== 1) return;
       fromHandle = !!e.target.closest('.st-grab');
       if (!fromHandle && (sheetEl.scrollTop > 0 || sheetEl.classList.contains('is-full') ||
-        e.target.closest('canvas, input, textarea, select, .st-grid--photos'))) return;
+        e.target.closest('canvas, input, textarea, select, .st-grid--photos, .zt-body'))) return;
       y0 = e.touches[0].clientY; t0 = Date.now(); dy = 0; on = true;
     }, { passive: true });
     sheetEl.addEventListener('touchmove', function (e) {
@@ -1782,6 +1791,147 @@
     }).join('');
   }
 
+
+  /* ======================================================================
+     ĐÀN TRANH — a "Khu vực" piece (act dantranh), out by the door.
+     16 strings tuned to the pentatonic scale (D E G A C), low at the top,
+     high at the bottom, nearest the player. The sound is made here, no audio
+     files: one plucked string (Karplus-Strong) worked out once per string the
+     first time it sounds. Tap a string, or sweep across them; "Rung dây"
+     adds a left-hand vibrato.
+     ====================================================================== */
+  var ZT_HZ = [146.83, 164.81, 196.00, 220.00, 261.63, 293.66, 329.63, 392.00,
+    440.00, 523.25, 587.33, 659.25, 783.99, 880.00, 1046.50, 1174.66];
+  var zt = { ctx: null, out: null, bufs: [], rate: [], vib: false, run: 0 };
+
+  function ztAudio() {
+    if (zt.ctx) return zt.ctx;
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    // iPhone: let it sound with the silent switch on (Safari 17+)
+    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) { /* older Safari */ }
+    try { zt.ctx = new AC(); } catch (e) { return null; }
+    var lp = zt.ctx.createBiquadFilter(), comp = zt.ctx.createDynamicsCompressor(), g = zt.ctx.createGain();
+    lp.type = 'lowpass';
+    lp.frequency.value = 6500;
+    g.gain.value = 0.6;
+    lp.connect(comp); comp.connect(g); g.connect(zt.ctx.destination);
+    zt.out = lp;
+    return zt.ctx;
+  }
+
+  // A burst of noise going round a delay line one period long, averaged each
+  // time: a bright string that fades in about two seconds. The line is a whole
+  // number of samples, so playbackRate puts the pitch back exactly.
+  function ztBuffer(i) {
+    if (zt.bufs[i]) return zt.bufs[i];
+    var sr = zt.ctx.sampleRate, hz = ZT_HZ[i];
+    var N = Math.max(2, Math.floor(sr / hz)), len = Math.round(sr * 2.4);
+    var buf = zt.ctx.createBuffer(1, len, sr), d = buf.getChannelData(0);
+    var ring = new Float32Array(N), k, prev = 0;
+    for (k = 0; k < N; k++) { var w = Math.random() * 2 - 1; ring[k] = (w + prev) / 2; prev = w; }   // a softer pick
+    var keep = Math.pow(0.01, 1 / (2.4 * hz));   // ~ -40 dB at the end, low or high
+    for (k = 0; k < len; k++) {
+      var a = ring[k % N], b = ring[(k + 1) % N];
+      d[k] = a * 0.8;
+      ring[k % N] = keep * 0.5 * (a + b);
+    }
+    var tail = Math.round(sr * 0.06);
+    for (k = 0; k < tail; k++) d[len - 1 - k] *= k / tail;   // no click at the end
+    zt.rate[i] = (N - 0.5) * hz / sr;   // each new sample averages the next two out: the loop is N - 0.5 long
+    zt.bufs[i] = buf;
+    return buf;
+  }
+
+  function ztPluck(i) {
+    var ctx = ztAudio();
+    if (!ctx) return false;
+    if (ctx.state === 'suspended') ctx.resume();
+    var s = ctx.createBufferSource(), now = ctx.currentTime;
+    s.buffer = ztBuffer(i);
+    s.playbackRate.value = zt.rate[i];
+    if (zt.vib && s.detune) {   // the left hand rocking the string past the bridge
+      var lfo = ctx.createOscillator(), depth = ctx.createGain();
+      lfo.frequency.value = 5.5;
+      depth.gain.setValueAtTime(0, now);
+      depth.gain.linearRampToValueAtTime(22, now + 0.4);   // cents
+      lfo.connect(depth); depth.connect(s.detune);
+      lfo.start(now); lfo.stop(now + 2.4);
+    }
+    s.connect(zt.out);
+    s.start(now);
+    return true;
+  }
+
+  function ztShow(root, i) {
+    var el = root.querySelectorAll('.zt-str')[i];
+    if (!el) return;
+    el.classList.remove('is-on');
+    void el.offsetWidth;   // start the shake again
+    el.classList.add('is-on');
+  }
+
+  function zitherSheet() {
+    var strs = '';
+    for (var i = 0; i < 16; i++) {
+      strs += '<button type="button" class="zt-str" data-zt="' + i + '" aria-label="' +
+        esc(t('studio.zt_string').replace('{n}', i + 1)) + '"><span class="zt-line"></span><span class="zt-nhan"></span></button>';
+    }
+    openSheet(
+      head('studio.zt_h', 'studio.zt_p') +
+      '<div class="zt"><div class="zt-body" role="group" aria-labelledby="st-sheet-title">' + strs + '</div></div>' +
+      '<div class="zt-row">' +
+        '<button type="button" class="st-btn st-btn-sm" data-zt-run data-i18n="studio.zt_run">' + esc(t('studio.zt_run')) + '</button>' +
+        '<label class="zt-vib"><input type="checkbox" data-zt-vib' + (zt.vib ? ' checked' : '') + '> <span data-i18n="studio.zt_vib">' + esc(t('studio.zt_vib')) + '</span></label>' +
+      '</div>' +
+      tr('p', 'studio.zt_note', ' class="zt-note"') +
+      tr('p', 'studio.zt_mute', ' class="zt-note zt-mute"')
+    );
+    var root = sheetBody.querySelector('.zt'), body = root.querySelector('.zt-body');
+    body.querySelectorAll('.zt-str').forEach(function (b, n) { b.style.setProperty('--b', (24 + n * 3.4) + '%'); });   // the bridges on a slant
+    if (!window.AudioContext && !window.webkitAudioContext) {
+      sheetBody.querySelector('.zt-mute').textContent = t('studio.zt_none');
+    }
+    var last = -1, down = false;
+    function rowAt(y) {
+      var r = body.getBoundingClientRect();
+      return Math.max(0, Math.min(15, Math.floor((y - r.top) / (r.height / 16))));
+    }
+    function play(i) { if (ztPluck(i)) ztShow(root, i); }
+    body.addEventListener('pointerdown', function (e) {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      e.preventDefault();
+      down = true;
+      try { body.setPointerCapture(e.pointerId); } catch (er) { /* fine */ }
+      last = rowAt(e.clientY);
+      play(last);
+    });
+    body.addEventListener('pointermove', function (e) {
+      if (!down) return;
+      var i = rowAt(e.clientY);
+      if (i === last) return;
+      var step = i > last ? 1 : -1;   // a quick sweep crosses rows between two events: sound each one
+      for (var j = last + step; j !== i + step; j += step) play(j);
+      last = i;
+    });
+    var up = function () { down = false; last = -1; };
+    body.addEventListener('pointerup', up);
+    body.addEventListener('pointercancel', up);
+    // keyboard: Enter / Space on a string (a pointer's click has detail ≥ 1 and already sounded)
+    body.addEventListener('click', function (e) {
+      var b = e.target.closest('.zt-str');
+      if (b && e.detail === 0) play(+b.getAttribute('data-zt'));
+    });
+    sheetBody.querySelector('[data-zt-vib]').addEventListener('change', function (e) { zt.vib = e.target.checked; });
+    sheetBody.querySelector('[data-zt-run]').addEventListener('click', function () {
+      var run = ++zt.run, i = 0;
+      (function next() {
+        if (run !== zt.run || !root.isConnected || i > 15) return;
+        play(i++);
+        setTimeout(next, 55);
+      })();
+    });
+  }
 
   function sofaSheet() {
     openSheet(
@@ -3678,7 +3828,8 @@
     memo: memoSheet,
     tu: tuSheet,
     counter: counter,
-    enter: enterStudio
+    enter: enterStudio,
+    dantranh: zitherSheet
   };
 
   // Open right away and let the character walk over behind the sheet.

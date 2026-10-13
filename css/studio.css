@@ -778,6 +778,78 @@ html:has(.studio-page), .studio-page { overscroll-behavior: none; }
   .st-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
+/* ---------- ĐÀN TRANH (studio.js zitherSheet) ----------
+   A wooden soundboard, 16 strings across it, the bridges (nhạn) on a slant.
+   The whole board takes the finger: a sweep across rows sounds each string. */
+.zt { margin: 0 0 var(--space-4); }
+.zt-body {
+  display: grid;
+  grid-template-rows: repeat(16, 26px);
+  padding: 10px 0;
+  border-radius: 14px 40px 40px 14px;
+  background:
+    linear-gradient(90deg, rgba(61, 74, 46, 0.18), transparent 8%, transparent 92%, rgba(61, 74, 46, 0.22)),
+    linear-gradient(180deg, #b07a48, #8f5d33 55%, #7d4f2a);
+  box-shadow: inset 0 2px 0 rgba(255, 240, 215, 0.35), inset 0 -3px 0 rgba(40, 25, 10, 0.25), 0 4px 10px rgba(61, 74, 46, 0.25);
+  touch-action: none;   /* a sweep plays, it doesn't scroll */
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: pointer;
+}
+.zt-str {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: inherit;
+}
+.zt-str:focus-visible { outline: 2px solid var(--paper-white); outline-offset: -2px; border-radius: 6px; }
+.zt-line {
+  position: absolute;
+  left: 4%;
+  right: 3%;
+  top: 50%;
+  height: 2px;
+  margin-top: -1px;
+  background: linear-gradient(180deg, #fbf3e2, #cbbfa6);
+  box-shadow: 0 1px 1px rgba(40, 25, 10, 0.45);
+  pointer-events: none;
+}
+.zt-str:nth-child(n + 9) .zt-line { height: 1.5px; }   /* the high strings are thinner */
+.zt-nhan {
+  position: absolute;
+  top: 50%;
+  left: var(--b, 50%);
+  width: 14px;
+  height: 12px;
+  margin: -9px 0 0 -7px;
+  background: #e9d6b5;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  filter: drop-shadow(0 1px 0 rgba(40, 25, 10, 0.4));
+  pointer-events: none;
+}
+.zt-str.is-on .zt-line { animation: zt-shake 0.42s ease-out; background: #fffaf0; }
+@keyframes zt-shake {
+  0% { transform: translateY(0); }
+  15% { transform: translateY(-2px); }
+  30% { transform: translateY(1.6px); }
+  45% { transform: translateY(-1.1px); }
+  60% { transform: translateY(0.7px); }
+  80% { transform: translateY(-0.3px); }
+  100% { transform: translateY(0); }
+}
+.st-calm .zt-str.is-on .zt-line { animation: none; }
+.zt-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4); margin-bottom: var(--space-3); }
+.zt-vib { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 44px; font-size: var(--text-sm); color: var(--ink-dark); cursor: pointer; }
+.zt-vib input { width: 18px; height: 18px; accent-color: var(--sage-deep); }
+.zt-note { margin: 0 0 var(--space-2); font-size: var(--text-sm); color: var(--ink-soft); }
+@media (min-width: 768px) {
+  .zt-body { grid-template-rows: repeat(16, 28px); }
+}
+
 /* ---------- REDUCED MOTION ----------
    .st-calm: the device asks for less motion and the visitor didn't turn the
    "Hiệu ứng" button on, or they turned it off (js/studio.js syncMotion). */
