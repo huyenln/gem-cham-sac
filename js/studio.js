@@ -3836,7 +3836,9 @@
   // (Opening only on arrival meant a second tap mid-walk cancelled the
   // first, so it took several taps to get anything open.)
   function visit(id, open) {
-    if (sceneName === 'out' && id !== 'enter') {   // a nav button from the street: go in first
+    // a nav button from the street: go in first. A place that is out here (the
+    // door, the owner's own tap box on the street) opens where it is.
+    if (sceneName === 'out' && id !== 'enter' && !hotById(id)) {
       goScene('in', function () { visit(id, open); });
       return;
     }

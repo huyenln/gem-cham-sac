@@ -43,8 +43,8 @@ and walks through what broke before:
            shows the real photos, picking a chip shows that one, "Thêm vào giỏ"
            asks for a pick first, a drag opens the sheet instead of adding; a
            consignment product shows "Ký gửi · …" and its notes
-  zither   a "Khu vực" piece on the street set to "Chơi đàn tranh": its tag opens
-           16 strings; a tap plucks one, a sweep plucks each string crossed,
+  zither   a "Khu vực" piece or a "Khung bấm" on the street set to "Chơi đàn
+           tranh": its tag opens it right there (not inside): 16 strings; a tap plucks one, a sweep plucks each string crossed,
            Enter on a string plucks it, "Rải dây" runs them all, "Rung dây" adds
            vibrato (counted on the Web Audio calls, nothing is heard)
   topbar   the top bar fits a phone (320px up), in Vietnamese and English
@@ -1876,6 +1876,23 @@ async def zither(browser, db):
             await pg.evaluate("window.GemI18n.setLang('vi')")
             acts = await pg.evaluate("window.GemLayout.ACTS.map(a => a.vi)")
             check('Chơi đàn tranh' in acts, 'the editor offers "Chơi đàn tranh" for a Khu vực')
+        check(not pg.errors, f'{name}: no script errors {pg.errors}')
+        await pg.context.close()
+
+    # the same from a "Khung bấm" on the street (it used to take you inside first)
+    db.rows['live']['outside']['items'] = []
+    db.rows['live']['outside']['boxes'] = [{'id': 'k-zt1', 'vi': 'Chơi đàn tranh', 'act': 'dantranh', 'box': [281, 683, 855, 776], 'stand': 1671}]
+    for name, w, h in (('desktop', 1440, 900), ('mobile', 390, 844)):
+        pg = await page(browser, db, w, h, spy)
+        await pg.goto(f'{BASE}/studio.html')
+        await pg.wait_for_timeout(2500)
+        await pg.add_style_tag(content='.lang-hint{display:none!important}')
+        lab = await pg.evaluate("(document.querySelector('.st-hot[data-hot=\"k-zt1\"] .st-hot-label') || {}).textContent || ''")
+        await js_click(pg, '.st-hot[data-hot="k-zt1"] .st-hot-label')
+        await pg.wait_for_timeout(1200)
+        n = await pg.evaluate(f"{body}.querySelectorAll('.zt-str').length")
+        check(lab == 'Chơi đàn tranh' and n == 16 and 'ngoai' in (await bg(pg)),
+              f'{name}: a "Khung bấm" on the street set to đàn tranh opens it right there ({lab!r}, {n} strings, still outside)')
         check(not pg.errors, f'{name}: no script errors {pg.errors}')
         await pg.context.close()
 

@@ -1740,6 +1740,9 @@ dùng lại phần thẻ chia sẻ của Bàn thiết kế, ảnh không rời m
   iPhone (Safari 17+): `navigator.audioSession.type = 'playback'` để kêu cả khi gạt im
   lặng; máy cũ hơn thì dòng nhắc "Không nghe tiếng?…".
 - Tắt hiệu ứng: dây không rung hình, tiếng vẫn có.
+- Dùng **"Khung bấm"** ngoài cửa (Khi bấm "Chơi đàn tranh") cũng được. Lỗi đã sửa
+  13/10: nhãn của mọi khung ngoài phố (trừ cửa) đưa khách vào studio trước — `visit()`
+  coi nó như nút điều hướng. Giờ khung nằm ngoài phố thì mở ngay tại chỗ.
 - **Kiểm:** `tools/check-studio.py zither` (đếm lời gọi Web Audio, không nghe thật):
   nhãn, 16 dây, chạm, vuốt (chuột + ngón tay thật qua CDP), Enter, Rải dây + Rung dây,
   EN, không tràn ngang.
