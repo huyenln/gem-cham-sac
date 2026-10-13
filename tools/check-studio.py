@@ -43,6 +43,10 @@ and walks through what broke before:
            shows the real photos, picking a chip shows that one, "Thêm vào giỏ"
            asks for a pick first, a drag opens the sheet instead of adding; a
            consignment product shows "Ký gửi · …" and its notes
+  zither   a "Khu vực" piece on the street set to "Chơi đàn tranh": its tag opens
+           16 strings; a tap plucks one, a sweep plucks each string crossed,
+           Enter on a string plucks it, "Rải dây" runs them all, "Rung dây" adds
+           vibrato (counted on the Web Audio calls, nothing is heard)
   topbar   the top bar fits a phone (320px up), in Vietnamese and English
   motion   a device asking for less motion: no walking, "Hiệu ứng" turns it on
   taps     taps on a phone (clicks on a desktop) near "Khu vực" pieces standing on
@@ -58,7 +62,7 @@ crashed and the counts add up.
     python3 tools/check-studio.py            all checks
     python3 tools/check-studio.py wear       one check (street | wear | shop | spots | editor |
                                              library | product | prodlib | design | catalog | kinds |
-                                             layers | zones | cart | choices | topbar | motion | taps)
+                                             layers | zones | cart | choices | zither | topbar | motion | taps)
 
 Needs: pip install playwright. Chromium: PLAYWRIGHT_BROWSERS_PATH or
 CHROMIUM=/path/to/chrome (the cloud sessions have /opt/pw-browsers/chromium).
@@ -1795,6 +1799,87 @@ async def choices(browser, db):
     db.extra = []
 
 
+async def zither(browser, db):
+    print('zither')
+    db.rows.clear(); db.info.clear()
+    db.rows['live'] = {
+        'v': 1, 'bg': {'src': 'images/studio/bg/strip-tron.webp', 'w': 5792, 'h': 1024}, 'items': [],
+        'udon': {'x': 5200, 'y': 560, 'w': 128, 'h': 140}, 'start': 700,
+        'outside': {'bg': {'src': 'images/studio/bg/ngoai.webp', 'w': 2686, 'h': 1024}, 'start': 300,
+                    'items': [dict(src='images/studio/vn/vn-36.webp', x=560, y=820, w=312, h=200, rot=0, flip=False,
+                                   layer='back', frame=False, kind='zone', zone={'act': 'dantranh'})]},
+    }
+    # count what Web Audio is asked to play (headless: nothing is heard)
+    spy = ("window.__pl = 0; window.__osc = 0; (() => { const A = window.AudioContext; if (!A) return;"
+           " const b = A.prototype.createBufferSource, o = A.prototype.createOscillator;"
+           " A.prototype.createBufferSource = function () { window.__pl++; return b.apply(this, arguments); };"
+           " A.prototype.createOscillator = function () { window.__osc++; return o.apply(this, arguments); }; })();"
+           "localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-studio-intro-touch','1');sessionStorage.removeItem('gem-scene')")
+    body = "document.getElementById('st-sheet-body')"
+    for name, w, h in (('desktop', 1440, 900), ('mobile', 390, 844)):
+        pg = await page(browser, db, w, h, spy)
+        await pg.goto(f'{BASE}/studio.html')
+        await pg.wait_for_timeout(2500)
+        await pg.add_style_tag(content='.lang-hint{display:none!important}')
+        tag = await pg.evaluate("[...document.querySelectorAll('[data-thing-label]')].map(l => l.textContent)")
+        check('Đàn tranh' in tag, f'{name}: the piece on the street is tagged "Đàn tranh" ({tag})')
+        await js_click(pg, '[data-thing-label]')
+        await pg.wait_for_timeout(900)
+        n = await pg.evaluate(f"{body}.querySelectorAll('.zt-str').length")
+        check(n == 16, f'{name}: its tag opens the đàn tranh, 16 strings ({n})')
+        r = await pg.evaluate("(() => { const r = document.querySelector('.zt-body').getBoundingClientRect(); return [r.left, r.top, r.width, r.height]; })()")
+        row = r[3] / 16
+        x = r[0] + r[2] * 0.7
+        ys = [r[1] + row * (i + 0.5) for i in range(16)]
+        if name == 'desktop':
+            await pg.mouse.move(x, ys[2])
+            await pg.mouse.down()
+            await pg.mouse.up()
+        else:
+            await pg.evaluate(TOUCH_JS, ['tap', x, ys[2], 0, 0])
+        await pg.wait_for_timeout(100)
+        got = await pg.evaluate("[window.__pl, [...document.querySelectorAll('.zt-str')].findIndex(b => b.classList.contains('is-on'))]")
+        check(got == [1, 2], f'{name}: a tap plucks that string ({got})')
+        if name == 'desktop':
+            await pg.mouse.move(x, ys[0])
+            await pg.mouse.down()
+            await pg.mouse.move(x, ys[15], steps=4)   # big steps: rows in between still sound
+            await pg.mouse.up()
+        else:   # a real finger (touch events, so touch pointers), in 5 big steps
+            cdp = await pg.context.new_cdp_session(pg)
+            await cdp.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': [{'x': x, 'y': ys[0], 'id': 1}]})
+            for i in range(1, 6):
+                await pg.wait_for_timeout(30)
+                await cdp.send('Input.dispatchTouchEvent', {'type': 'touchMove', 'touchPoints': [{'x': x, 'y': ys[0] + (ys[15] - ys[0]) * i / 5, 'id': 1}]})
+            await cdp.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []})
+            await cdp.detach()
+        await pg.wait_for_timeout(100)
+        n = await pg.evaluate('window.__pl')
+        check(n == 1 + 16, f'{name}: a sweep top to bottom plucks each of the 16 strings once ({n - 1})')
+        await pg.evaluate("document.querySelectorAll('.zt-str')[5].focus()")
+        await pg.keyboard.press('Enter')
+        await pg.wait_for_timeout(100)
+        check(await pg.evaluate('window.__pl') == n + 1, f'{name}: Enter on a string plucks it')
+        await js_click(pg, '[data-zt-vib]')
+        await js_click(pg, '[data-zt-run]')
+        await pg.wait_for_timeout(1300)
+        got = await pg.evaluate('[window.__pl, window.__osc]')
+        check(got[0] == n + 1 + 16 and got[1] == 16, f'"Rải dây" runs all 16, with vibrato on ({got})')
+        await pg.screenshot(path=OUT / f'zither-{name}.png')
+        wide = await pg.evaluate("(() => { const s = document.querySelector('.st-sheet'); return [s.scrollWidth, s.clientWidth]; })()")
+        check(wide[0] <= wide[1], f'{name}: no sideways scroll ({wide})')
+        if name == 'desktop':
+            await pg.evaluate("window.GemI18n.setLang('en')")
+            await pg.wait_for_timeout(300)
+            got = await pg.evaluate(f"[{body}.querySelector('h2').textContent, document.querySelector('[data-thing-label]').textContent]")
+            check(got == ['Đàn tranh', 'Đàn tranh zither'], f'English ({got})')
+            await pg.evaluate("window.GemI18n.setLang('vi')")
+            acts = await pg.evaluate("window.GemLayout.ACTS.map(a => a.vi)")
+            check('Chơi đàn tranh' in acts, 'the editor offers "Chơi đàn tranh" for a Khu vực')
+        check(not pg.errors, f'{name}: no script errors {pg.errors}')
+        await pg.context.close()
+
+
 async def topbar(browser, db):
     """The top bar on a phone: the logo and the three controls side by side,
     none on top of another, none past the edge, in both languages. (A fourth
@@ -2228,7 +2313,7 @@ async def main(which):
         browser = await launch(p)
         for name, fn in (('street', street), ('wear', wear), ('shop', shop), ('spots', spots), ('editor', editor),
                          ('library', library), ('product', product), ('prodlib', prodlib), ('workshop', workshop), ('design', design), ('catalog', catalog), ('kinds', kinds),
-                         ('layers', layers), ('zones', zones), ('cart', cart), ('choices', choices), ('topbar', topbar), ('motion', motion),
+                         ('layers', layers), ('zones', zones), ('cart', cart), ('choices', choices), ('zither', zither), ('topbar', topbar), ('motion', motion),
                          ('taps', taps)):
             if which in (None, name):
                 await fn(browser, db)

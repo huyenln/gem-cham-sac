@@ -1719,6 +1719,31 @@ món hẹp (Bloom, dây đeo) vùng nằm ngoài hình món vẫn tính là mộ
 **Chưa làm (đợt 2–3):** vải thật dạng "Mảnh hiếm" (bảng `fabrics` + admin), tường
 thiết kế của khách, Thiết kế của tháng.
 
+### Đàn tranh ngoài cửa (13/10/2026)
+
+Chọn giữa "đàn tranh ngoài cửa" và "chụp ảnh check-in gắn chibi": làm đàn tranh trước
+vì nhẹ nhất — không xin quyền camera, không tải file âm thanh, không xử lý ảnh lớn
+trên điện thoại. Check-in để sau (nếu làm: `<input type="file" capture>` + canvas,
+dùng lại phần thẻ chia sẻ của Bàn thiết kế, ảnh không rời máy khách).
+
+- **Bật:** Lắp studio → **Ngoài cửa** → chọn hình đàn tranh → Loại **Khu vực** → Khi
+  bấm **Chơi đàn tranh** (`dantranh` trong `ACTS`) → Phát hành. Nhãn mặc định "Đàn
+  tranh" (đổi ở "Tên hiện"). Đặt được cả trong studio.
+- **Bảng đàn** (`zitherSheet` trong `js/studio.js`, CSS mục `ĐÀN TRANH`): 16 dây ngũ
+  cung (Rê Mi Sol La Đô, D3 → D6), dây trầm ở trên, dây cao ở dưới (gần người chơi);
+  nhạn đàn xếp chéo. Chạm = gảy; vuốt dọc = rải qua từng dây (bước nhảy lớn vẫn kêu đủ
+  dây ở giữa); Tab + Enter cũng gảy được; "Rải dây" chạy một lượt 16 dây; "Rung dây" thêm
+  rung (LFO vào `detune`, ~22 cent, 5,5 Hz).
+- **Tiếng:** Web Audio, thuật toán dây gảy Karplus–Strong tính một lần cho mỗi dây lúc
+  gảy lần đầu (~2,4 giây), `playbackRate` chỉnh cao độ chính xác (đo lại: lệch tối đa
+  1,4 cent ở 44,1 / 48 kHz). Lọc thấp 6,5 kHz + compressor để gảy dồn không rè.
+  iPhone (Safari 17+): `navigator.audioSession.type = 'playback'` để kêu cả khi gạt im
+  lặng; máy cũ hơn thì dòng nhắc "Không nghe tiếng?…".
+- Tắt hiệu ứng: dây không rung hình, tiếng vẫn có.
+- **Kiểm:** `tools/check-studio.py zither` (đếm lời gọi Web Audio, không nghe thật):
+  nhãn, 16 dây, chạm, vuốt (chuột + ngón tay thật qua CDP), Enter, Rải dây + Rung dây,
+  EN, không tràn ngang.
+
 ### Lắp studio: lưu / mở / phát hành (10/2026)
 
 - **Lỗi cũ:** nút trong menu "Lưu" (Mở, Lưu vào…, Xoá) lọt xuống `barClick`, và
