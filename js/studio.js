@@ -238,12 +238,26 @@
     'studio.hot_enter':    { vi: `Vào studio`, en: `Go in` },
     'studio.hot_dantranh': { vi: `Đàn tranh`, en: `Đàn tranh zither` },
     'studio.zt_h':         { vi: `Đàn tranh`, en: `Đàn tranh` },
-    'studio.zt_p':         { vi: `Chạm để gảy · vuốt để rải · giữ ngón trên dây để nhấn.`, en: `Tap to pluck · sweep for a run · hold a string to bend it.` },
+    'studio.zt_p':         { vi: `Chạm để gảy · vuốt để rải · chạm chữ nhỏ bên trái nhạn để nhấn.`, en: `Tap to pluck · sweep for a run · tap a small name left of a bridge to press.` },
     'studio.zt_names':     { vi: `Tên nốt`, en: `Note names` },
     'studio.zt_k16':       { vi: `16 dây`, en: `16 strings` },
     'studio.zt_k19':       { vi: `19 dây`, en: `19 strings` },
     'studio.zt_about':     { vi: `Về đàn tranh`, en: `About the đàn tranh` },
-    'studio.zt_about_p':   { vi: `Đàn tranh truyền thống có 16 dây; đàn cải tiến có thêm dây, như loại 19 dây ở đây. Dây lên theo ngũ cung Đô Rê Mi Sol La, nên đàn không có dây đánh thẳng ra nốt Fa và Si: muốn có Fa thì nhấn dây Mi lên nửa cung, muốn có Si thì nhấn dây La lên một cung. Ở đây: giữ ngón trên dây Mi hoặc La.`, en: `The traditional đàn tranh has 16 strings; improved ones add more, like the 19-string one here. The strings are tuned to the five notes Do Re Mi Sol La, so no string plays Fa or Si directly: Fa is the Mi string pressed half a tone up, Si the La string pressed a whole tone up. Here: hold a finger on a Mi or La string.` },
+    'studio.zt_about_p':   { vi: `Đàn tranh truyền thống có 16 dây; đàn cải tiến có thêm dây, như loại 19 dây ở đây. Dây Bắc lên theo ngũ cung Sol La Đô Rê Mi, nên đàn không có dây đánh thẳng ra nốt Fa và Si: tay trái nhấn dây Mi ở phía trái nhạn cho lên nửa cung thành Fa, nhấn dây La lên một cung thành Si. Ở đây: chạm chữ nhỏ "Fa" / "Si" bên trái nhạn, hoặc gảy rồi giữ ngón trên dây để nghe tiếng luyến.`, en: `The traditional đàn tranh has 16 strings; improved ones add more, like the 19-string one here. In the Bắc tuning the strings play the five notes Sol La Do Re Mi, so no string plays Fa or Si directly: the left hand presses the Mi string left of its bridge half a tone up to Fa, and the La string a whole tone up to Si. Here: tap the small "Fa" / "Si" left of a bridge, or pluck and hold a string to hear it slide.` },
+    'studio.zt_about_hoi': { vi: `Lên dây: dây Bắc (Sol La Đô Rê Mi) tươi sáng; dây Nam (Sol Si♭ Đô Rê Fa) buồn, dùng cho Nam Ai, Nam Xuân; dây Đảo (Sol La Đô Rê Fa). Đổi cách lên dây thì vài dây chuyển cao lên, như người chơi dời nhạn, và chữ nhỏ bên trái nhạn đổi theo nốt còn thiếu.`, en: `Tuning: Bắc (Sol La Do Re Mi) is bright; Nam (Sol Si♭ Do Re Fa) is sad, for Nam Ai and Nam Xuân; Đảo is Sol La Do Re Fa. A new tuning moves some strings up, as a player moves the bridges, and the small names left of the bridges follow the missing notes.` },
+    'studio.zt_about_tone':{ vi: `Tông: nâng hoặc hạ cả cây đàn từng nửa cung cho vừa giọng hát. Tên nốt giữ nguyên, Đô vẫn là nốt chủ.`, en: `Key: moves the whole đàn up or down by half tones, to suit a voice. The note names stay; Do is still the home note.` },
+    'studio.zt_about_ho':  { vi: `Hò Xự Xang: cách gọi nốt cổ truyền, tính từ Hò (= Sol): Hò Xự Xang Xê Cống là Sol La Đô Rê Mi; Xư là Si♭, Phan là Fa.`, en: `Hò Xự Xang: the old Vietnamese note names, counted from Hò (= Sol): Hò Xự Xang Xê Cống are Sol La Do Re Mi; Xư is Si♭, Phan is Fa.` },
+    'studio.zt_about_keys':{ vi: `Bàn phím máy tính: A S D F G H J K L ; rồi Q W E R T Y U I O gảy từ dây trầm đến dây cao; giữ Shift để nhấn.`, en: `Computer keyboard: A S D F G H J K L ; then Q W E R T Y U I O play the strings from low to high; hold Shift to press.` },
+    'studio.zt_hoi':       { vi: `Lên dây`, en: `Tuning` },
+    'studio.zt_bac':       { vi: `Dây Bắc`, en: `Bắc tuning` },
+    'studio.zt_nam':       { vi: `Dây Nam`, en: `Nam tuning` },
+    'studio.zt_dao':       { vi: `Dây Đảo`, en: `Đảo tuning` },
+    'studio.zt_tone':      { vi: `Tông`, en: `Key` },
+    'studio.zt_tone_dn':   { vi: `Hạ tông`, en: `Key down` },
+    'studio.zt_tone_up':   { vi: `Nâng tông`, en: `Key up` },
+    'studio.zt_n_do':      { vi: `Đô Rê Mi`, en: `Do Re Mi` },
+    'studio.zt_n_ho':      { vi: `Hò Xự Xang`, en: `Hò Xự Xang` },
+    'studio.zt_n_off':     { vi: `Ẩn tên nốt`, en: `No names` },
     'studio.zt_run':       { vi: `Rải dây`, en: `Sweep` },
     'studio.zt_vib':       { vi: `Rung dây`, en: `Vibrato` },
     'studio.zt_mute':      { vi: `Không nghe tiếng? Xem âm lượng và chế độ im lặng của máy.`, en: `No sound? Check the volume and silent mode.` },
@@ -1893,32 +1907,96 @@
      ĐÀN TRANH — a "Khu vực" piece or tap box (act dantranh), out by the door.
      The Vietnamese zither, not the Chinese guzheng: 16 strings (the
      traditional one) or 19 (an improved one), tuned in hơi Bắc to the
-     pentatonic Đô Rê Mi Sol La — so there is no Fa or Si string: Fa is the Mi
-     string pressed half a tone up, Si the La string pressed a whole tone up
-     (the guzheng's pentatonic is Rê Mi Fa# La Si). Bright steel strings and
-     the left hand make it sound Vietnamese: "Rung dây" (a slow, wide vibrato,
-     on by default) and nhấn — hold a finger on a string after plucking and
-     it rises (Mi → Fa, La → Si, the others a whole tone), let go and it
-     slides back. Low strings at the top, high at the bottom (nearest the
-     player). The sound is made here, no audio files: a plucked string
-     (Karplus-Strong) worked out the first time each pitch sounds. A string
-     sounds when the finger crosses its line, not the edge of its row, so a
-     finger resting on a string or between two plucks nothing more.
+     pentatonic Sol La Đô Rê Mi (the guzheng's is Rê Mi Fa# La Si). Dây Nam
+     (Sol Si♭ Đô Rê Fa) and dây Đảo (Sol La Đô Rê Fa) move some strings up,
+     as a player moves their bridges. No string plays the other notes: the
+     left hand presses a string left of its bridge (nhấn) up to the next note
+     of the hơi's seven (Bắc: Mi → Fa, La → Si). Here the part of the string
+     left of its bridge does that — its small name says which note — and a
+     string held after plucking slides up and back. Tông moves the whole
+     đàn by half tones; the names stay (Đô is still the tonic). Names are
+     Đô Rê Mi or the old Hò Xự Xang (counted from Hò = Sol). On a computer
+     the home row then the row above play the strings, low to high; Shift
+     presses. Bright steel strings and "Rung dây" (a slow, wide vibrato, on
+     by default) make it sound Vietnamese. Low strings at the top, high at
+     the bottom (nearest the player). The sound is made here, no audio
+     files: a plucked string (Karplus-Strong) worked out the first time each
+     pitch sounds. A string sounds when the finger crosses its line, not the
+     edge of its row, so a finger resting on a string or between two plucks
+     nothing more.
      ====================================================================== */
-  var ZT_KINDS = {
+  var ZT_BASE = {   // hơi Bắc, tông Đô
     16: [146.83, 164.81, 196.00, 220.00, 261.63, 293.66, 329.63, 392.00,          // D3 … D6
       440.00, 523.25, 587.33, 659.25, 783.99, 880.00, 1046.50, 1174.66],
     19: [110.00, 130.81, 146.83, 164.81, 196.00, 220.00, 261.63, 293.66, 329.63,  // A2 … E6
       392.00, 440.00, 523.25, 587.33, 659.25, 783.99, 880.00, 1046.50, 1174.66, 1318.51]
   };
-  var ZT_PC = { 0: 'Đô', 2: 'Rê', 4: 'Mi', 5: 'Fa', 7: 'Sol', 9: 'La', 11: 'Si' };
+  // move: half tones a string goes up from Bắc (by its note: 4 Mi, 9 La);
+  // scale: the seven notes a pressed string goes up to.
+  var ZT_HOI = {
+    bac: { move: {}, scale: [0, 2, 4, 5, 7, 9, 11] },              // Sol La Đô Rê Mi: Mi → Fa, La → Si
+    nam: { move: { 4: 1, 9: 1 }, scale: [0, 2, 3, 5, 7, 9, 10] },  // Sol Si♭ Đô Rê Fa (Nam Ai, Nam Xuân): Sol → La, Rê → Mi♭
+    dao: { move: { 4: 1 }, scale: [0, 2, 4, 5, 7, 9, 10] }         // Sol La Đô Rê Fa: La → Si♭, Rê → Mi
+  };
+  var ZT_PC = { 0: 'Đô', 1: 'Đô♯', 2: 'Rê', 3: 'Mi♭', 4: 'Mi', 5: 'Fa', 6: 'Fa♯', 7: 'Sol', 8: 'La♭', 9: 'La', 10: 'Si♭', 11: 'Si' };
+  var ZT_ABC = { 0: 'C', 1: 'C♯', 2: 'D', 3: 'E♭', 4: 'E', 5: 'F', 6: 'F♯', 7: 'G', 8: 'A♭', 9: 'A', 10: 'B♭', 11: 'B' };
+  var ZT_HO = { 0: 'Hò', 2: 'Xự', 3: 'Xư', 5: 'Xang', 7: 'Xê', 9: 'Cống', 10: 'Phan' };   // half tones up from Hò (Sol)
+  // the computer keys, string 1 (lowest) on: the home row, then the row above
+  var ZT_KEYS = ['KeyA', 'KeyS', 'KeyD', 'KeyF', 'KeyG', 'KeyH', 'KeyJ', 'KeyK', 'KeyL', 'Semicolon',
+    'KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY', 'KeyU', 'KeyI', 'KeyO', 'KeyP'];
+  var ZT_KEY_CAP = 'ASDFGHJKL;QWERTYUIOP';
   var ZT_BRIGHT = 0.42;   // the loop's averaging weight: under 0.5 = brighter, steel rather than silk
-  var zt = { ctx: null, out: null, bufs: {}, rate: {}, kind: 16, vib: true, names: true, run: 0, cur: null };
+  var zt = { ctx: null, out: null, bufs: {}, rate: {}, nbuf: 0, kind: 16, hoi: 'bac', tone: 0, names: 'do', vib: true,
+    run: 0, cur: null, loaded: false };
+
+  // The visitor's last settings (this browser only).
+  function ztLoad() {
+    if (zt.loaded) return;
+    zt.loaded = true;
+    try {
+      var o = JSON.parse(localStorage.getItem('gem-zt') || '{}');
+      if (o.kind === 16 || o.kind === 19) zt.kind = o.kind;
+      if (ZT_HOI[o.hoi]) zt.hoi = o.hoi;
+      if (typeof o.tone === 'number' && Math.abs(o.tone) <= 6) zt.tone = Math.round(o.tone);
+      if (o.names === 'do' || o.names === 'ho' || o.names === '') zt.names = o.names;
+      if (typeof o.vib === 'boolean') zt.vib = o.vib;
+    } catch (e) { /* private mode */ }
+  }
+  function ztSave() {
+    try { localStorage.setItem('gem-zt', JSON.stringify({ kind: zt.kind, hoi: zt.hoi, tone: zt.tone, names: zt.names, vib: zt.vib })); } catch (e) { /* private mode */ }
+  }
 
   function ztSemis(hz) { return Math.round(12 * Math.log(hz / 261.63) / Math.LN2); }   // from Đô 4
-  function ztName(hz) { return ZT_PC[((ztSemis(hz) % 12) + 12) % 12] || ''; }
-  // nhấn: Mi up half a tone (Fa), every other string a whole tone (La → Si)
-  function ztBendBy(hz) { return ztName(hz) === 'Mi' ? 1 : 2; }
+  function ztPcOf(semi) { return ((semi % 12) + 12) % 12; }
+  // string i in the chosen hơi: half tones from Đô 4, tông left out
+  function ztSemi(i) {
+    var hz = ZT_BASE[zt.kind][i];
+    if (!hz) return null;
+    var s = ztSemis(hz);
+    return s + (ZT_HOI[zt.hoi].move[ztPcOf(s)] || 0);
+  }
+  function ztHz(semi) { return 261.63 * Math.pow(2, (semi + zt.tone) / 12); }
+  // nhấn: up to the next of the hơi's seven notes
+  function ztPress(semi) {
+    var pc = ztPcOf(semi), sc = ZT_HOI[zt.hoi].scale;
+    for (var k = 0; k < sc.length; k++) if (sc[k] > pc) return sc[k] - pc;
+    return 12 - pc;
+  }
+  // a string whose pressed note no string plays: Bắc's Mi and La
+  function ztHasPress(i) {
+    var semi = ztSemi(i), want = ztPcOf(semi + ztPress(semi));
+    return !ZT_BASE[zt.kind].some(function (x, j) { return ztPcOf(ztSemi(j)) === want; });
+  }
+  function ztName(semi) {
+    var pc = ztPcOf(semi);
+    if (zt.names === 'ho') return ZT_HO[ztPcOf(pc - 7)] || ZT_PC[pc];
+    return ZT_PC[pc];
+  }
+  function ztTonic(semi) { return ztPcOf(semi) === (zt.names === 'ho' ? 7 : 0); }   // Đô, or Hò: find your place
+  function ztToneName() {
+    var pc = ztPcOf(zt.tone);
+    return lng() === 'en' ? ZT_ABC[pc] : ZT_PC[pc];
+  }
 
   function ztAudio() {
     if (zt.ctx) return zt.ctx;
@@ -1940,7 +2018,9 @@
   // time: a string that fades in about two seconds. The line is a whole
   // number of samples, so playbackRate puts the pitch back exactly.
   function ztBuffer(hz) {
-    if (zt.bufs[hz]) return zt.bufs[hz];
+    var key = hz.toFixed(2);
+    if (zt.bufs[key]) return zt.bufs[key];
+    if (++zt.nbuf > 60) { zt.bufs = {}; zt.rate = {}; zt.nbuf = 1; }   // tông and hơi make new pitches: keep a few
     var sr = zt.ctx.sampleRate, S = ZT_BRIGHT;
     var N = Math.max(2, Math.floor(sr / hz)), len = Math.round(sr * 2.4);
     var buf = zt.ctx.createBuffer(1, len, sr), d = buf.getChannelData(0);
@@ -1954,18 +2034,22 @@
     }
     var tail = Math.round(sr * 0.06);
     for (k = 0; k < tail; k++) d[len - 1 - k] *= k / tail;   // no click at the end
-    zt.rate[hz] = (N - S) * hz / sr;   // the averaging shortens the loop by S of a sample
-    zt.bufs[hz] = buf;
+    zt.rate[key] = (N - S) * hz / sr;   // the averaging shortens the loop by S of a sample
+    zt.bufs[key] = buf;
     return buf;
   }
 
-  function ztPluck(i) {
-    var ctx = ztAudio(), hz = ZT_KINDS[zt.kind][i];
-    if (!ctx || !hz) return false;
+  // press: half tones the string is already pressed up (the part left of
+  // its bridge, Shift on a computer): it slides up at once and stays.
+  function ztPluck(i, press) {
+    var ctx = ztAudio(), semi = ztSemi(i);
+    if (!ctx || semi == null) return false;
     if (ctx.state === 'suspended') ctx.resume();
-    var s = ctx.createBufferSource(), now = ctx.currentTime;
+    var hz = ztHz(semi), s = ctx.createBufferSource(), now = ctx.currentTime;
     s.buffer = ztBuffer(hz);
-    s.playbackRate.value = zt.rate[hz];
+    var r = zt.rate[hz.toFixed(2)];
+    s.playbackRate.setValueAtTime(r, now);
+    if (press) s.playbackRate.setTargetAtTime(r * Math.pow(2, press / 12), now + 0.015, 0.025);   // luyến: a quick slide up
     if (zt.vib && s.detune) {   // rung: the left hand rocking the string past the bridge
       var lfo = ctx.createOscillator(), depth = ctx.createGain();
       lfo.frequency.value = 4.6;
@@ -1977,45 +2061,63 @@
     }
     s.connect(zt.out);
     s.start(now);
-    zt.cur = { i: i, hz: hz, s: s, bent: false };
+    zt.cur = { i: i, semi: semi, r: r, s: s, bent: !!press, held: !!press };
     return true;
   }
 
-  // nhấn / luyến: the string held down left of its bridge rises; let go and it
-  // slides back. The name on the string says what it is while held.
+  // The name on a string says what it sounds while pressed.
+  function ztLabel(root, i, semi) {
+    var lab = root && root.querySelectorAll('.zt-name')[i];
+    if (!lab) return;
+    var open = ztSemi(i), pressed = semi !== open;
+    lab.textContent = ztName(semi);
+    lab.classList.toggle('is-bent', pressed);
+  }
+
+  // nhấn / luyến: a string held after plucking rises; let go and it slides
+  // back. A string pressed from the start (left of its bridge) stays up.
   function ztBend(up, root) {
     var c = zt.cur;
-    if (!c || !zt.ctx || c.bent === up) return;
-    var r = zt.rate[c.hz], now = zt.ctx.currentTime, by = ztBendBy(c.hz);
+    if (!c || !zt.ctx || c.bent === up || c.held) return;
+    var now = zt.ctx.currentTime, by = ztPress(c.semi);
     c.s.playbackRate.cancelScheduledValues(now);
     c.s.playbackRate.setValueAtTime(c.s.playbackRate.value, now);
-    c.s.playbackRate.setTargetAtTime(up ? r * Math.pow(2, by / 12) : r, now, up ? 0.09 : 0.06);
+    c.s.playbackRate.setTargetAtTime(up ? c.r * Math.pow(2, by / 12) : c.r, now, up ? 0.09 : 0.06);
     c.bent = up;
-    var lab = root && root.querySelectorAll('.zt-name')[c.i];
-    if (lab) {
-      lab.textContent = up ? ztName(c.hz * Math.pow(2, by / 12)) : ztName(c.hz);
-      lab.classList.toggle('is-bent', up);
+    ztLabel(root, c.i, up ? c.semi + by : c.semi);
+  }
+
+  function ztShow(root, i, press) {
+    var el = root.querySelectorAll('.zt-str')[i];
+    if (!el) return;
+    el.classList.remove('is-on', 'is-pressed');
+    void el.offsetWidth;   // start the shake again
+    el.classList.add('is-on');
+    if (press) {
+      el.classList.add('is-pressed');
+      var semi = ztSemi(i);
+      ztLabel(root, i, semi + press);
+      clearTimeout(el.ztT);
+      el.ztT = setTimeout(function () { el.classList.remove('is-pressed'); ztLabel(root, i, semi); }, 700);
     }
   }
 
-  function ztShow(root, i) {
-    var el = root.querySelectorAll('.zt-str')[i];
-    if (!el) return;
-    el.classList.remove('is-on');
-    void el.offsetWidth;   // start the shake again
-    el.classList.add('is-on');
-  }
-
   function ztStrings() {
-    return ZT_KINDS[zt.kind].map(function (hz, i) {
-      var nm = ztName(hz);
-      return '<button type="button" class="zt-str' + (nm === 'Đô' ? ' is-do' : '') + '" data-zt="' + i + '" aria-label="' +
+    return ZT_BASE[zt.kind].map(function (x, i) {
+      var semi = ztSemi(i), nm = ztName(semi), hz = ztHz(semi);
+      var press = ztHasPress(i) ? ztName(semi + ztPress(semi)) : '';
+      return '<button type="button" class="zt-str' + (ztTonic(semi) ? ' is-do' : '') + '" data-zt="' + i + '" data-hz="' + hz.toFixed(2) + '"' +
+        (press ? ' data-press="' + esc(press) + '"' : '') + ' aria-label="' +
         esc(t('studio.zt_string').replace('{n}', i + 1) + ' · ' + nm) + '">' +
-        '<span class="zt-name" aria-hidden="true">' + nm + '</span><span class="zt-line"></span><span class="zt-nhan"></span></button>';
+        '<span class="zt-name" aria-hidden="true">' + esc(nm) + '</span><span class="zt-line"></span><span class="zt-nhan"></span>' +
+        (press ? '<span class="zt-press" aria-hidden="true">' + esc(press) + '</span>' : '') +
+        (i < ZT_KEY_CAP.length ? '<span class="zt-key" aria-hidden="true">' + ZT_KEY_CAP[i] + '</span>' : '') + '</button>';
     }).join('');
   }
 
   function zitherSheet() {
+    ztLoad();
+    var opt = function (key, val, on) { return tr('option', key, ' value="' + val + '"' + (on ? ' selected' : '')); };
     openSheet(
       '<div class="zt-wrap">' +
         '<div class="zt-head">' + tr('h2', 'studio.zt_h', ' id="st-sheet-title"') +
@@ -2025,13 +2127,26 @@
           }).join('') + '</div>' +
         '</div>' +
         tr('p', 'studio.zt_p', ' class="st-lead"') +
-        '<div class="zt"><div class="zt-body' + (zt.names ? ' has-names' : '') + '" data-n="' + zt.kind + '" role="group" aria-labelledby="st-sheet-title"></div></div>' +
+        '<div class="zt"><div class="zt-body' + (zt.names ? ' has-names' : '') + (ztKeysOn ? ' has-keys' : '') + '" data-n="' + zt.kind + '" role="group" aria-labelledby="st-sheet-title"></div></div>' +
+        '<div class="zt-row zt-set">' +
+          '<select class="zt-sel" data-zt-hoi data-i18n-attr="aria-label:studio.zt_hoi" aria-label="' + esc(t('studio.zt_hoi')) + '">' +
+            opt('studio.zt_bac', 'bac', zt.hoi === 'bac') + opt('studio.zt_nam', 'nam', zt.hoi === 'nam') + opt('studio.zt_dao', 'dao', zt.hoi === 'dao') +
+          '</select>' +
+          '<div class="zt-tone" role="group" data-i18n-attr="aria-label:studio.zt_tone" aria-label="' + esc(t('studio.zt_tone')) + '">' +
+            '<button type="button" data-zt-tone="-1" data-i18n-attr="aria-label:studio.zt_tone_dn" aria-label="' + esc(t('studio.zt_tone_dn')) + '">&minus;</button>' +
+            '<span class="zt-tone-v" aria-live="polite">' + tr('span', 'studio.zt_tone') + ' <b data-zt-tone-n>' + esc(ztToneName()) + '</b></span>' +
+            '<button type="button" data-zt-tone="1" data-i18n-attr="aria-label:studio.zt_tone_up" aria-label="' + esc(t('studio.zt_tone_up')) + '">+</button>' +
+          '</div>' +
+          '<select class="zt-sel" data-zt-names data-i18n-attr="aria-label:studio.zt_names" aria-label="' + esc(t('studio.zt_names')) + '">' +
+            opt('studio.zt_n_do', 'do', zt.names === 'do') + opt('studio.zt_n_ho', 'ho', zt.names === 'ho') + opt('studio.zt_n_off', '', !zt.names) +
+          '</select>' +
+        '</div>' +
         '<div class="zt-row">' +
           '<button type="button" class="st-btn st-btn-sm" data-zt-run data-i18n="studio.zt_run">' + esc(t('studio.zt_run')) + '</button>' +
           '<label class="zt-vib"><input type="checkbox" data-zt-vib' + (zt.vib ? ' checked' : '') + '> <span data-i18n="studio.zt_vib">' + esc(t('studio.zt_vib')) + '</span></label>' +
-          '<label class="zt-vib"><input type="checkbox" data-zt-names' + (zt.names ? ' checked' : '') + '> <span data-i18n="studio.zt_names">' + esc(t('studio.zt_names')) + '</span></label>' +
         '</div>' +
-        '<details class="zt-about">' + tr('summary', 'studio.zt_about') + tr('p', 'studio.zt_about_p') + '</details>' +
+        '<details class="zt-about">' + tr('summary', 'studio.zt_about') + tr('p', 'studio.zt_about_p') + tr('p', 'studio.zt_about_hoi') +
+          tr('p', 'studio.zt_about_tone') + tr('p', 'studio.zt_about_ho') + tr('p', 'studio.zt_about_keys', ' class="zt-keys-p"') + '</details>' +
         tr('p', 'studio.zt_mute', ' class="zt-note zt-mute"') +
       '</div>', true);
     document.documentElement.classList.add('zt-open');   // the basket button would sit on the high strings
@@ -2039,21 +2154,27 @@
     function build() {
       body.innerHTML = ztStrings();
       body.setAttribute('data-n', zt.kind);
-      var n = ZT_KINDS[zt.kind].length;
-      body.querySelectorAll('.zt-str').forEach(function (b, k) { b.style.setProperty('--b', (28 + k * 50 / (n - 1)) + '%'); });   // the bridges on a slant
+      var n = ZT_BASE[zt.kind].length;
+      body.querySelectorAll('.zt-str').forEach(function (b, k) { b.style.setProperty('--b', (36 + k * 44 / (n - 1)) + '%'); });   // the bridges on a slant
+      var tn = sheetBody.querySelector('[data-zt-tone-n]');
+      if (tn) tn.textContent = ztToneName();
+      ztSave();
     }
     build();
     if (!window.AudioContext && !window.webkitAudioContext) {
       sheetBody.querySelector('.zt-mute').textContent = t('studio.zt_none');
     }
-    function play(i) { if (ztPluck(i)) ztShow(root, i); }
-    // where each string's line is, in screen px (read at the start of a touch:
-    // the sheet doesn't move under a finger on the board)
-    var lines = [], gap = 0;
+    function play(i, press) { if (ztPluck(i, press)) ztShow(root, i, press); }
+    // where each string's line and bridge are, in screen px (read at the
+    // start of a touch: the sheet doesn't move under a finger on the board)
+    var lines = [], bridges = [], gap = 0;
     function measure() {
-      lines = Array.prototype.map.call(body.querySelectorAll('.zt-str'), function (b) {
-        var r = b.getBoundingClientRect();
-        return r.top + r.height / 2;
+      lines = []; bridges = [];
+      Array.prototype.forEach.call(body.querySelectorAll('.zt-str'), function (b) {
+        var r = b.getBoundingClientRect(), nh = b.querySelector('.zt-nhan').getBoundingClientRect();
+        var x1 = nh.left + nh.width / 2, x0 = Math.max(b.querySelector('.zt-line').getBoundingClientRect().left, x1 - 96);
+        lines.push(r.top + r.height / 2);
+        bridges.push(b.hasAttribute('data-press') ? [x0, x1] : null);   // just left of the bridge, round its small name
       });
       gap = lines.length > 1 ? lines[1] - lines[0] : 30;
     }
@@ -2078,8 +2199,10 @@
       lastY = e.clientY;
       lastI = nearest(e.clientY);
       away = false;
-      play(lastI);
-      startHold();
+      // just left of a Mi or La string's bridge: Fa, Si (not on its name)
+      var zone = bridges[lastI], press = zone && e.clientX > zone[0] && e.clientX < zone[1] ? ztPress(ztSemi(lastI)) : 0;
+      play(lastI, press);
+      if (!press) startHold();
     });
     body.addEventListener('pointermove', function (e) {
       if (!down) return;
@@ -2094,7 +2217,7 @@
       lines.forEach(function (c, n) { if (c > lo && c <= hi) hit.push(n); });
       if (y < lastY) hit.reverse();
       if (hit.length) {
-        hit.forEach(play);
+        hit.forEach(function (n) { play(n, 0); });   // a sweep plays the open strings
         lastI = hit[hit.length - 1];
         away = Math.abs(y - lines[lastI]) >= gap * 0.45;
         if (!away) startHold();
@@ -2115,8 +2238,21 @@
     body.addEventListener('click', function (e) {
       var b = e.target.closest('.zt-str');
       if (eat) { eat = false; return; }
-      if (b) play(+b.getAttribute('data-zt'));
+      if (b) play(+b.getAttribute('data-zt'), 0);
     });
+    // a computer's keys: A S D F G H J K L ; then Q W E R T Y U I O P, low to
+    // high; Shift presses. The key names show on the strings once used.
+    function onKey(e) {
+      if (!root.isConnected) { document.removeEventListener('keydown', onKey); return; }
+      if (e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
+      if (/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) return;
+      var i = ZT_KEYS.indexOf(e.code);
+      if (i < 0 || i >= ZT_BASE[zt.kind].length) return;
+      e.preventDefault();
+      if (!ztKeysOn) { ztKeysOn = true; body.classList.add('has-keys'); }
+      play(i, e.shiftKey ? ztPress(ztSemi(i)) : 0);
+    }
+    document.addEventListener('keydown', onKey);
     sheetBody.querySelector('.zt-kind').addEventListener('click', function (e) {
       var b = e.target.closest('[data-zt-kind]');
       if (!b) return;
@@ -2125,19 +2261,38 @@
       sheetBody.querySelectorAll('[data-zt-kind]').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
       build();
     });
-    sheetBody.querySelector('[data-zt-vib]').addEventListener('change', function (e) { zt.vib = e.target.checked; });
+    sheetBody.querySelector('[data-zt-hoi]').addEventListener('change', function (e) {
+      zt.hoi = ZT_HOI[e.target.value] ? e.target.value : 'bac';
+      e.target.blur();   // the keys play the strings again
+      build();
+    });
+    sheetBody.querySelector('.zt-tone').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-zt-tone]');
+      if (!b) return;
+      zt.tone = Math.max(-6, Math.min(6, zt.tone + +b.getAttribute('data-zt-tone')));
+      build();
+      play(ZT_BASE[zt.kind].length > 16 ? 6 : 4, 0);   // the Đô in the middle, so the new tông is heard
+    });
+    sheetBody.querySelector('[data-zt-vib]').addEventListener('change', function (e) { zt.vib = e.target.checked; ztSave(); });
     sheetBody.querySelector('[data-zt-names]').addEventListener('change', function (e) {
-      zt.names = e.target.checked;
-      body.classList.toggle('has-names', zt.names);
+      zt.names = e.target.value === 'do' || e.target.value === 'ho' ? e.target.value : '';
+      body.classList.toggle('has-names', !!zt.names);
+      e.target.blur();
+      build();
     });
     sheetBody.querySelector('[data-zt-run]').addEventListener('click', function () {
       var run = ++zt.run, n = 0;
       (function next() {
-        if (run !== zt.run || !root.isConnected || n >= ZT_KINDS[zt.kind].length) return;
-        play(n++);
+        if (run !== zt.run || !root.isConnected || n >= ZT_BASE[zt.kind].length) return;
+        play(n++, 0);
         setTimeout(next, 55);
       })();
     });
+  }
+  var ztKeysOn = false;   // a key has played a string: show the key names
+  function ztRelabel() {   // the language changed while the đàn is open
+    var tn = sheetBody && sheetBody.querySelector('[data-zt-tone-n]');
+    if (tn) tn.textContent = ztToneName();
   }
 
   function sofaSheet() {
@@ -4461,7 +4616,7 @@
       e.target.closest('.mb-form').querySelector('.mb-count').textContent = e.target.value.length + '/280';
     });
 
-    document.addEventListener('gem:langchange', function () { renderDesigner(); renderTu(); relabelSpots(); relabelThings(); pdRender(); streetNav(); });
+    document.addEventListener('gem:langchange', function () { renderDesigner(); renderTu(); relabelSpots(); relabelThings(); pdRender(); streetNav(); ztRelabel(); });
     // an own-colour fabric finished dyeing: swap the plain colour for it
     var fabricTimer = null;
     document.addEventListener('gem:fabric', function () {

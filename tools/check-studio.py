@@ -1820,11 +1820,12 @@ async def zither(browser, db):
     }
     # count what Web Audio is asked to do (headless: nothing is heard); bends are
     # setTargetAtTime calls on a playbackRate
-    spy = ("window.__pl = 0; window.__osc = 0; window.__bend = []; (() => { const A = window.AudioContext; if (!A) return;"
-           " const b = A.prototype.createBufferSource, o = A.prototype.createOscillator, st = AudioParam.prototype.setTargetAtTime;"
+    spy = ("window.__pl = 0; window.__osc = 0; window.__bend = []; window.__set = []; (() => { const A = window.AudioContext; if (!A) return;"
+           " const b = A.prototype.createBufferSource, o = A.prototype.createOscillator, st = AudioParam.prototype.setTargetAtTime, sv = AudioParam.prototype.setValueAtTime;"
            " A.prototype.createBufferSource = function () { window.__pl++; return b.apply(this, arguments); };"
            " A.prototype.createOscillator = function () { window.__osc++; return o.apply(this, arguments); };"
-           " AudioParam.prototype.setTargetAtTime = function (v) { window.__bend.push(v); return st.apply(this, arguments); }; })();"
+           " AudioParam.prototype.setTargetAtTime = function (v) { window.__bend.push(v); return st.apply(this, arguments); };"
+           " AudioParam.prototype.setValueAtTime = function (v) { window.__set.push(v); return sv.apply(this, arguments); }; })();"
            "localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-studio-intro-touch','1');sessionStorage.removeItem('gem-scene')")
     body = "document.getElementById('st-sheet-body')"
 
@@ -1859,6 +1860,8 @@ async def zither(browser, db):
               f'{name}: 16 strings (traditional) to start, named Rê Mi Sol La Đô… ({got["n"]}, {got["names"]})')
         check(got['row'] >= 30 and got['bottom'] <= got['vh'], f'{name}: rows of {got["row"]}px, all on screen ({got["bottom"]}/{got["vh"]})')
         check(got['widget'] == 'none', f'{name}: the basket button is out of the way while playing ({got["widget"]})')
+        hl = await pg.evaluate("[...new Set(['.zt-str', '.zt-name', '.zt-sel', '.zt-tone button'].map(q => getComputedStyle(document.querySelector(q)).webkitTapHighlightColor))]")
+        check(hl == ['rgba(0, 0, 0, 0)'], f'{name}: no blue box over a string or button when tapped ({hl})')
         r = await pg.evaluate("(() => { const r = document.querySelector('.zt-body').getBoundingClientRect(); return [r.left, r.top, r.width, r.height]; })()")
         lines = await pg.evaluate("[...document.querySelectorAll('.zt-str')].map(b => { const r = b.getBoundingClientRect(); return r.top + r.height / 2; })")
         gap = lines[1] - lines[0]
@@ -1936,6 +1939,48 @@ async def zither(browser, db):
         await pg.keyboard.press('Enter')
         await pg.wait_for_timeout(100)
         check(await pg.evaluate('window.__pl') == n + 1, f'{name}: Enter on a string plucks it')
+        # the part just left of a Mi / La bridge plays Fa / Si (its small name), slides up and stays
+        press = await pg.evaluate(f"[...{body}.querySelectorAll('.zt-str')].map(b => b.dataset.press || '').join(',')")
+        check(press == ',Fa,,Si,,,Fa,,Si,,,Fa,,Si,,', f'{name}: the Mi strings say Fa left of their bridge, the La strings Si ({press})')
+        async def tap_at(x_, y_):
+            if name == 'desktop':
+                await pg.mouse.click(x_, y_)
+            else:
+                await finger(pg, [(x_, y_)])
+            await pg.wait_for_timeout(120)
+        for idx, want, ratio in ((1, 'Fa', 2 ** (1 / 12)), (3, 'Si', 2 ** (2 / 12))):
+            c = await pg.evaluate(f"(() => {{ const r = document.querySelectorAll('.zt-str')[{idx}].querySelector('.zt-press').getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; }})()")
+            await pg.evaluate('window.__bend = []; window.__set = []')
+            n = await pg.evaluate('window.__pl')
+            await tap_at(*c)
+            got = await pg.evaluate(f"[window.__pl, window.__bend, window.__set[0], document.querySelectorAll('.zt-name')[{idx}].textContent]")
+            await pg.wait_for_timeout(900)
+            back = await pg.evaluate(f"document.querySelectorAll('.zt-name')[{idx}].textContent")
+            check(got[0] == n + 1 and len(got[1]) == 1 and abs(got[1][0] / got[2] - ratio) < 1e-3 and got[3] == want and back != want,
+                  f'{name}: a tap on "{want}" plays it at once ({got[0] - n} pluck, x{round(got[1][0] / got[2], 4) if got[1] else got[1]}, reads {got[3]}, then {back})')
+        # on the string's name: the open string, not the pressed note
+        c = await pg.evaluate("(() => { const r = document.querySelectorAll('.zt-str')[6].querySelector('.zt-name').getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; })()")
+        await pg.evaluate('window.__bend = []')
+        n = await pg.evaluate('window.__pl')
+        await tap_at(*c)
+        got = await pg.evaluate('[window.__pl, window.__bend.length]')
+        check(got == [n + 1, 0], f'{name}: a tap on a Mi string\'s name plays Mi ({got})')
+        # a sweep down through the small names plays the open strings
+        c = await pg.evaluate("(() => { const r = document.querySelectorAll('.zt-str')[1].querySelector('.zt-press').getBoundingClientRect(); return r.left + r.width / 2; })()")
+        await pg.evaluate('window.__bend = []')
+        n = await pg.evaluate('window.__pl')
+        pts = [(c, lines[0] + (lines[5] - lines[0]) * i / 5) for i in range(6)]
+        if name == 'desktop':
+            await pg.mouse.move(*pts[0]); await pg.mouse.down()
+            for p_ in pts[1:]:
+                await pg.mouse.move(*p_)
+            await pg.mouse.up()
+        else:
+            await finger(pg, pts)
+        await pg.wait_for_timeout(120)
+        got = await pg.evaluate('[window.__pl, window.__bend.length]')
+        check(got == [n + 6, 0], f'{name}: a sweep through the small names plays 6 open strings ({got[0] - n}, {got[1]} pressed)')
+        await pg.wait_for_timeout(600)
         # 19 strings (the improved đàn)
         await js_click(pg, '[data-zt-kind="19"]')
         got = await pg.evaluate(f"""(() => {{ const s = [...{body}.querySelectorAll('.zt-str')];
@@ -1951,10 +1996,65 @@ async def zither(browser, db):
         check(got[0] - n == 19 and got[1] - osc0 == 19, f'"Rải dây" runs all 19, with the rung (vibrato) on by default ({got[0] - n}, {got[1] - osc0})')
         about = await pg.evaluate("document.querySelector('.zt-about p').textContent")
         check('Fa' in about and 'Si' in about and '16 dây' in about, 'the note says why there is no Fa or Si string')
-        await js_click(pg, '[data-zt-names]')
-        hidden = await pg.evaluate("getComputedStyle(document.querySelector('.zt-name')).display")
-        check(hidden == 'none', f'{name}: "Tên nốt" hides the names ({hidden})')
-        await js_click(pg, '[data-zt-names]')
+        await js_click(pg, '[data-zt-kind="16"]')
+        strs = f"[...{body}.querySelectorAll('.zt-str')]"
+        def tune():
+            return pg.evaluate(f"""(() => {{ const s = {strs}; return {{ names: s.map(x => x.querySelector('.zt-name').textContent).slice(0, 6).join(' '),
+                press: s.map(x => x.dataset.press || '').slice(0, 5).join(','), hz: s.map(x => +x.dataset.hz),
+                tone: document.querySelector('.zt-tone-v').textContent.trim(), tonic: s.findIndex(x => x.classList.contains('is-do')) }}; }})()""")
+        await pg.select_option('[data-zt-hoi]', 'nam')
+        got = await tune()
+        check(got['names'] == 'Rê Fa Sol Si♭ Đô Rê' and got['press'] == 'Mi♭,,La,,' and abs(got['hz'][3] - 233.08) < 0.02,
+              f'{name}: "Dây Nam" is Sol Si♭ Đô Rê Fa, the pressed notes La and Mi♭ ({got["names"]}; {got["press"]}; {got["hz"][3]})')
+        await pg.select_option('[data-zt-hoi]', 'dao')
+        got = await tune()
+        check(got['names'] == 'Rê Fa Sol La Đô Rê' and got['press'] == 'Mi,,,Si♭,', f'{name}: "Dây Đảo" is Sol La Đô Rê Fa, pressed Si♭ and Mi ({got["names"]}; {got["press"]})')
+        await pg.select_option('[data-zt-hoi]', 'bac')
+        n = await pg.evaluate('window.__pl')
+        await js_click(pg, '[data-zt-tone="1"]'); await js_click(pg, '[data-zt-tone="1"]')
+        got = await tune()
+        n2 = await pg.evaluate('window.__pl')
+        check(got['tone'] == 'Tông Rê' and abs(got['hz'][0] - 146.83 * 2 ** (2 / 12)) < 0.02 and got['names'].startswith('Rê Mi Sol') and n2 - n == 2,
+              f'{name}: "+" twice: Tông Rê, every string up a whole tone, names kept, the Đô heard each time ({got["tone"]}, {got["hz"][0]}, {n2 - n} plucks)')
+        for _ in range(6):
+            await js_click(pg, '[data-zt-tone="1"]')
+        got = await tune()
+        check(got['tone'] == 'Tông Fa♯' and abs(got['hz'][0] - 146.83 * 2 ** 0.5) < 0.02, f'{name}: the tông stops at +6 ({got["tone"]}, {got["hz"][0]})')
+        for _ in range(6):
+            await js_click(pg, '[data-zt-tone="-1"]')
+        got = await tune()
+        check(got['tone'] == 'Tông Đô' and abs(got['hz'][0] - 146.83) < 0.02, f'{name}: and back to Tông Đô ({got["tone"]}, {got["hz"][0]})')
+        await pg.select_option('[data-zt-names]', 'ho')
+        got = await tune()
+        check(got['names'] == 'Xê Cống Hò Xự Xang Xê' and got['press'] == ',Phan,,Si,' and got['tonic'] == 2,
+              f'{name}: "Hò Xự Xang" names the strings from Hò = Sol, Fa is Phan, Hò marked ({got["names"]}; {got["press"]}; {got["tonic"]})')
+        await pg.select_option('[data-zt-names]', '')
+        hidden = await pg.evaluate("[getComputedStyle(document.querySelector('.zt-name')).display, getComputedStyle(document.querySelector('.zt-press')).display]")
+        check(hidden == ['none', 'none'], f'{name}: "Ẩn tên nốt" hides the names and the small ones ({hidden})')
+        await pg.select_option('[data-zt-names]', 'do')
+        saved = await pg.evaluate("JSON.parse(localStorage.getItem('gem-zt'))")
+        check(saved == {'kind': 16, 'hoi': 'bac', 'tone': 0, 'names': 'do', 'vib': True}, f'{name}: the choices are kept for next time ({saved})')
+        if name == 'desktop':
+            await pg.evaluate("document.activeElement && document.activeElement.blur()")
+            n = await pg.evaluate('window.__pl')
+            await pg.keyboard.press('a')
+            await pg.wait_for_timeout(80)
+            got = await pg.evaluate(f"[window.__pl, {strs}.findIndex(b => b.classList.contains('is-on')), getComputedStyle(document.querySelector('.zt-key')).display, document.querySelector('.zt-key').textContent]")
+            check(got[0] == n + 1 and got[1] == 0 and got[2] != 'none' and got[3] == 'A', f'{name}: key A plucks the lowest string and the keys show on the strings ({got})')
+            await pg.evaluate('window.__bend = []; window.__set = []')
+            await pg.keyboard.press('Shift+KeyS')
+            await pg.wait_for_timeout(80)
+            got = await pg.evaluate("[window.__bend, window.__set[0], document.querySelectorAll('.zt-name')[1].textContent]")
+            check(len(got[0]) == 1 and abs(got[0][0] / got[1] - 2 ** (1 / 12)) < 1e-3 and got[2] == 'Fa', f'{name}: Shift + S presses the Mi string to Fa ({got[2]})')
+            await pg.focus('[data-zt-hoi]')
+            n = await pg.evaluate('window.__pl')
+            await pg.keyboard.press('d')
+            check(await pg.evaluate('window.__pl') == n, f'{name}: keys typed in a list don\'t pluck')
+            await pg.evaluate("window.GemI18n.setLang('en')")
+            await pg.wait_for_timeout(200)
+            got = await pg.evaluate("[document.querySelector('.zt-tone-v').textContent.trim(), document.querySelector('[data-zt-hoi] option').textContent, document.querySelector('.zt-about p').textContent.slice(0, 30)]")
+            check(got[0] == 'Key C' and got[1] == 'Bắc tuning', f'{name}: English on the đàn ({got})')
+            await pg.evaluate("window.GemI18n.setLang('vi')")
         await pg.screenshot(path=OUT / f'zither-{name}.png')
         wide = await pg.evaluate("(() => { const s = document.querySelector('.st-sheet'); return [s.scrollWidth, s.clientWidth]; })()")
         check(wide[0] <= wide[1], f'{name}: no sideways scroll ({wide})')
@@ -1971,6 +2071,20 @@ async def zither(browser, db):
         check(await pg.evaluate("getComputedStyle(document.querySelector('.gb-widget')).display") != 'none', f'{name}: the basket button is back once the đàn is closed')
         check(not pg.errors, f'{name}: no script errors {pg.errors}')
         await pg.context.close()
+
+    # the choices a visitor left are the đàn they find
+    pg = await page(browser, db, 390, 844, spy + ";localStorage.setItem('gem-zt', JSON.stringify({kind: 19, hoi: 'dao', tone: -3, names: 'ho', vib: false}))")
+    await pg.goto(f'{BASE}/studio.html')
+    await pg.wait_for_timeout(2500)
+    await js_click(pg, '[data-thing-label]')
+    await pg.wait_for_timeout(900)
+    got = await pg.evaluate(f"""(() => {{ const s = [...{body}.querySelectorAll('.zt-str')]; return [s.length, document.querySelector('[data-zt-hoi]').value,
+        document.querySelector('[data-zt-names]').value, document.querySelector('.zt-tone-v').textContent.trim(), document.querySelector('[data-zt-vib]').checked,
+        +s[0].dataset.hz, s[0].querySelector('.zt-name').textContent]; }})()""")
+    check(got[:5] == [19, 'dao', 'ho', 'Tông La', False] and abs(got[5] - 110 * 2 ** (-3 / 12)) < 0.02 and got[6] == 'Xự',
+          f'the đàn opens as the visitor left it: 19 strings, Đảo, Hò Xự Xang, Tông La, no vibrato ({got})')
+    check(not pg.errors, f'no script errors {pg.errors}')
+    await pg.context.close()
 
     # the same from a "Khung bấm" on the street (it used to take you inside first)
     db.rows['live']['outside']['items'] = []
