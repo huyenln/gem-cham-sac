@@ -205,6 +205,9 @@
     'basket.done_p':        { vi: `Gem sẽ nhắn lại cho bạn trong hôm nay để xác nhận món và phí giao. Cảm ơn bạn đã chọn đồ của chúng mình.`, en: `Gem will message you back today to confirm the items and shipping. Thank you for choosing our pieces.` },
     'basket.code_label':    { vi: `MÃ ĐƠN`, en: `ORDER CODE` },
     'basket.out_of_stock':  { vi: `Tạm hết hàng`, en: `Out of stock` },
+    // {x}: what is chosen, from the product ("mùi hương", "cỡ")
+    'basket.choose':        { vi: `Chọn {x}`, en: `Choose {x}` },
+    'basket.option_gone':   { vi: `Một lựa chọn trong giỏ (mùi, cỡ…) vừa hết hàng. Bạn xem lại giỏ giúp chúng mình nhé.`, en: `Something you picked (a scent, a size…) has just sold out. Please check your basket.` },
 
     'basket.pay_h':         { vi: `Cách trả tiền`, en: `How you'll pay` },
     'basket.pay_cod':       { vi: `Trả khi nhận hàng`, en: `Pay on delivery` },
@@ -253,11 +256,13 @@
      STATE
      ====================================================================== */
   var STORAGE_KEY = 'gem-basket';
-  var items = [];   // [{ sku, qty, spec?, pics? }]  spec = design code from js/patch.js
+  var items = [];   // [{ sku, qty, spec?, opt?, pics? }]  spec = design code from js/patch.js,
+                    // opt = key of the scent / size picked (products.options)
   var liveSkus = null;   // skus the database sells, in its order; null until it answers
 
-  // A custom design is its own line even when the product is the same.
-  function keyOf(it) { return it.sku + (it.spec ? '|' + it.spec : ''); }
+  // A custom design is its own line even when the product is the same, and
+  // so is each scent / size of one product.
+  function keyOf(it) { return it.sku + (it.spec ? '|' + it.spec : '') + (it.opt ? '#' + it.opt : ''); }
 
   /* ---------- the very piece picked up ----------
      In the Studio one product can hang as several pictures (a green shirt, a
@@ -308,6 +313,43 @@
     return isKey(p) ? ' data-i18n="' + p.name + '"' : '';
   }
 
+  /* ---------- lựa chọn: mùi, cỡ, mẫu… ----------
+     products.options = { label_vi, label_en, choices: [{ key, vi, en, note_vi,
+     note_en, image, out }] }, cùng một giá cho mọi lựa chọn. Món có lựa chọn
+     không bỏ thẳng vào giỏ từ thẻ được: khách chọn trong bảng chi tiết
+     (js/gallery.js), dòng trong giỏ giữ key (opt), và create_order() đòi đúng
+     key đó, còn hàng. */
+  var OPT_KEY = /^[a-z0-9-]{1,40}$/;
+
+  function choices(p) {
+    var o = p && p.options;
+    return o && Array.isArray(o.choices) && o.choices.length ? o.choices : null;
+  }
+
+  function choiceOf(p, key) {
+    var cs = choices(p);
+    if (!cs || !key) return null;
+    for (var i = 0; i < cs.length; i++) if (cs[i] && cs[i].key === key) return cs[i];
+    return null;
+  }
+
+  function isEn() {
+    return (window.GemI18n && window.GemI18n.getLang && window.GemI18n.getLang()) === 'en';
+  }
+
+  function choiceName(c) { return (isEn() && c.en) || c.vi || c.key; }
+
+  // "Mùi hương", "Cỡ" — what is being chosen
+  function optLabel(p) {
+    var o = p.options || {};
+    return (isEn() && o.label_en) || o.label_vi || '';
+  }
+
+  // The card button of a product with choices: "Chọn mùi hương"
+  function chooseText(p) {
+    return t('basket.choose', 'Chọn {x}').replace('{x}', optLabel(p).toLowerCase());
+  }
+
   function esc(s) {
     return String(s == null ? '' : s)
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -340,6 +382,10 @@
       p.image    = r.image || null;
       p.cutout   = r.cutout || null;
       p.shelf    = r.shelf || null;
+      p.options  = r.options && Array.isArray(r.options.choices) && r.options.choices.length ? r.options : null;
+      p.consignor = r.consignor || null;
+      p.notesVi  = r.notes_vi || null;
+      p.notesEn  = r.notes_en || null;
       if (r.sprite) p.sprite = r.sprite;
       changed = true;
     });
@@ -357,6 +403,8 @@
       }).map(function (it) {
         var out = { sku: it.sku, qty: Math.min(99, Math.round(it.qty)) };
         if (it.spec) out.spec = it.spec;
+        // checked against the product's choices once the database answers
+        if (typeof it.opt === 'string' && OPT_KEY.test(it.opt)) out.opt = it.opt;
         if (Array.isArray(it.pics)) {
           var pics = it.pics.slice(0, out.qty).map(function (u) { return okPic(u) ? u : null; });
           if (pics.some(Boolean)) out.pics = pics;
@@ -436,8 +484,9 @@
   }
 
   // cut: the picture of the very piece picked up (Studio), kept for this unit
-  function addItem(sku, spec, cut) {
-    var key = keyOf({ sku: sku, spec: spec }), line = null;
+  // opt: the key of the scent / size picked, for a product with choices
+  function addItem(sku, spec, cut, opt) {
+    var key = keyOf({ sku: sku, spec: spec, opt: opt }), line = null;
     for (var i = 0; i < items.length; i++) {
       if (keyOf(items[i]) === key) { line = items[i]; break; }
     }
@@ -446,6 +495,7 @@
     } else {
       line = { sku: sku, qty: 1 };
       if (spec) line.spec = spec;
+      if (opt) line.opt = opt;
       items.push(line);
     }
     if (cut) {
@@ -474,28 +524,32 @@
   function spriteQueue() {
     var out = [];
     items.forEach(function (it) {
-      for (var i = 0; i < it.qty; i++) out.push({ sku: it.sku, spec: it.spec, cut: (it.pics && it.pics[i]) || null });
+      for (var i = 0; i < it.qty; i++) out.push({ sku: it.sku, spec: it.spec, opt: it.opt, cut: (it.pics && it.pics[i]) || null });
     });
     return out;
   }
 
   // One line of the basket as a single picture: the first piece picked.
   function lineView(it) {
-    return { sku: it.sku, spec: it.spec, cut: (it.pics && it.pics.filter(Boolean)[0]) || null };
+    return { sku: it.sku, spec: it.spec, opt: it.opt, cut: (it.pics && it.pics.filter(Boolean)[0]) || null };
   }
 
-  // A picture of what is in the basket: the customer's own design, else a
-  // cut-out (the piece picked, the product's own, one the page knows), else
-  // the product's photo, else the little drawn sprite.
+  // A picture of what is in the basket: the customer's own design, else the
+  // piece picked up in the Studio, else the photo of the scent / size picked,
+  // else a cut-out (the product's own, one the page knows), else the
+  // product's photo, else the little drawn sprite.
   function pic(it) {
     var p = bySku(it.sku);
     if (it.spec && window.GemPatch) {
       var svg = window.GemPatch.svg(it.spec, {});
       if (svg) return svg;
     }
-    var cut = it.cut || (p && p.cutout) || pageCuts[it.sku] || null;
-    if (cut || (p && p.image)) {
-      return '<img src="' + esc(cut || p.image) + '" alt="" draggable="false" class="' + (cut ? 'is-cut' : 'is-photo') + '">';
+    var c = choiceOf(p, it.opt);
+    var own = c && okPic(c.image) ? c.image : null;
+    var cut = it.cut || (own ? null : (p && p.cutout) || pageCuts[it.sku] || null);
+    var src = cut || own || (p && p.image);
+    if (src) {
+      return '<img src="' + esc(src) + '" alt="" draggable="false" class="' + (cut ? 'is-cut' : 'is-photo') + '">';
     }
     return (p && SPRITES[p.sprite]) || '';
   }
@@ -758,11 +812,13 @@
     var rows = items.map(function (it) {
       var p = bySku(it.sku);
       var custom = it.spec && window.GemPatch;
+      var choice = choiceOf(p, it.opt);
       return '<li class="gb-row" data-key="' + esc(keyOf(it)) + '">' +
         '<span class="gb-row-sprite">' + pic(lineView(it)) + '</span>' +
         '<span class="gb-row-text">' +
           '<span class="gb-row-name"' + nameAttr(p) + '>' +
             (isKey(p) ? '' : esc(pName(p))) + '</span>' +
+          (choice ? '<span class="gb-row-opt">' + esc(choiceName(choice)) + '</span>' : '') +
           (custom
             ? '<span class="gb-row-price"><span data-i18n="basket.custom">Thiết kế riêng</span> · ' +
                 '<a href="' + esc(window.GemPatch.url(it.spec)) + '" data-i18n="basket.custom_view">xem</a></span>'
@@ -1092,6 +1148,8 @@
       var p = bySku(it.sku);
       lines.push((i + 1) + '. ' + pName(p) + ' × ' + it.qty +
         ' — ' + priceLabel(p, it.qty));
+      var choice = choiceOf(p, it.opt);
+      if (choice) lines.push('   ' + optLabel(p) + ': ' + choiceName(choice));
       if (it.spec && window.GemPatch) {
         lines.push('   ' + window.GemPatch.describe(it.spec, 'vi'));
         lines.push('   ' + window.GemPatch.url(it.spec));
@@ -1202,7 +1260,12 @@
         address: customer.pickup ? t('basket.txt_pickup', 'Nhận tại cửa hàng') : customer.address,
         note: note,
         payment: picked ? picked.value : null,
-        items: items.map(function (it) { return { sku: it.sku, qty: it.qty }; })
+        // option: the key of the scent / size picked — the database checks it
+        items: items.map(function (it) {
+          var line = { sku: it.sku, qty: it.qty };
+          if (it.opt) line.option = it.opt;
+          return line;
+        })
       }).then(function (res) {
         if (res && res.ok) {
           // Tủ sưu tầm (js/collection.js) listens: what was bought, before the
@@ -1222,6 +1285,11 @@
         if (res && res.error === 'prepay_required') {
           return fail(t('basket.prepay_required',
             'Đơn này cần chuyển khoản trước. Bạn chọn “Chuyển khoản QR” giúp chúng mình nhé.'));
+        }
+        // A scent / size sold out (or vanished) after the page loaded
+        if (res && (res.error === 'option_out' || res.error === 'need_option')) {
+          return fail(t('basket.option_gone',
+            'Một lựa chọn trong giỏ (mùi, cỡ…) vừa hết hàng. Bạn xem lại giỏ giúp chúng mình nhé.'));
         }
         fail(t('basket.order_failed', 'Chưa gửi được đơn. Bạn nhắn Zalo cho chúng mình nhé.'));
       }).catch(function () {
@@ -1273,14 +1341,22 @@
       // Price line + add button, so the page markup stays free of prototype bits
       var slot = card.querySelector('.gb-slot');
       if (!slot) return;
+      // the text in the current language: cards catalog.js builds after the
+      // page's i18n pass would otherwise stay Vietnamese until the next one
       slot.innerHTML =
         '<span class="gb-price">' + priceLabel(product) + '</span>' +
-        '<button type="button" class="gb-add" data-i18n="basket.add">Thêm vào giỏ</button>';
+        '<button type="button" class="gb-add" data-i18n="basket.add">' + esc(t('basket.add', 'Thêm vào giỏ')) + '</button>';
 
       var btn = slot.querySelector('.gb-add');
       btn.addEventListener('click', function (e) {
         e.preventDefault();
         e.stopPropagation();   // don't trigger the product lightbox behind it
+
+        // A scent / size to pick first: that happens in the product sheet
+        if (choices(bySku(sku))) {
+          if (window.GemGallery && window.GemGallery.open) window.GemGallery.open(card);
+          return;
+        }
 
         var source = card.querySelector('.product-card-image') || card;
         fly(source, { sku: sku }, function () {
@@ -1322,6 +1398,9 @@
         if (out) {
           addBtn.removeAttribute('data-i18n');
           addBtn.textContent = t('basket.out_of_stock', 'Tạm hết hàng');
+        } else if (choices(p)) {
+          addBtn.removeAttribute('data-i18n');
+          addBtn.textContent = chooseText(p);
         }
       }
     }
@@ -1336,7 +1415,10 @@
         var p = bySku(sku);
         if (!p) return null;
         return { sku: sku, name: pName(p), price: priceLabel(p), inStock: p.inStock !== false,
-                 image: p.image || null, cutout: p.cutout || null, shelf: p.shelf || null };
+                 image: p.image || null, cutout: p.cutout || null, shelf: p.shelf || null,
+                 // the product sheet (js/gallery.js): choices, whose it is, notes
+                 options: p.options || null, consignor: p.consignor || null,
+                 notes: (isEn() && p.notesEn) || p.notesVi || null };
       },
       // Skus on sale, in the shop's order — null until the database answers.
       skus: function () { return liveSkus ? liveSkus.slice() : null; },
@@ -1345,13 +1427,22 @@
       // the things riding in the character's cart)
       pieces: function () { return spriteQueue().map(function (it) { return { sku: it.sku, spec: it.spec || null, html: pic(it) }; }); },
       // cut (optional): the picture of the very piece picked up in the Studio
-      add: function (sku, sourceEl, spec, cut) {
+      // opt: the key of the scent / size picked — required, and still in
+      // stock, for a product with choices (the Studio can't pick one, so
+      // such a product is refused there)
+      add: function (sku, sourceEl, spec, cut, opt) {
         var p = bySku(sku);
         if (!p || p.inStock === false) return false;
         if (spec && !validSpec(spec)) return false;
+        if (choices(p)) {
+          var c = choiceOf(p, opt);
+          if (!c || c.out) return false;
+        } else {
+          opt = null;
+        }
         if (spec || !okPic(cut)) cut = null;   // a design is its own picture
-        fly(sourceEl, { sku: sku, spec: spec, cut: cut }, function () {
-          addItem(sku, spec, cut);
+        fly(sourceEl, { sku: sku, spec: spec, opt: opt, cut: cut }, function () {
+          addItem(sku, spec, cut, opt);
           renderWidget();
           wiggle();
           if (panel.classList.contains('open') && view === 'basket') renderBasketView();
@@ -1370,10 +1461,15 @@
     };
 
     translate();
-    // No gem:langchange listener here on purpose: every injected string carries a
-    // data-i18n attribute, so the shared i18n pass retranslates the panel in
-    // place. Re-rendering from that event would loop, since render calls
-    // translate() which fires the event again.
+    // No gem:langchange listener for the panel on purpose: every injected string
+    // carries a data-i18n attribute, so the shared i18n pass retranslates the
+    // panel in place. Re-rendering from that event would loop, since render
+    // calls translate() which fires the event again.
+    // The card buttons written here without a key ("Chọn mùi hương", "Tạm hết
+    // hàng") are only set again — refreshCard never calls translate().
+    document.addEventListener('gem:langchange', function () {
+      if (liveSkus) cards.forEach(refreshCard);
+    });
 
     /* ---------- giá thật từ Supabase ----------
        Vẽ ngay bằng CATALOG trước cho trang hiện tức thì, rồi cập nhật khi
@@ -1389,9 +1485,16 @@
         cards.forEach(refreshCard);
         document.dispatchEvent(new CustomEvent('gem:products', { detail: { rows: rows } }));
 
-        // Giỏ đang có món vừa bị gỡ/ẩn thì bỏ ra, kẻo đặt đơn sẽ lỗi sku.
+        // Giỏ đang có món vừa bị gỡ/ẩn thì bỏ ra, kẻo đặt đơn sẽ lỗi sku. Món có
+        // lựa chọn cũng vậy: mùi / cỡ đã hết hay không còn thì bỏ dòng đó.
         var before = items.length;
-        items = items.filter(function (it) { return live[it.sku]; });
+        items = items.filter(function (it) {
+          if (!live[it.sku]) return false;
+          var p = bySku(it.sku);
+          if (!choices(p)) return true;
+          var c = choiceOf(p, it.opt);
+          return !!(c && !c.out);
+        });
         if (items.length !== before) { save(); }
         renderWidget();
         if (panel.classList.contains('open') && view === 'basket') renderBasketView();

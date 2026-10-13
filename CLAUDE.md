@@ -32,8 +32,8 @@ Static website cho cửa hàng **Gem Chạm Sắc** — pop-up store sustainabil
 ├── css/studio.css            Chỉ dùng cho studio.html
 ├── js/main.js                Mobile menu toggle, product TOC scroll, Udon popup
 ├── js/i18n.js                Song ngữ VI/EN: engine + STRINGS dictionary (data-i18n)
-├── js/gallery.js             Carousel/lightbox ảnh sản phẩm (data-gallery, bắt click cả thẻ tạo sau)
-├── js/catalog.js             san-pham.html: thẻ sản phẩm theo database (món mới tự có thẻ, đúng danh mục + thứ tự)
+├── js/gallery.js             Carousel/lightbox ảnh sản phẩm (data-gallery, bắt click cả thẻ tạo sau) + bảng chi tiết kiểu Shopee cho món có lựa chọn (mùi / cỡ / mẫu), ký gửi hoặc ghi chú
+├── js/catalog.js             san-pham.html: thẻ sản phẩm theo database (món mới tự có thẻ, đúng danh mục + thứ tự; nhãn "Ký gửi · …")
 ├── js/img-tools.js           Thu nhỏ ảnh (1280px WebP + thumb 600px) và "Xoá nền trắng" ngay trong trình duyệt
 ├── js/mailerlite.js          Email subscribe handler (fetch no-cors → inline success)
 ├── js/gem-db.js              Client Supabase tự viết bằng fetch (KHÔNG dùng supabase-js)
@@ -91,7 +91,7 @@ Postgres 17). Bảng: `products`, `orders`, `order_items`, `sessions`, `bookings
 
 **Naming conventions:**
 - Files: lowercase kebab-case (`cau-chuyen.html`, `vai-vun-tui-deo-cheo.jpg`)
-- Product image categories: `vai-vun-`, `vpp-`, `2hand-`, `gom-`, `tr-` (trang trí)
+- Product image categories: `vai-vun-`, `vpp-`, `2hand-`, `gom-`, `tr-` (trang trí), `ky-gui-` (hàng ký gửi, WebP)
 - Thumbnails: `<name>-thumb.jpg` (600x600 square crop)
 - Full images: `<name>.jpg` (max 1600px long side, quality 85)
 
@@ -131,12 +131,13 @@ Quick reference:
 - Email signup: **Mailerlite đã tích hợp** (account `2380127`, form `41774242`). `js/mailerlite.js` submit bằng `fetch` mode `no-cors` rồi hiện success inline (`.ml-success`) — KHÔNG load script Mailerlite, KHÔNG redirect. Form ở `index.html` và `ghe-tham.html`.
 - **Có giỏ hàng + đặt đơn** (`js/basket.js`): trả khi nhận (COD) hoặc chuyển khoản VietQR (D14). KHÔNG có cổng thẻ, KHÔNG có tài khoản khách — đăng nhập chỉ dành cho nhân sự (`admin.html`). Khách xem lại món đã mua qua "Tủ sưu tầm" bằng mã đơn + SĐT.
 
-**Products (5 categories):**
+**Products (6 categories):**
 1. Phụ kiện vải vụn (14 sản phẩm — tên thương hiệu in sẵn trên ảnh: Origami Pouch, Oxford Shirt, Reimagine the Denim, Bloom Charm, Túi bút kẹp sổ, Thảm/Gối Chắp Sắc, Lót Cốc, Túi đeo chéo, Bookmark, Ví & thẻ vải ghép, Bìa sổ, Dây đeo cổ tay, Dây buộc tóc)
-2. Văn phòng phẩm bền vững (Sổ kraft spiral + Sổ khâu tay tái chế — ký gửi từ "Tiệm sổ Cún Con")
+2. Văn phòng phẩm bền vững (Sổ kraft spiral)
 3. Quần áo 2hand (1 card → gallery 23 ảnh, mỗi ảnh tự ghi tên món)
 4. Gốm sứ Nhật (1 card → gallery)
 5. Set quà tặng (gift sets: Quà tốt nghiệp… — Bloom Charm + thiệp hoa + bookmark/scrunchie)
+6. Hàng ký gửi (`ky-gui`, D22–D23): nến Tiny's Herbal (hũ 120g 13 mùi, cupcake, macaron), tất Re.socks, sổ khâu tay Tiệm sổ Cún Con. Mỗi thẻ có nhãn "Ký gửi · <nơi gửi>" (cột `consignor`). Món nhiều mùi / cỡ / mẫu = một thẻ + lựa chọn (cột `options`), ghi chú ở cột `notes_vi/en` — đều sửa trong admin. KHÔNG hiện số tồn, chỉ còn / hết từng lựa chọn.
 
 Ảnh sản phẩm mới là full-size (1080px+), KHÔNG kèm `-thumb`. Thumbnail card 600×600 được tạo bằng Pillow (center-crop). `.heic` (vd `gom-2`) KHÔNG hiển thị trên browser — convert sang `.jpg` trước khi dùng.
 
@@ -174,6 +175,7 @@ Quick reference:
 - Engine: `js/gallery.js` (chỉ nhúng ở `san-pham.html`). Mỗi `.product-card` có `data-gallery="base1,base2,…"` (tên file gốc trong `images/products/`, KHÔNG kèm path/đuôi) sẽ click mở được lightbox carousel.
 - Thêm ảnh cho 1 sản phẩm: thả file theo convention (`<name>-2.jpg`, `<name>-3.jpg`…) vào `images/products/` rồi nối tên base vào `data-gallery` của card đó.
 - Modal có sẵn câu CTA "Mời các bạn qua cửa hàng xem & mua nhé!" (key `products.modal_cta`).
+- Món có lựa chọn / ký gửi / ghi chú: cùng modal mở thành bảng chi tiết (giá, ô lựa chọn, "Thêm vào giỏ", Ghi chú). Dữ liệu lấy qua `GemBasket.info()`; thêm vào giỏ qua `GemBasket.add(sku, el, null, null, key)`.
 
 **Mạng xã hội (links chính thức):**
 - Facebook: `web.facebook.com/gemchamsac`
@@ -379,8 +381,13 @@ Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
   sạch* chứ không theo *sản phẩm nào đẹp*. Cũng chặn trang Câu chuyện (U6).
 - 📦 Nén ảnh sản phẩm (`gom-1.jpg` 3 MB) — nên làm cùng lúc với ảnh mới
 - ✅ Thêm / sửa sản phẩm hoàn toàn trong admin (ảnh, thư viện ảnh, ảnh cắt nền, kệ
-  Studio) — thẻ trên `san-pham.html` và kệ Studio tự theo. Danh mục mới thì vẫn cần
-  thêm khối HTML (`<div class="product-grid" data-cat="…">`) + `CATEGORIES` trong `js/admin.js`.
+  Studio, ký gửi, lựa chọn, ghi chú) — thẻ trên `san-pham.html` và kệ Studio tự theo.
+  Danh mục mới thì vẫn cần thêm khối HTML (`<div class="product-grid" data-cat="…">`)
+  + `CATEGORIES` trong `js/admin.js`. Món có lựa chọn không bày được trong Studio.
+- 🕯️ Hàng ký gửi (13/10/2026): sau khi merge, chạy
+  `supabase/migrations/20261013b_ky_gui_products.sql` (9 món + chuyển sổ Cún Con).
+  4 mẫu tất Re.socks để ẩn chờ ảnh; cỡ M của Đất Nước / Học Đường cần xem nhãn.
+  Chi tiết: `docs/design.md` → "Hàng ký gửi + lựa chọn".
 - 📝 Bản dịch EN là first-pass — Anna review & chỉnh trong `STRINGS` (`js/i18n.js`)
 - 🚚 Chọn đối tác giao hàng cho COD
 - 💳 Quyết định ngưỡng bắt buộc chuyển khoản (hiện đang tắt)

@@ -23,6 +23,24 @@
     return (lang() === 'en' && r[field + '_en']) || r[field + '_vi'] || '';
   }
 
+  function t(key, fallback) {
+    var v = window.GemI18n && window.GemI18n.t ? window.GemI18n.t(key) : null;
+    return v != null ? v : fallback;
+  }
+
+  // Hàng ký gửi: whose it is, above the name. A span, not a <p>: the card's
+  // first <p> is its description (fill() here, the sheet in gallery.js).
+  function consign(card, r) {
+    var tag = card.querySelector('.pc-consign');
+    if (!r.consignor) { if (tag) tag.parentNode.removeChild(tag); return; }
+    if (!tag) {
+      tag = document.createElement('span');
+      tag.className = 'pc-consign';
+      card.insertBefore(tag, card.querySelector('h4'));
+    }
+    tag.textContent = t('products.consign', 'Ký gửi') + ' · ' + r.consignor;
+  }
+
   function grids() {
     var out = {};
     document.querySelectorAll('.product-grid[data-cat]').forEach(function (g) {
@@ -66,6 +84,7 @@
       img.alt = name;
     }
     if (r.gallery && r.gallery.length) card.setAttribute('data-gallery', r.gallery.join(','));
+    consign(card, r);
   }
 
   function apply() {

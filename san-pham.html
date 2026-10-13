@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title data-i18n="title.products">Sản phẩm · Gem Chạm Sắc</title>
-  <meta name="description" content="Catalog sản phẩm Gem Chạm Sắc - phụ kiện vải vụn, văn phòng phẩm bền vững, quần áo 2hand, gốm sứ Nhật.">
+  <meta name="description" content="Catalog sản phẩm Gem Chạm Sắc - phụ kiện vải vụn, văn phòng phẩm bền vững, quần áo 2hand, gốm sứ Nhật, và hàng ký gửi từ những người bạn.">
 
   <link rel="icon" type="image/png" href="images/logo/gem_logo_icon_120.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -75,6 +75,7 @@
       <a href="#quan-ao-2hand" class="toc-item" data-i18n="products.toc_2hand">Quần áo 2hand</a>
       <a href="#gom-su-nhat" class="toc-item" data-i18n="products.toc_gom">Gốm sứ Nhật</a>
       <a href="#set-qua" class="toc-item" data-i18n="products.toc_setqua">Set quà</a>
+      <a href="#hang-ky-gui" class="toc-item" data-i18n="products.toc_consign" hidden>Hàng ký gửi</a>
       <a href="#dich-vu" class="toc-item" data-i18n="products.toc_service">Dịch vụ</a>
     </div>
   </div>
@@ -90,6 +91,7 @@
         <li><a href="#quan-ao-2hand" class="toc-item" data-i18n="products.toc_2hand">Quần áo 2hand</a></li>
         <li><a href="#gom-su-nhat" class="toc-item" data-i18n="products.toc_gom">Gốm sứ Nhật</a></li>
         <li><a href="#set-qua" class="toc-item" data-i18n="products.toc_setqua">Set quà</a></li>
+        <li hidden><a href="#hang-ky-gui" class="toc-item" data-i18n="products.toc_consign">Hàng ký gửi</a></li>
         <li><a href="#dich-vu" class="toc-item" data-i18n="products.toc_service_full">Dịch vụ đặc biệt</a></li>
       </ul>
     </aside>
@@ -308,6 +310,21 @@
             <div class="gb-slot"></div>
           </div>
         </div>
+      </div>
+
+      <!-- CATEGORY 6: HÀNG KÝ GỬI — đồ của bạn bè, Gem bán giúp. Thẻ đến từ
+           database (js/catalog.js), nên khối này và hai mục trong danh mục
+           ẩn sẵn, chỉ hiện khi database trả về món. -->
+      <div class="category-block" id="hang-ky-gui" hidden>
+        <div class="category-header">
+          <h2 data-i18n="products.cat6_h">Hàng ký gửi</h2>
+          <span class="hand" data-i18n="products.cat6_tag">— từ những người bạn</span>
+        </div>
+        <p class="lead" style="max-width: 720px; margin-bottom: var(--space-8);" data-i18n="products.cat6_lead">
+          Đồ của những người bạn làm nghề cùng chí hướng, chúng mình nhận bán giúp tại Gem. Mỗi món đều ghi rõ là của ai.
+        </p>
+
+        <div class="product-grid" data-cat="ky-gui"></div>
       </div>
     </div>
   </section>

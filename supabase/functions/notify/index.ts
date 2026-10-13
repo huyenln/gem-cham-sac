@@ -54,7 +54,7 @@ function compose(kind: string, d: any): Mail {
         ['Mã đơn', d.code], ['Khách', d.name], ['SĐT', d.phone], ['Địa chỉ', d.address || '—'],
         ['Thanh toán', pay],
         ['Tạm tính', vnd(d.subtotal) + (d.has_unpriced ? ' (+ món "Liên hệ")' : '')],
-        ['Món', items.map((it: any) => `${it.name} × ${it.qty} — ${it.price == null ? 'Liên hệ' : vnd(it.price * it.qty)}`).join('\n')],
+        ['Món', items.map((it: any) => `${it.name}${it.option ? ' · ' + it.option : ''} × ${it.qty} — ${it.price == null ? 'Liên hệ' : vnd(it.price * it.qty)}`).join('\n')],
       ],
       body: d.note || '',
     };

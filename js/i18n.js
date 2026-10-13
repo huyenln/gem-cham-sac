@@ -297,6 +297,7 @@
     'products.toc_2hand':   { vi: `Quần áo 2hand`, en: `2hand clothing` },
     'products.toc_gom':     { vi: `Gốm sứ Nhật`, en: `Japanese ceramics` },
     'products.toc_setqua':  { vi: `Set quà`, en: `Gift sets` },
+    'products.toc_consign': { vi: `Hàng ký gửi`, en: `On consignment` },
     'products.toc_service': { vi: `Dịch vụ`, en: `Services` },
     'products.toc_service_full': { vi: `Dịch vụ đặc biệt`, en: `Special services` },
     'products.cat1_h':   { vi: `Phụ kiện vải vụn`, en: `Fabric-scrap accessories` },
@@ -381,6 +382,19 @@
     'products.cat5_lead':{ vi: `Những set quà nhỏ gói ghém từ đồ Gem — cho dịp tốt nghiệp, sinh nhật, hay chỉ để tặng nhau. Mỗi set là một combo riêng, bấm vào ảnh để xem thêm.`, en: `Little gift sets wrapped from Gem pieces — for graduations, birthdays, or just because. Each set is its own combo; tap a photo to see more.` },
     'products.setqua_h': { vi: `Set quà tặng`, en: `Gift set` },
     'products.setqua_p': { vi: `Gói ghém cho dịp đặc biệt`, en: `Wrapped for special occasions` },
+
+    /* Hàng ký gửi category — cards come from the database (js/catalog.js) */
+    'products.cat6_h':   { vi: `Hàng ký gửi`, en: `On consignment` },
+    'products.cat6_tag': { vi: `— từ những người bạn`, en: `— from our friends` },
+    'products.cat6_lead':{ vi: `Đồ của những người bạn làm nghề cùng chí hướng, chúng mình nhận bán giúp tại Gem. Mỗi món đều ghi rõ là của ai.`, en: `Pieces by friends who care about the same things — we sell them on their behalf at Gem. Each one says whose it is.` },
+    'products.consign':  { vi: `Ký gửi`, en: `Consignment` },
+
+    /* product sheet (js/gallery.js): choices, notes */
+    'products.sheet_notes':       { vi: `Ghi chú`, en: `Notes` },
+    'products.sheet_out':         { vi: `hết`, en: `sold out` },
+    'products.sheet_pick':        { vi: `Bạn chọn {x} trước nhé.`, en: `Please choose a {x} first.` },
+    'products.sheet_added':       { vi: `Đã thêm vào giỏ`, en: `Added to basket` },
+    'products.sheet_view_basket': { vi: `Xem giỏ hàng`, en: `View basket` },
 
     /* ---------- VISIT (ghe-tham) ---------- */
     'visit.eyebrow':    { vi: `Ghé thăm`, en: `Visit` },

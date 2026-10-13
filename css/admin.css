@@ -748,3 +748,30 @@
 .se-boxes-chip { border-style: dashed; }
 .se-hot.is-own { border-color: rgba(184, 153, 104, 0.95); background: rgba(184, 153, 104, 0.08); }
 .se-spot select { min-height: 36px; border: 1.5px solid var(--sage-light); border-radius: 8px; background: var(--paper-white); font: inherit; max-width: 100%; }
+
+/* Product form: "Lựa chọn" (scent / size / design) — one card per choice */
+.ad-opts {
+  margin: 0 0 var(--space-4); padding: var(--space-4);
+  border: 1.5px dashed var(--sage-light); border-radius: var(--radius-md);
+}
+.ad-opts legend { padding: 0 var(--space-2); font-size: var(--text-sm); font-weight: 600; color: var(--ink-dark); }
+.ad-opts > .ad-f-row { margin-bottom: var(--space-3); }
+.ad-choices { list-style: none; margin: 0 0 var(--space-3); padding: 0; display: grid; gap: var(--space-3); }
+.ad-choice {
+  display: grid; gap: var(--space-3); grid-template-columns: 88px minmax(0, 1fr);
+  padding: var(--space-3); background: var(--paper-white);
+  border: 1px solid rgba(135, 150, 90, 0.22); border-radius: var(--radius-md);
+}
+.ad-choice.is-out { border-style: dashed; background: transparent; }
+.ad-choice .ad-f { margin-bottom: var(--space-2); }
+.ad-choice .ad-f-row { margin-bottom: var(--space-2); }
+.ad-choice .ad-acts { margin-top: var(--space-1); }
+.ad-choice-pic { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); text-align: center; }
+.ad-choice-pic img { width: 88px; height: 88px; object-fit: cover; border-radius: var(--radius-sm); display: block; }
+.ad-choice-pic .ad-hint { margin: 0; font-size: var(--text-xs); }
+.ad-prod-meta { margin: var(--space-1) 0 0; font-size: var(--text-xs); color: var(--ink-body); }
+@media (max-width: 420px) {
+  .ad-choice { grid-template-columns: 1fr; }
+  .ad-choice-pic { flex-direction: row; justify-content: flex-start; }
+  .ad-choice-pic img { width: 64px; height: 64px; }
+}

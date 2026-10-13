@@ -38,7 +38,8 @@
     'vai-vun': 'Phụ kiện vải vụn',
     'vpp':     'Văn phòng phẩm',
     'gom':     'Gốm sứ Nhật',
-    'set-qua': 'Set quà tặng'
+    'set-qua': 'Set quà tặng',
+    'ky-gui':  'Hàng ký gửi'
   };
 
   var el = {};
@@ -758,7 +759,9 @@
     var body = list.length ? list.map(function (o) {
       var st = OD_STATUS[o.status] || OD_STATUS['new'];
       var items = (o.order_items || []).map(function (it) {
-        return '<li><span>' + esc(it.name_vi) + ' × ' + it.qty + '</span>' +
+        // option_vi: the scent / size the customer picked (Hàng ký gửi)
+        return '<li><span>' + esc(it.name_vi) +
+               (it.option_vi ? ' · <b>' + esc(it.option_vi) + '</b>' : '') + ' × ' + it.qty + '</span>' +
                '<span class="ad-od-price">' + esc(itemPrice(it)) + '</span></li>';
       }).join('');
 
@@ -853,12 +856,36 @@
                       'với thẻ trên trang Sản phẩm và với các đơn đã đặt.</p>') +
         '<label class="ad-f"><span>Mô tả ngắn (VI)</span><input name="desc_vi"></label>' +
         '<label class="ad-f"><span>Mô tả ngắn (EN)</span><input name="desc_en"></label>' +
+        '<label class="ad-f"><span>Hàng ký gửi của</span>' +
+          '<input name="consignor" maxlength="80" placeholder="Để trống nếu là đồ Gem làm"></label>' +
+        '<p class="ad-hint">Điền tên nơi gửi (vd Tiny’s Herbal) thì thẻ trên web có nhãn ' +
+          '“Ký gửi · Tiny’s Herbal”.</p>' +
         '<div class="ad-f-row">' +
           '<label class="ad-f"><span>Giá</span>' +
             '<input type="number" name="price" min="0" step="1000" placeholder="Liên hệ"></label>' +
           '<label class="ad-f"><span>đến (nếu bán theo khoảng)</span>' +
             '<input type="number" name="price_max" min="0" step="1000" placeholder="—"></label>' +
         '</div>' +
+        // choices (scent, size, design): the product sheet shows them as
+        // buttons; the order records the one picked
+        '<fieldset class="ad-opts">' +
+          '<legend>Lựa chọn cho khách (mùi, cỡ, mẫu…)</legend>' +
+          '<div class="ad-f-row">' +
+            '<label class="ad-f"><span>Tên lựa chọn (VI)</span>' +
+              '<input name="opt_label_vi" maxlength="40" placeholder="vd Mùi hương"></label>' +
+            '<label class="ad-f"><span>Tên lựa chọn (EN)</span>' +
+              '<input name="opt_label_en" maxlength="40" placeholder="vd Scent"></label>' +
+          '</div>' +
+          '<ul class="ad-choices"></ul>' +
+          '<button type="button" class="ad-btn ad-choice-add">+ Thêm lựa chọn</button>' +
+          '<p class="ad-hint">Có lựa chọn thì khách phải bấm chọn một ô (vd một mùi) rồi mới thêm vào giỏ ' +
+            'được, và đơn ghi rõ ô đó. Ô “Hết” vẫn hiện nhưng mờ, không chọn được. Mọi lựa chọn ' +
+            'chung một giá. Món không cần thì để trống danh sách.</p>' +
+        '</fieldset>' +
+        '<label class="ad-f"><span>Ghi chú (VI) — hiện cuối bảng chi tiết</span>' +
+          '<textarea name="notes_vi" rows="5" maxlength="4000" placeholder="Bảng cỡ, chất liệu, cách dùng… mỗi ý một dòng"></textarea></label>' +
+        '<label class="ad-f"><span>Ghi chú (EN)</span>' +
+          '<textarea name="notes_en" rows="4" maxlength="4000"></textarea></label>' +
         '<div class="ad-f">' +
           '<span>Ảnh chính (thẻ sản phẩm)</span>' +
           '<div class="ad-img-row">' +
@@ -917,6 +944,16 @@
     if (p.category) form.elements['category'].value = p.category;
 
     form.elements['shelf'].value = p.shelf || '';
+    form.elements['consignor'].value = p.consignor || '';
+    form.elements['notes_vi'].value = p.notes_vi || '';
+    form.elements['notes_en'].value = p.notes_en || '';
+    var opts = p.options || {};
+    form.elements['opt_label_vi'].value = opts.label_vi || '';
+    form.elements['opt_label_en'].value = opts.label_en || '';
+    // a copy: nothing changes on the product until Lưu
+    var choices = (opts.choices || []).map(function (c) {
+      var o = {}; Object.keys(c).forEach(function (k) { o[k] = c[k]; }); return o;
+    });
     var image = p.image || null;
     var gallery = (p.gallery || []).slice();
     var cutout = p.cutout || null;
@@ -954,6 +991,80 @@
       input.disabled = on;
     }
     var up = window.GemDB.uploadImage;
+
+    /* ---------- lựa chọn: mùi, cỡ, mẫu… ----------
+       Typing goes straight into `choices` (no redraw, so the cursor stays put);
+       adding, moving, removing, Còn/Hết and a new photo redraw the list. A
+       choice keeps its key for good once saved: baskets and orders hold it. */
+    var chUl = form.querySelector('.ad-choices');
+    function renderChoices() {
+      chUl.innerHTML = choices.map(function (c, i) {
+        return '<li class="ad-choice' + (c.out ? ' is-out' : '') + '" data-i="' + i + '">' +
+          '<div class="ad-choice-pic">' +
+            (c.image ? '<img src="' + esc(c.image) + '" alt="">' : '<span class="ad-hint">Chưa có ảnh</span>') +
+            '<label class="ad-btn ad-upload">Ảnh<input type="file" accept="image/*" hidden data-choice-pic="' + i + '"></label>' +
+          '</div>' +
+          '<div class="ad-choice-f">' +
+            '<div class="ad-f-row">' +
+              '<label class="ad-f"><span>Tên (VI)</span><input data-cf="vi" maxlength="60" value="' + esc(c.vi || '') + '"></label>' +
+              '<label class="ad-f"><span>Tên (EN)</span><input data-cf="en" maxlength="60" value="' + esc(c.en || '') + '"></label>' +
+            '</div>' +
+            '<label class="ad-f"><span>Mô tả ngắn (VI) — hiện khi khách bấm chọn</span>' +
+              '<input data-cf="note_vi" maxlength="300" value="' + esc(c.note_vi || '') + '"></label>' +
+            '<label class="ad-f"><span>Mô tả ngắn (EN)</span>' +
+              '<input data-cf="note_en" maxlength="300" value="' + esc(c.note_en || '') + '"></label>' +
+            '<div class="ad-acts">' +
+              '<button type="button" class="ad-btn' + (c.out ? ' on' : '') + '" data-choice="out">' +
+                (c.out ? 'Hết' : 'Còn hàng') + '</button>' +
+              (i ? '<button type="button" class="ad-btn" data-choice="up">‹ Lên trước</button>' : '') +
+              '<button type="button" class="ad-btn ad-danger" data-choice="del">Bỏ</button>' +
+            '</div>' +
+          '</div>' +
+        '</li>';
+      }).join('');
+    }
+    renderChoices();
+
+    chUl.addEventListener('input', function (e) {
+      var field = e.target.getAttribute('data-cf');
+      var li = e.target.closest('.ad-choice');
+      if (field && li) choices[+li.getAttribute('data-i')][field] = e.target.value;
+    });
+    chUl.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-choice]');
+      if (!b) return;
+      var i = +b.closest('.ad-choice').getAttribute('data-i');
+      var act = b.getAttribute('data-choice');
+      if (act === 'out') choices[i].out = !choices[i].out;
+      else if (act === 'up' && i > 0) choices.splice(i - 1, 0, choices.splice(i, 1)[0]);
+      else if (act === 'del') {
+        if (choices[i].key && !window.confirm('Bỏ lựa chọn “' + (choices[i].vi || '') +
+            '”? Khách đang để nó trong giỏ sẽ phải chọn lại.')) return;
+        choices.splice(i, 1);
+      }
+      renderChoices();
+    });
+    chUl.addEventListener('change', function (e) {
+      var inp = e.target.closest('[data-choice-pic]');
+      var file = inp && (inp.files || [])[0];
+      if (!file) return;
+      var i = +inp.getAttribute('data-choice-pic');
+      busy(inp, true);
+      IMG.shrink(file).then(up).then(function (url) {
+        choices[i].image = url;
+        renderChoices();
+        toast('Đã tải ảnh lên — bấm Lưu để giữ');
+      }).catch(function (err) {
+        busy(inp, false); inp.value = '';
+        toast('Tải ảnh không được: ' + (err.message || ''), true);
+      });
+    });
+    form.querySelector('.ad-choice-add').addEventListener('click', function () {
+      choices.push({ vi: '', en: '' });
+      renderChoices();
+      var last = chUl.querySelector('.ad-choice:last-child [data-cf="vi"]');
+      if (last) last.focus();
+    });
 
     form.querySelector('[data-up="cover"]').addEventListener('change', function (e) {
       var file = (e.target.files || [])[0];
@@ -1051,7 +1162,52 @@
       var max = maxV === '' ? null : parseInt(maxV, 10);
       if (max != null && min == null) { err.textContent = 'Có giá “đến” thì phải có giá đầu.'; err.hidden = false; return; }
       if (max != null && max < min)   { err.textContent = 'Giá “đến” phải lớn hơn giá đầu.'; err.hidden = false; return; }
+
+      var labelVi = f['opt_label_vi'].value.trim(), labelEn = f['opt_label_en'].value.trim();
+      for (var ci = 0; ci < choices.length; ci++) {
+        if (!(choices[ci].vi || '').trim()) {
+          err.textContent = 'Lựa chọn thứ ' + (ci + 1) + ' chưa có tên tiếng Việt.'; err.hidden = false; return;
+        }
+      }
+      if (choices.length && !labelVi) {
+        err.textContent = 'Đặt tên cho lựa chọn (vd “Mùi hương”, “Cỡ”) — nút trên thẻ sẽ là “Chọn mùi hương”.';
+        err.hidden = false; return;
+      }
+      // The Studio puts a piece straight into the basket: it can't ask which scent
+      if (choices.length && f['shelf'].value) {
+        err.textContent = 'Món có lựa chọn chưa bày được trong Studio 2D (khách không chọn mùi / cỡ ở đó được). ' +
+                          'Chọn “Không bày” ở mục Kệ.';
+        err.hidden = false; return;
+      }
       err.hidden = true;
+
+      // New choices get a key from their name; saved ones keep theirs
+      var used = {};
+      choices.forEach(function (c) { if (c.key) used[c.key] = true; });
+      choices.forEach(function (c) {
+        if (c.key) return;
+        var base = String(c.vi).normalize('NFD').replace(/[̀-ͯ]/g, '')
+          .replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 32) || 'lua-chon';
+        var k = base, n = 2;
+        while (used[k]) k = base + '-' + n++;
+        used[k] = true;
+        c.key = k;
+      });
+      var options = choices.length ? {
+        label_vi: labelVi,
+        label_en: labelEn || undefined,     // left out of the JSON when empty
+        choices: choices.map(function (c) {
+          var o = { key: c.key, vi: c.vi.trim() };
+          ['en', 'note_vi', 'note_en'].forEach(function (k) {
+            var v = (c[k] || '').trim();
+            if (v) o[k] = v;
+          });
+          if (c.image) o.image = c.image;
+          if (c.out) o.out = true;
+          return o;
+        })
+      } : null;
 
       var row = {
         sku: sku, category: f['category'].value,
@@ -1059,6 +1215,10 @@
         name_en: f['name_en'].value.trim() || null,
         desc_vi: f['desc_vi'].value.trim() || null,
         desc_en: f['desc_en'].value.trim() || null,
+        consignor: f['consignor'].value.trim() || null,
+        options: options,
+        notes_vi: f['notes_vi'].value.trim() || null,
+        notes_en: f['notes_en'].value.trim() || null,
         price: min, price_max: max, image: image,
         gallery: gallery,
         shelf: f['shelf'].value || null,
@@ -1079,9 +1239,12 @@
       }).catch(function (e2) {
         btn.disabled = false; btn.textContent = 'Lưu';
         // Mã hàng trùng là lỗi hay gặp nhất, nói thẳng thay vì để lộ câu của Postgres
-        err.textContent = /duplicate|unique/i.test(e2.message || '')
+        var m = e2.message || '';
+        err.textContent = /duplicate|unique/i.test(m)
           ? 'Mã hàng “' + sku + '” đã có rồi. Chọn mã khác.'
-          : ('Không lưu được. ' + (e2.message || ''));
+          : /products_options_ok/.test(m)
+          ? 'Lựa chọn chưa hợp lệ: tên dài quá 60 chữ, mô tả quá 300 chữ, hoặc ảnh không tải lên từ trang này.'
+          : ('Không lưu được. ' + m);
         err.hidden = false;
       });
     });
@@ -1099,6 +1262,16 @@
       byCat[p.category].push(p);
     });
 
+    // "Ký gửi · Tiny's Herbal · Mùi hương: 13 (2 hết)" under the name
+    function prodMeta(p) {
+      var cs = (p.options && p.options.choices) || [];
+      var out = cs.filter(function (c) { return c.out; }).length;
+      var bits = [];
+      if (p.consignor) bits.push('Ký gửi · ' + esc(p.consignor));
+      if (cs.length) bits.push(esc(p.options.label_vi || 'Lựa chọn') + ': ' + cs.length + (out ? ' (' + out + ' hết)' : ''));
+      return bits.length ? '<p class="ad-prod-meta">' + bits.join(' · ') + '</p>' : '';
+    }
+
     var groups = order.map(function (cat) {
       return '<section class="ad-cat">' +
         '<h3>' + esc(CATEGORIES[cat] || cat) + '</h3>' +
@@ -1108,6 +1281,7 @@
               '<b>' + esc(p.name_vi) + '</b>' +
               '<span class="ad-sku">' + esc(p.sku) + '</span>' +
             '</div>' +
+            prodMeta(p) +
             '<div class="ad-prod-price">' +
               '<label>Giá <input type="number" min="0" step="1000" class="ad-p-min" ' +
                 'value="' + (p.price == null ? '' : p.price) + '" placeholder="Liên hệ"></label>' +
@@ -1122,9 +1296,11 @@
                 (p.is_published ? 'Đang bán' : 'Đang ẩn') + '</button>' +
               '<button type="button" class="ad-btn ad-edit-prod">Sửa</button>' +
             '</div>' +
-            (studioOn ? '<p class="ad-prod-studio" data-sku="' + esc(p.sku) + '">' +
-              '<span class="ad-ps-where">Studio 2D: …</span> ' +
-              '<button type="button" class="ad-btn ad-ps-place">Đặt vào Studio</button></p>' : '') +
+            // a product with choices can't go in the Studio: nobody picks a scent there
+            (studioOn && !(p.options && p.options.choices && p.options.choices.length)
+              ? '<p class="ad-prod-studio" data-sku="' + esc(p.sku) + '">' +
+                '<span class="ad-ps-where">Studio 2D: …</span> ' +
+                '<button type="button" class="ad-btn ad-ps-place">Đặt vào Studio</button></p>' : '') +
           '</div>';
         }).join('') +
       '</section>';
