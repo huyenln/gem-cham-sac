@@ -548,6 +548,16 @@ Trang chủ · Về Gem · Sản phẩm · Workshop · Bản tin · Ghé thăm
 
 Phương án khác: bỏ “Mô hình” khỏi nav, link từ trong “Câu chuyện”.
 
+**13/10/2026: Về Gem có 3 trang con** — Câu chuyện · Mô hình · **Đối tác** (`doi-tac.html`).
+- Đối tác + Các gói hợp tác chuyển từ cuối `mo-hinh.html` sang trang riêng (góp ý: "scroll mãi
+  mới thấy, nhiều người không scroll"). Logo đối tác nằm ngay dưới tiêu đề trang. Chữ vẫn
+  dùng khoá `model.pt_*` / `model.co_*`; tiêu đề trang `partners.*`, menu `nav.partners`.
+- Thanh tab "Về Gem" trên điện thoại (< 480 px) ẩn chữ "VỀ GEM" cho 3 tab vừa màn hình.
+- Menu "Về Gem" mở khi rê chuột (máy tính) từ trước, nhưng giữa chữ "Về Gem" và khung menu
+  có khe 12 px: rê chuột xuống là menu đóng giữa đường, nên trông như phải bấm. Sửa:
+  `.nav-sub::before` phủ khe đó, và menu đóng trễ 0,25 giây (visibility + opacity thay cho
+  display) để tay lệch một chút vẫn kịp. Bấm vẫn mở / đóng như cũ (điện thoại, bàn phím).
+
 ---
 
 ## 12. Bảo mật
