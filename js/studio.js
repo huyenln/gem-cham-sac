@@ -238,11 +238,15 @@
     'studio.hot_enter':    { vi: `Vào studio`, en: `Go in` },
     'studio.hot_dantranh': { vi: `Đàn tranh`, en: `Đàn tranh zither` },
     'studio.zt_h':         { vi: `Đàn tranh`, en: `Đàn tranh` },
-    'studio.zt_p':         { vi: `Chạm một dây để gảy. Vuốt dọc qua các dây để rải cả chuỗi.`, en: `Tap a string to pluck it. Sweep across the strings for a run.` },
+    'studio.zt_p':         { vi: `Chạm để gảy · vuốt để rải · giữ ngón trên dây để nhấn.`, en: `Tap to pluck · sweep for a run · hold a string to bend it.` },
+    'studio.zt_names':     { vi: `Tên nốt`, en: `Note names` },
+    'studio.zt_k16':       { vi: `16 dây`, en: `16 strings` },
+    'studio.zt_k19':       { vi: `19 dây`, en: `19 strings` },
+    'studio.zt_about':     { vi: `Về đàn tranh`, en: `About the đàn tranh` },
+    'studio.zt_about_p':   { vi: `Đàn tranh truyền thống có 16 dây; đàn cải tiến có thêm dây, như loại 19 dây ở đây. Dây lên theo ngũ cung Đô Rê Mi Sol La, nên đàn không có dây đánh thẳng ra nốt Fa và Si: muốn có Fa thì nhấn dây Mi lên nửa cung, muốn có Si thì nhấn dây La lên một cung. Ở đây: giữ ngón trên dây Mi hoặc La.`, en: `The traditional đàn tranh has 16 strings; improved ones add more, like the 19-string one here. The strings are tuned to the five notes Do Re Mi Sol La, so no string plays Fa or Si directly: Fa is the Mi string pressed half a tone up, Si the La string pressed a whole tone up. Here: hold a finger on a Mi or La string.` },
     'studio.zt_run':       { vi: `Rải dây`, en: `Sweep` },
     'studio.zt_vib':       { vi: `Rung dây`, en: `Vibrato` },
-    'studio.zt_note':      { vi: `16 dây, lên theo ngũ cung: gảy dây nào cũng ra tiếng hợp nhau.`, en: `16 strings tuned to a five-note scale: any string sounds right with the others.` },
-    'studio.zt_mute':      { vi: `Không nghe tiếng? Xem lại âm lượng hoặc chế độ im lặng của máy.`, en: `No sound? Check the volume or silent mode.` },
+    'studio.zt_mute':      { vi: `Không nghe tiếng? Xem âm lượng và chế độ im lặng của máy.`, en: `No sound? Check the volume and silent mode.` },
     'studio.zt_none':      { vi: `Trình duyệt này chưa phát được âm thanh.`, en: `This browser can't play sound.` },
     'studio.zt_string':    { vi: `Dây {n}`, en: `String {n}` },
     'studio.out_intro':    { vi: `Chào bạn! Chạm vào cửa để vào studio nhé.`, en: `Hi! Tap the door to come in.` },
@@ -1516,6 +1520,7 @@
     if (modal.hidden) lastFocus = document.activeElement;
     sheetEl.classList.toggle('is-full', !!full);
     modal.classList.toggle('is-full', !!full);
+    document.documentElement.classList.remove('zt-open');
     sheetBody.innerHTML = html;
     sheetEl.scrollTop = 0;
     if (modal.hidden && !sheetInHistory) {
@@ -1529,6 +1534,7 @@
   function closeSheet(fromHistory) {
     if (modal.hidden) return;
     modal.hidden = true;
+    document.documentElement.classList.remove('zt-open');
     sheetBody.innerHTML = '';
     sheetEl.classList.remove('is-full');
     modal.classList.remove('is-full');
@@ -1793,16 +1799,35 @@
 
 
   /* ======================================================================
-     ĐÀN TRANH — a "Khu vực" piece (act dantranh), out by the door.
-     16 strings tuned to the pentatonic scale (D E G A C), low at the top,
-     high at the bottom, nearest the player. The sound is made here, no audio
-     files: one plucked string (Karplus-Strong) worked out once per string the
-     first time it sounds. Tap a string, or sweep across them; "Rung dây"
-     adds a left-hand vibrato.
+     ĐÀN TRANH — a "Khu vực" piece or tap box (act dantranh), out by the door.
+     The Vietnamese zither, not the Chinese guzheng: 16 strings (the
+     traditional one) or 19 (an improved one), tuned in hơi Bắc to the
+     pentatonic Đô Rê Mi Sol La — so there is no Fa or Si string: Fa is the Mi
+     string pressed half a tone up, Si the La string pressed a whole tone up
+     (the guzheng's pentatonic is Rê Mi Fa# La Si). Bright steel strings and
+     the left hand make it sound Vietnamese: "Rung dây" (a slow, wide vibrato,
+     on by default) and nhấn — hold a finger on a string after plucking and
+     it rises (Mi → Fa, La → Si, the others a whole tone), let go and it
+     slides back. Low strings at the top, high at the bottom (nearest the
+     player). The sound is made here, no audio files: a plucked string
+     (Karplus-Strong) worked out the first time each pitch sounds. A string
+     sounds when the finger crosses its line, not the edge of its row, so a
+     finger resting on a string or between two plucks nothing more.
      ====================================================================== */
-  var ZT_HZ = [146.83, 164.81, 196.00, 220.00, 261.63, 293.66, 329.63, 392.00,
-    440.00, 523.25, 587.33, 659.25, 783.99, 880.00, 1046.50, 1174.66];
-  var zt = { ctx: null, out: null, bufs: [], rate: [], vib: false, run: 0 };
+  var ZT_KINDS = {
+    16: [146.83, 164.81, 196.00, 220.00, 261.63, 293.66, 329.63, 392.00,          // D3 … D6
+      440.00, 523.25, 587.33, 659.25, 783.99, 880.00, 1046.50, 1174.66],
+    19: [110.00, 130.81, 146.83, 164.81, 196.00, 220.00, 261.63, 293.66, 329.63,  // A2 … E6
+      392.00, 440.00, 523.25, 587.33, 659.25, 783.99, 880.00, 1046.50, 1174.66, 1318.51]
+  };
+  var ZT_PC = { 0: 'Đô', 2: 'Rê', 4: 'Mi', 5: 'Fa', 7: 'Sol', 9: 'La', 11: 'Si' };
+  var ZT_BRIGHT = 0.42;   // the loop's averaging weight: under 0.5 = brighter, steel rather than silk
+  var zt = { ctx: null, out: null, bufs: {}, rate: {}, kind: 16, vib: true, names: true, run: 0, cur: null };
+
+  function ztSemis(hz) { return Math.round(12 * Math.log(hz / 261.63) / Math.LN2); }   // from Đô 4
+  function ztName(hz) { return ZT_PC[((ztSemis(hz) % 12) + 12) % 12] || ''; }
+  // nhấn: Mi up half a tone (Fa), every other string a whole tone (La → Si)
+  function ztBendBy(hz) { return ztName(hz) === 'Mi' ? 1 : 2; }
 
   function ztAudio() {
     if (zt.ctx) return zt.ctx;
@@ -1813,54 +1838,73 @@
     try { zt.ctx = new AC(); } catch (e) { return null; }
     var lp = zt.ctx.createBiquadFilter(), comp = zt.ctx.createDynamicsCompressor(), g = zt.ctx.createGain();
     lp.type = 'lowpass';
-    lp.frequency.value = 6500;
-    g.gain.value = 0.6;
+    lp.frequency.value = 9500;
+    g.gain.value = 0.55;
     lp.connect(comp); comp.connect(g); g.connect(zt.ctx.destination);
     zt.out = lp;
     return zt.ctx;
   }
 
   // A burst of noise going round a delay line one period long, averaged each
-  // time: a bright string that fades in about two seconds. The line is a whole
+  // time: a string that fades in about two seconds. The line is a whole
   // number of samples, so playbackRate puts the pitch back exactly.
-  function ztBuffer(i) {
-    if (zt.bufs[i]) return zt.bufs[i];
-    var sr = zt.ctx.sampleRate, hz = ZT_HZ[i];
+  function ztBuffer(hz) {
+    if (zt.bufs[hz]) return zt.bufs[hz];
+    var sr = zt.ctx.sampleRate, S = ZT_BRIGHT;
     var N = Math.max(2, Math.floor(sr / hz)), len = Math.round(sr * 2.4);
     var buf = zt.ctx.createBuffer(1, len, sr), d = buf.getChannelData(0);
-    var ring = new Float32Array(N), k, prev = 0;
-    for (k = 0; k < N; k++) { var w = Math.random() * 2 - 1; ring[k] = (w + prev) / 2; prev = w; }   // a softer pick
+    var ring = new Float32Array(N), k;
+    for (k = 0; k < N; k++) ring[k] = Math.random() * 2 - 1;   // a hard pick: the full burst
     var keep = Math.pow(0.01, 1 / (2.4 * hz));   // ~ -40 dB at the end, low or high
     for (k = 0; k < len; k++) {
       var a = ring[k % N], b = ring[(k + 1) % N];
-      d[k] = a * 0.8;
-      ring[k % N] = keep * 0.5 * (a + b);
+      d[k] = a * 0.7;
+      ring[k % N] = keep * ((1 - S) * a + S * b);
     }
     var tail = Math.round(sr * 0.06);
     for (k = 0; k < tail; k++) d[len - 1 - k] *= k / tail;   // no click at the end
-    zt.rate[i] = (N - 0.5) * hz / sr;   // each new sample averages the next two out: the loop is N - 0.5 long
-    zt.bufs[i] = buf;
+    zt.rate[hz] = (N - S) * hz / sr;   // the averaging shortens the loop by S of a sample
+    zt.bufs[hz] = buf;
     return buf;
   }
 
   function ztPluck(i) {
-    var ctx = ztAudio();
-    if (!ctx) return false;
+    var ctx = ztAudio(), hz = ZT_KINDS[zt.kind][i];
+    if (!ctx || !hz) return false;
     if (ctx.state === 'suspended') ctx.resume();
     var s = ctx.createBufferSource(), now = ctx.currentTime;
-    s.buffer = ztBuffer(i);
-    s.playbackRate.value = zt.rate[i];
-    if (zt.vib && s.detune) {   // the left hand rocking the string past the bridge
+    s.buffer = ztBuffer(hz);
+    s.playbackRate.value = zt.rate[hz];
+    if (zt.vib && s.detune) {   // rung: the left hand rocking the string past the bridge
       var lfo = ctx.createOscillator(), depth = ctx.createGain();
-      lfo.frequency.value = 5.5;
+      lfo.frequency.value = 4.6;
       depth.gain.setValueAtTime(0, now);
-      depth.gain.linearRampToValueAtTime(22, now + 0.4);   // cents
+      depth.gain.setValueAtTime(0, now + 0.18);
+      depth.gain.linearRampToValueAtTime(34, now + 0.6);   // cents
       lfo.connect(depth); depth.connect(s.detune);
       lfo.start(now); lfo.stop(now + 2.4);
     }
     s.connect(zt.out);
     s.start(now);
+    zt.cur = { i: i, hz: hz, s: s, bent: false };
     return true;
+  }
+
+  // nhấn / luyến: the string held down left of its bridge rises; let go and it
+  // slides back. The name on the string says what it is while held.
+  function ztBend(up, root) {
+    var c = zt.cur;
+    if (!c || !zt.ctx || c.bent === up) return;
+    var r = zt.rate[c.hz], now = zt.ctx.currentTime, by = ztBendBy(c.hz);
+    c.s.playbackRate.cancelScheduledValues(now);
+    c.s.playbackRate.setValueAtTime(c.s.playbackRate.value, now);
+    c.s.playbackRate.setTargetAtTime(up ? r * Math.pow(2, by / 12) : r, now, up ? 0.09 : 0.06);
+    c.bent = up;
+    var lab = root && root.querySelectorAll('.zt-name')[c.i];
+    if (lab) {
+      lab.textContent = up ? ztName(c.hz * Math.pow(2, by / 12)) : ztName(c.hz);
+      lab.classList.toggle('is-bent', up);
+    }
   }
 
   function ztShow(root, i) {
@@ -1871,63 +1915,135 @@
     el.classList.add('is-on');
   }
 
+  function ztStrings() {
+    return ZT_KINDS[zt.kind].map(function (hz, i) {
+      var nm = ztName(hz);
+      return '<button type="button" class="zt-str' + (nm === 'Đô' ? ' is-do' : '') + '" data-zt="' + i + '" aria-label="' +
+        esc(t('studio.zt_string').replace('{n}', i + 1) + ' · ' + nm) + '">' +
+        '<span class="zt-name" aria-hidden="true">' + nm + '</span><span class="zt-line"></span><span class="zt-nhan"></span></button>';
+    }).join('');
+  }
+
   function zitherSheet() {
-    var strs = '';
-    for (var i = 0; i < 16; i++) {
-      strs += '<button type="button" class="zt-str" data-zt="' + i + '" aria-label="' +
-        esc(t('studio.zt_string').replace('{n}', i + 1)) + '"><span class="zt-line"></span><span class="zt-nhan"></span></button>';
-    }
     openSheet(
-      head('studio.zt_h', 'studio.zt_p') +
-      '<div class="zt"><div class="zt-body" role="group" aria-labelledby="st-sheet-title">' + strs + '</div></div>' +
-      '<div class="zt-row">' +
-        '<button type="button" class="st-btn st-btn-sm" data-zt-run data-i18n="studio.zt_run">' + esc(t('studio.zt_run')) + '</button>' +
-        '<label class="zt-vib"><input type="checkbox" data-zt-vib' + (zt.vib ? ' checked' : '') + '> <span data-i18n="studio.zt_vib">' + esc(t('studio.zt_vib')) + '</span></label>' +
-      '</div>' +
-      tr('p', 'studio.zt_note', ' class="zt-note"') +
-      tr('p', 'studio.zt_mute', ' class="zt-note zt-mute"')
-    );
+      '<div class="zt-wrap">' +
+        '<div class="zt-head">' + tr('h2', 'studio.zt_h', ' id="st-sheet-title"') +
+          '<div class="zt-kind" role="group">' + [16, 19].map(function (n) {
+            return '<button type="button" class="zt-kind-b" data-zt-kind="' + n + '" aria-pressed="' + (zt.kind === n) + '" data-i18n="studio.zt_k' + n + '">' +
+              esc(t('studio.zt_k' + n)) + '</button>';
+          }).join('') + '</div>' +
+        '</div>' +
+        tr('p', 'studio.zt_p', ' class="st-lead"') +
+        '<div class="zt"><div class="zt-body' + (zt.names ? ' has-names' : '') + '" data-n="' + zt.kind + '" role="group" aria-labelledby="st-sheet-title"></div></div>' +
+        '<div class="zt-row">' +
+          '<button type="button" class="st-btn st-btn-sm" data-zt-run data-i18n="studio.zt_run">' + esc(t('studio.zt_run')) + '</button>' +
+          '<label class="zt-vib"><input type="checkbox" data-zt-vib' + (zt.vib ? ' checked' : '') + '> <span data-i18n="studio.zt_vib">' + esc(t('studio.zt_vib')) + '</span></label>' +
+          '<label class="zt-vib"><input type="checkbox" data-zt-names' + (zt.names ? ' checked' : '') + '> <span data-i18n="studio.zt_names">' + esc(t('studio.zt_names')) + '</span></label>' +
+        '</div>' +
+        '<details class="zt-about">' + tr('summary', 'studio.zt_about') + tr('p', 'studio.zt_about_p') + '</details>' +
+        tr('p', 'studio.zt_mute', ' class="zt-note zt-mute"') +
+      '</div>', true);
+    document.documentElement.classList.add('zt-open');   // the basket button would sit on the high strings
     var root = sheetBody.querySelector('.zt'), body = root.querySelector('.zt-body');
-    body.querySelectorAll('.zt-str').forEach(function (b, n) { b.style.setProperty('--b', (24 + n * 3.4) + '%'); });   // the bridges on a slant
+    function build() {
+      body.innerHTML = ztStrings();
+      body.setAttribute('data-n', zt.kind);
+      var n = ZT_KINDS[zt.kind].length;
+      body.querySelectorAll('.zt-str').forEach(function (b, k) { b.style.setProperty('--b', (28 + k * 50 / (n - 1)) + '%'); });   // the bridges on a slant
+    }
+    build();
     if (!window.AudioContext && !window.webkitAudioContext) {
       sheetBody.querySelector('.zt-mute').textContent = t('studio.zt_none');
     }
-    var last = -1, down = false;
-    function rowAt(y) {
-      var r = body.getBoundingClientRect();
-      return Math.max(0, Math.min(15, Math.floor((y - r.top) / (r.height / 16))));
-    }
     function play(i) { if (ztPluck(i)) ztShow(root, i); }
+    // where each string's line is, in screen px (read at the start of a touch:
+    // the sheet doesn't move under a finger on the board)
+    var lines = [], gap = 0;
+    function measure() {
+      lines = Array.prototype.map.call(body.querySelectorAll('.zt-str'), function (b) {
+        var r = b.getBoundingClientRect();
+        return r.top + r.height / 2;
+      });
+      gap = lines.length > 1 ? lines[1] - lines[0] : 30;
+    }
+    function nearest(y) {
+      var best = 0;
+      for (var n = 1; n < lines.length; n++) if (Math.abs(lines[n] - y) < Math.abs(lines[best] - y)) best = n;
+      return best;
+    }
+    var down = false, lastY = 0, lastI = -1, away = false, hold = 0, eat = false, eatT = 0;
+    function startHold() {
+      clearTimeout(hold);
+      hold = setTimeout(function () { if (down) ztBend(true, root); }, 260);
+    }
     body.addEventListener('pointerdown', function (e) {
       if (e.pointerType === 'mouse' && e.button !== 0) return;
       e.preventDefault();
-      down = true;
       try { body.setPointerCapture(e.pointerId); } catch (er) { /* fine */ }
-      last = rowAt(e.clientY);
-      play(last);
+      measure();
+      down = true;
+      eat = true;   // the click this press ends in has sounded already
+      clearTimeout(eatT);
+      lastY = e.clientY;
+      lastI = nearest(e.clientY);
+      away = false;
+      play(lastI);
+      startHold();
     });
     body.addEventListener('pointermove', function (e) {
       if (!down) return;
-      var i = rowAt(e.clientY);
-      if (i === last) return;
-      var step = i > last ? 1 : -1;   // a quick sweep crosses rows between two events: sound each one
-      for (var j = last + step; j !== i + step; j += step) play(j);
-      last = i;
+      var y = e.clientY;
+      if (!away && Math.abs(y - lines[lastI]) >= gap * 0.45) {
+        away = true;   // left the string just played: no bend, and crossing it again plays it
+        clearTimeout(hold);
+        ztBend(false, root);
+      }
+      if (!away) { lastY = y; return; }   // a finger resting on it wobbles: not another pluck
+      var lo = Math.min(lastY, y), hi = Math.max(lastY, y), hit = [];
+      lines.forEach(function (c, n) { if (c > lo && c <= hi) hit.push(n); });
+      if (y < lastY) hit.reverse();
+      if (hit.length) {
+        hit.forEach(play);
+        lastI = hit[hit.length - 1];
+        away = Math.abs(y - lines[lastI]) >= gap * 0.45;
+        if (!away) startHold();
+      }
+      lastY = y;
     });
-    var up = function () { down = false; last = -1; };
+    var up = function () {
+      down = false; lastI = -1;
+      clearTimeout(hold);
+      ztBend(false, root);
+      eatT = setTimeout(function () { eat = false; }, 500);   // a sweep ends in no click
+    };
     body.addEventListener('pointerup', up);
     body.addEventListener('pointercancel', up);
-    // keyboard: Enter / Space on a string (a pointer's click has detail ≥ 1 and already sounded)
+    // keyboard: Enter / Space on a string. The click a finger or the mouse
+    // makes at the end of its press (however long it was held) has already
+    // sounded: let it go.
     body.addEventListener('click', function (e) {
       var b = e.target.closest('.zt-str');
-      if (b && e.detail === 0) play(+b.getAttribute('data-zt'));
+      if (eat) { eat = false; return; }
+      if (b) play(+b.getAttribute('data-zt'));
+    });
+    sheetBody.querySelector('.zt-kind').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-zt-kind]');
+      if (!b) return;
+      zt.kind = +b.getAttribute('data-zt-kind');
+      zt.run++;
+      sheetBody.querySelectorAll('[data-zt-kind]').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+      build();
     });
     sheetBody.querySelector('[data-zt-vib]').addEventListener('change', function (e) { zt.vib = e.target.checked; });
+    sheetBody.querySelector('[data-zt-names]').addEventListener('change', function (e) {
+      zt.names = e.target.checked;
+      body.classList.toggle('has-names', zt.names);
+    });
     sheetBody.querySelector('[data-zt-run]').addEventListener('click', function () {
-      var run = ++zt.run, i = 0;
+      var run = ++zt.run, n = 0;
       (function next() {
-        if (run !== zt.run || !root.isConnected || i > 15) return;
-        play(i++);
+        if (run !== zt.run || !root.isConnected || n >= ZT_KINDS[zt.kind].length) return;
+        play(n++);
         setTimeout(next, 55);
       })();
     });

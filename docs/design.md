@@ -1726,26 +1726,38 @@ vì nhẹ nhất — không xin quyền camera, không tải file âm thanh, kh�
 trên điện thoại. Check-in để sau (nếu làm: `<input type="file" capture>` + canvas,
 dùng lại phần thẻ chia sẻ của Bàn thiết kế, ảnh không rời máy khách).
 
-- **Bật:** Lắp studio → **Ngoài cửa** → chọn hình đàn tranh → Loại **Khu vực** → Khi
+- **Bật:** Lắp studio → **Ngoài cửa** → chọn hình đàn tranh → Loại **Khu vực** (hoặc một
+  **Khung bấm**) → Khi
   bấm **Chơi đàn tranh** (`dantranh` trong `ACTS`) → Phát hành. Nhãn mặc định "Đàn
   tranh" (đổi ở "Tên hiện"). Đặt được cả trong studio.
-- **Bảng đàn** (`zitherSheet` trong `js/studio.js`, CSS mục `ĐÀN TRANH`): 16 dây ngũ
-  cung (Rê Mi Sol La Đô, D3 → D6), dây trầm ở trên, dây cao ở dưới (gần người chơi);
-  nhạn đàn xếp chéo. Chạm = gảy; vuốt dọc = rải qua từng dây (bước nhảy lớn vẫn kêu đủ
-  dây ở giữa); Tab + Enter cũng gảy được; "Rải dây" chạy một lượt 16 dây; "Rung dây" thêm
-  rung (LFO vào `detune`, ~22 cent, 5,5 Hz).
-- **Tiếng:** Web Audio, thuật toán dây gảy Karplus–Strong tính một lần cho mỗi dây lúc
-  gảy lần đầu (~2,4 giây), `playbackRate` chỉnh cao độ chính xác (đo lại: lệch tối đa
-  1,4 cent ở 44,1 / 48 kHz). Lọc thấp 6,5 kHz + compressor để gảy dồn không rè.
-  iPhone (Safari 17+): `navigator.audioSession.type = 'playback'` để kêu cả khi gạt im
-  lặng; máy cũ hơn thì dòng nhắc "Không nghe tiếng?…".
+- **Bảng đàn** (`zitherSheet` trong `js/studio.js`, CSS mục `ĐÀN TRANH`), toàn màn hình
+  (13/10, sau góp ý "phím hơi dễ gảy lẫn"): **16 dây** (truyền thống, mặc định, Rê³ → Rê⁶)
+  hoặc **19 dây** (đàn cải tiến, La² → Mi⁶), chọn ở đầu bảng. Hàng dây chia hết chiều cao
+  màn hình (điện thoại 390×844: 36 px / dây với 16 dây, 30 px với 19 dây). Tên nốt (Đô Rê Mi
+  Sol La, Đô tô xanh) ở đầu dây, tắt được. Nút giỏ hàng ẩn khi đang chơi (nó che mấy dây cao).
+- **Đàn tranh Việt Nam, không phải cổ tranh:** lên dây hơi Bắc Đô Rê Mi Sol La (cổ tranh
+  Trung Quốc thường lên Rê Mi Fa# La Si); dây thép, tiếng sáng (`ZT_BRIGHT` 0,42, lọc 9,5 kHz);
+  **rung** bật sẵn (chậm, rộng: 4,6 Hz, ±34 cent, vào sau ~0,2 giây); **nhấn**: giữ ngón trên
+  dây ~0,26 giây thì tiếng luyến lên — dây Mi lên nửa cung thành **Fa**, các dây khác lên một
+  cung (dây La → **Si**); nhãn dây đổi theo (Fa / Si, nền kraft); buông ra thì luyến về.
+  Mục "Về đàn tranh" (thu gọn) giải thích: đàn không có dây đánh thẳng ra Fa và Si.
+- **Gảy:** dây kêu khi ngón **băng qua đường dây**, không phải mép hàng — ngón đặt trên dây
+  rung nhẹ, hay lướt giữa hai dây, không gảy thêm. Vuốt nhanh vẫn kêu đủ từng dây đi qua.
+  Chạm = gảy một dây; Tab + Enter cũng gảy; cú click cuối mỗi lần chạm / giữ bị bỏ (đã kêu
+  lúc ấn). "Rải dây" chạy một lượt hết số dây đang chọn.
+- **Tiếng:** Web Audio, thuật toán dây gảy Karplus–Strong tính một lần cho mỗi cao độ lúc
+  gảy lần đầu (~2,4 giây), `playbackRate` chỉnh cao độ chính xác (lệch tối đa ~1,4 cent).
+  Compressor để gảy dồn không rè. iPhone (Safari 17+): `navigator.audioSession.type =
+  'playback'` để kêu cả khi gạt im lặng; máy cũ hơn thì dòng nhắc "Không nghe tiếng?…".
 - Tắt hiệu ứng: dây không rung hình, tiếng vẫn có.
 - Dùng **"Khung bấm"** ngoài cửa (Khi bấm "Chơi đàn tranh") cũng được. Lỗi đã sửa
   13/10: nhãn của mọi khung ngoài phố (trừ cửa) đưa khách vào studio trước — `visit()`
   coi nó như nút điều hướng. Giờ khung nằm ngoài phố thì mở ngay tại chỗ.
-- **Kiểm:** `tools/check-studio.py zither` (đếm lời gọi Web Audio, không nghe thật):
-  nhãn, 16 dây, chạm, vuốt (chuột + ngón tay thật qua CDP), Enter, Rải dây + Rung dây,
-  EN, không tràn ngang.
+- **Kiểm:** `tools/check-studio.py zither` (đếm lời gọi Web Audio, không nghe thật), máy
+  tính + điện thoại (ngón tay thật qua CDP): 16 dây có tên, hàng ≥ 30 px nằm trọn màn hình,
+  chạm, ngón rung trên dây / lướt giữa hai dây không gảy thêm, vuốt đủ 16, giữ Mi → Fa
+  (×1,0595), giữ La → Si (×1,1225), buông không gảy thêm, Enter, 19 dây từ La, Rải dây 19
+  + rung, ghi chú Fa / Si, tắt tên nốt, nút giỏ ẩn rồi hiện lại, EN, không tràn ngang.
 
 ### Lắp studio: lưu / mở / phát hành (10/2026)
 
