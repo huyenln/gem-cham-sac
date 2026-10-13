@@ -44,9 +44,12 @@ and walks through what broke before:
            asks for a pick first, a drag opens the sheet instead of adding; a
            consignment product shows "Ký gửi · …" and its notes
   zither   a "Khu vực" piece or a "Khung bấm" on the street set to "Chơi đàn
-           tranh": its tag opens it right there (not inside): 16 strings; a tap plucks one, a sweep plucks each string crossed,
-           Enter on a string plucks it, "Rải dây" runs them all, "Rung dây" adds
-           vibrato (counted on the Web Audio calls, nothing is heard)
+           tranh": its tag opens it right there (not inside): 16 named strings
+           (19 at a tap) filling the screen; a tap plucks one, a finger wobbling
+           on a string or moving between two plucks nothing more, a sweep plucks
+           each string once, holding Mi reads Fa (+1/2 tone), La reads Si (+1),
+           Enter plucks, "Rải dây" runs them all with the rung on (counted on the
+           Web Audio calls, nothing is heard)
   topbar   the top bar fits a phone (320px up), in Vietnamese and English
   motion   a device asking for less motion: no walking, "Hiệu ứng" turns it on
   taps     taps on a phone (clicks on a desktop) near "Khu vực" pieces standing on
@@ -1809,13 +1812,28 @@ async def zither(browser, db):
                     'items': [dict(src='images/studio/vn/vn-36.webp', x=560, y=820, w=312, h=200, rot=0, flip=False,
                                    layer='back', frame=False, kind='zone', zone={'act': 'dantranh'})]},
     }
-    # count what Web Audio is asked to play (headless: nothing is heard)
-    spy = ("window.__pl = 0; window.__osc = 0; (() => { const A = window.AudioContext; if (!A) return;"
-           " const b = A.prototype.createBufferSource, o = A.prototype.createOscillator;"
+    # count what Web Audio is asked to do (headless: nothing is heard); bends are
+    # setTargetAtTime calls on a playbackRate
+    spy = ("window.__pl = 0; window.__osc = 0; window.__bend = []; (() => { const A = window.AudioContext; if (!A) return;"
+           " const b = A.prototype.createBufferSource, o = A.prototype.createOscillator, st = AudioParam.prototype.setTargetAtTime;"
            " A.prototype.createBufferSource = function () { window.__pl++; return b.apply(this, arguments); };"
-           " A.prototype.createOscillator = function () { window.__osc++; return o.apply(this, arguments); }; })();"
+           " A.prototype.createOscillator = function () { window.__osc++; return o.apply(this, arguments); };"
+           " AudioParam.prototype.setTargetAtTime = function (v) { window.__bend.push(v); return st.apply(this, arguments); }; })();"
            "localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-studio-intro-touch','1');sessionStorage.removeItem('gem-scene')")
     body = "document.getElementById('st-sheet-body')"
+
+    async def finger(pg, pts, hold=0):
+        # a real finger (touch events, so touch pointers) along pts
+        cdp = await pg.context.new_cdp_session(pg)
+        await cdp.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': [{'x': pts[0][0], 'y': pts[0][1], 'id': 1}]})
+        for x, y in pts[1:]:
+            await pg.wait_for_timeout(30)
+            await cdp.send('Input.dispatchTouchEvent', {'type': 'touchMove', 'touchPoints': [{'x': x, 'y': y, 'id': 1}]})
+        if hold:
+            await pg.wait_for_timeout(hold)
+        await cdp.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []})
+        await cdp.detach()
+
     for name, w, h in (('desktop', 1440, 900), ('mobile', 390, 844)):
         pg = await page(browser, db, w, h, spy)
         await pg.goto(f'{BASE}/studio.html')
@@ -1825,46 +1843,112 @@ async def zither(browser, db):
         check('Đàn tranh' in tag, f'{name}: the piece on the street is tagged "Đàn tranh" ({tag})')
         await js_click(pg, '[data-thing-label]')
         await pg.wait_for_timeout(900)
-        n = await pg.evaluate(f"{body}.querySelectorAll('.zt-str').length")
-        check(n == 16, f'{name}: its tag opens the đàn tranh, 16 strings ({n})')
+        got = await pg.evaluate(f"""(() => {{ const b = {body}, s = [...b.querySelectorAll('.zt-str')];
+            return {{ n: s.length, names: s.map(x => x.querySelector('.zt-name').textContent).slice(0, 6).join(' '),
+                      shown: getComputedStyle(s[0].querySelector('.zt-name')).display !== 'none',
+                      row: Math.round(s[0].getBoundingClientRect().height),
+                      bottom: Math.round(s[s.length - 1].getBoundingClientRect().bottom), vh: innerHeight,
+                      widget: getComputedStyle(document.querySelector('.gb-widget')).display }}; }})()""")
+        check(got['n'] == 16 and got['names'] == 'Rê Mi Sol La Đô Rê' and got['shown'],
+              f'{name}: 16 strings (traditional) to start, named Rê Mi Sol La Đô… ({got["n"]}, {got["names"]})')
+        check(got['row'] >= 30 and got['bottom'] <= got['vh'], f'{name}: rows of {got["row"]}px, all on screen ({got["bottom"]}/{got["vh"]})')
+        check(got['widget'] == 'none', f'{name}: the basket button is out of the way while playing ({got["widget"]})')
         r = await pg.evaluate("(() => { const r = document.querySelector('.zt-body').getBoundingClientRect(); return [r.left, r.top, r.width, r.height]; })()")
-        row = r[3] / 16
-        x = r[0] + r[2] * 0.7
-        ys = [r[1] + row * (i + 0.5) for i in range(16)]
+        lines = await pg.evaluate("[...document.querySelectorAll('.zt-str')].map(b => { const r = b.getBoundingClientRect(); return r.top + r.height / 2; })")
+        gap = lines[1] - lines[0]
+        x = r[0] + r[2] * 0.85
         if name == 'desktop':
-            await pg.mouse.move(x, ys[2])
+            await pg.mouse.move(x, lines[2])
             await pg.mouse.down()
             await pg.mouse.up()
         else:
-            await pg.evaluate(TOUCH_JS, ['tap', x, ys[2], 0, 0])
+            await finger(pg, [(x, lines[2])])
         await pg.wait_for_timeout(100)
         got = await pg.evaluate("[window.__pl, [...document.querySelectorAll('.zt-str')].findIndex(b => b.classList.contains('is-on'))]")
         check(got == [1, 2], f'{name}: a tap plucks that string ({got})')
+        # a finger resting on a string, wobbling a little: one pluck, not more
+        wob = [(x, lines[6]), (x, lines[6] - 4), (x, lines[6] + 4), (x, lines[6] - 3), (x, lines[6] + 3)]
         if name == 'desktop':
-            await pg.mouse.move(x, ys[0])
-            await pg.mouse.down()
-            await pg.mouse.move(x, ys[15], steps=4)   # big steps: rows in between still sound
+            await pg.mouse.move(*wob[0]); await pg.mouse.down()
+            for p_ in wob[1:]:
+                await pg.mouse.move(*p_)
             await pg.mouse.up()
-        else:   # a real finger (touch events, so touch pointers), in 5 big steps
-            cdp = await pg.context.new_cdp_session(pg)
-            await cdp.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': [{'x': x, 'y': ys[0], 'id': 1}]})
-            for i in range(1, 6):
-                await pg.wait_for_timeout(30)
-                await cdp.send('Input.dispatchTouchEvent', {'type': 'touchMove', 'touchPoints': [{'x': x, 'y': ys[0] + (ys[15] - ys[0]) * i / 5, 'id': 1}]})
-            await cdp.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []})
-            await cdp.detach()
+        else:
+            await finger(pg, wob)
         await pg.wait_for_timeout(100)
         n = await pg.evaluate('window.__pl')
-        check(n == 1 + 16, f'{name}: a sweep top to bottom plucks each of the 16 strings once ({n - 1})')
+        check(n == 2, f'{name}: a finger wobbling on a string plucks it once ({n - 1})')
+        # between two strings: moving there crosses no line, plucks nothing more
+        mid = (lines[9] + lines[10]) / 2
+        if name == 'desktop':
+            await pg.mouse.move(x, lines[9]); await pg.mouse.down()
+            await pg.mouse.move(x, mid - gap * 0.2); await pg.mouse.move(x, mid + gap * 0.2); await pg.mouse.move(x, mid - gap * 0.2)
+            await pg.mouse.up()
+        else:
+            await finger(pg, [(x, lines[9]), (x, mid - gap * 0.2), (x, mid + gap * 0.2), (x, mid - gap * 0.2)])
+        await pg.wait_for_timeout(100)
+        n = await pg.evaluate('window.__pl')
+        check(n == 3, f'{name}: a finger moving between two strings plucks neither ({n - 3} extra)')
+        # a sweep top to bottom, in big steps
+        steps = [(x, lines[0] + (lines[-1] - lines[0]) * i / 5) for i in range(6)]
+        if name == 'desktop':
+            await pg.mouse.move(*steps[0]); await pg.mouse.down()
+            for p_ in steps[1:]:
+                await pg.mouse.move(*p_)
+            await pg.mouse.up()
+        else:
+            await finger(pg, steps)
+        await pg.wait_for_timeout(100)
+        n2 = await pg.evaluate('window.__pl')
+        check(n2 - n == 16, f'{name}: a sweep top to bottom plucks each of the 16 strings once ({n2 - n})')
+        # nhấn: hold Mi, it rises half a tone to Fa; hold La, a whole tone to Si; let go, back
+        pl0 = await pg.evaluate('window.__pl')
+        for idx, want, ratio in ((1, 'Fa', 2 ** (1 / 12)), (3, 'Si', 2 ** (2 / 12))):
+            await pg.evaluate('window.__bend = []')
+            if name == 'desktop':
+                await pg.mouse.move(x, lines[idx]); await pg.mouse.down()
+                await pg.wait_for_timeout(500)
+                held = await pg.evaluate(f"document.querySelectorAll('.zt-name')[{idx}].textContent")
+                await pg.mouse.up()
+            else:
+                cdp = await pg.context.new_cdp_session(pg)
+                await cdp.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': [{'x': x, 'y': lines[idx], 'id': 1}]})
+                await pg.wait_for_timeout(500)
+                held = await pg.evaluate(f"document.querySelectorAll('.zt-name')[{idx}].textContent")
+                await cdp.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []})
+                await cdp.detach()
+            await pg.wait_for_timeout(100)
+            bend = await pg.evaluate('window.__bend')
+            after = await pg.evaluate(f"document.querySelectorAll('.zt-name')[{idx}].textContent")
+            check(len(bend) == 2 and abs(bend[0] / bend[1] - ratio) < 1e-3 and held == want and after != want,
+                  f'{name}: holding the {after} string reads {held} and rises {round(bend[0] / bend[1], 4) if len(bend) == 2 else bend}, letting go brings it back')
+        await pg.wait_for_timeout(300)
+        n = await pg.evaluate('window.__pl')
+        check(n - pl0 == 2, f'{name}: letting go of a held string plucks nothing more ({n - pl0} plucks for 2 holds)')
         await pg.evaluate("document.querySelectorAll('.zt-str')[5].focus()")
+        n = await pg.evaluate('window.__pl')
         await pg.keyboard.press('Enter')
         await pg.wait_for_timeout(100)
         check(await pg.evaluate('window.__pl') == n + 1, f'{name}: Enter on a string plucks it')
-        await js_click(pg, '[data-zt-vib]')
+        # 19 strings (the improved đàn)
+        await js_click(pg, '[data-zt-kind="19"]')
+        got = await pg.evaluate(f"""(() => {{ const s = [...{body}.querySelectorAll('.zt-str')];
+            return [s.length, s.map(x => x.querySelector('.zt-name').textContent).slice(0, 6).join(' '),
+                    Math.round(s[0].getBoundingClientRect().height), Math.round(s[s.length - 1].getBoundingClientRect().bottom) <= innerHeight]; }})()""")
+        check(got[0] == 19 and got[1] == 'La Đô Rê Mi Sol La' and got[2] >= 30 and got[3],
+              f'{name}: "19 dây" gives 19 strings from La, rows of {got[2]}px, all on screen ({got})')
+        osc0 = await pg.evaluate('window.__osc')
+        n = await pg.evaluate('window.__pl')
         await js_click(pg, '[data-zt-run]')
-        await pg.wait_for_timeout(1300)
+        await pg.wait_for_timeout(1600)
         got = await pg.evaluate('[window.__pl, window.__osc]')
-        check(got[0] == n + 1 + 16 and got[1] == 16, f'"Rải dây" runs all 16, with vibrato on ({got})')
+        check(got[0] - n == 19 and got[1] - osc0 == 19, f'"Rải dây" runs all 19, with the rung (vibrato) on by default ({got[0] - n}, {got[1] - osc0})')
+        about = await pg.evaluate("document.querySelector('.zt-about p').textContent")
+        check('Fa' in about and 'Si' in about and '16 dây' in about, 'the note says why there is no Fa or Si string')
+        await js_click(pg, '[data-zt-names]')
+        hidden = await pg.evaluate("getComputedStyle(document.querySelector('.zt-name')).display")
+        check(hidden == 'none', f'{name}: "Tên nốt" hides the names ({hidden})')
+        await js_click(pg, '[data-zt-names]')
         await pg.screenshot(path=OUT / f'zither-{name}.png')
         wide = await pg.evaluate("(() => { const s = document.querySelector('.st-sheet'); return [s.scrollWidth, s.clientWidth]; })()")
         check(wide[0] <= wide[1], f'{name}: no sideways scroll ({wide})')
@@ -1876,6 +1960,9 @@ async def zither(browser, db):
             await pg.evaluate("window.GemI18n.setLang('vi')")
             acts = await pg.evaluate("window.GemLayout.ACTS.map(a => a.vi)")
             check('Chơi đàn tranh' in acts, 'the editor offers "Chơi đàn tranh" for a Khu vực')
+        await pg.keyboard.press('Escape')
+        await pg.wait_for_timeout(400)
+        check(await pg.evaluate("getComputedStyle(document.querySelector('.gb-widget')).display") != 'none', f'{name}: the basket button is back once the đàn is closed')
         check(not pg.errors, f'{name}: no script errors {pg.errors}')
         await pg.context.close()
 
@@ -1891,7 +1978,7 @@ async def zither(browser, db):
         await js_click(pg, '.st-hot[data-hot="k-zt1"] .st-hot-label')
         await pg.wait_for_timeout(1200)
         n = await pg.evaluate(f"{body}.querySelectorAll('.zt-str').length")
-        check(lab == 'Chơi đàn tranh' and n == 16 and 'ngoai' in (await bg(pg)),
+        check(lab == 'Chơi đàn tranh' and n in (16, 19) and 'ngoai' in (await bg(pg)),
               f'{name}: a "Khung bấm" on the street set to đàn tranh opens it right there ({lab!r}, {n} strings, still outside)')
         check(not pg.errors, f'{name}: no script errors {pg.errors}')
         await pg.context.close()

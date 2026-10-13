@@ -779,13 +779,26 @@ html:has(.studio-page), .studio-page { overscroll-behavior: none; }
 }
 
 /* ---------- ĐÀN TRANH (studio.js zitherSheet) ----------
-   A wooden soundboard, 16 strings across it, the bridges (nhạn) on a slant.
-   The whole board takes the finger: a sweep across rows sounds each string. */
-.zt { margin: 0 0 var(--space-4); }
+   Full screen, so the 16 or 19 strings get as much height as the screen has
+   (rows of 30–56px; a finger between two strings plucks neither). A wooden
+   board, the note names on its head, the bridges (nhạn) on a slant. */
+.zt-head { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2) var(--space-4); padding-right: 48px; }
+.zt-head h2 { margin: 0; }
+.zt-kind { display: inline-flex; border: 1.5px solid var(--sage-light); border-radius: 999px; overflow: hidden; }
+.zt-kind-b {
+  min-height: 36px; padding: 0 14px; border: 0; background: transparent;
+  font-family: var(--font-display); font-weight: 700; font-size: var(--text-xs); color: var(--ink-dark); cursor: pointer;
+}
+.zt-kind-b[aria-pressed="true"] { background: var(--sage-deep); color: var(--paper-white); }
+.zt-kind-b:focus-visible { outline: 2px solid var(--sage-deep); outline-offset: -2px; }
+.zt-wrap .st-lead { margin: var(--space-2) 0 var(--space-3); font-size: var(--text-sm); }
+.zt { margin: 0 0 var(--space-3); }
+/* the strings take what the screen has left after the title and the buttons */
 .zt-body {
+  height: clamp(calc(16 * 30px + 16px), calc(100svh - 260px), calc(16 * 56px + 16px));
   display: grid;
-  grid-template-rows: repeat(16, 26px);
-  padding: 10px 0;
+  grid-template-rows: repeat(16, 1fr);
+  padding: 8px 0;
   border-radius: 14px 40px 40px 14px;
   background:
     linear-gradient(90deg, rgba(61, 74, 46, 0.18), transparent 8%, transparent 92%, rgba(61, 74, 46, 0.22)),
@@ -818,14 +831,37 @@ html:has(.studio-page), .studio-page { overscroll-behavior: none; }
   box-shadow: 0 1px 1px rgba(40, 25, 10, 0.45);
   pointer-events: none;
 }
-.zt-str:nth-child(n + 9) .zt-line { height: 1.5px; }   /* the high strings are thinner */
+.zt-body[data-n="19"] { grid-template-rows: repeat(19, 1fr); height: clamp(calc(19 * 30px + 16px), calc(100svh - 260px), calc(19 * 52px + 16px)); }
+.zt-str:nth-child(n + 10) .zt-line { height: 1.5px; }   /* the high strings are thinner */
+.zt-body.has-names .zt-line { left: 52px; }
+.zt-name {
+  display: none;
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  min-width: 36px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(251, 246, 238, 0.9);
+  color: var(--ink-dark);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
+  pointer-events: none;
+}
+.zt-body.has-names .zt-name { display: block; }
+.zt-str.is-do .zt-name { background: var(--sage-deep); color: var(--paper-white); }   /* Đô: find your place */
+.zt-name.is-bent { background: var(--kraft); color: var(--paper-white); }   /* nhấn: Mi held is Fa, La held is Si */
 .zt-nhan {
   position: absolute;
   top: 50%;
   left: var(--b, 50%);
-  width: 14px;
-  height: 12px;
-  margin: -9px 0 0 -7px;
+  width: 16px;
+  height: 14px;
+  margin: -11px 0 0 -8px;
   background: #e9d6b5;
   clip-path: polygon(50% 0, 100% 100%, 0 100%);
   filter: drop-shadow(0 1px 0 rgba(40, 25, 10, 0.4));
@@ -842,12 +878,18 @@ html:has(.studio-page), .studio-page { overscroll-behavior: none; }
   100% { transform: translateY(0); }
 }
 .st-calm .zt-str.is-on .zt-line { animation: none; }
-.zt-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4); margin-bottom: var(--space-3); }
+/* the basket button is hidden while the zither is open: it sat on the high strings */
+.zt-open .gb-widget { display: none; }
+.zt-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); }
 .zt-vib { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 44px; font-size: var(--text-sm); color: var(--ink-dark); cursor: pointer; }
 .zt-vib input { width: 18px; height: 18px; accent-color: var(--sage-deep); }
-.zt-note { margin: 0 0 var(--space-2); font-size: var(--text-sm); color: var(--ink-soft); }
+.zt-note { margin: var(--space-1) 0 0; font-size: var(--text-xs); color: var(--ink-soft); }
+.zt-about { margin-top: var(--space-1); font-size: var(--text-sm); color: var(--ink-body); }
+.zt-about summary { padding: 8px 0; cursor: pointer; color: var(--ink-dark); font-weight: 600; }   /* list-item: keeps the ▸ that says it opens */
+.zt-about p { margin: 0 0 var(--space-2); line-height: 1.6; }
 @media (min-width: 768px) {
-  .zt-body { grid-template-rows: repeat(16, 28px); }
+  .zt-body { height: clamp(calc(16 * 30px + 16px), calc(min(96vh, 940px) - 280px), calc(16 * 52px + 16px)); }
+  .zt-body[data-n="19"] { height: clamp(calc(19 * 30px + 16px), calc(min(96vh, 940px) - 280px), calc(19 * 48px + 16px)); }
 }
 
 /* ---------- REDUCED MOTION ----------
