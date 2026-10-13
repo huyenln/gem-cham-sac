@@ -18,6 +18,7 @@ Static website cho cửa hàng **Gem Chạm Sắc** — pop-up store sustainabil
 ├── index.html                Trang chủ
 ├── cau-chuyen.html           Câu chuyện (mission/vision/values/commitments)
 ├── mo-hinh.html              Mô hình (process + roadmap 4 seasons)
+├── doi-tac.html              Đối tác (logo đối tác + các gói hợp tác) — trang con thứ 3 của "Về Gem"
 ├── san-pham.html             Sản phẩm (4 categories + dịch vụ đặc biệt)
 ├── ghe-tham.html             Ghé thăm (địa chỉ + map + email signup)
 ├── season-02.html            Câu chuyện Season 02 (A Space To Stay + link FB reel)
@@ -126,7 +127,7 @@ Quick reference:
 ## Decisions đã chốt (ĐỪNG hỏi lại)
 
 **Scope & content:**
-- 5 trang chính trên nav + các trang phụ: `season-02.html` (không nằm trong nav), `workshop.html`, `ban-tin.html`, `admin.html` (nhân sự), `studio.html` (bản thử, chưa lên nav). Không tạo thêm trang mới trừ khi user yêu cầu rõ.
+- 5 trang chính trên nav ("Về Gem" gồm Câu chuyện / Mô hình / Đối tác) + các trang phụ: `season-02.html` (không nằm trong nav), `workshop.html`, `ban-tin.html`, `admin.html` (nhân sự), `studio.html` (bản thử, chưa lên nav). Không tạo thêm trang mới trừ khi user yêu cầu rõ.
 - **Có hiện giá** (quyết định D3 trong `docs/design.md`, đảo lại "không hiện giá" cũ). Giá đọc từ bảng `products`; món chưa có giá ghi "Liên hệ".
 - Email signup: **Mailerlite đã tích hợp** (account `2380127`, form `41774242`). `js/mailerlite.js` submit bằng `fetch` mode `no-cors` rồi hiện success inline (`.ml-success`) — KHÔNG load script Mailerlite, KHÔNG redirect. Form ở `index.html` và `ghe-tham.html`.
 - **Có giỏ hàng + đặt đơn** (`js/basket.js`): trả khi nhận (COD) hoặc chuyển khoản VietQR (D14). KHÔNG có cổng thẻ, KHÔNG có tài khoản khách — đăng nhập chỉ dành cho nhân sự (`admin.html`). Khách xem lại món đã mua qua "Tủ sưu tầm" bằng mã đơn + SĐT.
@@ -352,7 +353,7 @@ the testing before bothering the user.
 **Đã xong — Sprint 1 → 6, tất cả đã lên `main`:**
 - ✅ Font tiếng Việt, Mailerlite, footer/social, TOC, carousel, song ngữ VI/EN
 - ✅ Ảnh thật + giá thật (11/16 từ catalog, 5 món "Liên hệ")
-- ✅ "Về Gem" thành mục cha (Câu chuyện + Mô hình là trang con)
+- ✅ "Về Gem" thành mục cha (Câu chuyện + Mô hình + Đối tác là trang con; menu mở khi rê chuột)
 - ✅ Supabase: đặt lịch workshop, sản phẩm, đơn hàng, thanh toán COD + QR, Bản tin
 - ✅ Trang quản trị: Hôm nay / Đơn hàng / Đặt lịch / Sản phẩm / Bản tin
 - ✅ UX đợt 2: bỏ lặp, căn trái đoạn dài, badge Season thành dải, vùng bấm 44px, lazy-load
