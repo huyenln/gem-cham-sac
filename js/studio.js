@@ -1649,7 +1649,10 @@
       '<span class="st-price">' + esc(info.price) + '</span>' +
       (out
         ? '<button type="button" class="st-btn" disabled>' + esc(t('studio.out')) + '</button>'
-        : '<button type="button" class="st-btn" data-add="' + esc(sku) + '" data-i18n="studio.add">' + esc(t('studio.add')) + '</button>') +
+        : pdChoices(info).length
+          ? '<button type="button" class="st-btn" data-pd-open="' + esc(sku) + '">' +
+            esc(t('basket.choose').replace('{x}', pdLabel(info).toLowerCase())) + '</button>'
+          : '<button type="button" class="st-btn" data-add="' + esc(sku) + '" data-i18n="studio.add">' + esc(t('studio.add')) + '</button>') +
       (designable(sku) && hasPlace('sewing')
         ? '<button type="button" class="st-link st-design-from" data-design-from="' + esc(sku) + '" data-i18n="studio.prod_design">' +
           esc(t('studio.prod_design')) + '</button>'
@@ -3212,8 +3215,12 @@
   }
 
   // cut: the picture of the piece that was tapped — what "Thêm vào giỏ" puts
-  // in the basket is that very piece.
-  function productSheet(sku, cut) {
+  // in the basket is that very piece. A product with choices, a consignor or
+  // notes opens the detail sheet instead (pdSheet); nudge: it was dragged to
+  // the basket before a choice was picked.
+  function productSheet(sku, cut, nudge) {
+    var info = window.GemBasket ? window.GemBasket.info(sku) : null;
+    if (pdWanted(info)) { pdSheet(sku, cut, nudge); return; }
     var card = productCard(sku);
     if (!card) return;
     openSheet(tr('p', 'studio.prod_tip', ' class="st-lead st-prod-tip"') +
@@ -3222,6 +3229,146 @@
       '<p class="st-foot">' + tr('a', 'studio.all_products', ' href="san-pham.html"') + '</p>');
     var add = sheetBody.querySelector('[data-add]');
     if (add && cut) add.setAttribute('data-cut', cut);
+  }
+
+  /* ---------- the detail sheet: real photos, choices, notes ----------
+     Like the sheet on san-pham.html (js/gallery.js), for a product with
+     choices (a scent, a size, a design: products.options), a consignor or
+     notes: its photos, the price, the choices as chips (picking one shows
+     that jar / bag), "Thêm vào giỏ", the notes. So the piece on the shelf can
+     be one drawing for the whole range: the photos are what people pick by.
+     Names, choices and notes are typed by staff: esc() only. */
+  var PD = null;   // the open one: { sku, cut, pics: [src], at, pick, msg }
+
+  function pdWanted(info) { return !!(info && (info.options || info.consignor || info.notes)); }
+  function pdChoices(info) { return (info && info.options && info.options.choices) || []; }
+  function pdChoice(info, key) {
+    var cs = pdChoices(info);
+    for (var i = 0; i < cs.length; i++) if (cs[i].key === key) return cs[i];
+    return null;
+  }
+  // "Mùi hương", "Cỡ", "Mẫu": what is being picked
+  function pdLabel(info) {
+    var o = (info && info.options) || {};
+    return (lng() === 'en' && o.label_en) || o.label_vi || '';
+  }
+  function pdName(c) { return (lng() === 'en' && c.en) || c.vi || c.key; }
+  function pdNote(c) { return (lng() === 'en' && c.note_en) || c.note_vi || ''; }
+  // a gallery entry: a path or URL as is, a bare name lives in images/products/
+  function pdSrc(tok) {
+    tok = String(tok || '').trim();
+    if (!tok) return null;
+    if (tok.indexOf('/') >= 0) return tok;
+    return 'images/products/' + tok + (/\.(jpe?g|png|webp|gif)$/i.test(tok) ? '' : '.jpg');
+  }
+
+  function pdSheet(sku, cut, nudge) {
+    var info = window.GemBasket.info(sku);
+    var pics = (info.gallery || []).map(pdSrc).filter(Boolean);
+    if (!pics.length && info.image) pics = [info.image];
+    PD = { sku: sku, cut: cut || null, pics: pics, at: 0, pick: null, msg: '' };
+    openSheet('<div class="st-pd"></div>' +
+      '<p class="st-foot">' + tr('a', 'studio.all_products', ' href="san-pham.html"') + '</p>');
+    if (nudge) pdHint(); else pdRender();
+  }
+
+  // focus: a selector to give the focus back to (the chip or arrow just used)
+  function pdRender(focus) {
+    var root = PD && sheetBody.querySelector('.st-pd');
+    var info = root && window.GemBasket.info(PD.sku);
+    if (!info) return;
+    var cs = pdChoices(info), cur = pdChoice(info, PD.pick), n = PD.pics.length;
+    root.innerHTML =
+      '<div class="st-pd-head">' +
+        (info.consignor ? '<span class="pg-consign">' + esc(t('products.consign') + ' · ' + info.consignor) + '</span>' : '') +
+        '<h2 id="st-sheet-title">' + esc(info.name) + '</h2>' +
+        '<p class="pg-price">' + esc(info.price) + '</p>' +
+      '</div>' +
+      '<div class="st-pd-media">' +
+        (n ? '<img class="st-pd-img" src="' + esc(PD.pics[PD.at]) + '" alt="' + esc(info.name) + '">' : '') +
+        (n > 1
+          ? '<button type="button" class="st-pd-nav is-prev" data-pd-go="-1" aria-label="' + esc(t('products.modal_prev')) + '">&#8249;</button>' +
+            '<button type="button" class="st-pd-nav is-next" data-pd-go="1" aria-label="' + esc(t('products.modal_next')) + '">&#8250;</button>' +
+            '<span class="st-pd-count" aria-hidden="true">' + (PD.at + 1) + ' / ' + n + '</span>'
+          : '') +
+      '</div>' +
+      '<div class="st-pd-buy">' +
+        (cs.length
+          ? '<p class="pg-opts-label" id="st-pd-label">' + esc(pdLabel(info)) + '</p>' +
+            '<div class="pg-chips" role="group" aria-labelledby="st-pd-label">' + cs.map(function (c) {
+              return '<button type="button" class="pg-chip" data-pd-pick="' + esc(c.key) + '" aria-pressed="' + (c.key === PD.pick) + '"' +
+                (c.out ? ' disabled' : '') + '>' + esc(pdName(c)) +
+                (c.out ? '<span class="pg-chip-out">' + esc(t('products.sheet_out')) + '</span>' : '') + '</button>';
+            }).join('') + '</div>' +
+            '<p class="pg-choice-note" aria-live="polite">' + esc(cur ? pdNote(cur) : '') + '</p>'
+          : '') +
+        (info.inStock
+          ? '<button type="button" class="st-btn st-pd-add" data-pd-add>' + esc(t('studio.add')) + '</button>'
+          : '<button type="button" class="st-btn st-pd-add" disabled>' + esc(t('studio.out')) + '</button>') +
+        '<p class="pg-msg" role="status">' + esc(PD.msg) + '</p>' +
+        (cs.length ? '' : tr('p', 'studio.prod_tip', ' class="st-prod-tip"')) +
+        (designable(PD.sku) && hasPlace('sewing')
+          ? '<button type="button" class="st-link st-design-from" data-design-from="' + esc(PD.sku) + '" data-i18n="studio.prod_design">' +
+            esc(t('studio.prod_design')) + '</button>'
+          : '') +
+        (info.notes
+          ? '<div class="pg-notes"><h3 class="pg-notes-h">' + esc(t('products.sheet_notes')) + '</h3>' +
+            '<p class="pg-notes-body">' + esc(info.notes) + '</p></div>'
+          : '') +
+      '</div>';
+    var f = focus && root.querySelector(focus);
+    if (f) f.focus({ preventScroll: true });
+  }
+
+  // "Add" before a choice: say what to pick, and go to the first one there is
+  function pdHint() {
+    var info = window.GemBasket.info(PD.sku);
+    PD.msg = t('products.sheet_pick').replace('{x}', pdLabel(info).toLowerCase());
+    pdRender('.pg-chip:not(:disabled)');
+  }
+
+  function pdClick(b) {
+    if (b.hasAttribute('data-pd-open')) { productSheet(b.getAttribute('data-pd-open')); return true; }
+    var info = PD && window.GemBasket && window.GemBasket.info(PD.sku);
+    if (!info) return true;
+    var go = b.getAttribute('data-pd-go');
+    if (go) {
+      var n = PD.pics.length;
+      PD.at = (PD.at + (+go) + n) % n;
+      pdRender('[data-pd-go="' + go + '"]');
+      return true;
+    }
+    if (b.hasAttribute('data-pd-pick')) {
+      var c = pdChoice(info, b.getAttribute('data-pd-pick'));
+      if (!c || c.out) return true;
+      PD.pick = c.key;
+      PD.msg = '';
+      if (c.image) {   // show the jar / bag that was picked
+        var src = pdSrc(c.image), i = PD.pics.indexOf(src);
+        if (i < 0) { PD.pics.push(src); i = PD.pics.length - 1; }
+        PD.at = i;
+      }
+      pdRender('[data-pd-pick="' + c.key + '"]');   // keys are a-z 0-9 - (database check)
+      return true;
+    }
+    // Thêm vào giỏ
+    var cur = pdChoice(info, PD.pick);
+    if (pdChoices(info).length && !cur) { pdHint(); return true; }
+    // a choice with its own photo goes in the basket as that photo, not as
+    // the drawing that stands for the whole range
+    var cut = cur && cur.image ? null : PD.cut;
+    if (!window.GemBasket.add(PD.sku, sheetBody.querySelector('.st-pd-img'), null, cut, cur ? cur.key : null)) {
+      PD.msg = t('studio.prod_out');
+      pdRender();
+      return true;
+    }
+    b.textContent = t('studio.added');
+    b.classList.add('is-added');
+    setTimeout(function () {
+      b.textContent = t('studio.add');
+      b.classList.remove('is-added');
+    }, 1100);
+    return true;
   }
 
   /* ---------- what the basket shows ----------
@@ -3312,7 +3459,9 @@
           el.classList.remove('is-lifted');
           var info = window.GemBasket && window.GemBasket.info(sku);
           if (!info || !info.inStock) { say('studio.prod_out', 3000); return false; }
-          window.GemBasket.add(sku, ghost, null, pieceCut(el));
+          // a scent / size / design to pick first: its sheet opens on the choices
+          if (pdChoices(info).length) { productSheet(sku, pieceCut(el), true); return false; }
+          if (!window.GemBasket.add(sku, ghost, null, pieceCut(el))) { say('studio.prod_out', 3000); return false; }
           ghost.remove();
           say(where === 'cart' ? 'studio.prod_in_cart' : 'studio.prod_in_basket', 2600);
           return true;
@@ -3865,6 +4014,8 @@
       }
       if (sheetBody.querySelector('.pt') && designerClick(e)) return;
       if (sheetBody.querySelector('.tu') && tuClick(e)) return;
+      var pd = e.target.closest('[data-pd-open], [data-pd-go], [data-pd-pick], [data-pd-add]');
+      if (pd && pdClick(pd)) return;
       var add = e.target.closest('[data-add]');
       if (add && window.GemBasket) {
         var card = add.closest('.st-prod, .fit-item');
@@ -3950,7 +4101,7 @@
       e.target.closest('.mb-form').querySelector('.mb-count').textContent = e.target.value.length + '/280';
     });
 
-    document.addEventListener('gem:langchange', function () { renderDesigner(); renderTu(); relabelSpots(); relabelThings(); });
+    document.addEventListener('gem:langchange', function () { renderDesigner(); renderTu(); relabelSpots(); relabelThings(); pdRender(); });
     // an own-colour fabric finished dyeing: swap the plain colour for it
     var fabricTimer = null;
     document.addEventListener('gem:fabric', function () {

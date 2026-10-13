@@ -42,7 +42,7 @@ Static website cho cửa hàng **Gem Chạm Sắc** — pop-up store sustainabil
 ├── js/admin.js               Trang quản trị: Hôm nay / Đơn hàng / Đặt lịch / Sản phẩm
 ├── js/ban-tin.js             Danh sách bài + đọc bài (?bai=<slug>)
 ├── js/vietqr.js              Sinh mã VietQR ngay trong trình duyệt (EMVCo + QR encoder)
-├── js/studio.js              Studio 2D: mặt tiền + cảnh trong, nhân vật + phụ kiện đeo thử, điểm bấm, bàn thiết kế, bảng lời nhắn; mua qua window.GemBasket
+├── js/studio.js              Studio 2D: mặt tiền + cảnh trong, nhân vật + phụ kiện đeo thử, điểm bấm, bàn thiết kế, bảng lời nhắn; mua qua window.GemBasket (món có lựa chọn / ký gửi: bảng chi tiết ảnh thật + ô chọn)
 ├── js/patch.js               Bàn thiết kế (v2): món + kiểu ghép + tông + họa tiết + chất vải + hình vẽ + ghi chú → mã thiết kế, vẽ SVG (dùng chung với giỏ, tủ)
 ├── js/collection.js         Tủ sưu tầm: thiết kế đã lưu + món đã mua (localStorage gem-tu, rpc claim_collection)
 ├── js/studio-layout.js        Định dạng + kiểm tra bố cục studio (dùng chung studio.html / admin.html)
@@ -383,7 +383,8 @@ Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
 - ✅ Thêm / sửa sản phẩm hoàn toàn trong admin (ảnh, thư viện ảnh, ảnh cắt nền, kệ
   Studio, ký gửi, lựa chọn, ghi chú) — thẻ trên `san-pham.html` và kệ Studio tự theo.
   Danh mục mới thì vẫn cần thêm khối HTML (`<div class="product-grid" data-cat="…">`)
-  + `CATEGORIES` trong `js/admin.js`. Món có lựa chọn không bày được trong Studio.
+  + `CATEGORIES` trong `js/admin.js`. Món có lựa chọn bày được trong Studio: một hình
+  vẽ trên kệ, chạm vào mở bảng chi tiết có ảnh thật + ô chọn (`pdSheet` trong `js/studio.js`).
 - 🕯️ Hàng ký gửi (13/10/2026): sau khi merge, chạy
   `supabase/migrations/20261013b_ky_gui_products.sql` (9 món ký gửi + 3 thẻ túi tái chế + chuyển sổ Cún Con).
   4 mẫu tất Re.socks để ẩn chờ ảnh; cỡ M của Đất Nước / Học Đường cần xem nhãn.

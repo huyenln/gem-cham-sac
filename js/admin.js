@@ -1173,12 +1173,6 @@
         err.textContent = 'Đặt tên cho lựa chọn (vd “Mùi hương”, “Cỡ”) — nút trên thẻ sẽ là “Chọn mùi hương”.';
         err.hidden = false; return;
       }
-      // The Studio puts a piece straight into the basket: it can't ask which scent
-      if (choices.length && f['shelf'].value) {
-        err.textContent = 'Món có lựa chọn chưa bày được trong Studio 2D (khách không chọn mùi / cỡ ở đó được). ' +
-                          'Chọn “Không bày” ở mục Kệ.';
-        err.hidden = false; return;
-      }
       err.hidden = true;
 
       // New choices get a key from their name; saved ones keep theirs
@@ -1296,8 +1290,7 @@
                 (p.is_published ? 'Đang bán' : 'Đang ẩn') + '</button>' +
               '<button type="button" class="ad-btn ad-edit-prod">Sửa</button>' +
             '</div>' +
-            // a product with choices can't go in the Studio: nobody picks a scent there
-            (studioOn && !(p.options && p.options.choices && p.options.choices.length)
+            (studioOn
               ? '<p class="ad-prod-studio" data-sku="' + esc(p.sku) + '">' +
                 '<span class="ad-ps-where">Studio 2D: …</span> ' +
                 '<button type="button" class="ad-btn ad-ps-place">Đặt vào Studio</button></p>' : '') +
