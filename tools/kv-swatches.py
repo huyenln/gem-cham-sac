@@ -15,7 +15,8 @@
 #   prints       big light changes evened out (a fold that bends the print
 #                stays: redrawing it would no longer be the real cloth)
 # then the shop's lights corrected (less yellow-red, not for cream / beige),
-# brighter, a little fresher. The rows match supabase/migrations/20261014b_kho_vai_seed.sql.
+# brighter, a little fresher. The rows match supabase/migrations/20261014b_kho_vai_seed.sql
+# less the second photos of the same cloth (20261014d_kho_vai_gop.sql).
 import os
 import re
 import sys

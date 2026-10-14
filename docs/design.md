@@ -1893,6 +1893,15 @@ Gem đang có**, nhân sự tự thêm tấm mới trong admin.
     cùng tủ vải to. Bỏ các ảnh trùng tấm.
   - Ảnh nằm ở `images/studio/vai-that/` (khoảng 1,8 MB), làm bằng `tools/kv-swatches.py`.
   - Tên, chất liệu, hoa văn là **đoán từ ảnh**: Anna sửa trong admin.
+  - **Lọc lại 14/10** (`20261014d_kho_vai_gop.sql`): Drive có 2–3 ảnh cho một số tấm (gần,
+    xa, mặt trái), seed đã tính mỗi ảnh một tấm. Xoá 5 dòng trùng (3→2, 16→15, 14→12,
+    57→59, 53→41), còn **66 tấm**. Mã thiết kế cũ có `r3`… vẫn hiện đúng vải nhờ bảng
+    `MERGED` trong `js/patch.js`.
+  - **Vải kẻ / caro chụp nghiêng thì xoay thẳng** trước khi cắt ảnh (Anna 14/10: "kẻ dọc
+    nhưng chụp bị chéo"). Góc đo bằng độ sắc của đường chiếu dọc / ngang (lần lượt thử từng
+    góc, lấy góc mà các đường kẻ thẳng hàng nhất). Đã xoay: #46 −45° (đổi tên "Kẻ ô nâu
+    đen"), #13 −25° ("Caro lớn xanh đen"), #63 −3,8°. Vải chéo thật (twill #62, hạt trám
+    #68) giữ nguyên.
 - **Xử lý ảnh** (cùng một cách ở `tools/kv-swatches.py` và `GemImg.fabric` trong
   `js/img-tools.js`):
   - **Vải trơn** được vẽ lại cho phẳng hẳn: màu của chính tấm vải (trung vị, nên nếp gấp
