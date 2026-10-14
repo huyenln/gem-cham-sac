@@ -1242,20 +1242,20 @@ async def catalog(browser, db):
       }
       return out;
     }"""
-    for gone, name in (({'gom'}, 'one category emptied'), ({c for _, c, *_ in PRODUCTS}, 'every product gone')):
+    for gone, name in (({'set-qua'}, 'one category emptied'), ({c for _, c, *_ in PRODUCTS}, 'every product gone')):
         db.gone = gone
         pg = await page(browser, db, 1440, 900)
         await pg.goto(f'{BASE}/san-pham.html')
         await pg.wait_for_timeout(1500)
         got = await pg.evaluate(shown)
-        # Văn phòng phẩm is put away for now (data-off): hidden, in neither list, products or not
-        vpp = got.pop('van-phong-pham')
-        check(vpp == [False, []], f'{name}: Văn phòng phẩm stays put away ({vpp})')
+        # Văn phòng phẩm and Gốm sứ Nhật are put away for now (data-off): hidden, in neither list, products or not
+        off = [got.pop('van-phong-pham'), got.pop('gom-su-nhat')]
+        check(off == [[False, []], [False, []]], f'{name}: Văn phòng phẩm and Gốm sứ Nhật stay put away ({off})')
         emptied = {'vai-vun': 'phu-kien-vai-vun', 'vpp': 'van-phong-pham', 'gom': 'gom-su-nhat', 'set-qua': 'set-qua'}
         want = {i: i not in {emptied[c] for c in gone} for i in got}
         ok = all(got[i][0] == want[i] and all(v == want[i] for v in got[i][1]) and len(got[i][1]) == 2 for i in got)
         check(ok, f'{name}: its block and both list entries are hidden, the rest stays ({ {i: got[i][0] for i in got} })')
-        await pg.screenshot(path=OUT / f'catalog-{"all" if len(gone) > 1 else "gom"}-gone.png')
+        await pg.screenshot(path=OUT / f'catalog-{"all" if len(gone) > 1 else "setqua"}-gone.png')
         check(not pg.errors, f'{name}: no script errors {pg.errors}')
         await pg.context.close()
     db.gone = set()

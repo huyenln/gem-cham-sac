@@ -147,7 +147,7 @@ Quick reference:
 
 Ảnh sản phẩm mới là full-size (1080px+), KHÔNG kèm `-thumb`. Thumbnail card 600×600 được tạo bằng Pillow (center-crop). `.heic` (vd `gom-2`) KHÔNG hiển thị trên browser — convert sang `.jpg` trước khi dùng.
 
-**Thứ tự trên `san-pham.html`** (Anna 14/10/2026): Phụ kiện vải vụn → Hàng ký gửi → Set quà → Quần áo 2hand → Gốm sứ Nhật → Dịch vụ đặc biệt. **Văn phòng phẩm tạm ẩn**: khối `#van-phong-pham` có `hidden data-off` (catalog.js giữ ẩn), không có trong danh mục; mở lại thì bỏ hai thuộc tính đó và thêm lại mục danh mục.
+**Thứ tự trên `san-pham.html`** (Anna 14/10/2026): Phụ kiện vải vụn → Hàng ký gửi → Set quà → Quần áo 2hand → Dịch vụ đặc biệt. **Văn phòng phẩm và Gốm sứ Nhật tạm ẩn**: khối `#van-phong-pham` / `#gom-su-nhat` có `hidden data-off` (catalog.js giữ ẩn), không có trong danh mục; mở lại thì bỏ hai thuộc tính đó và thêm lại mục danh mục.
 
 **Loại trừ:**
 - Generic pens (bút bi nhập), sticky notes, tiger cartoon bookmarks — **KHÔNG đăng lên web** dù có bán tại cửa hàng. Lý do: clash với brand vintage/sustainable.
