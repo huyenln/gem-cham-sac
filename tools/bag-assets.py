@@ -17,7 +17,8 @@ Two kinds of bag:
                                 line up), box-X stitched tabs
               tuibuoc-<style>   tie shoulder bag: two points tied on the shoulder,
                                 plain straps knotted (thuong), a bow (no), a
-                                ruffled strap (xoan) or lace ribbon (ren)
+                                ruffled strap (xoan) or plain straps edged
+                                with lace (ren)
               laptopq           the laptop sleeve painting, smaller, with a
                                 shoulder strap drawn over it
 
@@ -374,8 +375,8 @@ def drawn(name, src=None, style='no'):
         body = left + side(-1)[::-1]
         # the straps from each point, and how they meet on the shoulder
         # (style): plain straps knotted (thuong, in the price), a bow, a
-        # ruffled strap over the shoulder (xoan), or lace ribbon tied in a bow
-        # (lace is drawn as is, cream, over the fabric)
+        # ruffled strap over the shoulder (xoan), or the plain straps with lace
+        # sewn along their edges (ren; the lace is drawn as is, cream)
         def loop(cx, cy, rx, ry, rot):
             r = math.radians(rot)
             return [(cx + rx * math.cos(t) * math.cos(r) - ry * math.sin(t) * math.sin(r),
@@ -383,12 +384,12 @@ def drawn(name, src=None, style='no'):
                     for t in [k * math.pi / 18 for k in range(36)]]
         mirror = lambda q: [(340 - x, y) for x, y in q]
         tie_l = [(125, 112), (161, 52), (171, 58), (141, 112)]
-        if style in ('no', 'ren'):
+        if style == 'no':
             tail_l = [(164, 50), (146, 76), (154, 80), (170, 54)]
             ties = [tie_l, mirror(tie_l), tail_l, mirror(tail_l), loop(147, 42, 21, 11, -12), loop(193, 42, 21, 11, 12),
                     [(162, 36), (178, 36), (179, 52), (161, 52)]]
             folds = [[(158, 40), (182, 40)], [(158, 47), (182, 47)]]
-        elif style == 'thuong':
+        elif style in ('thuong', 'ren'):   # ren: the same plain straps, lace sewn along both edges
             tail_l = [(163, 44), (149, 22), (157, 18), (170, 40)]
             ties = [tie_l, mirror(tie_l), tail_l, mirror(tail_l), [(161, 40), (179, 40), (181, 57), (159, 57)]]
             folds = [[(160, 48), (180, 48)]]
@@ -423,36 +424,50 @@ def drawn(name, src=None, style='no'):
                 if abs(math.sin(d * math.pi / 9)) < 0.12:                    # at each pinch
                     folds.append([(x - nx * 5, y - ny * 5), (x + nx * 12, y + ny * 12)])
         fill(A, body)
+        for q in ties:
+            fill(A, q)
+        parts['quai'] = ''.join(path(q) for q in ties)
+        for f in folds:
+            line(marks, f, 120 if style == 'xoan' else 90, 1.1 if style == 'xoan' else 1.0)
         if style == 'ren':
-            T = Image.new('RGBA', (SIDE * S2, SIDE * S2))
-            m = canvas()
-            for q in ties:
-                fill(m, q)
-            lace = Image.new('RGBA', T.size, (243, 236, 222, 245))
-            dr = ImageDraw.Draw(lace)
+            # cream lace along both long edges of each strap, drawn as is over
+            # the fabric: a band with little holes and a scalloped outer edge
             u = K * S2
-            for gy in range(0, 340, 4):                                      # the lace's holes
-                for gx in range(0, 340, 4):
-                    ox = 2 if (gy // 4) % 2 else 0
-                    dr.ellipse([(gx + ox - 0.9) * u, (gy - 0.9) * u, (gx + ox + 0.9) * u, (gy + 0.9) * u], fill=(214, 202, 180, 255))
-            T.paste(lace, (0, 0), m)
+            T = Image.new('RGBA', (SIDE * S2, SIDE * S2))
+            band = canvas()
+            scallops = []
+            for q in (tie_l, mirror(tie_l)):
+                cx, cy = sum(x for x, _ in q) / 4, sum(y for _, y in q) / 4
+                for p0, p1 in ((q[0], q[1]), (q[2], q[3])):
+                    dx, dy = p1[0] - p0[0], p1[1] - p0[1]
+                    L = math.hypot(dx, dy)
+                    ux, uy = dx / L, dy / L
+                    nx, ny = -uy, ux
+                    mx, my = (p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2
+                    if (mx - cx) * nx + (my - cy) * ny < 0:
+                        nx, ny = -nx, -ny
+                    # leave the knot and the bag's point clear
+                    a0, a1 = 8, L - 4
+                    e0 = (p0[0] + ux * a0, p0[1] + uy * a0)
+                    e1 = (p0[0] + ux * a1, p0[1] + uy * a1)
+                    fill(band, [e0, e1, (e1[0] + nx * 4.4, e1[1] + ny * 4.4), (e0[0] + nx * 4.4, e0[1] + ny * 4.4)])
+                    t = a0
+                    while t <= a1:
+                        scallops.append((p0[0] + ux * t + nx * 4.6, p0[1] + uy * t + ny * 4.6))
+                        t += 3.6
+            lace = Image.new('RGBA', T.size, (251, 248, 241, 255))
+            dl = ImageDraw.Draw(lace)
+            for gy in range(0, 340, 2):                                      # the lace's holes
+                for gx in range(0, 340, 2):
+                    ox = 1 if (gy // 2) % 2 else 0
+                    dl.ellipse([(gx + ox - 0.45) * u, (gy - 0.45) * u, (gx + ox + 0.45) * u, (gy + 0.45) * u], fill=(196, 180, 152, 255))
+            T.paste(lace, (0, 0), band)
             dr = ImageDraw.Draw(T)
-            for q in ties:                                                   # scalloped edges
-                for (x0, y0), (x1, y1) in zip(q, q[1:] + q[:1]):
-                    n = max(1, int(math.hypot(x1 - x0, y1 - y0) / 3))
-                    for i in range(n):
-                        x, y = x0 + (x1 - x0) * i / n, y0 + (y1 - y0) * i / n
-                        dr.ellipse([(x - 1.7) * u, (y - 1.7) * u, (x + 1.7) * u, (y + 1.7) * u],
-                                   fill=(246, 240, 228, 255), outline=(190, 176, 150, 255), width=max(1, int(0.35 * u)))
-            for f in folds:
-                dr.line([(x * u, y * u) for x, y in f], fill=(176, 160, 132, 255), width=max(1, int(0.8 * u)))
+            for x, y in scallops:
+                dr.ellipse([(x - 2.4) * u, (y - 2.4) * u, (x + 2.4) * u, (y + 2.4) * u],
+                           fill=(251, 248, 241, 255), outline=(168, 150, 120, 255), width=max(1, int(0.35 * u)))
+            T.paste(lace, (0, 0), band)                                      # the band over the scallops' inner halves
             top = T.resize((SIDE, SIDE), Image.LANCZOS)
-        else:
-            for q in ties:
-                fill(A, q)
-            parts['quai'] = ''.join(path(q) for q in ties)
-            for f in folds:
-                line(marks, f, 120 if style == 'xoan' else 90, 1.1 if style == 'xoan' else 1.0)
         # topstitch round the mouth and the points, the side seam of the gusset
         inner = [(x + (6 if x < 170 else -6 if x > 170 else 0), y + 6) for x, y in left[-14:]]
         line(marks, inner, 110, 1.0, dash=(5, 4))

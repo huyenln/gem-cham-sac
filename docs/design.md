@@ -1994,9 +1994,9 @@ hai migration chỉ chạy khi merge: `20261015_kho_vai_photo.sql` (ảnh lớn 
     - **Túi buộc vai** (mẫu Anna gửi 14/10, thay túi bán nguyệt vì dáng bán nguyệt trông già): thân
       2 đỉnh nhô, miệng khoét, mảnh hông/đáy, hai đỉnh buộc trên vai. **Kiểu buộc vai** là một
       lựa chọn (field 13 `t<i>`): **dây thẳng** (mặc định, đã gồm trong giá), thắt nơ (+10k, tạm),
-      **dây xoắn = dây nhún bèo** (+30k, Anna chốt), dây ren (+20k, tạm). "Dây tạo kiểu thì cộng
-      thêm tiền" (Anna 14/10). Mỗi kiểu một bộ tranh `mon-tuibuoc-<kiểu>-*`. Dây ren màu kem vẽ sẵn,
-      không lấy vải trong rổ (bớt một ô vải).
+      **dây xoắn = dây nhún bèo** (+30k, Anna chốt), **dây viền ren** = dây thẳng may thêm ren dọc
+      hai mép (+20k, tạm; ren vẽ màu kem trên dây vải). "Dây tạo kiểu thì cộng thêm tiền" (Anna
+      14/10). Mỗi kiểu một bộ tranh `mon-tuibuoc-<kiểu>-*`.
     - Túi dây rút đã bỏ (Anna 14/10: không làm chính).
   - Tote **vẽ lại cho đứng thẳng, không rủ như ảnh** (Anna 14/10): đáy phẳng, miệng thẳng, quai
     vòng đều, tab quai may chữ X.

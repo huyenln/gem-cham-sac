@@ -2994,7 +2994,7 @@ async def tui(browser, db):
         check(all(drawn), f'{name}: each shape draws its own bag ({drawn})')
         # the tie bag: four ways to tie it on the shoulder, each drawn
         ties = await pg.evaluate("[...document.querySelectorAll('[data-tie]')].map(b => b.textContent)")
-        check(len(ties) == 4 and ties[0] == 'Dây thẳng', f'{name}: "Kiểu buộc vai": four ways, plain straps first ({ties})')
+        check(len(ties) == 4 and ties[0] == 'Dây thẳng' and ties[3].startswith('Dây viền ren'), f'{name}: "Kiểu buộc vai": four ways, plain straps first ({ties})')
         pt0 = num(await pg.evaluate(price))
         await js_click(pg, '[data-tie="2"]')
         await pg.wait_for_timeout(250)
@@ -3002,8 +3002,8 @@ async def tui(browser, db):
               f'{name}: "Dây xoắn (nhún bèo)" draws the ruffle, +30.000đ')
         await js_click(pg, '[data-tie="3"]')
         await pg.wait_for_timeout(250)
-        check(await pg.evaluate("!!document.querySelector('.pt-board image[href*=\"mon-tuibuoc-ren-top\"]') && window.GemPatch.slots(window.GemPatch.parse(new URL(window.GemPatch.url('2~tuibuoc~mot~~~~~~~~~~t3')).searchParams.get('d'))) === 1"),
-              f'{name}: "Dây ren": cream lace drawn over, no fabric for the ties')
+        check(await pg.evaluate("!!document.querySelector('.pt-board image[href*=\"mon-tuibuoc-ren-top\"]') && window.GemPatch.slots(window.GemPatch.parse('2~tuibuoc~mot~~~~~~~~~~t3')) === 2"),
+              f'{name}: "Dây viền ren": the plain straps in the fabric, cream lace drawn along them')
         await js_click(pg, '.pt-shapes [data-shape="tuitote"]')
         await js_click(pg, '.pt-layouts [data-layout="mot"]')
         await pg.wait_for_timeout(300)
