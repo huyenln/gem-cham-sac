@@ -498,6 +498,23 @@
   function isReal(key) { return typeof key === 'string' && /^r[1-9]\d{0,5}$/.test(key); }
   function realOf(key) { return isReal(key) ? REAL[+key.slice(1)] || null : null; }
 
+  // The big photos (lon/, 640–960px) are fetched ahead: those of the
+  // fabrics in the basket, and a scrap's own the moment it is picked up, so
+  // a dropped fabric shows at once (Anna: "thả vải vào ghép cũng phải mất 1s
+  // mới lên màu"). Until one is in, the patch wears the swatch (svg()).
+  var PHOTO_IN = {};   // url -> 1 coming, 2 here, 3 failed
+  function warmPhoto(url) {
+    if (!url || PHOTO_IN[url]) return;
+    PHOTO_IN[url] = 1;
+    var im = new Image();
+    im.onload = function () { PHOTO_IN[url] = 2; };
+    im.onerror = function () { PHOTO_IN[url] = 3; };
+    im.src = url;
+  }
+  function warm(keys) {
+    (keys || []).forEach(function (k) { var rf = realOf(k); if (rf && rf.photo) warmPhoto(rf.photo); });
+  }
+
   // studio.html / san-pham.html: fetched once, then gem:fabric redraws
   var realP = null;
   function loadReal() {
@@ -1371,14 +1388,16 @@
   var ART = {
     cushion: { n: 'goi', seams: [[34.9, 64.9], [34, 62]] },
     coaster: { n: 'lotcoc' }, coasterSq: { n: 'lotcocv' }, scrunchie: { n: 'scrunchie' },
-    // parts: pieces of their own on top of the body, one fabric each
-    // (polygons measured on the painting, 340 square)
+    // parts: pieces of their own on top of the body, one fabric each (340
+    // square). The collar is traced off the painting's own lines (both flaps
+    // and the back of the collar round the neck; Anna: "phần cắt đang không
+    // được clean" with the 12-point polygon). over: drawn after the others —
+    // the strap comes down in front of the back of the collar.
     shirt: { n: 'oxford', box: [47, 1, 292, 339], parts: [
-      { id: 'co', poly: [[113, 96], [95, 118], [99, 148], [121, 193], [161, 151], [128, 116], [212, 116], [178, 153],
-        [218, 193], [241, 147], [242, 120], [223, 96]] },
-      { id: 'quai', poly: [[146, 113], [146, 8], [152, 1], [184, 1], [190, 8], [190, 113]] }
+      { id: 'co', d: 'M157 92L183 92L184 93L202 93L203 94L220 95L225 97L228 100L227 101L228 105L242 120L242 124L244 127L244 129L242 130L243 134L237 151L234 155L234 159L227 175L226 180L221 187L220 191L213 193L195 181L182 168L179 164L179 162L173 158L169 153L173 152L185 140L193 134L205 120L205 118L209 113L208 112L180 112L125 112L124 113L128 120L134 124L145 137L148 138L151 142L160 149L159 153L157 155L157 158L152 165L149 166L145 171L145 173L135 183L123 192L118 190L115 187L109 173L100 157L100 154L94 144L94 141L90 131L90 124L92 121L95 120L95 117L97 114L104 108L105 105L108 102L108 99L112 96L120 94L156 93Z' },
+      { id: 'quai', over: 1, poly: [[146, 113], [146, 8], [152, 1], [184, 1], [190, 8], [190, 113]] }
     ] },
-    origami: { n: 'origami', top: 1, c: [187, 201] },
+    origami: { n: 'origami', top: 1, c: [187, 201], sang: 1 },
     // the cord (stems, knot) in one fabric, each flower in its own. The
     // painting has three buds: one or two flowers hide the side buds (the
     // middle one is in front, so nothing behind it is missing)
@@ -1418,6 +1437,7 @@
       parts: [{ id: 'quai', d: 'M58 150L58.3 120.7L59 111.8L62 95L64.2 87.2L66.8 79.8L69.9 72.8L73.3 66.1L81.4 54L90.9 43.5L96.1 38.8L101.7 34.5L107.5 30.7L119.9 24.1L126.5 21.4L140.3 17.3L154.9 14.8L170 14L185.1 14.8L199.7 17.3L213.5 21.4L220.1 24.1L232.5 30.7L238.3 34.5L243.9 38.8L249.1 43.5L258.6 54L266.7 66.1L270.1 72.8L273.2 79.8L275.8 87.2L278 95L281 111.8L281.7 120.7L282 150L269 150L268.8 121.6L267 105.8L265.4 98.4L263.5 91.4L258.5 78.5L252 67.1L244.3 57.1L235.3 48.5L230.4 44.8L225.3 41.4L214.3 35.7L202.4 31.4L196.2 29.8L183.4 27.7L170 27L156.6 27.7L143.8 29.8L137.6 31.4L125.7 35.7L114.7 41.4L104.7 48.5L95.7 57.1L91.7 61.9L84.6 72.6L81.5 78.5L76.5 91.4L74.6 98.4L73 105.8L71.2 121.6L71 150Z' }, { id: 'day', d: 'M41.7 273L292.1 273L292.1 278.4L290.5 282.3L290.5 298.7L288.9 303.4L285 307.3L279.6 308.8L231.2 312L132.2 308.1L65.1 307.3L51.8 304.9L44 299.5Z' }] }
   };
   var SEAM = '" stroke="' + STITCH + '" stroke-width="1.8" stroke-dasharray="6 5" stroke-opacity="0.4" fill="none"/>';
+  var SANG = 0.22;   // how strongly the light layer (ART sang) lifts the lit faces
 
   // The cushion is painted quilted 3 x 3, its seams not quite on the thirds
   // (the lower one sits well above two thirds). A layout drawn on thirds is
@@ -1543,19 +1563,27 @@
     if (A.bag && d.ext && d.ext.q && d.layout !== 'tuve') out += quilting(A, pre);
     // a zip / a snap the customer added (drawn where the bag has a place)
     if (A.bag && d.ext && d.ext.z && A.zip) out += zipLine(A.zip);
-    // the pieces of their own (collar, strap, flowers): back to front
-    var parts = partsOf(d), base = f.used() + 1;
-    for (var j = parts.length - 1; j >= 0; j--) {
+    // the pieces of their own (collar, strap, flowers): back to front, the
+    // ones marked "over" last (their number stays their place in the list)
+    var parts = partsOf(d), base = f.used() + 1, order = [];
+    for (var j = parts.length - 1; j >= 0; j--) if (!parts[j].over) order.push(j);
+    parts.forEach(function (q, j) { if (q.over) order.push(j); });
+    order.forEach(function (j) {
       var pd = parts[j].d || polyPath(parts[j].poly);
       out += '<path d="' + pd + '" fill="' + f(base + j, parts[j].d ? bboxOfPath(pd) : bboxOf(parts[j].poly)) +
         '" stroke="' + STITCH + '" stroke-width="1.6" stroke-dasharray="5 5" stroke-opacity="0.35" stroke-linejoin="round"/>';
-    }
+    });
     out += '</g>';
     // photos of real fabric already carry their own light: a lighter shading
     // over them, or they come out dull (painted swatches are flat and bright)
     var photo = (d.cus || []).some(function (c) { return c.r != null; }) || (!d.fab && hasReal());
     out += '<image href="' + VAI + 'mon-' + name + '-bong.webp" width="340" height="340" style="mix-blend-mode:multiply" opacity="' +
       (photo ? 0.6 : 0.8) + '" pointer-events="none"/>';
+    // the shading only darkens, so on a dark fabric the folds were lost
+    // (Anna: "vải che luôn nếp gấp origami"): the lit faces of the folds
+    // screened over it lift them on any fabric (tools/design-assets.py light)
+    if (A.sang) out += '<image href="' + VAI + 'mon-' + name + '-sang.webp" width="340" height="340" mask="url(#' + pre + 'mk)"' +
+      ' style="mix-blend-mode:screen" opacity="' + SANG + '" pointer-events="none"/>';
     if (hide.length) out += '</g>';
     if (A.top) out += '<image href="' + VAI + 'mon-' + name + '-top.webp" width="340" height="340" pointer-events="none"/>';
     if (A.bag && d.ext && d.ext.n && A.snap) out += snapDot(A.snap);
@@ -1643,11 +1671,22 @@
       var big = rf.photo || rf.src, W = Math.max(SWATCH_CM * (rf.photo ? rf.k : 1) * unit, box[2], box[3]);
       var h = Math.abs(Math.sin(rid * 12.9898 + slot * 78.233 + bb[0] * 0.37 + bb[1] * 0.71) * 43758.5453);
       var fx = h - Math.floor(h), fy = (h * 7.13) - Math.floor(h * 7.13);
-      var id = pre + 'r' + rid + 'p' + (++np);
+      var id = pre + 'r' + rid + 'p' + (++np), Wt = W.toFixed(1);
+      // the big photo not here yet: the swatch under it (the basket showed
+      // it already), at its size and in the middle where it sits in the
+      // photo, so the patch has its fabric at once; the photo covers it
+      var under = '';
+      if (rf.photo && PHOTO_IN[rf.photo] !== 2) {
+        warmPhoto(rf.photo);
+        var S = (W / rf.k).toFixed(1), off = ((W - W / rf.k) / 2).toFixed(1);
+        defsOut += '<pattern id="' + id + 's" patternUnits="userSpaceOnUse" x="' + off + '" y="' + off + '" width="' + S + '" height="' + S + '">' +
+          '<image href="' + rf.src + '" width="' + S + '" height="' + S + '" preserveAspectRatio="none"/></pattern>';
+        under = '<rect width="' + Wt + '" height="' + Wt + '" fill="url(#' + id + 's)"/>';
+      }
       defsOut += '<pattern id="' + id + '" patternUnits="userSpaceOnUse" x="' + (box[0] - (W - box[2]) * fx).toFixed(1) +
-        '" y="' + (box[1] - (W - box[3]) * fy).toFixed(1) + '" width="' + W.toFixed(1) + '" height="' + W.toFixed(1) + '"' +
-        (deg ? ' patternTransform="rotate(' + deg + ' ' + cx.toFixed(1) + ' ' + cy.toFixed(1) + ')"' : '') + '>' +
-        '<image href="' + big + '" width="' + W.toFixed(1) + '" height="' + W.toFixed(1) + '" preserveAspectRatio="none"/></pattern>';
+        '" y="' + (box[1] - (W - box[3]) * fy).toFixed(1) + '" width="' + Wt + '" height="' + Wt + '"' +
+        (deg ? ' patternTransform="rotate(' + deg + ' ' + cx.toFixed(1) + ' ' + cy.toFixed(1) + ')"' : '') + '>' + under +
+        '<image href="' + big + '" width="' + Wt + '" height="' + Wt + '" preserveAspectRatio="none"/></pattern>';
       return 'url(#' + id + ')';
     };
     var fill = function (i, bb) {
@@ -2093,7 +2132,7 @@
     SIZES: SIZES, TIES: TIES, tieWhy: tieWhy, sizesOf: sizesOf, sizeLabel: sizeLabel, blankExt: blankExt, fitExt: fitExt, MAX_POCKETS: MAX_POCKETS, CUSTOM_CM: CUSTOM_CM,
     PRICING: PRICING, price: price, priceLine: priceLine, priceRange: priceRange, fee: fee, setPricing: setPricing, loadPricing: loadPricing,
     // real fabrics (Kho vải)
-    setReal: setReal, loadReal: loadReal, hasReal: hasReal, isReal: isReal, realOf: realOf, moodKeys: moodKeys,
+    setReal: setReal, loadReal: loadReal, hasReal: hasReal, isReal: isReal, realOf: realOf, moodKeys: moodKeys, warm: warm,
     keyColor: keyColor, fabricList: fabricList,
     realList: function () { return REAL_ON.slice(); },
     // by: the designer's name for the card, travels in the link only

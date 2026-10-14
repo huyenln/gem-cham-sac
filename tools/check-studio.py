@@ -55,6 +55,10 @@ and walks through what broke before:
            swapped in when it comes, a very late one swapped in too
   topbar   the top bar fits a phone (320px up), in Vietnamese and English
   motion   a device asking for less motion: no walking, "Hiệu ứng" turns it on
+  phone    held sideways the studio fits (one bar, the scene to the bottom);
+           far pictures wait until near; a dropped fabric shows at once (its
+           swatch while the big photo comes); the Oxford collar traced, the
+           strap over it; the origami's light layer
   taps     taps on a phone (clicks on a desktop) near "Khu vực" pieces standing on
            the floor: a piece's picture walks there, its tag opens it; a tap on
            the character is never dead; every piece has a tag on its picture, out
@@ -1059,15 +1063,25 @@ async def design(browser, db):
         check(cell0.endswith(want2), f'{name}: drag a scrap onto a patch ({want2} in {cell0})')
         await pg.screenshot(path=OUT / f'design-{name}-1.png')
         if name == 'mobile':
-            # phone: scrolled to the piece, the basket is docked right above
-            # the action bar - the piece and the scraps on screen together
-            await pg.evaluate("document.querySelector('.st-sheet').scrollTop = 140")
-            await pg.wait_for_timeout(300)
-            box = await pg.evaluate("""(() => { const r = e => document.querySelector(e).getBoundingClientRect();
+            # phone: one column that does not change as it scrolls - the
+            # piece, then the basket right under it, both on the first screen
+            # above the action bar; the bar stays at the bottom edge to the
+            # end (Anna: "khi scroll thì bố cục bị thay đổi nhìn hơi amateur")
+            box_js = """(() => { const r = e => document.querySelector(e).getBoundingClientRect();
                 const b = r('.pt-board'), s = r('.pt-scraps'), a = r('.pt-actions');
-                return [Math.round(b.top), Math.round(b.bottom), Math.round(s.top), Math.round(s.bottom), Math.round(a.top), innerHeight]; })()""")
-            check(box[0] >= 0 and box[1] <= box[2] + 20 and box[3] <= box[4] + 2 and box[4] < box[5],
-                  f'{name}: the piece, the docked basket and the action bar fit one screen ({box})')
+                return [Math.round(b.top), Math.round(b.bottom), Math.round(s.top), Math.round(s.bottom), Math.round(a.top), Math.round(a.bottom), innerHeight]; })()"""
+            await pg.evaluate("document.querySelector('.st-sheet').scrollTop = 0")
+            await pg.wait_for_timeout(300)
+            box = await pg.evaluate(box_js)
+            check(box[0] >= 0 and box[1] <= box[2] and box[3] <= box[4] and abs(box[5] - box[6]) <= 1,
+                  f'{name}: the piece and the basket under it fit the first screen above the bar ({box})')
+            await pg.evaluate("document.querySelector('.st-sheet').scrollTop = 1e6")
+            await pg.wait_for_timeout(300)
+            end = await pg.evaluate(box_js)
+            check(abs(end[5] - end[6]) <= 1, f'{name}: scrolled to the end, the bar is still at the bottom ({end})')
+            st = await pg.evaluate("[getComputedStyle(document.querySelector('.pt-sec-basket')).position, getComputedStyle(document.querySelector('.pt-stage')).zIndex]")
+            check(st == ['static', '1'], f'{name}: the basket does not dock; the piece (and "Xoay vải") is one layer under it ({st})')
+            await pg.evaluate("document.querySelector('.st-sheet').scrollTop = 0")
         # a mood changes the fabrics, not the layout the customer picked
         await js_click(pg, '[data-layout="chong"]')
         await js_click(pg, '[data-mood="tet"]')
@@ -2503,6 +2517,95 @@ async def motion(browser, db):
     await ctx.close()
 
 
+async def phone(browser, db):
+    """What Anna saw on a real phone (14/10/2026): held sideways the studio
+    fits (one bar, the scene to the bottom, nothing cut, nothing to scroll);
+    pictures far along the strip wait until they are near; a dropped fabric
+    shows at once (the swatch stands in while its big photo comes); the
+    Oxford collar is traced off the painting with the strap over it; the
+    origami's folds get a light layer."""
+    print('phone')
+    db.rows.clear(); db.info.clear()
+    db.fabrics = fabric_rows()
+    inside = "sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-studio-intro-touch','1');"
+    # sideways: Android with its address bar (788 x 250), a small iPhone (667 x 320)
+    for name, w, h in (('android', 788, 250), ('iphone-se', 667, 320)):
+        for scene in ('out', 'in'):
+            ctx = await browser.new_context(viewport={'width': w, 'height': h}, is_mobile=True, has_touch=True)
+            await ctx.route('**/*.supabase.co/**', db.route)
+            await ctx.add_init_script(GUIDE_OFF + (inside if scene == 'in' else ''))
+            pg = await ctx.new_page()
+            await pg.goto(f'{BASE}/studio.html')
+            await pg.wait_for_timeout(1500)
+            m = await pg.evaluate("""(() => { const r = s => document.querySelector(s).getBoundingClientRect();
+              const st = r('.st-stage'), top = r('.st-top'), nav = r('.st-nav'), help = r('.st-help-b'), cart = r('.gb-widget');
+              const shown = [...document.querySelectorAll('.st-nav button')].filter(b => b.offsetWidth).map(b => b.getBoundingClientRect());
+              return { vh: innerHeight, sh: document.documentElement.scrollHeight, stTop: st.top, stBot: st.bottom, top: top.bottom,
+                       nav: [nav.top, nav.bottom], btns: shown.every(b => b.top >= 0 && b.bottom <= nav.bottom + 1) && shown.length > 0,
+                       corners: help.bottom <= innerHeight && cart.bottom <= innerHeight && help.top >= st.top && cart.top >= st.top }; })()""")
+            check(abs(m['stBot'] - m['vh']) <= 1 and m['sh'] <= m['vh'] and abs(m['stTop'] - m['top']) <= 1,
+                  f'sideways {name} {scene}: the scene runs to the bottom, nothing cut or to scroll ({m})')
+            check(m['nav'][0] <= 1 and m['btns'], f'sideways {name} {scene}: the places are in the one bar at the top ({m["nav"]})')
+            check(m['corners'], f'sideways {name} {scene}: "?" and the cart sit in the scene\'s corners')
+            await ctx.close()
+
+    # pictures along a long strip: the near ones at once, the far ones later
+    piece = lambda src, x: dict(src=src, x=x, y=700, w=160, h=200, rot=0, flip=False, layer='back', frame=False)
+    xs = [400, 700, 1500, 2600, 3400, 4300, 5200, 6100, 7000, 7600]
+    db.rows['live'] = {'v': 1, 'bg': {'src': 'images/studio/bg/strip-tron.webp', 'w': 7872, 'h': 1024},
+                       'items': [piece(f'images/studio/cay/cay-{i + 3:02d}.webp', x) for i, x in enumerate(xs)],
+                       'udon': {'x': 7200, 'y': 404, 'w': 133, 'h': 145}, 'start': 500}
+    pg = await page(browser, db, 390, 844, inside)
+    await pg.goto(f'{BASE}/studio.html')
+    await pg.wait_for_timeout(800)
+    got = await pg.evaluate("[...document.querySelectorAll('.st-item')].map(e => !!e.getAttribute('src'))")
+    check(got[:2] == [True, True] and not any(got[4:]), f'pictures near the start load first, far ones wait ({got})')
+    await pg.wait_for_timeout(6000)
+    got = await pg.evaluate("[...document.querySelectorAll('.st-item')].map(e => !!e.getAttribute('src'))")
+    check(all(got), f'the rest follow on their own ({got})')
+    check(not pg.errors, f'lazy pictures: no script errors {pg.errors}')
+    await pg.context.close()
+    db.rows.clear()
+
+    # a dropped real fabric shows at once: its big photo is slow, the swatch stands in
+    ctx = await browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True)
+    await ctx.route('**/*.supabase.co/**', db.route)
+
+    async def late_photo(r):
+        await asyncio.sleep(8)
+        await r.continue_()
+    await ctx.route('**/vai-that/lon/**', late_photo)
+    await ctx.add_init_script(GUIDE_OFF + inside + "localStorage.removeItem('gem-designer');")
+    pg = await ctx.new_page()
+    await pg.goto(f'{BASE}/studio.html')
+    await pg.wait_for_timeout(1500)
+    await js_click(pg, '[data-go="sewing"]')
+    await pg.wait_for_timeout(2500)
+    sid = await pg.evaluate("[...document.querySelectorAll('.pt-scrap')].map(b => b.dataset.scrap).find(k => /^r\\d+$/.test(k) && !document.querySelector('.pt-board [data-i=\"4\"]').getAttribute('fill').includes('-r' + k.slice(1) + 'p'))")
+    await js_click(pg, f'.pt-scrap[data-scrap="{sid}"]')
+    await pg.click('.pt-board [data-i="4"]')   # an SVG path: a real click, it has no .click()
+    await pg.wait_for_timeout(150)
+    st = await pg.evaluate("""(sid) => { const fill = document.querySelector('.pt-board [data-i="4"]').getAttribute('fill');
+      const id = fill.slice(5, -1), pat = document.getElementById(id);
+      return { fill, under: !!pat && !!pat.querySelector('rect[fill^="url("]'),
+               photo: !!pat && [...pat.querySelectorAll('image')].some(i => i.getAttribute('href').includes('/lon/')) }; }""", sid)
+    check(st['under'] and st['photo'], f'a dropped fabric whose big photo is not in yet wears its swatch under it ({sid}: {st})')
+    await ctx.close()
+
+    # the Oxford collar off the painting, the strap over it; origami's light layer
+    pg = await page(browser, db, 600, 400)
+    await pg.goto(f'{BASE}/studio.html')
+    await pg.wait_for_timeout(1200)
+    got = await pg.evaluate("""(() => { const P = window.GemPatch;
+      const ox = P.svg(P.blank('oxford')), ori = P.svg(P.blank('origami'));
+      const co = ox.indexOf('d="M157 92'), quai = ox.indexOf('d="M146 113');
+      return { co: co > 0, strapOver: quai > co, light: /mon-origami-sang\\.webp[^>]*mix-blend-mode:screen/.test(ori),
+               noLightOx: !ox.includes('-sang.webp') }; })()""")
+    check(got['co'] and got['strapOver'], f'Oxford: the collar traced off the painting, the strap drawn over it ({got})')
+    check(got['light'] and got['noLightOx'], f'origami: the light layer over its folds (only where asked) ({got})')
+    await pg.context.close()
+
+
 async def taps(browser, db):
     """Taps near "Khu vực" pieces, which stand on the floor inside see-through
     sheets like the owner's uploads. The rule: a tap on a piece's picture walks
@@ -3307,7 +3410,7 @@ async def main(which):
         for name, fn in (('street', street), ('wear', wear), ('shop', shop), ('spots', spots), ('editor', editor),
                          ('library', library), ('product', product), ('prodlib', prodlib), ('workshop', workshop), ('design', design), ('catalog', catalog), ('kinds', kinds),
                          ('layers', layers), ('zones', zones), ('cart', cart), ('choices', choices), ('zither', zither), ('guide', guide), ('vai', vai), ('tui', tui), ('kho', kho), ('slow', slow), ('topbar', topbar), ('motion', motion),
-                         ('taps', taps)):
+                         ('phone', phone), ('taps', taps)):
             if which in (None, name):
                 await fn(browser, db)
         await browser.close()

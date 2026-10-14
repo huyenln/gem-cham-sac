@@ -2002,25 +2002,77 @@ Gem đang có**, nhân sự tự thêm tấm mới trong admin.
       từng tấm. Ảnh cũ không có thước, nên số này là ước lượng.
     - Vải vụn bị cắt dần, nên web phải ghi "Gem cắt sát chỗ bạn chọn nhất có thể".
 
-### Bàn thiết kế trên điện thoại: rổ vải neo (14/10/2026)
+### Bàn thiết kế trên điện thoại: món và rổ cùng một màn hình (14/10/2026)
 
-Anna: "rổ vải ở tận dưới phải scroll qua lại hơi bất tiện". Trên điện thoại (dưới 768px),
-khối **Rổ vải vụn** dính ngay trên thanh "May xong" (`position: sticky`, `bottom` theo
-chiều cao thanh — `--pt-bar-h`, `js/studio.js` đo lại mỗi lần vẽ), nên món và rổ cùng trên
-màn hình: chạm vải rồi chạm ô, không phải cuộn. Cuộn xuống tới chỗ của nó thì rổ nằm lại
-như cũ. Cột phải (`.pt-side`) thành `display: contents` để rổ dính được suốt trang. Rổ gọn
-lại: dải màu một hàng vuốt ngang, rổ rộng tối đa 290px. Món tự co theo chiều cao màn hình
-(`100svh - 430px`, không dưới 240px) để món + rổ + thanh vừa một màn hình. Mở "Màu riêng"
-thì rổ về lại chỗ cũ (là bảng để đọc, không phải khay). Máy tính giữ nguyên 2 cột. Test:
-`check-studio.py design` (điện thoại: món, rổ, thanh cùng vừa màn hình).
+Anna: "rổ vải ở tận dưới phải scroll qua lại hơi bất tiện". Bản đầu (#66) cho rổ **neo**
+(sticky) trên thanh "May xong". Thử máy thật thì Anna thấy "khi scroll thì bố cục bị thay đổi
+nhìn hơi amateur": rổ nhảy giữa đáy màn hình và chỗ của nó, đè lên món, nền mờ để lộ chữ phía sau.
+
+Bản hiện tại (điện thoại đứng, dưới 768px): **một cột, thứ tự cố định, không gì dính trừ thanh
+hành động**.
+- `.pt-view` và `.pt-side` thành `display: contents`; thứ tự bằng `order`: sản phẩm → món →
+  gợi ý → thẻ "May xong" → **rổ vải** → vải trên món → Udon → tâm trạng → kiểu ghép → cỡ →
+  tờ nhắn. Rổ ngay dưới món nên chạm vải rồi chạm ô không phải cuộn.
+- Món co theo màn hình: `max(220px, min(420px, 100svh - 470px))`. Dòng giới thiệu dưới tiêu đề
+  ẩn trên điện thoại (gợi ý dưới món đã nói việc cần làm).
+- Thanh hành động là phần tử **cuối cùng** của cột, nên cuộn tới cuối nó vẫn ở đáy (sheet
+  không có padding dưới). Thanh 2 phần: giá + cách tính, rồi "Đặt Gem may" và "May xong!" cạnh
+  nhau; góc phải để cho giỏ hàng nổi.
+- Sheet cao `100dvh`: cuộn bàn thiết kế làm thanh địa chỉ ẩn đi, `100svh` cũ để hở dải nền tối
+  dưới đáy. Trang studio cũng `100dvh`.
+- "Xoay vải" nằm trong lớp của món (`.pt-stage` z-index 1), không còn đè lên rổ.
+- Máy tính giữ 2 cột. Test: `check-studio.py design`.
+
+### Studio trên điện thoại thật (14/10/2026)
+
+Anna thử trên máy Android thật sau khi #66 lên, báo một loạt:
+
+- **Xoay ngang bị cắt, không kéo được** (máy ngang chỉ cao 250–340px; cảnh `min-height: 320px`
+  trong trang `100svh` + `overflow: hidden`). Giờ `@media (orientation: landscape) and
+  (max-height: 520px)` (cuối `css/studio.css`, "PHONE ON ITS SIDE"):
+  - Một thanh duy nhất: logo + Danh sách + Hiệu ứng + VI/EN, rồi các nút khu (cuộn ngang).
+    Dùng grid trên `.studio-page` với `main.st { display: contents }`.
+  - Cảnh lấy hết chiều cao còn lại (studio.js tự co tranh theo chiều cao). "?" và giỏ hàng ở
+    hai góc dưới.
+  - Các bảng là bottom sheet cao gần hết màn hình, cuộn bên trong.
+  - Bàn thiết kế: món bên trái (dính khi cuộn, cao theo màn hình), rổ và lựa chọn bên phải,
+    thanh hành động một hàng (ẩn cách tính giá cho đỡ cao). Rổ neo kiểu điện thoại đứng không
+    dùng khi xoay ngang.
+- **Mở trang hơn 10 giây.** Đo với bố cục live: vào trong studio tải ~6 MB cùng lúc (93 ảnh,
+  70 ảnh từ bucket), trong đó ~35 ảnh tải **hai lần** (thẻ `<img>` không CORS + bản `alphaOf`
+  có CORS để đọc độ trong suốt). Giờ:
+  - Ảnh của bucket gắn `crossOrigin` như `alphaOf` → một lần tải (70 request thay vì 105).
+  - **Ảnh theo chỗ đang nhìn** (`LAZY`, `wake()` trong `render()`): ảnh trong màn hình và
+    1,5 màn hình hai bên tải ngay; phần còn lại 2,5 giây sau tải dần 6 ảnh mỗi 0,4 giây, gần
+    trước xa sau. Đi tới đâu ảnh ở đó tải ngay.
+  - Ngoài phố không còn đọc ảnh "Khu vực" và tường trong studio ngay lúc mở; `insideSoon()`
+    lấy sau 2,5 giây.
+  - Kết quả đo (2 giây đầu): trong studio 2,2 MB (trước ~6 MB), ngoài phố 1,9 MB (trước 2,7 MB).
+- **Thả vải lên ô ~1 giây mới lên màu**: ảnh lớn (`lon/`) tải lúc đắp lần đầu. Giờ ảnh lớn của
+  vải trong rổ tải trước (`GemPatch.warm`, cả lúc chạm vào mảnh). Chưa về thì ô mặc **ô nhỏ**
+  (đã có sẵn vì rổ đang hiện), đặt ở giữa đúng chỗ của nó trong ảnh lớn; ảnh lớn về thì phủ lên.
+- **Cổ áo Oxford "cắt không clean"**: đa giác 12 điểm đo tay để lộ dải hồng ở mép cổ, và cổ vẽ
+  sau quai nên chân quai thành khối đỏ sẫm. Giờ cổ là path dò từ chính nét vẽ (hai vạt + phần
+  cổ vòng sau gáy; vạt dò bằng flood fill trên nét mực lọc top-hat). Phần có `over: 1` (quai)
+  vẽ sau cùng, số thứ tự của phần (mã thiết kế) giữ nguyên.
+- **Vải che mất nếp gấp Origami** (vải tối như Gấm lá xanh): bóng `multiply` chỉ làm tối, trên
+  vải tối gần như không thấy gì. Giờ thêm lớp sáng `mon-origami-sang.webp`: chỗ sáng của tranh
+  (mặt các cánh gấp), `mix-blend-mode: screen`, độ mạnh `SANG` 0.22. Món nào cần thì
+  `ART[x].sang: 1` và chạy `python3 tools/design-assets.py --sang <món>`.
 
 ### Bàn thiết kế — túi, cỡ, tuỳ chọn, giá (14–15/10/2026)
 
 Anna: "cứ thử làm hết rồi mình duyệt một thể". Đã merge (#65, 14/10). Migration chạy theo thứ tự:
 `20261015_kho_vai_photo.sql` (ảnh lớn của từng tấm), `20261015b_design_pricing.sql` (giá thiết
 kế), rồi `20261015c_ke_ve_lai_xoay_vai.sql` (sau #65: 6 tấm kẻ vẽ lại có `photo_k` 3; `design_price`
-nhận mã 14 trường — xoay vải). Khi chưa chạy hai file đầu, đơn có túi thiết kế bị từ chối
-("need_option": `create_order` cũ bắt chọn "Mẫu") và thiết kế khác bị tính giá món may sẵn.
+nhận mã 14 trường — xoay vải). **Cả ba đã chạy 14/10/2026** (migration `kho_vai_photo`,
+`design_pricing`, `ke_ve_lai_xoay_vai`; policy `st_read_public` đổi bằng `alter policy`, cùng
+kết quả với file). Câu kiểm GRANT-vs-policy vẫn đúng 3 dòng cố ý. Đã kiểm 3 vai trong một giao
+dịch hoàn tác: khách đọc `design_pricing` + `photo`/`photo_k`, ghi settings / fabrics bị chặn ở
+GRANT, gọi `design_price` bị chặn; đăng nhập không phải nhân sự ghi 0 dòng (RLS); nhân sự ghi
+được. `create_order` của khách: gối thiết kế 150.000đ (không phải giá món may sẵn 120.000đ), túi
+buộc vai thắt nơ 190.000–220.000đ, mã 14 trường cùng giá, field 14 sai → `bad_design`, cỡ riêng
+→ chưa có giá; không còn đơn thử nào sót lại.
 
 - **A. Vải thật không còn "chéo vải"**
   - Mỗi tấm có thêm một ảnh lớn (`images/studio/vai-that/lon/`, 640px, cột `photo`), kèm

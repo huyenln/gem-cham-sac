@@ -389,10 +389,14 @@ Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
   bản dự phòng khi database chưa trả lời.
 - 👜 Túi / cỡ / tuỳ chọn / giá thiết kế (14–15/10, **đã merge** #65): tab Túi (5 dáng) + Túi laptop,
   chần bông / túi trong / khoá kéo / nút bấm, cỡ riêng → báo giá, giá thiết kế tính cả ở database
-  (`design_price`). **Phải chạy** `20261015_kho_vai_photo.sql` → `20261015b_design_pricing.sql` →
-  `20261015c_ke_ve_lai_xoay_vai.sql` (vải kẻ vẽ lại, xoay vải từng ô), rồi câu kiểm GRANT-vs-policy.
-  Con số giá là ước lượng — owner chỉnh ở admin → Sản phẩm → Giá thiết kế. Chi tiết:
+  (`design_price`). Ba migration `20261015_kho_vai_photo.sql` → `20261015b_design_pricing.sql` →
+  `20261015c_ke_ve_lai_xoay_vai.sql` **đã chạy 14/10** (#66 merge cùng ngày), câu kiểm GRANT-vs-policy
+  và 3 vai đã kiểm. Con số giá là ước lượng — owner chỉnh ở admin → Sản phẩm → Giá thiết kế. Chi tiết:
   `docs/design.md` → "Bàn thiết kế — túi, cỡ, tuỳ chọn, giá".
+- 📱 Studio trên điện thoại (14/10, Anna thử máy thật): xoay ngang không còn bị cắt; ảnh trong cảnh
+  tải theo chỗ đang nhìn; bàn thiết kế điện thoại một cột cố định (rổ ngay dưới món, bỏ rổ neo);
+  vải thả lên ô hiện ngay; cổ áo Oxford cắt theo nét vẽ; nếp gấp Origami hiện trên vải tối.
+  Chi tiết: `docs/design.md` → "Studio trên điện thoại thật (14/10/2026)".
 - Ngoài studio: chưa gắn Studio lên menu (chờ Anna); Gmail secrets cho mail báo đơn
   (các bước: `docs/design.md` → "Bật gửi mail thật").
 
