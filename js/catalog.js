@@ -117,6 +117,8 @@
         var sku = card.getAttribute('data-sku');
         return !sku || live[sku];
       });
+      // data-off: a category Gem has put away for now (its block stays hidden)
+      if (block.hasAttribute('data-off')) any = false;
       block.hidden = !any;
       var id = block.id || (block.closest('section') || {}).id;   // the first category's id is on its <section>
       if (!id) return;

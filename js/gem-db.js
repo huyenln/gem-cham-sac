@@ -84,6 +84,13 @@ window.GemDB = (function () {
         .then(function (rows) { return (rows && rows[0] && rows[0].value) || null; });
     },
 
+    // Giá thiết kế riêng (Bàn thiết kế): các con số owner chỉnh trong admin.
+    // Khách đọc được (trang tự tính giá); database tính lại khi đặt đơn.
+    designPricing: function () {
+      return req('/rest/v1/settings?select=value&key=eq.design_pricing')
+        .then(function (rows) { return (rows && rows[0] && rows[0].value) || null; });
+    },
+
     // Đặt đơn. Trả { ok, code, subtotal, has_unpriced } hoặc { ok:false, error }.
     // Chỉ gửi sku và số lượng — giá do database tự tra, không tin giá từ trình
     // duyệt gửi lên (tin thì ai cũng đặt được đơn 0đ).
@@ -346,6 +353,15 @@ window.GemDB = (function () {
         headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
         body: JSON.stringify(row)
       }).then(function (rows) { return rows && rows[0]; });
+    },
+
+    // admin → Sản phẩm → Giá thiết kế (RLS: nhân sự ghi được settings)
+    saveDesignPricing: function (value) {
+      return req('/rest/v1/settings?on_conflict=key', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify({ key: 'design_pricing', value: value })
+      });
     },
 
     saveFabricPlace: function (id, place) {

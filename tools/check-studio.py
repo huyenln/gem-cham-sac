@@ -160,6 +160,14 @@ def fabric_rows():
         r['place'] = places.get(r['id'])
         if r['img'] in photos:
             r['photo'], r['photo_k'] = photos[r['img']]
+    # 20261014d: second photos of the same cloth removed, a few renamed
+    gop = (ROOT / 'supabase/migrations/20261014d_kho_vai_gop.sql').read_text(encoding='utf-8')
+    gone = {int(x) for x in re.search(r'where id in \(([\d, ]+)\)', gop)[1].split(',')}
+    rows = [r for r in rows if r['id'] not in gone]
+    for m in re.finditer(r"set name_vi = '([^']*)', name_en = '([^']*)' where id = (\d+)", gop):
+        for r in rows:
+            if r['id'] == int(m[3]):
+                r['name_vi'], r['name_en'] = m[1], m[2]
     return rows
 
 
@@ -186,6 +194,9 @@ class FakeDB:
         self.fab_log = []    # writes to fabrics / fabric_private
         self.fab_urls = []   # every fabrics request (customers must never ask for places)
         self.orders = []
+        self.pricing = None       # settings 'design_pricing' (None: no row)
+        self.pricing_saved = []   # what admin wrote there
+        self.order_calls = []     # create_order bodies
 
     async def route(self, r):
         u, m = r.request.url, r.request.method
@@ -249,6 +260,17 @@ class FakeDB:
             rows = [dict({k: v for k, v in f.items() if k != 'place'}, **({'fabric_private': {'place': f.get('place')}} if staff else {}))
                     for f in self.fabrics]
             return await r.fulfill(status=200, content_type='application/json', body=json.dumps(rows))
+        if '/rest/v1/settings' in u:
+            if m == 'POST':
+                self.pricing_saved.append(json.loads(r.request.post_data))
+                return await r.fulfill(status=201, body='')
+            if 'design_pricing' in u:
+                rows = [{'value': self.pricing}] if self.pricing else []
+                return await r.fulfill(status=200, content_type='application/json', body=json.dumps(rows))
+        if '/rpc/create_order' in u:
+            self.order_calls.append(json.loads(r.request.post_data))
+            return await r.fulfill(status=200, content_type='application/json',
+                                   body='{"ok": true, "code": "GEM-TEST1", "subtotal": 0, "has_unpriced": false, "payment_method": "cod"}')
         if '/rest/v1/orders' in u and m == 'GET':
             return await r.fulfill(status=200, content_type='application/json', body=json.dumps(self.orders))
         if '/rest/v1/studio_info' in u:
@@ -1220,17 +1242,20 @@ async def catalog(browser, db):
       }
       return out;
     }"""
-    for gone, name in (({'vpp'}, 'one category emptied'), ({c for _, c, *_ in PRODUCTS}, 'every product gone')):
+    for gone, name in (({'gom'}, 'one category emptied'), ({c for _, c, *_ in PRODUCTS}, 'every product gone')):
         db.gone = gone
         pg = await page(browser, db, 1440, 900)
         await pg.goto(f'{BASE}/san-pham.html')
         await pg.wait_for_timeout(1500)
         got = await pg.evaluate(shown)
+        # Văn phòng phẩm is put away for now (data-off): hidden, in neither list, products or not
+        vpp = got.pop('van-phong-pham')
+        check(vpp == [False, []], f'{name}: Văn phòng phẩm stays put away ({vpp})')
         emptied = {'vai-vun': 'phu-kien-vai-vun', 'vpp': 'van-phong-pham', 'gom': 'gom-su-nhat', 'set-qua': 'set-qua'}
         want = {i: i not in {emptied[c] for c in gone} for i in got}
         ok = all(got[i][0] == want[i] and all(v == want[i] for v in got[i][1]) and len(got[i][1]) == 2 for i in got)
         check(ok, f'{name}: its block and both list entries are hidden, the rest stays ({ {i: got[i][0] for i in got} })')
-        await pg.screenshot(path=OUT / f'catalog-{"all" if len(gone) > 1 else "vpp"}-gone.png')
+        await pg.screenshot(path=OUT / f'catalog-{"all" if len(gone) > 1 else "gom"}-gone.png')
         check(not pg.errors, f'{name}: no script errors {pg.errors}')
         await pg.context.close()
     db.gone = set()
@@ -2823,9 +2848,10 @@ async def vai(browser, db):
     """Kho vải on the design table: the basket holds the real fabrics."""
     print('vai')
     db.fabrics = fabric_rows()
-    db.fabrics[2]['in_stock'] = False      # Caro xanh lá to: sold out
-    db.fabrics[3]['is_visible'] = False    # Gấm lá xanh: hidden
-    gone = {'r3', 'r4'}
+    byid = {f['id']: f for f in db.fabrics}
+    byid[2]['in_stock'] = False            # Caro xanh lá: sold out
+    byid[4]['is_visible'] = False          # Gấm lá xanh: hidden
+    gone = {'r2', 'r4'}
     lam = sorted('r%d' % f['id'] for f in db.fabrics if f['tone'] == 'lam')
     for name, w, h in (('mobile', 393, 852), ('desktop', 1440, 900)):
         db.fab_urls.clear()
@@ -2840,7 +2866,7 @@ async def vai(browser, db):
         line = await pg.evaluate("(() => { const e = document.querySelector('.pt-onpiece'); return e && !e.hidden ? e.textContent : ''; })()")
         check(line.startswith('Vải trên món:') and '×' in line, f'{name}: "Vải trên món" names the fabrics ({line[:70]})')
         chips = await pg.evaluate("[...document.querySelectorAll('.pt-vtone')].map(b => b.textContent)")
-        check(len(chips) == 6 and chips[0].startswith('Tất cả 69'), f'{name}: colour chips, sold-out / hidden left out ({chips})')
+        check(len(chips) == 6 and chips[0].startswith('Tất cả 64'), f'{name}: colour chips, sold-out / hidden left out ({chips})')
         # one colour: only blues, and "Lục rổ" walks through all of them
         await js_click(pg, '[data-vtone="lam"]')
         seen = set(await pg.evaluate("[...document.querySelectorAll('.pt-scrap')].map(b => b.dataset.scrap)"))
@@ -2863,7 +2889,9 @@ async def vai(browser, db):
         await pg.click('.pt-board [data-i="4"]')
         await pg.wait_for_timeout(300)
         fill = await pg.evaluate("document.querySelector('.pt-board [data-i=\"4\"]').getAttribute('fill')")
-        check(fill.endswith('r' + k[1:] + ')'), f'{name}: tap scrap, tap patch: that fabric ({k} in {fill})')
+        # a real fabric's fill: its own pattern per patch, "…-r<id>p<n>)"
+        check(re.search(r'-r(\d+)p\d+\)$', fill or '') and re.search(r'-r(\d+)p\d+\)$', fill)[1] == k[1:],
+              f'{name}: tap scrap, tap patch: that fabric ({k} in {fill})')
         await pg.screenshot(path=OUT / f'vai-{name}.png')
         check(not any('fabric_private' in x for x in db.fab_urls), f'{name}: the studio never asks where fabrics are kept')
         check(not pg.errors, f'{name}: no script errors {pg.errors}')
@@ -2875,7 +2903,7 @@ async def vai(browser, db):
         await js_click(pg, '[data-pt="kho"]')
         await pg.wait_for_timeout(500)
         n = await pg.evaluate("document.querySelectorAll('.kho-f').length")
-        check(n == 69, f'{name}: Kho vải shows every fabric in stock ({n})')
+        check(n == 64, f'{name}: Kho vải shows every fabric in stock ({n})')
         names = await pg.evaluate("[...document.querySelectorAll('.kho-f b')].map(b => b.textContent).slice(0, 3)")
         check(names[0] == 'Thô xanh rêu', f'{name}: each card has its name ({names})')
         await js_click(pg, '[data-ktone="hong"]')
@@ -2893,7 +2921,7 @@ async def vai(browser, db):
         await pg.wait_for_timeout(800)
         basket = await pg.evaluate("[...document.querySelectorAll('.pt-scrap')].map(b => b.dataset.scrap)")
         check(basket == picks[:8], f'{name}: "Ghép thử": the basket is the eight picked')
-        used = await pg.evaluate("[...new Set([...document.querySelectorAll('.pt-board [data-i]')].map(p => (p.getAttribute('fill').match(/r(\\d+)\\)$/) || [])[1]))]")
+        used = await pg.evaluate("[...new Set([...document.querySelectorAll('.pt-board [data-i]')].map(p => (p.getAttribute('fill').match(/-r(\\d+)p\\d+\\)$/) || [])[1]))]")
         check(all(u and 'r' + u in picks[:8] for u in used), f'{name}: every patch wears one of them ({used})')
         check(not pg.errors, f'{name}: no script errors {pg.errors}')
         await pg.context.close()
@@ -2905,12 +2933,12 @@ async def vai(browser, db):
     got = await pg.evaluate("""() => window.GemPatch.loadReal().then(() => {
       const P = window.GemPatch, d = P.blank('goi');
       P.applyMood(d, P.MOODS[1]);
-      P.setPatch(d, 0, 'r3');                    // a sold-out one on purpose
+      P.setPatch(d, 0, 'r2');                    // a sold-out one on purpose
       const spec = P.encode(d), back = P.parse(spec);
       return [spec, !!back && P.encode(back) === spec, P.describe(spec, 'vi'), P.url(spec)];
     })""")
     check(got[1] and re.search(r'~r\d+(\.r\d+)*$', got[0]), f'design code carries the real fabrics and reads back ({got[0][-40:]})')
-    check('Caro xanh lá to (đã hết)' in got[2] and 'chất vải' not in got[2], f'order line: real names, sold out marked ({got[2][:120]})')
+    check('Caro xanh lá (đã hết)' in got[2] and 'chất vải' not in got[2], f'order line: real names, sold out marked ({got[2][:120]})')
     await pg.goto(got[3])
     await pg.wait_for_timeout(3500)
     check(await pg.evaluate("document.querySelectorAll('.pt-board image[href*=\"vai-that\"]').length") > 0, 'a shared link opens with the fabric photos')
@@ -2938,6 +2966,137 @@ def fabric_photo(path):
     return str(path)
 
 
+async def tui(browser, db):
+    """Bàn thiết kế: the bags (shapes from Gem's own), the laptop sleeve, size + options, the design's price."""
+    print('tui')
+    db.fabrics = []          # painted fabrics: quick, no photos to wait for
+    db.order_calls.clear()
+    # the ready-made bags a design is ordered as: one-offs with a "Mẫu" to
+    # pick, all sold out — a design is made to order, neither applies
+    mau = {'label_vi': 'Mẫu', 'label_en': 'Design', 'choices': [{'key': 'a', 'vi': 'Mẫu A', 'en': 'A'}]}
+    bags = [dict(product_rows()[0], id='pt-' + sku, sku=sku, category='vai-vun', name_vi=nm, name_en=nm, price=80000,
+                 price_max=300000, in_stock=False, options=mau if sku != 'tui-laptop' else None, shelf=None, cutout=None)
+            for sku, nm in (('tui-di-cho', 'Túi đi chợ'), ('tui-di-choi', 'Túi đi chơi'), ('tui-laptop', 'Túi đựng laptop'))]
+    db.extra += bags
+    price = "document.querySelector('.pt-actions .pt-price').textContent"
+    num = lambda t: int(re.sub(r'\D', '', t) or 0)
+    for name, w, h in (('mobile', 393, 852), ('desktop', 1440, 900)):
+        pg = await open_table(browser, db, w, h, "localStorage.removeItem('gem-basket');")
+        await js_click(pg, '.pt-tab[data-product="tuitote"]')
+        await pg.wait_for_timeout(500)
+        shapes = await pg.evaluate("[...document.querySelectorAll('.pt-shapes [data-shape]')].map(b => b.textContent)")
+        check(len(shapes) == 6, f'{name}: "Túi" offers six shapes ({shapes})')
+        drawn = []
+        for sid in ('tuitote', 'tuinut', 'tuikhoa', 'tuitamgiac', 'tuidayrut', 'tuibannguyet'):
+            await js_click(pg, f'.pt-shapes [data-shape="{sid}"]')
+            await pg.wait_for_timeout(250)
+            drawn.append(await pg.evaluate(f"!!document.querySelector('.pt-board image[href*=\"mon-{sid}-mask\"]')"))
+        check(all(drawn), f'{name}: each shape draws its own bag ({drawn})')
+        await js_click(pg, '.pt-shapes [data-shape="tuitote"]')
+        await js_click(pg, '.pt-layouts [data-layout="mot"]')
+        await pg.wait_for_timeout(300)
+        p0 = num(await pg.evaluate(price))
+        check(p0 >= 160000, f'{name}: a price shows (base and fabrics) ({p0})')
+        await js_click(pg, '[data-bagopt="q"]')
+        await pg.wait_for_timeout(250)
+        p1 = num(await pg.evaluate(price))
+        check(p1 - p0 == 70000 and await pg.evaluate("!!document.querySelector('.pt-board pattern[id$=\"qd\"]')"),
+              f'{name}: "Chần bông" adds 70.000đ and quilting shows ({p0} -> {p1})')
+        check('Chần bông +70.000đ' in await pg.evaluate("document.querySelector('.pt-price-lines').textContent"), f'{name}: the breakdown names it')
+        await js_click(pg, '[data-pocket="1"]')
+        await js_click(pg, '[data-pocket="1"]')
+        await pg.wait_for_timeout(250)
+        check(num(await pg.evaluate(price)) - p1 == 40000 and '1 túi có sẵn + 2' in await pg.evaluate("document.querySelector('.pt-pockets').textContent"),
+              f'{name}: two more inside pockets: +40.000đ (one stays free)')
+        await js_click(pg, '[data-bagopt="z"]')
+        await js_click(pg, '[data-bagopt="n"]')
+        await pg.wait_for_timeout(250)
+        check(await pg.evaluate("document.querySelectorAll('.pt-board [stroke-dasharray=\"1 1.4\"]').length") == 1, f'{name}: an added zip is drawn')
+        await js_click(pg, '[data-psize="c"]')
+        await pg.wait_for_timeout(250)
+        check(await pg.evaluate("!document.querySelector('.pt-own-size').hidden"), f'{name}: "Cỡ riêng" asks for width and height')
+        await pg.fill('[name="cw"]', '30')
+        await pg.wait_for_timeout(250)
+        lbl = await pg.evaluate(price)
+        check(lbl.startswith('từ'), f'{name}: an own size: "từ …", Gem quotes ({lbl})')
+        # laptop sleeve: with or without a strap, the zip comes with it
+        await js_click(pg, '.pt-tab[data-product="laptop"]')
+        await pg.wait_for_timeout(400)
+        lap = await pg.evaluate("[...document.querySelectorAll('.pt-shapes [data-shape]')].map(b => b.textContent)")
+        check(lap == ['Không quai', 'Có quai đeo'], f'{name}: "Túi laptop": with or without a strap ({lap})')
+        check('Khoá kéo có sẵn' in await pg.evaluate("document.querySelector('.pt-bagopts').textContent")
+              and not await pg.evaluate("!!document.querySelector('[data-bagopt=\"z\"]')"), f'{name}: the sleeve\'s zip is included, not sold')
+        await js_click(pg, '.pt-shapes [data-shape="laptopq"]')
+        await pg.wait_for_timeout(300)
+        check(await pg.evaluate("!!document.querySelector('.pt-board image[href*=\"mon-laptopq-mask\"]')"), f'{name}: "Có quai đeo" draws the strap')
+        sizes = await pg.evaluate("[...document.querySelectorAll('[data-psize]')].map(b => b.textContent)")
+        check(len(sizes) == 4 and sizes[0].startswith('13 inch'), f'{name}: laptop sizes by inch + own size ({sizes})')
+        # materials when picking by colour
+        await js_click(pg, '[data-pt="own"]')
+        await pg.wait_for_timeout(200)
+        mats = await pg.evaluate("[...document.querySelectorAll('.pt-own-mats .pt-chip')].map(b => [b.textContent, b.getAttribute('aria-pressed')])")
+        check(len(mats) == 10 and mats[0] == ['Để Gem chọn', 'true'], f'{name}: "Màu riêng": materials you are happy with, or Gem picks ({mats[:3]})')
+        await js_click(pg, '.pt-own-mats [data-fabric="dui"]')
+        await js_click(pg, '.pt-own-mats [data-fabric="bo"]')
+        await pg.wait_for_timeout(200)
+        on = await pg.evaluate("[...document.querySelectorAll('.pt-own-mats .is-on')].map(b => b.textContent)")
+        check(on == ['Đũi / linen', 'Vải bò'], f'{name}: two materials ticked, "Gem chọn" off ({on})')
+        if name == 'desktop':
+            # into the basket and the order: the design rides with its code, priced from it
+            await js_click(pg, '.pt-actions [data-pt="add"]')
+            await pg.wait_for_timeout(1500)
+            basket = await pg.evaluate("JSON.parse(localStorage.getItem('gem-basket') || '[]')")
+            check(len(basket) == 1 and basket[0]['sku'] == 'tui-laptop' and '~laptopq~' in basket[0].get('spec', ''),
+                  f'basket: the sleeve design as "tui-laptop" with its code ({basket})')
+            want = await pg.evaluate("window.GemPatch.price(JSON.parse(localStorage.getItem('gem-basket'))[0].spec).total")
+            await js_click(pg, '.gb-widget')
+            await pg.wait_for_timeout(500)
+            row = await pg.evaluate("document.querySelector('.gb-row-total').textContent")
+            check(num(row) == want, f'basket line priced by the design ({row} = {want})')
+            await js_click(pg, '.gb-go-form')
+            await pg.wait_for_timeout(300)
+            await pg.fill('.gb-form [name="name"]', 'Khách thử')
+            await pg.fill('.gb-form [name="phone"]', '0900000000')
+            await js_click(pg, '.gb-form [name="pickup"]')
+            await js_click(pg, '.gb-form .gb-submit')
+            await pg.wait_for_timeout(1200)
+            items = db.order_calls[-1]['p_items'] if db.order_calls else []
+            check(items and items[0].get('spec', '').startswith('2~laptopq~') and 'price' not in items[0],
+                  f'create_order gets the code, never a price ({items})')
+            check('laptopq' in (db.order_calls[-1].get('p_note') or '') if db.order_calls else False, 'the order note links the design')
+        check(not pg.errors, f'{name}: no script errors {pg.errors}')
+        await pg.context.close()
+
+    # the owner's numbers (settings) win over the starting ones
+    db.pricing = {'fabric': 5000, 'products': {'tuitote': {'base': 200000, 'quilt': 90000}}}
+    pg = await open_table(browser, db, 1440, 900)
+    await js_click(pg, '.pt-tab[data-product="tuitote"]')
+    await pg.wait_for_timeout(400)
+    got = await pg.evaluate("[window.GemPatch.PRICING.products.tuitote.base, window.GemPatch.PRICING.products.tuitote.quilt, window.GemPatch.PRICING.products.tuitote.pocket]")
+    check(got == [200000, 90000, 20000], f'settings "design_pricing" read: owner numbers + defaults kept ({got})')
+    check(not pg.errors, f'no script errors {pg.errors}')
+    await pg.context.close()
+    db.pricing = None
+
+    # admin: Sản phẩm → Giá thiết kế (owner)
+    pg = await admin_page(browser, db, 1280, 900)
+    await js_click(pg, '[data-tab="products"]')
+    await pg.wait_for_timeout(800)
+    await js_click(pg, '.ad-dp-open')
+    await pg.wait_for_timeout(600)
+    n = await pg.evaluate("document.querySelectorAll('.ad-dp').length")
+    check(n == 17, f'admin: one price card per designed piece ({n})')
+    await pg.fill('[name="o.tuitote.quilt"]', '80000')
+    await js_click(pg, '.ad-dp-save')
+    await pg.wait_for_timeout(800)
+    saved = db.pricing_saved[-1] if db.pricing_saved else {}
+    check(saved.get('key') == 'design_pricing' and saved['value']['products']['tuitote']['quilt'] == 80000
+          and saved['value']['products']['goi']['layouts']['sao'] == 50000, 'admin saves the whole table, the change in it')
+    check(not pg.errors, f'admin: no script errors {pg.errors}')
+    await pg.context.close()
+    db.extra = [x for x in db.extra if x not in bags]
+
+
 async def kho(browser, db):
     """admin.html → Kho vải: the cards, Còn / Hết, add with a framed photo, edit, delete; orders say where."""
     print('kho')
@@ -2946,10 +3105,10 @@ async def kho(browser, db):
     await js_click(pg, '[data-tab="fabrics"]')
     await pg.wait_for_timeout(800)
     n = await pg.evaluate("document.querySelectorAll('.ad-fab').length")
-    check(n == 71, f'all 71 fabrics on cards ({n})')
+    check(n == 66, f'all 66 fabrics on cards ({n})')
     check('Chỗ để: Phòng' in await pg.evaluate("document.querySelector('.ad-fab .ad-fab-place').textContent"), 'each card says where it is kept')
     await js_click(pg, '[data-ff="xanh"]')
-    check(await pg.evaluate("document.querySelectorAll('.ad-fab').length") == 6, 'the "Xanh lá" chip: six cards')
+    check(await pg.evaluate("document.querySelectorAll('.ad-fab').length") == 5, 'the "Xanh lá" chip: five cards')
     await js_click(pg, '[data-ff="all"]')
     # Còn -> Hết
     await js_click(pg, '.ad-fab [data-fs="stock"]')
@@ -3007,7 +3166,7 @@ async def kho(browser, db):
     f = db.files.get((row.get('img') or '').split('/gem-media/')[-1])
     check(f and decode(f[1]).size == (320, 320) and f[0] == 'image/webp', f'the photo is a 320px WebP ({decode(f[1]).size if f else None}, {len(f[1]) // 1024 if f else 0} KB)')
     check(('place', {'fabric_id': 72, 'place': 'Kệ thử, tầng 2'}) in db.fab_log, 'its place goes to fabric_private')
-    check(await pg.evaluate("document.querySelectorAll('.ad-fab').length") == 72, 'back on the cards: 72 now')
+    check(await pg.evaluate("document.querySelectorAll('.ad-fab').length") == 67, 'back on the cards: 67 now')
     # edit: rename + move
     await js_click(pg, '.ad-fab[data-id="72"] [data-fs="edit"]')
     check(await pg.evaluate("document.querySelector('[name=\"name_vi\"]').value") == 'Lụa đỏ thử', 'the form opens filled in')
@@ -3022,7 +3181,7 @@ async def kho(browser, db):
     await js_click(pg, '.ad-fab[data-id="72"] [data-fs="edit"]')
     await js_click(pg, '.ad-fab-del')   # page() accepts the confirm
     await pg.wait_for_timeout(1000)
-    check(('delete', 72) in db.fab_log and await pg.evaluate("document.querySelectorAll('.ad-fab').length") == 71, 'Xoá removes it')
+    check(('delete', 72) in db.fab_log and await pg.evaluate("document.querySelectorAll('.ad-fab').length") == 66, 'Xoá removes it')
     check(not pg.errors, f'no script errors {pg.errors}')
     await pg.context.close()
 
@@ -3064,7 +3223,7 @@ async def main(which):
         browser = await launch(p)
         for name, fn in (('street', street), ('wear', wear), ('shop', shop), ('spots', spots), ('editor', editor),
                          ('library', library), ('product', product), ('prodlib', prodlib), ('workshop', workshop), ('design', design), ('catalog', catalog), ('kinds', kinds),
-                         ('layers', layers), ('zones', zones), ('cart', cart), ('choices', choices), ('zither', zither), ('guide', guide), ('vai', vai), ('kho', kho), ('slow', slow), ('topbar', topbar), ('motion', motion),
+                         ('layers', layers), ('zones', zones), ('cart', cart), ('choices', choices), ('zither', zither), ('guide', guide), ('vai', vai), ('tui', tui), ('kho', kho), ('slow', slow), ('topbar', topbar), ('motion', motion),
                          ('taps', taps)):
             if which in (None, name):
                 await fn(browser, db)

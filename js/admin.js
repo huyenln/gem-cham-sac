@@ -52,6 +52,7 @@
   var noteFilter = 'pending';   // pending | approved | hidden
   var wtypes = [];
   var editingProduct = null;
+  var editingPricing = false;   // Sản phẩm → Giá thiết kế (owner)
   var fabrics = [];             // Kho vải, each with fabric_private.place
   var fabFilter = 'all';        // all | <tone> | out | hidden
   var editingFabric = null;     // null = xem kho, {} = tấm mới, {…} = sửa tấm
@@ -182,6 +183,7 @@
         el.main.classList.toggle('is-wide', tab === 'studio');
         editingPost = null;
         editingProduct = null;
+        editingPricing = false;
         editingFabric = null;
         paintTabs();
         el.main.innerHTML = '<p class="ad-loading">Đang tải...</p>';
@@ -1298,8 +1300,75 @@
     });
   }
 
+  /* ---------- Giá thiết kế (owner) ----------
+     The numbers a design made at Bàn thiết kế is priced by (settings
+     "design_pricing"): js/patch.js shows the price, create_order charges
+     it (design_price), both from this one row. */
+  var DP_OPTS = { quilt: 'Chần bông', pocket: 'Mỗi túi trong thêm', zip: 'Thêm khoá kéo', snap: 'Thêm nút bấm' };
+  function renderPricing() {
+    var P = window.GemPatch, PR = P.PRICING;
+    var num = function (name, v, label) {
+      return '<label class="ad-dp-n"><span>' + esc(label) + '</span><input type="number" min="0" max="10000000" step="1000" name="' +
+        esc(name) + '" value="' + (v == null ? '' : v) + '"></label>';
+    };
+    var cards = Object.keys(PR.products).map(function (id) {
+      var pr = PR.products[id], p = P.PRODUCTS[id];
+      var lay = p.layouts.map(function (x) { return num('l.' + id + '.' + x, (pr.layouts || {})[x] || 0, P.layoutName(id, x, 'vi')); }).join('');
+      var sizes = P.sizesOf(id).slice(1).map(function (z, i) {
+        return num('s.' + id + '.' + (i + 1), (pr.sizes || [])[i + 1] || 0, P.sizeLabel(id, i + 1, 'vi'));
+      }).join('');
+      var opts = Object.keys(DP_OPTS).filter(function (k) { return k in pr; }).map(function (k) {
+        return num('o.' + id + '.' + k, pr[k], DP_OPTS[k]);
+      }).join('');
+      return '<fieldset class="ad-dp" data-id="' + esc(id) + '"><legend>' + esc(p.vi) + '</legend>' +
+        '<div class="ad-dp-row">' + num('b.' + id, pr.base, 'Giá nền (cỡ thường)') +
+          num('f.' + id, pr.fabric != null ? pr.fabric : null, 'Mỗi vải thêm (trống = mặc định)') + '</div>' +
+        '<p class="ad-dp-h">Kiểu ghép — cộng thêm</p><div class="ad-dp-row">' + lay + '</div>' +
+        (sizes ? '<p class="ad-dp-h">Cỡ lớn hơn — cộng thêm</p><div class="ad-dp-row">' + sizes + '</div>' : '') +
+        (opts ? '<p class="ad-dp-h">Tuỳ chọn túi</p><div class="ad-dp-row">' + opts + '</div>' : '') +
+      '</fieldset>';
+    }).join('');
+    el.main.innerHTML =
+      '<div class="ad-filters"><button type="button" class="ad-filter ad-dp-back">← Sản phẩm</button></div>' +
+      '<p class="ad-hint">Giá một thiết kế = giá nền + kiểu ghép + mỗi vải thêm (từ vải thứ hai) + cỡ lớn hơn + tuỳ chọn. ' +
+        'Khách tự điền cỡ riêng thì đơn ghi “báo giá sau”. Túi trong: 1 túi luôn miễn phí; khoá kéo của túi khoá kéo, ' +
+        'túi bán nguyệt, túi laptop có sẵn, không tính.<br>Đơn mới tính theo giá đang lưu; đơn cũ giữ giá lúc đặt.</p>' +
+      '<form class="ad-dp-form">' +
+        '<div class="ad-dp-row">' + num('fabric', PR.fabric, 'Mỗi vải thêm (mặc định)') + '</div>' + cards +
+        '<button type="submit" class="ad-btn ad-dp-save">Lưu giá thiết kế</button>' +
+      '</form>';
+    el.main.querySelector('.ad-dp-back').addEventListener('click', function () { editingPricing = false; renderProducts(); });
+    el.main.querySelector('.ad-dp-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var form = e.target, bad = false;
+      var val = function (name) {
+        var inp = form.querySelector('[name="' + name + '"]');
+        if (!inp || inp.value.trim() === '') return null;
+        var v = Math.round(+inp.value);
+        if (!(v >= 0 && v <= 10000000)) { bad = true; return null; }
+        return v;
+      };
+      var out = { fabric: val('fabric'), gem: PR.gem, products: {} };
+      Object.keys(PR.products).forEach(function (id) {
+        var pr = PR.products[id], o = { base: val('b.' + id), layouts: {} };
+        if (o.base == null) bad = true;
+        var f = val('f.' + id);
+        if (f != null) o.fabric = f;
+        P.PRODUCTS[id].layouts.forEach(function (x) { o.layouts[x] = val('l.' + id + '.' + x) || 0; });
+        if (pr.sizes) o.sizes = pr.sizes.map(function (v0, i) { return i ? val('s.' + id + '.' + i) || 0 : 0; });
+        Object.keys(DP_OPTS).forEach(function (k) { if (k in pr) o[k] = val('o.' + id + '.' + k) || 0; });
+        out.products[id] = o;
+      });
+      if (bad || out.fabric == null) return toast('Có ô giá trống hoặc không hợp lệ', true);
+      window.GemDB.saveDesignPricing(out)
+        .then(function () { P.setPricing(out); toast('Đã lưu giá thiết kế'); })
+        .catch(function () { toast('Không lưu được', true); });
+    });
+  }
+
   function renderProducts() {
     if (editingProduct !== null) return renderProductForm();
+    if (editingPricing) return renderPricing();
     // owner only: where each product stands in Studio 2D, and a shortcut
     // that opens the layout editor with it ready to place
     var studioOn = !!(me && me.role === 'owner' && window.GemStudioEditor);
@@ -1354,7 +1423,10 @@
     }).join('');
 
     el.main.innerHTML =
-      '<div class="ad-filters"><button type="button" class="ad-filter active ad-new-prod">+ Thêm sản phẩm</button></div>' +
+      '<div class="ad-filters"><button type="button" class="ad-filter active ad-new-prod">+ Thêm sản phẩm</button>' +
+        // owner only: the prices of designs made at Bàn thiết kế
+        (me && me.role === 'owner' && window.GemPatch ? '<button type="button" class="ad-filter ad-dp-open">Giá thiết kế</button>' : '') +
+      '</div>' +
       '<p class="ad-hint">Để trống ô giá là web hiện “Liên hệ”. Ô “đến” chỉ ' +
       'điền khi bán theo khoảng giá.<br>' +
       'Món mới tự có thẻ trên trang Sản phẩm (đúng danh mục, theo thứ tự ở đây), ' +
@@ -1362,6 +1434,11 @@
 
     el.main.querySelector('.ad-new-prod').addEventListener('click', function () {
       editingProduct = {}; renderProductForm();
+    });
+    var dpOpen = el.main.querySelector('.ad-dp-open');
+    if (dpOpen) dpOpen.addEventListener('click', function () {
+      editingPricing = true;
+      window.GemPatch.loadPricing().then(renderPricing, renderPricing);
     });
 
     if (studioOn) {

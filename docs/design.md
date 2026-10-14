@@ -1960,6 +1960,82 @@ Gem đang có**, nhân sự tự thêm tấm mới trong admin.
       từng tấm. Ảnh cũ không có thước, nên số này là ước lượng.
     - Vải vụn bị cắt dần, nên web phải ghi "Gem cắt sát chỗ bạn chọn nhất có thể".
 
+### Bàn thiết kế — túi, cỡ, tuỳ chọn, giá (14–15/10/2026)
+
+Anna: "cứ thử làm hết rồi mình duyệt một thể". Tất cả nằm ở một PR để duyệt, **chưa merge**. Có
+hai migration chỉ chạy khi merge: `20261015_kho_vai_photo.sql` (ảnh lớn của từng tấm) và
+`20261015b_design_pricing.sql` (giá thiết kế).
+
+- **A. Vải thật không còn "chéo vải"**
+  - Mỗi tấm có thêm một ảnh lớn (`images/studio/vai-that/lon/`, 640px, cột `photo`), kèm
+    `photo_k` là cạnh ảnh lớn gấp mấy lần ô 320px. Ô 320px là khoảng 13 cm vải (`SWATCH_CM`).
+  - Mỗi mảnh đặt ảnh lớn theo đúng tỉ lệ thật của món (`PRODUCTS[x].span`, số cm của khung
+    340), lệch ngẫu nhiên. Không lặp, không lật, nên mảnh này cho thấy một chỗ khác trên tấm vải
+    so với mảnh kia.
+- **B. Món nhiều phần** (`ART[x].parts` là đa giác hoặc path SVG; vải của các phần nằm sau vải
+  của các mảnh thân):
+  - Oxford: thân + cổ + quai.
+  - Bloom: dây + 1, 2 hoặc 3 bông.
+  - Bookmark: hai mảnh rời, vuông và tam giác.
+  - Dây đeo: mặt ngoài và mặt trong.
+  - Mã thiết kế cũ được đổi qua bảng `LEGACY`.
+- **F. Túi** (`tools/bag-assets.py`):
+  - Tab **"Túi"** có 6 dáng:
+    - 4 dáng từ tranh túi của Gem: tote, quai nút, khoá kéo đeo vai, tam giác.
+    - 2 dáng phổ biến trên mạng: dây rút, bán nguyệt.
+  - Tote **vẽ lại cho đứng thẳng, không rủ như ảnh** (Anna 14/10): đáy phẳng, miệng thẳng, quai
+    vòng đều, tab quai may chữ X.
+  - Tab **"Túi laptop"**: không quai / có quai đeo. Bản có quai là chính tranh đó thu nhỏ, thêm
+    quai vẽ và khoen chữ D.
+  - Kiểu ghép của túi: một vải, trên – dưới, sọc dọc (`doc`, 5 dải), ô vuông, theo nét vẽ, theo
+    hình vẽ. Các phần riêng: quai, lót (chỗ lộ ra), mảnh giữa, đáy, túi ngoài, viền miệng.
+  - **Tuỳ chọn** (`PRODUCTS[x].opts`):
+    - chần bông (lưới trám may chỉ trên thân);
+    - túi trong: luôn có sẵn 1 túi miễn phí, thêm tối đa 5;
+    - khoá kéo: có sẵn, miễn phí ở túi khoá kéo, túi bán nguyệt và túi laptop; các túi khác thêm
+      thì tính tiền;
+    - nút bấm.
+  - Túi thiết kế được đặt dưới sku của túi may sẵn cùng loại: tote là `tui-di-cho`, laptop là
+    `tui-laptop`, các dáng còn lại là `tui-di-choi`.
+    - Không bắt chọn "Mẫu" và không chặn khi túi may sẵn đã hết, vì thiết kế là may theo đơn.
+    - Món khác (gối, oxford…) đặt theo thiết kế cũng không còn bị chặn khi bản may sẵn hết hàng.
+- **E. Cỡ** (`SIZES` trong `js/patch.js`):
+  - Mỗi món có cỡ thường, vài món có cỡ lớn hơn:
+    - gối 40 / 45 / 50;
+    - túi Oxford 16 × 12;
+    - Origami rộng khoảng 10 cm (theo các mẫu trên mạng);
+    - túi laptop 13 / 14 / 15,6 inch;
+    - tote 35 × 40 / 40 × 45.
+  - Khách có thể điền **cỡ riêng** (rộng × cao, 3–200 cm). Khi đó dòng đơn ghi "báo giá sau":
+    đơn không tính giá dòng đó, giống món "Liên hệ".
+  - Cỡ lớn hơn thì ảnh vải thật trông nhỏ lại theo đúng tỉ lệ.
+  - Mã thiết kế thêm field 13, ví dụ `s1.q.p2.z.n` hoặc `c30x25`. Khi field này có mặt thì
+    field 11–12 được phép rỗng.
+- **D. Chất liệu**:
+  - Danh sách có thêm Kaki / canvas, Lụa / satin, Nỉ / dạ.
+  - Trong "Màu riêng" có hàng "Chất liệu bạn thấy ổn": chọn nhiều loại, hoặc "Để Gem chọn"
+    (không chọn loại nào).
+- **C. Giá thiết kế** (`PRICING` trong `js/patch.js`, settings `design_pricing`):
+  - Giá = nền (cỡ thường) + công kiểu ghép + mỗi vải từ vải thứ hai + cỡ lớn hơn + tuỳ chọn.
+  - Mỗi vải thêm tính +5k cho món nhỏ, +10k cho gối, oxford và túi. Kiểu ghép khó thì cộng
+    nhiều hơn, ví dụ gối: sao +50k, nhà gỗ +30k, chong chóng +30k, nét vẽ +40k.
+  - Gem tự chọn vải thì tính theo số vải ước của kiểu ghép (`PRICING.gem`).
+  - **Con số ban đầu là ước lượng của Claude**, chưa có đối chiếu: giá nền túi 160–290k, chần
+    bông 50–70k, túi trong 20k, khoá kéo 30k, nút bấm 10k. Không tìm được bảng phí chần bông
+    tin cậy trên mạng. Dây đeo cổ tay chưa có giá trong database, đang tạm để 35k. Owner sửa ở
+    **admin → Sản phẩm → Giá thiết kế**.
+  - **Database tính lại khi đặt đơn**:
+    - giỏ gửi kèm mã thiết kế (`items[].spec`) nhưng không gửi giá;
+    - `create_order` gọi `design_price(spec, sku)`, cùng phép tính với `GemPatch.price()` (đã
+      đối chiếu 10 mã mẫu, khớp hết);
+    - sai sku hoặc mã lạ thì trả lỗi `bad_design`.
+  - Settings `design_pricing`: khách đọc được, vì policy `st_read_public` giờ cho cả
+    `payment` lẫn `design_pricing`. Chỉ nhân sự ghi được.
+  - Bàn thiết kế hiện giá và dòng chi tiết ("Giá nền 160.000đ · Kiểu ghép +20.000đ · Thêm 2 vải
+    +20.000đ · Chần bông +70.000đ"). Giỏ hàng tính dòng thiết kế theo mã.
+- **Kiểm tra**: `python3 tools/check-studio.py tui` kiểm dáng, tuỳ chọn, giá, cỡ riêng, laptop,
+  chất liệu, giỏ, `create_order` nhận mã chứ không nhận giá, settings, và editor giá trong admin.
+
 ### Studio hiện cảnh mặc định thay cho bố cục đã lắp (sửa 13/10/2026)
 
 **Triệu chứng:** mở `studio.html` thấy mặt phố mặc định (monstera, bình tưới, ghế gỗ,

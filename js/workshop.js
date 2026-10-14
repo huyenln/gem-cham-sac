@@ -57,7 +57,7 @@
     'ws.done_more':     { vi: `Xem buổi khác`, en: `See other sessions` },
 
     'ws.other_h':       { vi: `Muốn giờ khác?`, en: `Want a different time?` },
-    'ws.other_p':       { vi: `Em gái mình ở studio cả tuần, từ thứ Hai đến thứ Bảy — nhắn cho chúng mình là hẹn được một buổi riêng, kể cả chỉ một người. Chủ Nhật thì cần hẹn trước.`, en: `We're at the studio Monday to Saturday — message us and we'll arrange a session just for you, even for one person. Sundays need booking ahead.` },
+    'ws.other_p':       { vi: `Gem Chạm Sắc Studio nhận hẹn buổi riêng từ thứ Hai đến thứ Bảy, kể cả chỉ một người — nhắn cho chúng mình là xếp được. Chủ Nhật thì cần hẹn trước.`, en: `Gem Chạm Sắc Studio runs private sessions Monday to Saturday, even for one person — message us to arrange one. Sundays need booking ahead.` },
     'ws.other_zalo':    { vi: `Nhắn Zalo`, en: `Message on Zalo` },
 
     'ws.type_more':     { vi: `Xem chi tiết`, en: `See details` },

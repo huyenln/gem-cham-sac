@@ -170,6 +170,8 @@
     'basket.minus_aria':    { vi: `Giảm một`, en: `Decrease by one` },
     'basket.plus_aria':     { vi: `Thêm một`, en: `Increase by one` },
     'basket.price_tbd':     { vi: `Liên hệ`, en: `Ask us` },
+    'basket.price_quote':   { vi: `Báo giá sau`, en: `Quoted later` },
+    'basket.design_gone':   { vi: `Một thiết kế trong giỏ không còn đọc được. Bạn mở lại Bàn thiết kế giúp chúng mình nhé.`, en: `One design in the basket can no longer be read. Please open it again at the design table.` },
     'basket.from':          { vi: `từ`, en: `from` },
     'basket.has_range':     { vi: `Vài món có giá theo khoảng vì mỗi cái một mẫu vải khác nhau — chúng mình báo giá đúng khi nhắn lại nhé.`, en: `Some pieces have a price range because every one is made from different fabric — we'll confirm the exact price when we reply.` },
     'basket.all_unpriced':  { vi: `Chúng mình sẽ báo giá cho bạn khi nhắn lại nhé.`, en: `We'll quote you when we reply.` },
@@ -427,9 +429,26 @@
     return items.reduce(function (n, it) { return n + it.qty; }, 0);
   }
 
+  // A design is priced by its own code (GemPatch.price: layout, fabrics,
+  // size, bag options — the same sum the database does when the order
+  // comes in). undefined: not a design; null: own size, Gem quotes it.
+  function designPrice(it) {
+    if (!it.spec || !window.GemPatch || !window.GemPatch.price) return undefined;
+    var pr = window.GemPatch.price(it.spec);
+    return pr ? (pr.quote ? null : pr.total) : undefined;
+  }
+  function lineLabel(it, qty) {
+    var dp = designPrice(it);
+    if (dp === undefined) return priceLabel(bySku(it.sku), qty);
+    if (dp === null) return t('basket.price_quote', 'Báo giá sau');
+    return money(dp * (qty || 1));
+  }
+
   // Chỉ cộng những món đã có giá — món chưa chốt giá không được đoán thành 0đ
   function subtotal() {
     return items.reduce(function (sum, it) {
+      var dp = designPrice(it);
+      if (dp !== undefined) return sum + (dp || 0) * it.qty;
       var p = bySku(it.sku);
       return sum + (p && p.price != null ? p.price * it.qty : 0);
     }, 0);
@@ -437,6 +456,8 @@
 
   function hasUnpriced() {
     return items.some(function (it) {
+      var dp = designPrice(it);
+      if (dp !== undefined) return dp === null;
       var p = bySku(it.sku);
       return p && p.price == null;
     });
@@ -451,7 +472,7 @@
   function isRange(p) { return !!(p && p.price != null && p.priceMax != null); }
 
   function hasRange() {
-    return items.some(function (it) { return isRange(bySku(it.sku)); });
+    return items.some(function (it) { return designPrice(it) === undefined && isRange(bySku(it.sku)); });
   }
 
   // price == null nghĩa là chưa chốt giá → hiện "Liên hệ", không bịa ra con số.
@@ -826,7 +847,7 @@
             : '') +
           // unit price only earns its line once there's more than one
           '<span class="gb-row-price">' +
-            (it.qty > 1 ? priceLabel(p) + ' × ' + it.qty : '') +
+            (it.qty > 1 ? lineLabel(it) + ' × ' + it.qty : '') +
           '</span>' +
         '</span>' +
         '<span class="gb-stepper">' +
@@ -836,7 +857,7 @@
           '<button type="button" class="gb-step" data-act="plus" ' +
             'data-i18n-attr="aria-label:basket.plus_aria">+</button>' +
         '</span>' +
-        '<span class="gb-row-total">' + priceLabel(p, it.qty) + '</span>' +
+        '<span class="gb-row-total">' + lineLabel(it, it.qty) + '</span>' +
         '<button type="button" class="gb-row-remove" data-act="remove" ' +
           'data-i18n-attr="aria-label:basket.remove_aria">&times;</button>' +
       '</li>';
@@ -1148,7 +1169,7 @@
     items.forEach(function (it, i) {
       var p = bySku(it.sku);
       lines.push((i + 1) + '. ' + pName(p) + ' × ' + it.qty +
-        ' — ' + priceLabel(p, it.qty));
+        ' — ' + lineLabel(it, it.qty));
       var choice = choiceOf(p, it.opt);
       if (choice) lines.push('   ' + optLabel(p) + ': ' + choiceName(choice));
       if (it.spec && window.GemPatch) {
@@ -1235,8 +1256,9 @@
     submitBtn.disabled = true;
     submitBtn.textContent = t('basket.sending', 'Đang gửi...');
 
-    // Đơn vào thẳng database để em gái xem trong trang quản trị. Chỉ gửi sku
-    // và số lượng — giá do database tự tra, không gửi giá từ trình duyệt lên.
+    // Đơn vào thẳng database để nhân sự xem trong trang quản trị. Chỉ gửi sku,
+    // số lượng (và mã thiết kế) — giá do database tự tra / tự tính, không gửi
+    // giá từ trình duyệt lên.
     if (window.GemDB && window.GemDB.createOrder) {
       var picked = custom ? null : form.querySelector('[name="pay"]:checked');
       // Designs ride in the order note (Anna sees it in admin): what each
@@ -1265,6 +1287,7 @@
         items: items.map(function (it) {
           var line = { sku: it.sku, qty: it.qty };
           if (it.opt) line.option = it.opt;
+          if (it.spec) line.spec = it.spec;   // a design: priced from its code
           return line;
         })
       }).then(function (res) {
@@ -1288,6 +1311,10 @@
             'Đơn này cần chuyển khoản trước. Bạn chọn “Chuyển khoản QR” giúp chúng mình nhé.'));
         }
         // A scent / size sold out (or vanished) after the page loaded
+        if (res && res.error === 'bad_design') {
+          return fail(t('basket.design_gone',
+            'Một thiết kế trong giỏ không còn đọc được. Bạn mở lại Bàn thiết kế giúp chúng mình nhé.'));
+        }
         if (res && (res.error === 'option_out' || res.error === 'need_option')) {
           return fail(t('basket.option_gone',
             'Một lựa chọn trong giỏ (mùi, cỡ…) vừa hết hàng. Bạn xem lại giỏ giúp chúng mình nhé.'));
@@ -1433,9 +1460,11 @@
       // stock, for a product with choices
       add: function (sku, sourceEl, spec, cut, opt) {
         var p = bySku(sku);
-        if (!p || p.inStock === false) return false;
+        // a design is made to order: the ready-made ones being sold out, or
+        // the bag "Mẫu" to pick, don't apply to it
+        if (!p || (p.inStock === false && !spec)) return false;
         if (spec && !validSpec(spec)) return false;
-        if (choices(p)) {
+        if (choices(p) && !spec) {
           var c = choiceOf(p, opt);
           if (!c || c.out) return false;
         } else {
@@ -1471,6 +1500,16 @@
     document.addEventListener('gem:langchange', function () {
       if (liveSkus) cards.forEach(refreshCard);
     });
+
+    // the owner's design prices (settings "design_pricing"): designs in the
+    // basket are priced by them once they arrive
+    if (window.GemPatch && window.GemPatch.loadPricing) {
+      document.addEventListener('gem:pricing', function () {
+        if (panel.classList.contains('open') && view === 'basket') renderBasketView();
+        renderWidget();
+      });
+      window.GemPatch.loadPricing();
+    }
 
     /* ---------- giá thật từ Supabase ----------
        Vẽ ngay bằng CATALOG trước cho trang hiện tức thì, rồi cập nhật khi

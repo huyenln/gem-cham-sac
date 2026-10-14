@@ -73,11 +73,10 @@
   <div class="product-toc-mobile">
     <div class="product-toc-scroll">
       <a href="#phu-kien-vai-vun" class="toc-item" data-i18n="products.toc_fabric">Phụ kiện vải vụn</a>
-      <a href="#van-phong-pham" class="toc-item" data-i18n="products.toc_vpp">Văn phòng phẩm</a>
+      <a href="#hang-ky-gui" class="toc-item" data-i18n="products.toc_consign" hidden>Hàng ký gửi</a>
+      <a href="#set-qua" class="toc-item" data-i18n="products.toc_setqua">Set quà</a>
       <a href="#quan-ao-2hand" class="toc-item" data-i18n="products.toc_2hand">Quần áo 2hand</a>
       <a href="#gom-su-nhat" class="toc-item" data-i18n="products.toc_gom">Gốm sứ Nhật</a>
-      <a href="#set-qua" class="toc-item" data-i18n="products.toc_setqua">Set quà</a>
-      <a href="#hang-ky-gui" class="toc-item" data-i18n="products.toc_consign" hidden>Hàng ký gửi</a>
       <a href="#dich-vu" class="toc-item" data-i18n="products.toc_service">Dịch vụ</a>
     </div>
   </div>
@@ -89,11 +88,10 @@
       <h3 class="toc-title" data-i18n="products.toc_title">Danh mục</h3>
       <ul class="toc-list">
         <li><a href="#phu-kien-vai-vun" class="toc-item" data-i18n="products.toc_fabric">Phụ kiện vải vụn</a></li>
-        <li><a href="#van-phong-pham" class="toc-item" data-i18n="products.toc_vpp">Văn phòng phẩm</a></li>
+        <li hidden><a href="#hang-ky-gui" class="toc-item" data-i18n="products.toc_consign">Hàng ký gửi</a></li>
+        <li><a href="#set-qua" class="toc-item" data-i18n="products.toc_setqua">Set quà</a></li>
         <li><a href="#quan-ao-2hand" class="toc-item" data-i18n="products.toc_2hand">Quần áo 2hand</a></li>
         <li><a href="#gom-su-nhat" class="toc-item" data-i18n="products.toc_gom">Gốm sứ Nhật</a></li>
-        <li><a href="#set-qua" class="toc-item" data-i18n="products.toc_setqua">Set quà</a></li>
-        <li hidden><a href="#hang-ky-gui" class="toc-item" data-i18n="products.toc_consign">Hàng ký gửi</a></li>
         <li><a href="#dich-vu" class="toc-item" data-i18n="products.toc_service_full">Dịch vụ đặc biệt</a></li>
       </ul>
     </aside>
@@ -215,8 +213,90 @@
         </p>
       </div>
 
-      <!-- CATEGORY 2: VPP -->
-      <div class="category-block" id="van-phong-pham">
+      <!-- CATEGORY 2: HÀNG KÝ GỬI — đồ của bạn bè, Gem bán giúp. Thẻ đến từ
+           database (js/catalog.js), nên khối này và hai mục trong danh mục
+           ẩn sẵn, chỉ hiện khi database trả về món. -->
+      <div class="category-block" id="hang-ky-gui" hidden>
+        <div class="category-header">
+          <h2 data-i18n="products.cat6_h">Hàng ký gửi</h2>
+          <span class="hand" data-i18n="products.cat6_tag">— từ những người bạn</span>
+        </div>
+        <p class="lead" style="max-width: 720px; margin-bottom: var(--space-8);" data-i18n="products.cat6_lead">
+          Đồ của những người bạn làm nghề cùng chí hướng, chúng mình nhận bán giúp tại Gem. Mỗi món đều ghi rõ là của ai.
+        </p>
+
+        <div class="product-grid" data-cat="ky-gui"></div>
+      </div>
+
+      <!-- CATEGORY 3: SET QUÀ TẶNG -->
+      <div class="category-block" id="set-qua">
+        <div class="category-header">
+          <h2 data-i18n="products.cat5_h">Set quà tặng</h2>
+          <span class="hand" data-i18n="products.cat5_tag">— trao gửi yêu thương</span>
+        </div>
+        <p class="lead" style="max-width: 720px; margin-bottom: var(--space-8);" data-i18n="products.cat5_lead">
+          Những set quà nhỏ gói ghém từ đồ Gem — Bloom Charm, thiệp hoa, bookmark, scrunchie… cho dịp tốt nghiệp, sinh nhật, hay chỉ để tặng nhau.
+        </p>
+
+        <div class="product-grid" data-cat="set-qua">
+          <div class="product-card" data-sku="set-qua" data-gallery="set-qua-tang-2.png,set-qua-tang-1.png,set-qua-tang-3.png,set-qua-tang-4.jpg">
+            <div class="product-card-image">
+              <img src="images/products/set-qua-tang-thumb.jpg" data-i18n-attr="alt:products.setqua_h" alt="Set quà tặng" loading="lazy">
+            </div>
+            <h4 data-i18n="products.setqua_h">Set quà tặng</h4>
+            <p data-i18n="products.setqua_p">Bloom Charm · thiệp hoa · bookmark</p>
+            <div class="gb-slot"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CATEGORY 4: QUẦN ÁO 2HAND -->
+      <div class="category-block" id="quan-ao-2hand">
+        <div class="category-header">
+          <h2 data-i18n="products.cat3_h">Quần áo 2hand</h2>
+          <span class="hand" data-i18n="products.cat3_tag">— chọn lọc · tân trang</span>
+        </div>
+        <p class="lead" style="max-width: 720px; margin-bottom: var(--space-8);" data-i18n="products.cat3_lead">
+          Quần áo 2hand được chọn lọc kỹ, có thể tân trang hoặc tái chế thành đồ mới. Bấm vào ảnh để xem cả bộ sưu tập.
+        </p>
+
+        <div class="product-grid">
+          <div class="product-card" data-gallery="2hand-1.png,2hand-2.png,2hand-3.png,2hand-4.png,2hand-5.png,2hand-6.png,2hand-7.png,2hand-8.png,2hand-9.png,2hand-10.png,2hand-11.png,2hand-12.png,2hand-13.png,2hand-14.png,2hand-15.png,2hand-16.png,2hand-17.png,2hand-18.png,2hand-19.png,2hand-20.png,2hand-21.png,2hand-22.png,2hand-23.png">
+            <div class="product-card-image">
+              <img src="images/products/2hand-thumb.jpg" data-i18n-attr="alt:products.c2hand_h" alt="Bộ sưu tập 2hand" loading="lazy">
+            </div>
+            <h4 data-i18n="products.c2hand_h">Bộ sưu tập 2hand</h4>
+            <p data-i18n="products.c2hand_p">Mỗi món một câu chuyện · bấm để xem</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- CATEGORY 5: GỐM SỨ NHẬT -->
+      <div class="category-block" id="gom-su-nhat">
+        <div class="category-header">
+          <h2 data-i18n="products.cat4_h">Gốm sứ Nhật</h2>
+          <span class="hand" data-i18n="products.cat4_tag">— sắc màu của thời gian</span>
+        </div>
+        <p class="lead" style="max-width: 720px; margin-bottom: var(--space-8);" data-i18n="products.cat4_lead">
+          Gốm sứ Nhật được chọn lọc, làm sạch, mang sắc màu của thời gian. Bấm vào ảnh để xem thêm.
+        </p>
+
+        <div class="product-grid" data-cat="gom">
+          <div class="product-card" data-sku="gom" data-gallery="gom-2.jpg,gom-1.jpg,gom-3.jpg">
+            <div class="product-card-image">
+              <img src="images/products/gom-thumb.jpg" data-i18n-attr="alt:products.cgom_h" alt="Gốm sứ Nhật chọn lọc" loading="lazy">
+            </div>
+            <h4 data-i18n="products.cgom_h">Gốm sứ Nhật chọn lọc</h4>
+            <p data-i18n="products.cgom_p">Sắc màu của thời gian · bấm để xem</p>
+            <div class="gb-slot"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VĂN PHÒNG PHẨM — tạm ẩn (14/10/2026). data-off giữ khối ẩn kể cả khi
+           database còn món (js/catalog.js); muốn hiện lại: bỏ hidden + data-off
+           và thêm lại mục "Văn phòng phẩm" vào hai danh mục ở đầu trang. -->
+      <div class="category-block" id="van-phong-pham" hidden data-off>
         <div class="category-header">
           <h2 data-i18n="products.cat2_h">Văn phòng phẩm bền vững</h2>
           <span class="hand" data-i18n="products.cat2_tag">— giấy tái chế · handmade</span>
@@ -249,85 +329,6 @@
         </p>
       </div>
 
-      <!-- CATEGORY 3: QUẦN ÁO 2HAND -->
-      <div class="category-block" id="quan-ao-2hand">
-        <div class="category-header">
-          <h2 data-i18n="products.cat3_h">Quần áo 2hand</h2>
-          <span class="hand" data-i18n="products.cat3_tag">— chọn lọc · tân trang</span>
-        </div>
-        <p class="lead" style="max-width: 720px; margin-bottom: var(--space-8);" data-i18n="products.cat3_lead">
-          Quần áo 2hand được chọn lọc kỹ, có thể tân trang hoặc tái chế thành đồ mới. Bấm vào ảnh để xem cả bộ sưu tập.
-        </p>
-
-        <div class="product-grid">
-          <div class="product-card" data-gallery="2hand-1.png,2hand-2.png,2hand-3.png,2hand-4.png,2hand-5.png,2hand-6.png,2hand-7.png,2hand-8.png,2hand-9.png,2hand-10.png,2hand-11.png,2hand-12.png,2hand-13.png,2hand-14.png,2hand-15.png,2hand-16.png,2hand-17.png,2hand-18.png,2hand-19.png,2hand-20.png,2hand-21.png,2hand-22.png,2hand-23.png">
-            <div class="product-card-image">
-              <img src="images/products/2hand-thumb.jpg" data-i18n-attr="alt:products.c2hand_h" alt="Bộ sưu tập 2hand" loading="lazy">
-            </div>
-            <h4 data-i18n="products.c2hand_h">Bộ sưu tập 2hand</h4>
-            <p data-i18n="products.c2hand_p">Mỗi món một câu chuyện · bấm để xem</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- CATEGORY 4: GỐM SỨ NHẬT -->
-      <div class="category-block" id="gom-su-nhat">
-        <div class="category-header">
-          <h2 data-i18n="products.cat4_h">Gốm sứ Nhật</h2>
-          <span class="hand" data-i18n="products.cat4_tag">— sắc màu của thời gian</span>
-        </div>
-        <p class="lead" style="max-width: 720px; margin-bottom: var(--space-8);" data-i18n="products.cat4_lead">
-          Gốm sứ Nhật được chọn lọc, làm sạch, mang sắc màu của thời gian. Bấm vào ảnh để xem thêm.
-        </p>
-
-        <div class="product-grid" data-cat="gom">
-          <div class="product-card" data-sku="gom" data-gallery="gom-2.jpg,gom-1.jpg,gom-3.jpg">
-            <div class="product-card-image">
-              <img src="images/products/gom-thumb.jpg" data-i18n-attr="alt:products.cgom_h" alt="Gốm sứ Nhật chọn lọc" loading="lazy">
-            </div>
-            <h4 data-i18n="products.cgom_h">Gốm sứ Nhật chọn lọc</h4>
-            <p data-i18n="products.cgom_p">Sắc màu của thời gian · bấm để xem</p>
-            <div class="gb-slot"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- CATEGORY 5: SET QUÀ TẶNG -->
-      <div class="category-block" id="set-qua">
-        <div class="category-header">
-          <h2 data-i18n="products.cat5_h">Set quà tặng</h2>
-          <span class="hand" data-i18n="products.cat5_tag">— trao gửi yêu thương</span>
-        </div>
-        <p class="lead" style="max-width: 720px; margin-bottom: var(--space-8);" data-i18n="products.cat5_lead">
-          Những set quà nhỏ gói ghém từ đồ Gem — Bloom Charm, thiệp hoa, bookmark, scrunchie… cho dịp tốt nghiệp, sinh nhật, hay chỉ để tặng nhau.
-        </p>
-
-        <div class="product-grid" data-cat="set-qua">
-          <div class="product-card" data-sku="set-qua" data-gallery="set-qua-tang-2.png,set-qua-tang-1.png,set-qua-tang-3.png,set-qua-tang-4.jpg">
-            <div class="product-card-image">
-              <img src="images/products/set-qua-tang-thumb.jpg" data-i18n-attr="alt:products.setqua_h" alt="Set quà tặng" loading="lazy">
-            </div>
-            <h4 data-i18n="products.setqua_h">Set quà tặng</h4>
-            <p data-i18n="products.setqua_p">Bloom Charm · thiệp hoa · bookmark</p>
-            <div class="gb-slot"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- CATEGORY 6: HÀNG KÝ GỬI — đồ của bạn bè, Gem bán giúp. Thẻ đến từ
-           database (js/catalog.js), nên khối này và hai mục trong danh mục
-           ẩn sẵn, chỉ hiện khi database trả về món. -->
-      <div class="category-block" id="hang-ky-gui" hidden>
-        <div class="category-header">
-          <h2 data-i18n="products.cat6_h">Hàng ký gửi</h2>
-          <span class="hand" data-i18n="products.cat6_tag">— từ những người bạn</span>
-        </div>
-        <p class="lead" style="max-width: 720px; margin-bottom: var(--space-8);" data-i18n="products.cat6_lead">
-          Đồ của những người bạn làm nghề cùng chí hướng, chúng mình nhận bán giúp tại Gem. Mỗi món đều ghi rõ là của ai.
-        </p>
-
-        <div class="product-grid" data-cat="ky-gui"></div>
-      </div>
     </div>
   </section>
 

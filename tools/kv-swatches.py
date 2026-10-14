@@ -31,7 +31,6 @@ F = [
     # xanh lá
     ('A-185048', (160, 120, 1040, 1000), 'Thô xanh rêu', 'Moss green linen-look', 'xanh', 'tron', 'Vải thô', 1, 0),
     ('A-185105', (200, 150, 650, 600), 'Caro xanh lá', 'Green gingham', 'xanh', 'caro', 'Cotton', 0, 0),
-    ('A-185114', (450, 100, 1000, 650), 'Caro xanh lá to', 'Big green check', 'xanh', 'caro', 'Cotton', 0, 0),
     ('B-175626', (200, 120, 1040, 960), 'Gấm lá xanh', 'Green leaf brocade', 'xanh', 'hoato', 'Gấm', 0, 0),
     ('B-173906', C, 'Hoa nền vàng chanh', 'Flowers on lime', 'xanh', 'hoato', 'Vải pha', 0, 0),
     ('B-174628', C, 'Hoa rực rỡ', 'Bright garden', 'xanh', 'hoato', 'Vải pha', 0, 0),
@@ -42,10 +41,8 @@ F = [
     ('A-185530', (350, 150, 850, 650), 'Xanh than', 'Navy', 'lam', 'tron', 'Vải pha', 1, 0),
     ('A-185505', (550, 400, 1150, 1000), 'Tổ ong xanh nhạt', 'Pale blue waffle', 'lam', 'ono', 'Vải tổ ong', 0, 0),
     ('A-190250', (200, 150, 560, 510), 'Ô nhỏ xanh than', 'Small navy check', 'lam', 'ono', 'Cotton', 0, 0),
-    ('A-190149', (500, 240, 1100, 840), 'Caro trám xanh', 'Blue diamond check', 'lam', 'caro', 'Cotton', 0, 0),
-    ('A-190257', (550, 200, 1150, 800), 'Kẻ ô xanh coban', 'Cobalt plaid', 'lam', 'caro', 'Vải pha', 0, 0),
+    ('A-190149', (540, 280, 1060, 800), 'Caro trám xanh', 'Blue diamond check', 'lam', 'caro', 'Cotton', 0, 0),
     ('A-185158', (200, 150, 860, 810), 'Voan hoa hồng nền xanh', 'Roses on blue voile', 'lam', 'hoato', 'Voan', 0, 0),
-    ('A-185207', C, 'Hoa hồng to nền xanh nhạt', 'Big roses on pale blue', 'lam', 'hoato', 'Voan', 0, 0),
     ('A-184917', C, 'Họa tiết ô màu', 'Colour-block folk print', 'lam', 'tho', 'Cotton', 0, 0),
     ('B-174505', C, 'Màu nước tím xanh', 'Blue-violet watercolour', 'lam', 'hoato', 'Voan', 0, 0),
     ('B-175248', C, 'Paisley nền xám xanh', 'Paisley on grey-blue', 'lam', 'hoato', 'Voan', 0, 0),
@@ -84,12 +81,10 @@ F = [
     ('B-174419', C, 'Họa tiết nâu xanh ngọc', 'Brown and teal swirls', 'nau', 'hoato', 'Lụa', 0, 0),
     ('B-174524', C, 'Hoa to sơn dầu', 'Painted big flowers', 'nau', 'hoato', 'Vải pha', 0, 0),
     ('B-175200', C, 'Mảng màu cam xanh', 'Orange-blue colour blocks', 'nau', 'hoato', 'Vải pha', 0, 0),
-    ('B-174855', (800, 120, 1500, 820), 'Thổ cẩm đỏ đen', 'Red-black folk weave', 'nau', 'tho', 'Thổ cẩm', 0, 0),
     ('B-174154', C, 'Chắp vá thổ cẩm', 'Folk patchwork print', 'nau', 'tho', 'Cotton', 0, 0),
     # trung tính
     ('B-173754', (160, 120, 1040, 1000), 'Thun gân kem', 'Cream rib knit', 'trung', 'tron', 'Thun', 1, 1),
     ('B-173817', C, 'Kem trơn', 'Plain cream', 'trung', 'tron', 'Cotton', 1, 1),
-    ('A-185700', (300, 500, 800, 1000), 'Dạ xám muối tiêu', 'Salt-and-pepper wool', 'trung', 'tron', 'Dạ', 1, 0),
     ('A-185932', C, 'Nỉ xám', 'Grey felt', 'trung', 'tron', 'Nỉ', 1, 0),
     ('A-185655', C, 'Dạ xám than', 'Charcoal wool', 'trung', 'tron', 'Dạ', 1, 0),
     ('A-185719', C, 'Nhung đen ánh tím', 'Black-plum velvet', 'trung', 'tron', 'Nhung', 1, 0),
@@ -163,6 +158,10 @@ def photo(src, name):
         im = im.resize((round(im.width * k), round(im.height * k)), Image.LANCZOS)
     return im
 
+# checks / stripes photographed at a slant, turned straight round the crop's
+# centre before cropping (degrees, + = anticlockwise; Anna 14/10/2026)
+ROT = {'B-173648': -45, 'B-173947': -3.8, 'A-190149': -25}
+
 def default_box(im, box, plain):
     if box: return box
     w, h = im.size
@@ -175,6 +174,8 @@ def make(src, row, new=True):
     box = default_box(im, box, plain)
     if name in KEEP:
         plain = 0
+    if name in ROT:
+        im = im.rotate(ROT[name], center=((box[0] + box[2]) / 2, (box[1] + box[3]) / 2), resample=Image.BICUBIC)
     # prints keep the hand-checked crop: the "flattest" square found by
     # flattest() is too often the one with the least print on it
     a = np.asarray(im.crop(box).resize((640, 640), Image.LANCZOS), dtype=float) / 255
@@ -192,8 +193,8 @@ def make(src, row, new=True):
 # The bigger photo round each swatch (images/studio/vai-that/lon/): each patch
 # on the design table shows its own part of it. K: its side in swatch widths,
 # smaller where the photo runs out or something else shows round the cloth.
-K = {'A-185114': 1.0, 'A-185505': 1.0, 'A-190250': 1.15, 'A-190149': 1.0, 'A-190257': 1.1, 'A-184917': 1.0, 'A-185719': 1.0,
-     'A-185836': 1.2, 'B-174537': 1.15, 'B-174441': 1.1, 'B-174820': 1.2, 'B-174855': 1.2}
+K = {'A-185505': 1.0, 'A-190250': 1.15, 'A-190149': 1.0, 'A-184917': 1.0, 'A-185719': 1.0,
+     'A-185836': 1.2, 'B-174537': 1.15, 'B-174441': 1.1, 'B-174820': 1.2}
 
 
 def make_big(src, row):
@@ -205,7 +206,14 @@ def make_big(src, row):
     s = box[2] - box[0]
     cx, cy = (box[0] + box[2]) / 2, (box[1] + box[3]) / 2
     big = min(int(s * K.get(name, 1.6)), im.width, im.height)
+    valid = None
+    if name in ROT:   # turned straight: no empty corner inside the big square
+        valid = Image.new('L', im.size, 255).rotate(ROT[name], center=(cx, cy), resample=Image.NEAREST)
+        im = im.rotate(ROT[name], center=(cx, cy), resample=Image.BICUBIC)
     x0 = int(min(max(0, cx - big / 2), im.width - big)); y0 = int(min(max(0, cy - big / 2), im.height - big))
+    while valid is not None and big > s and min(valid.crop((x0, y0, x0 + big, y0 + big)).getextrema()) < 255:
+        big -= 8
+        x0 = int(min(max(0, cx - big / 2), im.width - big)); y0 = int(min(max(0, cy - big / 2), im.height - big))
     a = np.asarray(im.crop((x0, y0, x0 + big, y0 + big)).resize((800, 800), Image.LANCZOS), dtype=float) / 255
     a = rebuild(a, mat) if plain else flat(a, 800 / 6, 0.7)
     a = bright(a, name[0], warm)
