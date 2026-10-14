@@ -398,8 +398,8 @@ Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
   vẽ trên kệ, chạm vào mở bảng chi tiết có ảnh thật + ô chọn (`pdSheet` trong `js/studio.js`).
 - 🕯️ Hàng ký gửi (13/10/2026): sau khi merge, chạy
   `supabase/migrations/20261013b_ky_gui_products.sql` (9 món ký gửi + 3 thẻ túi tái chế + chuyển sổ Cún Con).
-  Ảnh tất Re.socks đợt 2 (14/10, `20261014c_resocks_photos.sql`): Tái Xinh trơn, Đất Nước, Học Đường
-  đã có ảnh và mở bán; còn Hộp Cái Thứ Gì ẩn chờ ảnh, Suôn Sẻ chưa có ảnh riêng.
+  Ảnh tất Re.socks đợt 2 (14/10, `20261014c_resocks_photos.sql`): cả 6 món Re.socks đã có ảnh và mở bán;
+  thẻ = poster "Ký gửi tại Gem Chạm Sắc", ảnh Re.socks xếp sau. Suôn Sẻ chưa có ảnh riêng.
   Chi tiết: `docs/design.md` → "Hàng ký gửi + lựa chọn".
 - 📝 Bản dịch EN là first-pass — Anna review & chỉnh trong `STRINGS` (`js/i18n.js`)
 - 🚚 Chọn đối tác giao hàng cho COD

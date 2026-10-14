@@ -23,3 +23,19 @@ update public.products set
   gallery = array['images/products/ky-gui-tat-hoc-duong-poster.webp', 'images/products/ky-gui-tat-bac-hoc.webp'],
   is_published = true
 where sku = 'tat-hoc-duong';
+
+-- Anna's second message (14/10): Re.socks' own shots after the posters, and
+-- the "Cái Thứ Gì" box poster (the box goes on sale).
+update public.products set
+  gallery = array['images/products/ky-gui-tat-tai-xinh-tron.webp', 'images/products/ky-gui-tat-tai-xinh-tron-den.webp']
+where sku = 'tat-tai-xinh-tron';
+
+update public.products set
+  gallery = array['images/products/ky-gui-tat-tai-xinh.webp', 'images/products/ky-gui-tat-tai-xinh-xam.webp']
+where sku = 'tat-tai-xinh-ngan';
+
+update public.products set
+  image = 'images/products/ky-gui-tat-cai-thu-gi.webp',
+  gallery = array['images/products/ky-gui-tat-cai-thu-gi.webp'],
+  is_published = true
+where sku = 'tat-cai-thu-gi';
