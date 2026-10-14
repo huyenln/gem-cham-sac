@@ -3593,7 +3593,11 @@
     // the tie bag: how it is tied on the shoulder
     if (p.ties) {
       bits.push('<span class="pt-label pt-ties-h">' + esc(t('studio.pt_ties')) + '</span>' + p.ties.map(function (k, i) {
-        return chip('data-tie', i, (e.t || 0) === i, P.TIES[k][l] + plus((pr.ties || [])[i]));
+        // a range (the bow): "+10–40k (tuỳ cỡ nơ)"
+        var f = P.fee((pr.ties || [])[i]);
+        return chip('data-tie', i, (e.t || 0) === i, P.TIES[k][l] + (f[1] > f[0]
+          ? ' +' + f[0] / 1000 + '–' + f[1] / 1000 + 'k (' + P.tieWhy(k, l) + ')'
+          : plus(f[0])));
       }).join(''));
     }
     var bag = root.querySelector('.pt-bagopts');
@@ -3637,10 +3641,10 @@
     var info = window.GemBasket ? window.GemBasket.info(sku) : null;
     var pr = P.price(d), l = lng(), mny = function (n) { return n.toLocaleString('vi-VN') + 'đ'; };
     root.querySelectorAll('.pt-price').forEach(function (el) {
-      el.textContent = !pr ? (info ? info.price : '') : (pr.quote ? t('studio.pt_from') + ' ' : '') + mny(pr.total);
+      el.textContent = !pr ? (info ? info.price : '') : pr.quote ? t('studio.pt_from') + ' ' + mny(pr.total) : P.priceRange(pr.total, pr.max);
     });
     root.querySelector('.pt-price-lines').textContent = !pr ? '' : [t('studio.pt_base') + ' ' + mny(pr.base)]
-      .concat(pr.lines.map(function (x) { return P.priceLine(x, l) + ' +' + mny(x.a); }))
+      .concat(pr.lines.map(function (x) { return P.priceLine(x, l) + ' +' + P.priceRange(x.a, x.b); }))
       .concat(pr.quote ? [t('studio.pt_size_q')] : []).join(' · ');
     // made to order: a ready-made one being sold out doesn't stop a design
     root.querySelectorAll('[data-pt="add"]').forEach(function (add) { add.disabled = !ok || !info; });

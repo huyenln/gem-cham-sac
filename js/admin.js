@@ -1320,7 +1320,10 @@
       var opts = Object.keys(DP_OPTS).filter(function (k) { return k in pr; }).map(function (k) {
         return num('o.' + id + '.' + k, pr[k], DP_OPTS[k]);
       }).join('') + (pr.ties ? P.PRODUCTS[id].ties.map(function (k, i) {
-        return i ? num('t.' + id + '.' + i, pr.ties[i] || 0, 'Buộc vai: ' + P.TIES[k].vi) : '';
+        // "đến" filled in: a range (the bow, by its size), Gem settles it
+        var f = P.fee(pr.ties[i]);
+        return i ? num('t.' + id + '.' + i, f[0], 'Buộc vai: ' + P.TIES[k].vi + ' — từ') +
+          num('tm.' + id + '.' + i, f[1] > f[0] ? f[1] : null, '… đến (trống = một giá)') : '';
       }).join('') : '');
       return '<fieldset class="ad-dp" data-id="' + esc(id) + '"><legend>' + esc(p.vi) + '</legend>' +
         '<div class="ad-dp-row">' + num('b.' + id, pr.base, 'Giá nền (cỡ thường)') +
@@ -1334,7 +1337,9 @@
       '<div class="ad-filters"><button type="button" class="ad-filter ad-dp-back">← Sản phẩm</button></div>' +
       '<p class="ad-hint">Giá một thiết kế = giá nền + kiểu ghép + mỗi vải thêm (từ vải thứ hai) + cỡ lớn hơn + tuỳ chọn. ' +
         'Khách tự điền cỡ riêng thì đơn ghi “báo giá sau”. Túi trong: 1 túi luôn miễn phí; khoá kéo của túi khoá kéo ' +
-        'và túi laptop có sẵn, không tính.<br>Đơn mới tính theo giá đang lưu; đơn cũ giữ giá lúc đặt.</p>' +
+        'và túi laptop có sẵn, không tính. Kiểu buộc vai có ô “đến” (vd nơ 10.000–40.000đ tuỳ cỡ nơ): ' +
+        'khách thấy khoảng giá, đơn ghi giá thấp nhất “từ”, Gem chốt khi nhắn lại.' +
+        '<br>Đơn mới tính theo giá đang lưu; đơn cũ giữ giá lúc đặt.</p>' +
       '<form class="ad-dp-form">' +
         '<div class="ad-dp-row">' + num('fabric', PR.fabric, 'Mỗi vải thêm (mặc định)') + '</div>' + cards +
         '<button type="submit" class="ad-btn ad-dp-save">Lưu giá thiết kế</button>' +
@@ -1358,7 +1363,12 @@
         if (f != null) o.fabric = f;
         P.PRODUCTS[id].layouts.forEach(function (x) { o.layouts[x] = val('l.' + id + '.' + x) || 0; });
         if (pr.sizes) o.sizes = pr.sizes.map(function (v0, i) { return i ? val('s.' + id + '.' + i) || 0 : 0; });
-        if (pr.ties) o.ties = pr.ties.map(function (v0, i) { return i ? val('t.' + id + '.' + i) || 0 : 0; });
+        if (pr.ties) o.ties = pr.ties.map(function (v0, i) {
+          if (!i) return 0;
+          var a = val('t.' + id + '.' + i) || 0, b = val('tm.' + id + '.' + i);
+          if (b != null && b < a) bad = true;
+          return b != null && b > a ? [a, b] : a;
+        });
         Object.keys(DP_OPTS).forEach(function (k) { if (k in pr) o[k] = val('o.' + id + '.' + k) || 0; });
         out.products[id] = o;
       });

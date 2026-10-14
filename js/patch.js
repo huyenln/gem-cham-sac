@@ -207,8 +207,11 @@
   SIZES.laptopq = SIZES.laptop;
   var MAX_POCKETS = 5, CUSTOM_CM = [3, 200];
   // how a tie bag is tied on the shoulder (PRODUCTS[x].ties)
-  var TIES = { thuong: { vi: 'Dây thẳng', en: 'Plain straps' }, no: { vi: 'Thắt nơ', en: 'Bow' },
+  // why: what a price range (PRICING ties [from, to]) depends on
+  var TIES = { thuong: { vi: 'Dây thẳng', en: 'Plain straps' },
+    no: { vi: 'Thắt nơ', en: 'Bow', why: { vi: 'tuỳ cỡ nơ', en: 'by the size of the bow' } },
     xoan: { vi: 'Dây xoắn (nhún bèo)', en: 'Ruffled strap' }, ren: { vi: 'Dây viền ren', en: 'Lace-edged straps' } };
+  function tieWhy(k, l) { var w = TIES[k] && TIES[k].why; return w ? w[l] : (l === 'vi' ? 'tuỳ cỡ' : 'by size'); }
   function tieOf(d) { var p = PRODUCTS[d.product]; return p.ties ? p.ties[(d.ext && d.ext.t) || 0] || p.ties[0] : null; }
   function sizesOf(product) { return SIZES[product] || [{ w: 0, h: 0 }]; }
   function sizeLabel(product, i, l) {
@@ -302,7 +305,9 @@
       tuino:        { base: 220000, fabric: 10000, layouts: BAG_FEES, sizes: [0, 30000], quilt: 60000, pocket: 20000, zip: 30000, snap: 10000 },
       tuikhoa:      { base: 200000, fabric: 10000, layouts: BAG_FEES, quilt: 50000, pocket: 20000, snap: 10000 },
       tuitamgiac:   { base: 100000, fabric: 10000, layouts: BAG_FEES, quilt: 60000, pocket: 20000, zip: 30000, snap: 10000 },
-      tuibuoc:      { base: 180000, fabric: 10000, layouts: BAG_FEES, quilt: 60000, pocket: 20000, snap: 10000, ties: [0, 10000, 30000, 20000] },
+      // ties: an amount, or [from, to] when Gem fixes it with the customer
+      // (the bow: 10–40k by its size)
+      tuibuoc:      { base: 180000, fabric: 10000, layouts: BAG_FEES, quilt: 60000, pocket: 20000, snap: 10000, ties: [0, [10000, 40000], 30000, 20000] },
       laptop:       { base: 260000, fabric: 10000, layouts: BAG_FEES, sizes: [0, 10000, 20000], quilt: 50000, pocket: 20000, snap: 10000 },
       laptopq:      { base: 290000, fabric: 10000, layouts: BAG_FEES, sizes: [0, 10000, 20000], quilt: 50000, pocket: 20000, snap: 10000 }
     }
@@ -310,6 +315,13 @@
   // the owner's numbers (settings "design_pricing"): only whole, sane
   // amounts are taken, the rest keeps the starting values
   function amount(v) { return typeof v === 'number' && isFinite(v) && v >= 0 && v <= 10000000 ? Math.round(v) : null; }
+  // an amount or a range [from, to] (to above from; equal ends = an amount)
+  function amountOrRange(v) {
+    if (!Array.isArray(v)) return amount(v);
+    var a = v.length === 2 ? amount(v[0]) : null, b = v.length === 2 ? amount(v[1]) : null;
+    return a == null || b == null || b < a ? null : a === b ? a : [a, b];
+  }
+  function fee(v) { return Array.isArray(v) ? v : [v || 0, v || 0]; }
   function setPricing(obj) {
     if (!obj || typeof obj !== 'object') return;
     if (amount(obj.fabric) != null) PRICING.fabric = amount(obj.fabric);
@@ -333,7 +345,8 @@
         dst.layouts = lay;
       }
       ['sizes', 'ties'].forEach(function (k) {
-        if (Array.isArray(src[k]) && dst[k]) dst[k] = dst[k].map(function (v, i) { var a = amount(src[k][i]); return a != null ? a : v; });
+        var ok = k === 'ties' ? amountOrRange : amount;
+        if (Array.isArray(src[k]) && dst[k]) dst[k] = dst[k].map(function (v, i) { var a = ok(src[k][i]); return a != null ? a : v; });
       });
     });
   }
@@ -353,15 +366,20 @@
     for (var i = 0; i < d.fab.length; i++) if (!seen[d.fab[i]]) { seen[d.fab[i]] = 1; n++; }
     return n;
   }
-  // { total, base, lines: [{ k, a, n }], quote } — quote: the customer's own
-  // size, the total is a starting point and Gem names the price
+  // { total, max, base, lines: [{ k, a, b, n }], quote } — quote: the
+  // customer's own size, the total is a starting point and Gem names the
+  // price. max above total: a part priced as a range (a: from, b: to — the
+  // bow, by its size); Gem fixes it with the customer
   function price(spec) {
     var d = typeof spec === 'string' ? parse(spec) : spec;
     if (!d) return null;
     var pr = PRICING.products[d.product];
     if (!pr) return null;
-    var e = d.ext || blankExt(), lines = [], total = pr.base;
-    var add = function (k, a, n) { if (a) { lines.push({ k: k, a: a, n: n || 0 }); total += a; } };
+    var e = d.ext || blankExt(), lines = [], total = pr.base, max = pr.base;
+    var add = function (k, a, n, b) {
+      if (b == null) b = a;
+      if (a || b) { lines.push({ k: k, a: a, b: b, n: n || 0 }); total += a; max += b; }
+    };
     add('layout', (pr.layouts || {})[d.layout] || 0);
     var nf = fabricCount(d);
     add('fabric', Math.max(0, nf - 1) * (pr.fabric != null ? pr.fabric : PRICING.fabric), nf - 1);
@@ -370,16 +388,24 @@
     if (e.p) add('pocket', e.p * (pr.pocket || 0), e.p);
     if (e.z) add('zip', pr.zip || 0);
     if (e.n) add('snap', pr.snap || 0);
-    if (e.t) add('tie', (pr.ties || [])[e.t] || 0);
-    return { base: pr.base, total: total, lines: lines, quote: !!e.c };
+    if (e.t) { var f = fee((pr.ties || [])[e.t]); add('tie', f[0], tieOf(d), f[1]); }
+    return { base: pr.base, total: total, max: max, lines: lines, quote: !!e.c };
   }
   var PRICE_NAMES = {
     layout: { vi: 'Kiểu ghép', en: 'Piecing' }, fabric: { vi: 'Thêm {n} vải', en: '{n} more fabrics' },
     size: { vi: 'Cỡ lớn hơn', en: 'Bigger size' }, quilt: { vi: 'Chần bông', en: 'Quilted' },
     pocket: { vi: 'Thêm {n} túi trong', en: '{n} more inside pockets' }, zip: { vi: 'Khoá kéo', en: 'Zip' },
-    snap: { vi: 'Nút bấm', en: 'Snap' }, tie: { vi: 'Kiểu buộc vai', en: 'Shoulder tie' }
+    snap: { vi: 'Nút bấm', en: 'Snap' }
   };
-  function priceLine(x, l) { return PRICE_NAMES[x.k][l].replace('{n}', x.n); }
+  function priceLine(x, l) {
+    // a tie: its own name, and what a range depends on
+    if (x.k === 'tie') return TIES[x.n][l] + (x.b > x.a ? ' (' + tieWhy(x.n, l) + ')' : '');
+    return PRICE_NAMES[x.k][l].replace('{n}', x.n);
+  }
+  // "10.000–40.000đ", or one amount
+  function priceRange(a, b) {
+    return (b > a ? a.toLocaleString('vi-VN') + '–' : '') + (b > a ? b : a).toLocaleString('vi-VN') + 'đ';
+  }
 
   /* ---------- the fabric catalogue ----------
      45 fabrics = 5 colour families x 9 kinds, id = tone * 9 + kind. They
@@ -673,7 +699,12 @@
     if (p.zip) out.push(vi ? 'khoá kéo có sẵn' : 'zip included');
     if (e.z) out.push(vi ? 'thêm khoá kéo' : 'add a zip');
     if (e.n) out.push(vi ? 'thêm nút bấm' : 'add a snap');
-    if (p.ties) out.push((vi ? 'buộc vai: ' : 'shoulder tie: ') + TIES[tieOf(d)][l].toLowerCase());
+    if (p.ties) {
+      // a range (the bow): the order line says so, Gem settles it on the reply
+      var k = tieOf(d), f = fee(((PRICING.products[d.product] || {}).ties || [])[p.ties.indexOf(k)]);
+      out.push((vi ? 'buộc vai: ' : 'shoulder tie: ') + TIES[k][l].toLowerCase() + (f[1] > f[0]
+        ? ' +' + f[0] / 1000 + '–' + f[1] / 1000 + 'k (' + tieWhy(k, l) + (vi ? ', Gem tư vấn cỡ)' : ', Gem helps choose)') : ''));
+    }
     return out;
   }
 
@@ -2009,8 +2040,8 @@
     // pieces under one tab (Lót cốc tròn / vuông, the bags, the laptop sleeve)
     GROUPS: GROUPS, groupOf: groupOf, tabOf: tabOf, tabName: tabName,
     // size + options, price
-    SIZES: SIZES, TIES: TIES, sizesOf: sizesOf, sizeLabel: sizeLabel, blankExt: blankExt, fitExt: fitExt, MAX_POCKETS: MAX_POCKETS, CUSTOM_CM: CUSTOM_CM,
-    PRICING: PRICING, price: price, priceLine: priceLine, setPricing: setPricing, loadPricing: loadPricing,
+    SIZES: SIZES, TIES: TIES, tieWhy: tieWhy, sizesOf: sizesOf, sizeLabel: sizeLabel, blankExt: blankExt, fitExt: fitExt, MAX_POCKETS: MAX_POCKETS, CUSTOM_CM: CUSTOM_CM,
+    PRICING: PRICING, price: price, priceLine: priceLine, priceRange: priceRange, fee: fee, setPricing: setPricing, loadPricing: loadPricing,
     // real fabrics (Kho vải)
     setReal: setReal, loadReal: loadReal, hasReal: hasReal, isReal: isReal, realOf: realOf, moodKeys: moodKeys,
     keyColor: keyColor, fabricList: fabricList,

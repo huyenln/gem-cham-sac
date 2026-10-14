@@ -1890,7 +1890,19 @@ async def choices(browser, db):
             await pg.wait_for_timeout(300)
             check(await pg.evaluate(f"!!{body}.querySelector('.st-pd .pg-chip')"), f'{name}: and it opens the sheet')
         check(not pg.errors, f'{name}: no script errors {pg.errors}')
+        kept = await pg.evaluate(stored)
         await pg.context.close()
+        if name == 'desktop':
+            # another page later: products only the database knows (all of
+            # these) stay in the basket, they are not dropped while it answers
+            pg = await page(browser, db, w, h, "localStorage.setItem('gem-basket', %s);" % json.dumps(json.dumps(kept)))
+            await pg.goto(f'{BASE}/san-pham.html')
+            await pg.wait_for_timeout(2000)
+            got = [await pg.evaluate("document.querySelector('.gb-badge').textContent"), await pg.evaluate(stored)]
+            check(len(kept) == 3 and got == [str(sum(i['qty'] for i in kept)), kept],
+                  f'{name}: the consignment lines are still in the basket on the next page ({got})')
+            check(not pg.errors, f'{name}: next page: no script errors {pg.errors}')
+            await pg.context.close()
     db.extra = []
 
 
@@ -2995,7 +3007,15 @@ async def tui(browser, db):
         # the tie bag: four ways to tie it on the shoulder, each drawn
         ties = await pg.evaluate("[...document.querySelectorAll('[data-tie]')].map(b => b.textContent)")
         check(len(ties) == 4 and ties[0] == 'Dây thẳng' and ties[3].startswith('Dây viền ren'), f'{name}: "Kiểu buộc vai": four ways, plain straps first ({ties})')
+        check(ties[1] == 'Thắt nơ +10–40k (tuỳ cỡ nơ)', f'{name}: the bow: +10–40k by its size ({ties[1]})')
         pt0 = num(await pg.evaluate(price))
+        # the bow: a range, from + 10.000 to + 40.000
+        await js_click(pg, '[data-tie="1"]')
+        await pg.wait_for_timeout(250)
+        lo, hi = (num(x) for x in (await pg.evaluate(price)).split('–'))
+        lines = await pg.evaluate("document.querySelector('.pt-price-lines').textContent")
+        check(lo - pt0 == 10000 and hi - pt0 == 40000 and 'Thắt nơ (tuỳ cỡ nơ) +10.000–40.000đ' in lines,
+              f'{name}: "Thắt nơ": the price is a range, the breakdown says why ({lo}–{hi}; {lines})')
         await js_click(pg, '[data-tie="2"]')
         await pg.wait_for_timeout(250)
         check(await pg.evaluate("!!document.querySelector('.pt-board image[href*=\"mon-tuibuoc-xoan-mask\"]')") and num(await pg.evaluate(price)) - pt0 == 30000,
@@ -3079,6 +3099,22 @@ async def tui(browser, db):
         check(not pg.errors, f'{name}: no script errors {pg.errors}')
         await pg.context.close()
 
+    # a bow in the basket: the line is a range, the total "từ" the lower end
+    bow = '2~tuibuoc~mot~~~~~~~~~~t1'
+    pg = await open_table(browser, db, 1440, 900, "localStorage.setItem('gem-basket', JSON.stringify([{sku: 'tui-di-choi', qty: 1, spec: '%s'}]));" % bow)
+    lo, hi = await pg.evaluate("(p => [p.total, p.max])(window.GemPatch.price('%s'))" % bow)
+    await js_click(pg, '.gb-widget')
+    await pg.wait_for_timeout(500)
+    row = await pg.evaluate("document.querySelector('.gb-row-total').textContent")
+    tot = await pg.evaluate("document.querySelector('.gb-sum strong').textContent")
+    fine = await pg.evaluate("[...document.querySelectorAll('.gb-fine')].map(p => p.textContent).join(' | ')")
+    check(hi - lo == 30000 and [num(x) for x in row.split('–')] == [lo, hi] and tot.startswith('từ') and num(tot) == lo and 'cỡ nơ' in fine,
+          f'basket: a bow design shows its range, the total is "từ" the lower end ({row}; {tot}; {fine})')
+    check('thắt nơ +10–40k (tuỳ cỡ nơ, Gem tư vấn cỡ)' in await pg.evaluate("window.GemPatch.describe(window.GemPatch.parse('%s'))" % bow),
+          'the order line says the bow is 10–40k by its size, Gem helps choose')
+    check(not pg.errors, f'no script errors {pg.errors}')
+    await pg.context.close()
+
     # the owner's numbers (settings) win over the starting ones
     db.pricing = {'fabric': 5000, 'products': {'tuitote': {'base': 200000, 'quilt': 90000}}}
     pg = await open_table(browser, db, 1440, 900)
@@ -3098,12 +3134,17 @@ async def tui(browser, db):
     await pg.wait_for_timeout(600)
     n = await pg.evaluate("document.querySelectorAll('.ad-dp').length")
     check(n == 16, f'admin: one price card per designed piece ({n})')
+    bowin = await pg.evaluate("['t.tuibuoc.1', 'tm.tuibuoc.1', 'tm.tuibuoc.2'].map(n => document.querySelector('[name=\"' + n + '\"]').value)")
+    check(bowin == ['10000', '40000', ''], f'admin: the bow is "từ … đến …", the others one amount ({bowin})')
     await pg.fill('[name="o.tuitote.quilt"]', '80000')
+    await pg.fill('[name="tm.tuibuoc.1"]', '50000')
     await js_click(pg, '.ad-dp-save')
     await pg.wait_for_timeout(800)
     saved = db.pricing_saved[-1] if db.pricing_saved else {}
     check(saved.get('key') == 'design_pricing' and saved['value']['products']['tuitote']['quilt'] == 80000
           and saved['value']['products']['goi']['layouts']['sao'] == 50000, 'admin saves the whole table, the change in it')
+    check(saved.get('value', {}).get('products', {}).get('tuibuoc', {}).get('ties') == [0, [10000, 50000], 30000, 20000],
+          f'admin: the bow saved as a range, the rest as amounts ({saved.get("value", {}).get("products", {}).get("tuibuoc", {}).get("ties")})')
     check(not pg.errors, f'admin: no script errors {pg.errors}')
     await pg.context.close()
     db.extra = [x for x in db.extra if x not in bags]

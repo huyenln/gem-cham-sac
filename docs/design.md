@@ -1578,6 +1578,14 @@ hương trước nhé.” Món không có lựa chọn / ký gửi / ghi chú v�
 là ảnh của lựa chọn đó. Khi database trả lời, dòng có lựa chọn đã hết / không còn bị
 bỏ ra. `GemBasket.add` từ chối món có lựa chọn khi thiếu `opt` (hoặc lựa chọn đã hết).
 
+**Lỗi đã sửa (14/10/2026): món chỉ database biết rơi khỏi giỏ khi sang trang khác.**
+`load()` lúc mở trang lọc giỏ theo `CATALOG` (16 món gốc), trước khi database trả lời —
+nên món thêm qua admin (cả hàng ký gửi, túi thiết kế) biến khỏi giỏ ở trang sau (huy hiệu
+về 0), và lần lưu giỏ kế tiếp xoá hẳn. Giờ các dòng đó được **giữ riêng** (`waiting`),
+vẫn ghi lại vào `gem-basket`, và quay về giỏ khi database trả lời (món đã gỡ thì bỏ như
+cũ). Cùng lúc: dòng **thiết kế** của túi có "Mẫu" không còn bị bỏ vì "thiếu lựa chọn".
+Kiểm tra: `check-studio.py choices` (sang `san-pham.html` với 3 món ký gửi trong giỏ).
+
 **Studio (bổ sung 13/10/2026):** món có lựa chọn / ký gửi / ghi chú bày được trong
 Studio. Trên kệ chỉ cần **một hình vẽ** cho cả dòng (một hũ nến cho 13 mùi, một đôi
 tất cho mọi cỡ); khách chạm vào thì mở **bảng chi tiết** (`pdSheet` trong
@@ -1993,8 +2001,8 @@ hai migration chỉ chạy khi merge: `20261015_kho_vai_photo.sql` (ảnh lớn 
     - 4 dáng từ tranh túi của Gem: tote, quai nơ (size nhỏ / vừa), khoá kéo đeo vai, tam giác.
     - **Túi buộc vai** (mẫu Anna gửi 14/10, thay túi bán nguyệt vì dáng bán nguyệt trông già): thân
       2 đỉnh nhô, miệng khoét, mảnh hông/đáy, hai đỉnh buộc trên vai. **Kiểu buộc vai** là một
-      lựa chọn (field 13 `t<i>`): **dây thẳng** (mặc định, đã gồm trong giá), thắt nơ (+10k, tạm),
-      **dây xoắn = dây nhún bèo** (+30k, Anna chốt), **dây viền ren** = dây thẳng may thêm ren dọc
+      lựa chọn (field 13 `t<i>`): **dây thẳng** (mặc định, đã gồm trong giá), **thắt nơ +10–40k
+      tuỳ cỡ nơ** (Anna chốt; giá khoảng, xem C), **dây xoắn = dây nhún bèo** (+30k, Anna chốt), **dây viền ren** = dây thẳng may thêm ren dọc
       hai mép (+20k, tạm; ren vẽ màu kem trên dây vải). "Dây tạo kiểu thì cộng thêm tiền" (Anna
       14/10). Mỗi kiểu một bộ tranh `mon-tuibuoc-<kiểu>-*`.
     - Túi dây rút đã bỏ (Anna 14/10: không làm chính).
@@ -2035,8 +2043,12 @@ hai migration chỉ chạy khi merge: `20261015_kho_vai_photo.sql` (ảnh lớn 
   - Mỗi vải thêm tính +5k cho món nhỏ, +10k cho gối, oxford và túi. Kiểu ghép khó thì cộng
     nhiều hơn, ví dụ gối: sao +50k, nhà gỗ +30k, chong chóng +30k, nét vẽ +40k.
   - Gem tự chọn vải thì tính theo số vải ước của kiểu ghép (`PRICING.gem`).
-  - Anna chốt (14/10): túi quai nơ 220k size nhỏ, 250k size vừa; túi tam giác 100k. Túi buộc vai
-    180k và giá kiểu buộc là số tạm.
+  - Anna chốt (14/10): túi quai nơ 220k size nhỏ, 250k size vừa; túi tam giác 100k; dây xoắn +30k;
+    thắt nơ +10–40k tuỳ cỡ nơ. Túi buộc vai 180k và dây viền ren +20k là số tạm ("còn lại oke").
+  - **Giá theo khoảng** (chỉ kiểu buộc vai, `ties[i] = [từ, đến]`): bàn thiết kế và giỏ hiện
+    khoảng ("190.000–220.000đ"), tổng giỏ cộng mức thấp và ghi "từ", dòng đơn ghi "thắt nơ
+    +10–40k (tuỳ cỡ nơ, Gem tư vấn cỡ)". `design_price` trả thêm `max`; `create_order` ghi
+    `price` = từ, `price_max` = đến, như món có khoảng giá. Admin: ô "… đến" (trống = một giá).
   - **Các con số còn lại là ước lượng của Claude**, chưa có đối chiếu: giá nền túi 160–290k, chần
     bông 50–70k, túi trong 20k, khoá kéo 30k, nút bấm 10k. Không tìm được bảng phí chần bông
     tin cậy trên mạng. Dây đeo cổ tay chưa có giá trong database, đang tạm để 35k. Owner sửa ở
@@ -2044,7 +2056,7 @@ hai migration chỉ chạy khi merge: `20261015_kho_vai_photo.sql` (ảnh lớn 
   - **Database tính lại khi đặt đơn**:
     - giỏ gửi kèm mã thiết kế (`items[].spec`) nhưng không gửi giá;
     - `create_order` gọi `design_price(spec, sku)`, cùng phép tính với `GemPatch.price()` (đã
-      đối chiếu 10 mã mẫu, khớp hết);
+      đối chiếu 10 mã mẫu, rồi 9 mã túi kể cả nơ theo khoảng, khớp hết);
     - sai sku hoặc mã lạ thì trả lỗi `bad_design`.
   - Settings `design_pricing`: khách đọc được, vì policy `st_read_public` giờ cho cả
     `payment` lẫn `design_pricing`. Chỉ nhân sự ghi được.

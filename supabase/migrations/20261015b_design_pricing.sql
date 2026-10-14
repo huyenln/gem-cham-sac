@@ -204,7 +204,7 @@ insert into public.settings (key, value) values ('design_pricing', $json$
       "snap": 10000,
       "ties": [
         0,
-        10000,
+        [10000, 40000],
         30000,
         20000
       ]
@@ -253,7 +253,10 @@ $json$::jsonb)
 on conflict (key) do nothing;
 
 -- 3. giá một thiết kế. null = mã không hợp lệ.
---    {price: số | null (cỡ riêng → báo giá), from: số}
+--    {price: số | null (cỡ riêng → báo giá), from: số, max: số | null}
+--    max > price: có phần tính theo khoảng (nơ của túi buộc vai: "ties" là
+--    [từ, đến], tuỳ cỡ nơ) — dòng đơn ghi price = từ, price_max = đến, như
+--    món có khoảng giá.
 create or replace function public.design_price(p_spec text, p_sku text)
 returns jsonb
 language plpgsql
@@ -270,9 +273,11 @@ declare
   pr     jsonb;
   cfg    jsonb;
   total  int;
+  extra  int := 0;
   nf     int;
   quote  boolean := false;
   tok    text;
+  tv     jsonb;
 begin
   if p_spec is null or length(p_spec) > 4000 then return null; end if;
   f := string_to_array(p_spec, '~');
@@ -320,14 +325,22 @@ begin
       elsif tok = 'n' then
         total := total + coalesce((cfg->>'snap')::int, 0);
       elsif tok ~ '^t[1-9]$' then
-        total := total + coalesce((cfg->'ties'->>(substr(tok, 2)::int))::int, 0);
+        -- an amount, or [from, to] (the bow, by its size)
+        tv := cfg->'ties'->(substr(tok, 2)::int);
+        if jsonb_typeof(tv) = 'array' then
+          total := total + coalesce((tv->>0)::int, 0);
+          extra := extra + greatest(coalesce((tv->>1)::int, 0) - coalesce((tv->>0)::int, 0), 0);
+        elsif jsonb_typeof(tv) = 'number' then
+          total := total + (tv #>> '{}')::int;
+        end if;
       else
         return null;
       end if;
     end loop;
   end if;
 
-  return jsonb_build_object('price', case when quote then null else total end, 'from', total);
+  return jsonb_build_object('price', case when quote then null else total end, 'from', total,
+                            'max', case when quote then null else total + extra end);
 end $function$;
 
 -- only create_order (security definer) calls it
@@ -413,7 +426,7 @@ begin
         raise exception 'bad_design' using errcode = 'check_violation';
       end if;
       v_price := (v_dp->>'price')::int;
-      v_pmax := null;
+      v_pmax := case when (v_dp->>'max')::int > v_price then (v_dp->>'max')::int end;
       v_opt := case when v_price is null then 'Thiết kế riêng · cỡ riêng, báo giá sau' else 'Thiết kế riêng' end;
     -- Món có lựa chọn (mùi, cỡ, mẫu): phải chọn một, và lựa chọn đó phải còn.
     -- Tên lựa chọn được chụp lại vào order_items như tên và giá.
