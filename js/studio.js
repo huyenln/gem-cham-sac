@@ -330,7 +330,9 @@
     'studio.pt_square':    { vi: `Vuông`, en: `Square` },
     'studio.pt_shuffle':   { vi: `Xáo mảnh`, en: `Shuffle` },
     'studio.pt_hint':      { vi: `Chạm một mảnh vải trong rổ rồi chạm vào ô trên món, hoặc kéo thả vào ô.`, en: `Tap a scrap in the basket, then tap a patch. Or drag it there.` },
-    'studio.pt_hint_held': { vi: `Giờ chạm vào ô muốn đắp mảnh {vai} lên.`, en: `Now tap the patch you want the {vai} on.` },
+    'studio.pt_hint_held': { vi: `Giờ chạm vào ô muốn đắp mảnh {vai} lên. Chạm lại ô đã có vải này để xoay vải.`, en: `Now tap the patch you want the {vai} on. Tap a patch that already has it to turn the fabric.` },
+    'studio.pt_turn':      { vi: `Xoay vải`, en: `Turn fabric` },
+    'studio.pt_turned':    { vi: `Vải ô này xoay {deg}° — chạm lần nữa để xoay tiếp.`, en: `This patch's fabric is turned {deg}° — tap again to turn on.` },
     'studio.pt_vt_all':    { vi: `Tất cả`, en: `All` },
     'studio.pt_kho':       { vi: `Kho vải`, en: `All fabrics` },
     'studio.kho_h':        { vi: `Kho vải của Gem`, en: `Gem's fabric store` },
@@ -2679,7 +2681,7 @@
     if (!withReal(function () { designerSheet(keep); })) return;
     // A fresh piece starts dressed in a mood rather than grey "Gem picks".
     if (!D.d.fab && !D.d.tones.length && !D.d.prints.length && D.d.layout !== 'tuve') P.applyMood(D.d, P.MOODS[0]);
-    D.held = null; D.sewn = false; D.card = null;
+    D.held = null; D.sewn = false; D.card = null; D.last = null; D.turnMsg = '';
     if (keep !== true || !D.basket.length) D.basket = basketFor(D.d);
     openSheet(
       head('studio.sewing_h', 'studio.sewing_p') +
@@ -2692,6 +2694,9 @@
           '<div class="pt-view">' +
             '<div class="pt-stage">' +
               '<div class="pt-board"></div>' +
+              // turn the fabric of the patch last touched (45° steps); on
+              // the piece's corner, so nothing below it moves
+              '<button type="button" class="pt-turn" data-pt="turn" hidden data-i18n="studio.pt_turn">' + esc(t('studio.pt_turn')) + '</button>' +
               // "from my drawing": draw straight on the piece
               '<canvas class="pt-canvas" width="680" height="680" hidden data-i18n-attr="aria-label:studio.pt_draw" aria-label="' + esc(t('studio.pt_draw')) + '"></canvas>' +
               '<button type="button" class="gv-next" data-gv-next hidden data-i18n-attr="aria-label:studio.gv_next" aria-label="' + esc(t('studio.gv_next')) + '">›</button>' +
@@ -3182,14 +3187,27 @@
   function putFabric(i, id) {
     P.setPatch(D.d, i, id);
     P.syncTaste(D.d);
+    D.last = i; D.turnMsg = '';
     unsew();
     renderDesigner();
     var hit = sheetBody.querySelectorAll('.pt-board [data-i="' + i + '"]');
     hit.forEach(function (el) { el.classList.add('pt-pop'); });
   }
 
+  // Turn patch i's fabric on by 45° (a stripe up-down -> on the slant ->
+  // across -> the other slant -> back)
+  function turnFabric(i) {
+    P.turnPatch(D.d, i);
+    D.last = i;
+    D.turnMsg = t('studio.pt_turned').replace('{deg}', P.rotAt(D.d, i) * P.TURN_STEP);
+    unsew();
+    renderDesigner();
+  }
+
   function tapPatch(i) {
     var id;
+    // the scrap held is already on this patch: turn it instead
+    if (D.held != null && P.keyAt(D.d, i) === D.held) return turnFabric(i);
     if (D.held != null) id = D.held;
     else {
       // nothing picked up: the next scrap in the basket
@@ -3612,7 +3630,9 @@
     var d = D.d, spec = specNow(), ok = P.isComplete(d);
     root.querySelector('.pt-board').innerHTML = P.svg(d, { title: esc(P.describe(d)), hit: true });
     // a short instruction when it matters; otherwise Udon's line shows
-    root.querySelector('.pt-hint').textContent = d.layout === 'net' ? t('studio.pt_net_on')
+    var turnBtn = root.querySelector('.pt-turn');
+    if (turnBtn) turnBtn.hidden = D.last == null || d.layout === 'tuve' || !d.fab || D.last >= d.fab.length;
+    root.querySelector('.pt-hint').textContent = D.turnMsg && D.last != null && d.fab ? D.turnMsg : d.layout === 'net' ? t('studio.pt_net_on')
       : d.layout === 'tuve' ? t('studio.pt_draw_on')
       : D.held != null ? t('studio.pt_hint_held').replace('{vai}', fabricName(D.held).toLowerCase() +
           (P.realOf(D.held) && P.realOf(D.held).mat ? ' (' + P.realOf(D.held).mat + ')' : '')) : '';
@@ -3894,7 +3914,7 @@
     }
     if ((el = e.target.closest('[data-mood]'))) {
       if (el.getAttribute('data-mood') === 'gem') {
-        D.d.fab = ''; D.d.cus = []; D.d.moodId = '';
+        D.d.fab = ''; D.d.cus = []; D.d.rot = ''; D.d.moodId = ''; D.last = null;
         D.d.tones = [P.GEM]; D.d.prints = [P.GEM];
         D.basket = fillBasket([]);
         D.held = null;
@@ -3916,6 +3936,7 @@
     if (see) { productSheet(see.getAttribute('data-gv-see')); return true; }
     if ((el = e.target.closest('[data-product]'))) {
       teachAfter = 'product';
+      D.last = null;
       var keep = D.d, pal = paletteNow();
       D.d = P.blank(el.getAttribute('data-product'));
       // carry the taste over to the new piece
@@ -3928,16 +3949,17 @@
     } else if ((el = e.target.closest('[data-layout]'))) {
       var pal2 = paletteNow();
       D.d.layout = el.getAttribute('data-layout');
+      D.last = null;
       if (D.d.layout === 'net') { if (!D.d.fab) D.d.fab = ''; P.refit(D.d, pal2); P.syncTaste(D.d); }
       else if (D.d.fab) P.scatter(D.d, pal2);
     } else if ((el = e.target.closest('[data-tone]'))) {
       toggle('tones', el.getAttribute('data-tone'), P.MAX_TONES);
-      D.d.fab = '';   // the chips decide again
+      D.d.fab = ''; D.d.rot = ''; D.last = null;   // the chips decide again
       D.basket = basketFor(D.d);
       teachAfter = 'taste';
     } else if ((el = e.target.closest('[data-print]'))) {
       toggle('prints', el.getAttribute('data-print'));
-      D.d.fab = '';
+      D.d.fab = ''; D.d.rot = ''; D.last = null;
       D.basket = basketFor(D.d);
       teachAfter = 'taste';
     } else if ((el = e.target.closest('[data-fabric]'))) {
@@ -3966,6 +3988,10 @@
       D.size = +el.getAttribute('data-size');
     } else if ((el = e.target.closest('[data-pt]'))) {
       var act = el.getAttribute('data-pt');
+      if (act === 'turn') {
+        if (D.last != null) turnFabric(D.last);
+        return true;
+      }
       if (act === 'undo') {
         D.d.sketch.pop();
         if (D.d.layout === 'net') refitNet();

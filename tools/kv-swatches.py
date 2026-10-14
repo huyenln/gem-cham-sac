@@ -237,6 +237,102 @@ def make_big(src, row):
     return out.filter(ImageFilter.UnsharpMask(1.2, 40, 2)), round(big / s, 2)
 
 
+# Checks and stripes drawn again, straight (Anna 14/10/2026: the photo's
+# lines wave with the cloth's folds, the design table should show them as
+# straight as the painted fabrics). Straightening the photo itself tore it
+# at the folds, so each is woven again from its measurements (a 1 cm grid
+# laid over the swatch, colours picked off the photo): the warp colours
+# across, the weft down, a twill where both run. Only the big photo the
+# design table lays on the pieces (lon/) is drawn; the swatch on the Kho
+# vải card stays the photo. Drawn ones show 3 swatch widths (photo_k 3).
+DRAWN_K, DRAWN_PX = 3, 960
+
+def sett_line(bands, ppc, n):
+    w = np.array([b[0] for b in bands]); edges = np.cumsum(w); rep = edges[-1]
+    pos = ((np.arange(n) + 0.5) / ppc) % rep
+    idx = np.minimum(np.searchsorted(edges, pos, side='right'), len(bands) - 1)
+    cols = np.array([b[1] for b in bands], dtype=float) / 255
+    return cols[idx]
+
+def linen(n):
+    t = np.asarray(Image.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'images', 'studio', 'vai', 'vai-trung-1.webp')).convert('L'), dtype=float)
+    b = np.asarray(Image.fromarray(t.astype('uint8')).filter(ImageFilter.GaussianBlur(6)), dtype=float)
+    g = t / np.maximum(b, 1)
+    r = int(np.ceil(n / g.shape[0]))
+    return np.tile(g, (r, r))[:n, :n]
+
+def woven(spec, cm, size):
+    """The cloth woven again: warp colours across x, weft down y (one repeat
+    each, in cm); where both run, a 2/2 twill shows one then the other in
+    diagonal steps - so a check gets its hatched squares, two colours in
+    blocks of 4 make houndstooth. cm: how much cloth the image shows."""
+    n = size * 2
+    ppc = n / cm
+    A = sett_line(spec['x'], ppc, n) if spec.get('x') else None
+    B = sett_line(spec['y'], ppc, n) if spec.get('y') else None
+    if A is not None and B is not None:
+        t = max(1.0, spec.get('twill', 0.1) * ppc)
+        Y, X = np.mgrid[0:n, 0:n]
+        step = np.floor((X + Y) / t)
+        Aa, Bb = np.broadcast_to(A[None, :, :], (n, n, 3)), np.broadcast_to(B[:, None, :], (n, n, 3))
+        if spec.get('hatch') == 'dark':
+            # the darker thread shows two steps in three (a gingham's
+            # hatched squares read as the darker colour, thin light lines)
+            dark = (Aa @ np.array([0.3, 0.6, 0.1])) <= (Bb @ np.array([0.3, 0.6, 0.1]))
+            D, Lt = np.where(dark[..., None], Aa, Bb), np.where(dark[..., None], Bb, Aa)
+            C = np.where((step % 3 != 0)[..., None], D, Lt)
+        else:
+            C = np.where(((step % 2) == 0)[..., None], Aa, Bb)
+    elif A is not None:
+        C = np.broadcast_to(A[None, :, :], (n, n, 3))
+    else:
+        C = np.broadcast_to(B[:, None, :], (n, n, 3))
+    # printed blocks over the weave: (x, y, w, h, colour) in cm, each repeat
+    if spec.get('blocks'):
+        C = np.array(C, dtype=float)
+        rx, ry = spec['repeat']
+        for bx, by, bw, bh, col in spec['blocks']:
+            for ox in np.arange(-rx, cm + rx, rx):
+                for oy in np.arange(-ry, cm + ry, ry):
+                    x0, y0 = int((ox + bx) * ppc), int((oy + by) * ppc)
+                    x1, y1 = int((ox + bx + bw) * ppc), int((oy + by + bh) * ppc)
+                    C[max(0, y0):max(0, y1), max(0, x0):max(0, x1)] = np.array(col) / 255
+    im = Image.fromarray((np.clip(C, 0, 1) * 255).astype('uint8')).resize((size, size), Image.LANCZOS)
+    o = np.asarray(im.filter(ImageFilter.GaussianBlur(0.5)), dtype=float) / 255
+    o = np.clip(o * (1 + (linen(size)[..., None] - 1) * spec.get('grain', 0.7)), 0, 1)
+    return Image.fromarray((o * 255).astype('uint8'))
+
+G, Wc = (16, 116, 56), (232, 233, 214)
+K, Wh = (28, 31, 33), (224, 229, 226)
+NAVY, BLU, LBL = (38, 56, 140), (66, 92, 182), (96, 124, 212)
+BK, BR, CR, LG = (36, 38, 41), (128, 104, 86), (220, 218, 210), (168, 162, 156)
+VK, VW = (30, 28, 30), (214, 204, 204)
+TN, TM, TL = (24, 30, 52), (78, 100, 160), (118, 144, 200)
+BAND = [(0.12, TM), (0.12, TL), (0.12, TM), (0.12, TL), (0.12, TM)]
+DRAWN = {
+    # Caro xanh lá: green 1 cm, cream 0.6 cm, both ways; where green crosses
+    # cream the square is hatched, mostly green (as on the cloth)
+    'A-185105': {'x': [(1.0, G), (0.6, Wc)], 'y': [(1.0, G), (0.6, Wc)], 'twill': 0.09, 'hatch': 'dark'},
+    # Sọc đen trắng: up-down stripes, 1.2 cm repeat, about even
+    'B-173947': {'x': [(0.6, K), (0.6, Wh)]},
+    # Ô nhỏ xanh than: a small blue glen check, about 1 cm
+    'A-190250': {'x': [(0.3, BLU), (0.08, NAVY), (0.08, LBL), (0.08, NAVY), (0.3, BLU), (0.16, LBL)],
+                 'y': [(0.3, BLU), (0.08, NAVY), (0.08, LBL), (0.08, NAVY), (0.3, BLU), (0.16, LBL)], 'twill': 0.06},
+    # Kẻ chéo nâu đen: glen plaid - houndstooth in brown and cream, black
+    # lines every 1.7 cm
+    'B-173648': {'x': [(0.2, CR), (0.2, BR), (0.2, CR), (0.2, BR), (0.2, CR), (0.2, BR), (0.3, BK), (0.2, CR)],
+                 'y': [(0.2, CR), (0.2, BR), (0.2, CR), (0.2, BR), (0.2, CR), (0.2, BR), (0.3, BK), (0.2, CR)], 'twill': 0.1},
+    # Nhung đen kẻ sọc: thin cream lines across black velvet, 0.9 cm
+    'A-185836': {'y': [(0.84, VK), (0.07, VW)], 'grain': 0.4},
+    # Caro trám xanh: light blue squares between bands of fine stripes, a
+    # small navy square where two bands cross, a big navy square in every
+    # other cell (printed blocks over the weave), 6.5 cm repeat each way
+    'A-190149': {'x': [(3.9, TL)] + BAND, 'y': [(3.9, TL)] + BAND, 'twill': 0.12, 'repeat': (9.0, 9.0),
+                 'blocks': [(3.9, 3.9, 0.6, 0.6, TN), (8.4, 3.9, 0.6, 0.6, TN), (3.9, 8.4, 0.6, 0.6, TN), (8.4, 8.4, 0.6, 0.6, TN),
+                            (4.5, 4.5, 3.9, 3.9, TN)]},
+}
+
+
 if __name__ == '__main__':
     # python3 tools/kv-swatches.py <folder> [photo…]: all, or only those photos
     if len(sys.argv) < 2:
@@ -248,6 +344,9 @@ if __name__ == '__main__':
         if sys.argv[2:] and r[0] not in sys.argv[2:]:
             continue
         make(sys.argv[1], r, True).save(os.path.join(out, slug(r[2]) + '.webp'), quality=82, method=6)
-        im, k = make_big(sys.argv[1], r)
+        if r[0] in DRAWN:
+            im, k = woven(DRAWN[r[0]], 13 * DRAWN_K, DRAWN_PX), DRAWN_K
+        else:
+            im, k = make_big(sys.argv[1], r)
         im.save(os.path.join(out, 'lon', slug(r[2]) + '.webp'), quality=78, method=6)
         print(slug(r[2]), 'k', k)   # photo_k in supabase/migrations/20261015_kho_vai_photo.sql

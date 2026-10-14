@@ -1038,7 +1038,8 @@ async def design(browser, db):
         await pg.wait_for_timeout(300)
         cell = await pg.evaluate("document.querySelector('.pt-board [data-i=\"4\"]').getAttribute('fill')")
         want = f'-f{sid})'
-        check(cell.endswith(want), f'{name}: tap scrap, tap patch puts that fabric there ({want} in {cell})')
+        # (already that fabric there: the tap turns it, "-f<id>o45)")
+        check(re.search(r'-f%s(o\d+)?\)$' % sid, cell), f'{name}: tap scrap, tap patch puts that fabric there ({want} in {cell})')
         # drag another scrap onto patch 0
         sid2 = await pg.evaluate("document.querySelectorAll('.pt-scrap')[2].getAttribute('data-scrap')")
         await pg.evaluate("document.querySelector('.pt-board').scrollIntoView({block: 'start'})")
@@ -2904,6 +2905,19 @@ async def vai(browser, db):
         # a real fabric's fill: its own pattern per patch, "…-r<id>p<n>)"
         check(re.search(r'-r(\d+)p\d+\)$', fill or '') and re.search(r'-r(\d+)p\d+\)$', fill)[1] == k[1:],
               f'{name}: tap scrap, tap patch: that fabric ({k} in {fill})')
+        # the same scrap on the same patch again: the fabric turns 45°
+        pat = """(() => { const f = document.querySelector('.pt-board [data-i="4"]').getAttribute('fill').match(/#([^)]+)\\)/)[1];
+            return document.getElementById(f).getAttribute('patternTransform') || ''; })()"""
+        await pg.click('.pt-board [data-i="4"]')
+        await pg.wait_for_timeout(300)
+        rot, hint = await pg.evaluate(pat), await pg.evaluate("document.querySelector('.pt-hint').textContent")
+        check(rot.startswith('rotate(45') and '45°' in hint, f'{name}: tap the patch again with that scrap: its fabric turns 45° ({rot}, {hint})')
+        # "Xoay vải ô vừa chọn": on to 90°, and the order line says so
+        await js_click(pg, '[data-pt="turn"]')
+        await pg.wait_for_timeout(300)
+        rot = await pg.evaluate(pat)
+        title = await pg.evaluate("document.querySelector('.pt-board svg title').textContent")
+        check(rot.startswith('rotate(90') and 'vải xoay: mảnh 5 90°' in title, f'{name}: "Xoay vải" turns it on to 90°; the order says so ({rot})')
         await pg.screenshot(path=OUT / f'vai-{name}.png')
         check(not any('fabric_private' in x for x in db.fab_urls), f'{name}: the studio never asks where fabrics are kept')
         check(not pg.errors, f'{name}: no script errors {pg.errors}')

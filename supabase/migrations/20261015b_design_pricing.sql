@@ -282,11 +282,13 @@ begin
   if p_spec is null or length(p_spec) > 4000 then return null; end if;
   f := string_to_array(p_spec, '~');
   n := cardinality(f);
-  if n < 9 or n > 13 or f[1] <> '2' then return null; end if;
+  -- 13: size / options; 14: each patch's fabric turned (no price)
+  if n < 9 or n > 14 or f[1] <> '2' then return null; end if;
+  if n = 14 and f[14] !~ '^[0-3]{1,64}$' then return null; end if;
   v_prod := f[2];
   v_lay  := f[3];
   v_fab  := case when n >= 11 then f[11] else '' end;
-  v_ext  := case when n = 13 then f[13] else '' end;
+  v_ext  := case when n >= 13 then f[13] else '' end;
 
   -- the piece must be ordered as its own product
   if p_sku is distinct from (case

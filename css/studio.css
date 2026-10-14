@@ -1575,6 +1575,13 @@ html:has(.studio-page) { overscroll-behavior: none; }   /* own rule: a Safari wi
 .pt-board svg [data-i] { pointer-events: auto; cursor: pointer; }
 .pt-board [data-i]:hover { filter: brightness(1.06); }
 .pt-hint { text-align: center; min-height: 3em; max-width: 34ch; }
+/* turn the fabric of the patch last touched: on the piece's corner */
+.pt-turn {
+  position: absolute; right: 0; bottom: 0; z-index: 6; min-height: 44px; padding: 0 var(--space-3);
+  border: 1.5px solid var(--sage-light); border-radius: 22px; background: var(--paper-white);
+  box-shadow: 0 2px 6px rgba(61, 74, 46, 0.25); font: inherit; font-size: var(--text-sm); color: var(--ink-dark); cursor: pointer;
+}
+.pt-turn[hidden] { display: none; }
 @keyframes pt-pop { 0% { transform: scale(0.8); } 60% { transform: scale(1.06); } 100% { transform: none; } }
 .pt-board .pt-pop, .pt-board.is-shuffle [data-i] { transform-box: fill-box; transform-origin: center; animation: pt-pop 0.38s ease-out; }
 @keyframes pt-puff { 0% { transform: none; } 40% { transform: scale(1.05); } 70% { transform: scale(0.985); } 100% { transform: none; } }

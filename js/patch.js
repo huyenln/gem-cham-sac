@@ -533,7 +533,7 @@
   function blank(product) {
     var p = PRODUCTS[product] || PRODUCTS.goi;
     return { product: PRODUCTS[product] ? product : 'goi', layout: p.def || p.layouts[0],
-      tones: [], prints: [], fabrics: [], other: '', sketch: [], note: '', img: '', fab: '', cus: [], ext: blankExt() };
+      tones: [], prints: [], fabrics: [], other: '', sketch: [], note: '', img: '', fab: '', cus: [], ext: blankExt(), rot: '' };
   }
 
   // A reference photo the customer attached (private bucket gem-design,
@@ -594,8 +594,10 @@
     var head = ['2', d.product, d.layout, d.tones.join('.'), d.prints.join('.'), d.fabrics.join('.'),
       txt(d.other), encodeSketch(d.sketch), txt(d.note)];
     var cus = d.fab && d.cus && d.cus.length ? d.cus.map(function (c) { return c.r != null ? 'r' + c.r : c.k + c.hex; }).join('.') : '';
-    // size / options ride last (field 13): the fields before it stay, empty
-    var ext = encodeExt(d);
+    // size / options ride in field 13, each patch's fabric turn in field 14
+    // (the fields before them stay, empty)
+    var ext = encodeExt(d), rot = rotCode(d);
+    if (rot) return head.concat([d.img || '', d.fab, cus, ext, rot]).join('~');
     if (ext) return head.concat([d.img || '', d.fab || '', d.fab ? cus : '', ext]).join('~');
     return head.concat(d.fab ? [d.img || '', d.fab] : d.img ? [d.img] : []).concat(cus ? [cus] : []).join('~');
   }
@@ -603,15 +605,18 @@
   function parse(spec) {
     if (typeof spec !== 'string' || spec.length > 4000) return null;
     var f = spec.split('~');
-    if (f.length < 9 || f.length > 13 || f[0] !== '2' || !PRODUCTS[f[1]]) return null;
+    if (f.length < 9 || f.length > 14 || f[0] !== '2' || !PRODUCTS[f[1]]) return null;
     var img = f.length >= 10 ? f[9] : '';
     var fab = f.length >= 11 ? f[10] : '';
     // 13 fields: size / options last, so fab and colours may be empty
     if (f.length >= 11 && f.length < 13 && !fab) return null;
     if (f.length === 13 && (!f[12] || (!fab && f[11]))) return null;
+    // 14: how each patch's fabric is turned, one digit a patch (x 45°)
+    var rot = f.length === 14 ? f[13] : '';
+    if (f.length === 14 && (!fab || !/^[0-3]{1,64}$/.test(rot) || rot.length > fab.length || !/[1-3]/.test(rot))) return null;
     if (fab.length > 64) return null;
     var cus = [];
-    if (f.length === 12 || (f.length === 13 && f[11])) {
+    if (f.length === 12 || (f.length >= 13 && f[11])) {
       var cs = f[11].split('.');
       if (cs.length > MAX_CUSTOM) return null;
       for (var ci = 0; ci < cs.length; ci++) {
@@ -644,16 +649,39 @@
     var other = untxt(f[6]), note = untxt(f[8]), sketch = parseSketch(f[7]);
     if (other === null || note === null || sketch === null) return null;
     if (other.length > MAX_OTHER || note.length > MAX_NOTE) return null;
-    var ext = parseExt(f.length === 13 ? f[12] : '', f[1]);
+    var ext = parseExt(f.length >= 13 ? f[12] : '', f[1]);
     if (!ext) return null;
     return { product: f[1], layout: f[2], tones: tones.v, prints: prints.v, fabrics: fabrics.v,
-      other: other, sketch: sketch, note: note, img: img, fab: fab, cus: cus, ext: ext };
+      other: other, sketch: sketch, note: note, img: img, fab: fab, cus: cus, ext: ext, rot: rot };
   }
 
   // Orderable: everything has a sensible "Gem chooses" default, except a
   // "from my drawing" layout with nothing drawn.
   function isComplete(d) {
     return !!d && (d.layout !== 'tuve' || d.sketch.length > 0 || !!d.img);
+  }
+
+  /* ---------- turning a patch's fabric (14/10/2026) ----------
+     Each patch can have its fabric turned in steps of 45° (a stripe that
+     runs up and down, cut on the slant). d.rot: one digit a patch, 0-3;
+     only patches with a fabric of their own (d.fab) turn. */
+  var TURN_STEP = 45;
+  function rotAt(d, i) {
+    return d && d.fab && d.rot && i < d.fab.length && i < d.rot.length ? +d.rot[i] || 0 : 0;
+  }
+  function rotCode(d) {
+    if (!d.fab || !d.rot) return '';
+    var r = d.rot.slice(0, d.fab.length).replace(/0+$/, '');
+    return /^[0-3]+$/.test(r) && /[1-3]/.test(r) ? r : '';
+  }
+  // the next turn for patch i (its fabric fixed first, as setPatch does)
+  function turnPatch(d, i) {
+    var n = slots(d);
+    if (i < 0 || i >= n) return;
+    if (!d.fab || d.fab.length !== n) setPatch(d, i, keyAt(d, i) != null ? keyAt(d, i) : shownKey(d, i));
+    var r = (d.rot || '').slice(0, n);
+    while (r.length < n) r += '0';
+    d.rot = r.slice(0, i) + ((rotAt(d, i) + 1) % 4) + r.slice(i + 1);
   }
 
   function names(ids, table, l) {
@@ -686,6 +714,13 @@
     } else if (d.sketch.length) bits.push(vi ? 'có hình vẽ tay' : 'with a sketch');
     if (d.img) bits.push(vi ? 'có ảnh tham khảo' : 'with a reference photo');
     bits = bits.concat(extBits(d, l));
+    // turned fabrics: which patch, how far (the sewer cuts it on that angle)
+    var turned = [], sn = slotNames(d, l);
+    for (var ti = 0; d.fab && ti < d.fab.length; ti++) {
+      var tr = rotAt(d, ti);
+      if (tr) turned.push((sn ? sn[ti] : (vi ? 'mảnh ' : 'patch ') + (ti + 1)) + ' ' + tr * TURN_STEP + '°');
+    }
+    if (turned.length) bits.push((vi ? 'vải xoay: ' : 'fabric turned: ') + turned.join(', '));
     if (d.note) bits.push((vi ? 'ghi chú: ' : 'note: ') + d.note);
     return bits.join(' · ');
   }
@@ -1296,6 +1331,7 @@
       out += letter(d, k) || B64[0];
     }
     d.fab = out;
+    d.rot = (d.rot || '').slice(0, Math.min(n, old.length));   // the old patches keep their turn
     prune(d);
   }
 
@@ -1316,9 +1352,11 @@
   // A painted swatch as an SVG pattern, laid side by side. Each swatch is
   // made to meet itself (tools/design-assets.py seamless()), so there is no
   // seam and no mirroring (mirrored copies folded checks into arrows).
-  function fabricPattern(id, pid, T, src) {
+  // deg: the fabric turned on the piece (a patch's turn, d.rot)
+  function fabricPattern(id, pid, T, src, deg) {
     src = src || swatchSrc(id);
-    return '<pattern id="' + pid + '" width="' + T + '" height="' + T + '" patternUnits="userSpaceOnUse">' +
+    return '<pattern id="' + pid + '" width="' + T + '" height="' + T + '" patternUnits="userSpaceOnUse"' +
+      (deg ? ' patternTransform="rotate(' + deg + ')"' : '') + '>' +
       '<image href="' + src + '" width="' + T + '" height="' + T + '" preserveAspectRatio="none"/></pattern>';
   }
 
@@ -1586,46 +1624,52 @@
     // not known (yet): a plain of its family, and the list is fetched.
     // a bigger size: the same cloth looks smaller on it
     var unit = 340 / ((p.span || 40) * sizeScale(d)), np = 0;
-    var realFill = function (rid, slot, bb) {
+    // deg: the patch's fabric turned; the photo then turns round the
+    // patch's middle and is big enough to cover it at that angle
+    var realFill = function (rid, slot, bb, deg) {
       var rf = REAL[rid];
       if (!rf || !rf.src) {
-        var fid0 = pre + 'r' + rid;
+        var fid0 = pre + 'r' + rid + (deg ? 'o' + deg : '');
         if (!defs[fid0]) {
           defs[fid0] = 1;
-          defsOut += fabricPattern(fabricId(rf ? rf.tone : 'trung', 'tron'), fid0, 110);
+          defsOut += fabricPattern(fabricId(rf ? rf.tone : 'trung', 'tron'), fid0, 110, null, deg);
           if (!rf) loadReal();
         }
         return 'url(#' + fid0 + ')';
       }
       bb = bb || FULL;
-      var big = rf.photo || rf.src, W = Math.max(SWATCH_CM * (rf.photo ? rf.k : 1) * unit, bb[2], bb[3]);
+      var cx = bb[0] + bb[2] / 2, cy = bb[1] + bb[3] / 2, box = bb;
+      if (deg) { var dg = Math.sqrt(bb[2] * bb[2] + bb[3] * bb[3]); box = [cx - dg / 2, cy - dg / 2, dg, dg]; }
+      var big = rf.photo || rf.src, W = Math.max(SWATCH_CM * (rf.photo ? rf.k : 1) * unit, box[2], box[3]);
       var h = Math.abs(Math.sin(rid * 12.9898 + slot * 78.233 + bb[0] * 0.37 + bb[1] * 0.71) * 43758.5453);
       var fx = h - Math.floor(h), fy = (h * 7.13) - Math.floor(h * 7.13);
       var id = pre + 'r' + rid + 'p' + (++np);
-      defsOut += '<pattern id="' + id + '" patternUnits="userSpaceOnUse" x="' + (bb[0] - (W - bb[2]) * fx).toFixed(1) +
-        '" y="' + (bb[1] - (W - bb[3]) * fy).toFixed(1) + '" width="' + W.toFixed(1) + '" height="' + W.toFixed(1) + '">' +
+      defsOut += '<pattern id="' + id + '" patternUnits="userSpaceOnUse" x="' + (box[0] - (W - box[2]) * fx).toFixed(1) +
+        '" y="' + (box[1] - (W - box[3]) * fy).toFixed(1) + '" width="' + W.toFixed(1) + '" height="' + W.toFixed(1) + '"' +
+        (deg ? ' patternTransform="rotate(' + deg + ' ' + cx.toFixed(1) + ' ' + cy.toFixed(1) + ')"' : '') + '>' +
         '<image href="' + big + '" width="' + W.toFixed(1) + '" height="' + W.toFixed(1) + '" preserveAspectRatio="none"/></pattern>';
       return 'url(#' + id + ')';
     };
     var fill = function (i, bb) {
       if (i > maxI) maxI = i;
-      var f;
+      var f, deg = rotAt(d, i) * TURN_STEP, turned = deg ? 'o' + deg : '';
       if (d.fab && i < d.fab.length) {
         var ix = B64.indexOf(d.fab[i]);
         if (ix >= N_FABRICS && d.cus[ix - N_FABRICS] && d.cus[ix - N_FABRICS].r != null) {
-          return realFill(d.cus[ix - N_FABRICS].r, i, bb) + (opts.hit ? '" data-i="' + i : '');
+          return realFill(d.cus[ix - N_FABRICS].r, i, bb, deg) + (opts.hit ? '" data-i="' + i : '');
         }
         if (ix >= N_FABRICS && d.cus[ix - N_FABRICS]) {
           // the customer's own colour: the recoloured painting once it is
           // ready (gem:fabric), a drawn print of that colour until then
-          var c = d.cus[ix - N_FABRICS], cid = pre + 'c' + c.k + c.hex;
+          var c = d.cus[ix - N_FABRICS], cid = pre + 'c' + c.k + c.hex + turned;
           if (!defs[cid]) {
             defs[cid] = 1;
             var csrc = customSrc(c.k, c.hex);
-            if (csrc) defsOut += fabricPattern(null, cid, 110, csrc);
+            if (csrc) defsOut += fabricPattern(null, cid, 110, csrc, deg);
             else {
               var cb = printBody(KINDS[c.k], '#' + c.hex);
-              defsOut += '<pattern id="' + cid + '" width="' + cb.size + '" height="' + cb.size + '" patternUnits="userSpaceOnUse">' + cb.body + '</pattern>';
+              defsOut += '<pattern id="' + cid + '" width="' + cb.size + '" height="' + cb.size + '" patternUnits="userSpaceOnUse"' +
+                (deg ? ' patternTransform="rotate(' + deg + ')"' : '') + '>' + cb.body + '</pattern>';
             }
           }
           return 'url(#' + cid + ')' + (opts.hit ? '" data-i="' + i : '');
@@ -1640,10 +1684,10 @@
       }
       // the painted swatch for this colour family + kind
       var fid = fabricId(toneOf(f.color), KINDS.indexOf(f.print) >= 0 ? f.print : 'tron');
-      var id = pre + 'f' + fid;
+      var id = pre + 'f' + fid + turned;
       if (!defs[id]) {
         defs[id] = 1;
-        defsOut += fabricPattern(fid, id, 110);
+        defsOut += fabricPattern(fid, id, 110, null, deg);
       }
       // opts.hit: every patch says which fabric slot it is (the designer
       // lets people tap a patch to change its fabric)
@@ -1828,25 +1872,33 @@
       out += letter(d, bag.splice(k, 1)[0]) || B64[0];
     }
     d.fab = out;
+    d.rot = '';   // new fabrics, laid straight
     prune(d);
     return d.fab;
   }
 
+  // the fabric the preview shows on patch i while Gem picks (no d.fab):
+  // a real one of that family when there is one, else the painted one
+  function paintedKey(d, i) {
+    var f = fabricsFor(d)(i);
+    return fabricId(toneOf(f.color), KINDS.indexOf(f.print) >= 0 ? f.print : 'tron');
+  }
+  function shownKey(d, i) {
+    var f = fabricsFor(d)(i);
+    return (hasReal() && nearReal(toneOf(f.color), KINDS.indexOf(f.print) >= 0 ? f.print : 'tron')) || paintedKey(d, i);
+  }
   function setPatch(d, i, key) {
     var n = slots(d);
     if (i < 0 || i >= n) return;
     var cur = d.fab && d.fab.length === n ? d.fab : '';
     if (!cur) {   // first touch: freeze what the preview shows now
-      var pick = fabricsFor(d);
-      d.cus = [];
-      for (var k = 0; k < n; k++) {
-        var f = pick(k), tone = toneOf(f.color), kind = KINDS.indexOf(f.print) >= 0 ? f.print : 'tron';
-        var near = hasReal() && nearReal(tone, kind);   // what the preview shows
-        cur += (near && letter(d, near)) || B64[fabricId(tone, kind)];
-      }
+      d.cus = []; d.rot = '';
+      for (var k = 0; k < n; k++) cur += letter(d, shownKey(d, k)) || B64[paintedKey(d, k)];
     }
     var ch = letter(d, key);
     if (!ch) return;
+    // another fabric on a turned patch: it starts straight
+    if (cur[i] !== ch && d.rot && i < d.rot.length) d.rot = d.rot.slice(0, i) + '0' + d.rot.slice(i + 1);
     d.fab = cur.slice(0, i) + ch + cur.slice(i + 1);
     prune(d);
   }
@@ -2031,6 +2083,7 @@
     sketchPaths: sketchPaths,
     KINDS: KINDS, KIND_NAMES: KIND_NAMES, N_FABRICS: N_FABRICS, MOODS: MOODS, B64: B64,
     fabric: fabric, fabricId: fabricId, slots: slots, scatter: scatter, setPatch: setPatch, syncTaste: syncTaste,
+    turnPatch: turnPatch, rotAt: rotAt, TURN_STEP: TURN_STEP,
     moodOf: moodOf, applyMood: applyMood, title: title, serial: serial, swatch: swatch,
     swatchSrc: swatchSrc, VAI: VAI, netRegions: netRegions, refit: refit, NET_MAX: NET_MAX, keySrc: keySrc, keyAt: keyAt, keyName: keyName, isCustom: isCustom, customSrc: customSrc,
     layoutName: layoutName, slotNames: slotNames,
