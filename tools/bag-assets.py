@@ -16,8 +16,8 @@ Two kinds of bag:
               tuitote           tote, one handle arch (front and back handles
                                 line up), box-X stitched tabs
               tuibuoc-<style>   tie shoulder bag: two points tied on the shoulder,
-                                as a bow (no), a plain knot (thuong), twisted
-                                (xoan) or with lace ribbon (ren)
+                                plain straps knotted (thuong), a bow (no), a
+                                ruffled strap (xoan) or lace ribbon (ren)
               laptopq           the laptop sleeve painting, smaller, with a
                                 shoulder strap drawn over it
 
@@ -373,8 +373,9 @@ def drawn(name, src=None, style='no'):
         left = side(1)
         body = left + side(-1)[::-1]
         # the straps from each point, and how they meet on the shoulder
-        # (style): a bow, a plain knot, twisted together, or lace ribbon tied
-        # in a bow (lace is drawn as is, cream, over the fabric)
+        # (style): plain straps knotted (thuong, in the price), a bow, a
+        # ruffled strap over the shoulder (xoan), or lace ribbon tied in a bow
+        # (lace is drawn as is, cream, over the fabric)
         def loop(cx, cy, rx, ry, rot):
             r = math.radians(rot)
             return [(cx + rx * math.cos(t) * math.cos(r) - ry * math.sin(t) * math.sin(r),
@@ -391,16 +392,36 @@ def drawn(name, src=None, style='no'):
             tail_l = [(163, 44), (149, 22), (157, 18), (170, 40)]
             ties = [tie_l, mirror(tie_l), tail_l, mirror(tail_l), [(161, 40), (179, 40), (181, 57), (159, 57)]]
             folds = [[(160, 48), (180, 48)]]
-        else:   # xoan: the two straps twisted round each other, up over the shoulder
-            tie_l = [(125, 112), (161, 86), (172, 93), (141, 112)]
-            # the twist: the edges swell and pinch every turn, the turns lean
-            ys = [96 - i for i in range(0, 67, 2)]
-            lft = [(170 - 9 - 2.6 * abs(math.sin((96 - y) * math.pi / 10)), y) for y in ys]
-            rgt = [(170 + 9 + 2.6 * abs(math.sin((96 - y) * math.pi / 10 + math.pi / 2)), y) for y in ys]
-            cap = [(170 - 10 * math.cos(k * math.pi / 8), 30 - 10 * math.sin(k * math.pi / 8)) for k in range(9)]
-            col = lft + cap + rgt[::-1]
-            ties = [tie_l, mirror(tie_l), col]
-            folds = [[(159, y + 4), (181, y - 6)] for y in range(36, 100, 10)]
+        else:   # xoan: a ruffled strap (fabric gathered on a narrow band), one
+            # arch from point to point over the shoulder, knotted at each point
+            mid = cubic((133, 112), (126, 40), (150, 24), (170, 24)) + cubic((170, 24), (190, 24), (214, 40), (207, 112))[1:]
+            # even steps along the arch
+            seg = [0.0]
+            for (x0, y0), (x1, y1) in zip(mid, mid[1:]):
+                seg.append(seg[-1] + math.hypot(x1 - x0, y1 - y0))
+            L, n = seg[-1], 160
+            pts, j = [], 0
+            for i in range(n + 1):
+                d = L * i / n
+                while j < len(seg) - 2 and seg[j + 1] < d:
+                    j += 1
+                t = (d - seg[j]) / max(seg[j + 1] - seg[j], 1e-6)
+                (x0, y0), (x1, y1) = mid[j], mid[j + 1]
+                nx, ny = -(y1 - y0), x1 - x0
+                ln = math.hypot(nx, ny) or 1
+                pts.append((x0 + (x1 - x0) * t, y0 + (y1 - y0) * t, nx / ln, ny / ln, d))
+            # big soft frills either side of a narrow band (a pinch every 9)
+            bump = lambda d, ph: 6 + 8 * abs(math.sin(d * math.pi / 9 + ph)) ** 0.7
+            outer = [(x + nx * bump(d, 0), y + ny * bump(d, 0)) for x, y, nx, ny, d in pts]
+            inner = [(x - nx * bump(d, 1.4), y - ny * bump(d, 1.4)) for x, y, nx, ny, d in pts]
+            ruffle = outer + inner[::-1]
+            knots = [loop(133, 116, 9, 7, 20), loop(207, 116, 9, 7, -20)]
+            ties = [ruffle] + knots
+            # the gathers: short folds across the band at each pinch
+            folds = []
+            for x, y, nx, ny, d in pts[2:-2]:
+                if abs(math.sin(d * math.pi / 9)) < 0.12:                    # at each pinch
+                    folds.append([(x - nx * 5, y - ny * 5), (x + nx * 12, y + ny * 12)])
         fill(A, body)
         if style == 'ren':
             T = Image.new('RGBA', (SIDE * S2, SIDE * S2))
@@ -431,7 +452,7 @@ def drawn(name, src=None, style='no'):
                 fill(A, q)
             parts['quai'] = ''.join(path(q) for q in ties)
             for f in folds:
-                line(marks, f, 150 if style == 'xoan' else 90, 1.6 if style == 'xoan' else 1.0)
+                line(marks, f, 120 if style == 'xoan' else 90, 1.1 if style == 'xoan' else 1.0)
         # topstitch round the mouth and the points, the side seam of the gusset
         inner = [(x + (6 if x < 170 else -6 if x > 170 else 0), y + 6) for x, y in left[-14:]]
         line(marks, inner, 110, 1.0, dash=(5, 4))

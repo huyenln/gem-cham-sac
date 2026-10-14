@@ -1993,8 +1993,10 @@ hai migration chỉ chạy khi merge: `20261015_kho_vai_photo.sql` (ảnh lớn 
     - 4 dáng từ tranh túi của Gem: tote, quai nơ (size nhỏ / vừa), khoá kéo đeo vai, tam giác.
     - **Túi buộc vai** (mẫu Anna gửi 14/10, thay túi bán nguyệt vì dáng bán nguyệt trông già): thân
       2 đỉnh nhô, miệng khoét, mảnh hông/đáy, hai đỉnh buộc trên vai. **Kiểu buộc vai** là một
-      lựa chọn (field 13 `t<i>`): nơ, thắt thường, xoắn (+10k), dây ren (+15k). Mỗi kiểu một bộ
-      tranh `mon-tuibuoc-<kiểu>-*`. Dây ren màu kem vẽ sẵn, không lấy vải trong rổ (bớt một ô vải).
+      lựa chọn (field 13 `t<i>`): **dây thẳng** (mặc định, đã gồm trong giá), thắt nơ (+10k, tạm),
+      **dây xoắn = dây nhún bèo** (+30k, Anna chốt), dây ren (+20k, tạm). "Dây tạo kiểu thì cộng
+      thêm tiền" (Anna 14/10). Mỗi kiểu một bộ tranh `mon-tuibuoc-<kiểu>-*`. Dây ren màu kem vẽ sẵn,
+      không lấy vải trong rổ (bớt một ô vải).
     - Túi dây rút đã bỏ (Anna 14/10: không làm chính).
   - Tote **vẽ lại cho đứng thẳng, không rủ như ảnh** (Anna 14/10): đáy phẳng, miệng thẳng, quai
     vòng đều, tab quai may chữ X.

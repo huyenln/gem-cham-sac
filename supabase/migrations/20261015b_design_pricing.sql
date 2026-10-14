@@ -204,9 +204,9 @@ insert into public.settings (key, value) values ('design_pricing', $json$
       "snap": 10000,
       "ties": [
         0,
-        0,
         10000,
-        15000
+        30000,
+        20000
       ]
     },
     "laptop": {
