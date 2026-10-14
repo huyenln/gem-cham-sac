@@ -324,6 +324,40 @@ window.GemDB = (function () {
       ]).then(function (r) { return { orders: r[0], sessions: r[1], notes: r[2] }; });
     },
 
+    /* ---------- Kho vải (bàn thiết kế + admin.html) ---------- */
+
+    // Vải thật Gem đang có. Ai cũng đọc được (kể cả tấm đã hết, để thiết kế
+    // cũ vẫn hiện đúng ảnh). Chỗ để vải nằm ở bảng riêng, chỉ nhân sự đọc.
+    // Bảng chưa có / mạng lỗi thì trả [] — bàn thiết kế dùng vải vẽ.
+    fabrics: function () {
+      return req('/rest/v1/fabrics?select=id,name_vi,name_en,tone,kind,material,img,in_stock,is_visible,sort_order' +
+        '&order=sort_order.asc,id.asc').catch(function () { return []; });
+    },
+
+    adminFabrics: function () {
+      return req('/rest/v1/fabrics?select=*,fabric_private(place)&order=sort_order.asc,id.asc');
+    },
+
+    saveFabric: function (id, row) {
+      return req('/rest/v1/fabrics' + (id ? '?id=eq.' + encodeURIComponent(id) : ''), {
+        method: id ? 'PATCH' : 'POST',
+        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+        body: JSON.stringify(row)
+      }).then(function (rows) { return rows && rows[0]; });
+    },
+
+    saveFabricPlace: function (id, place) {
+      return req('/rest/v1/fabric_private?on_conflict=fabric_id', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify({ fabric_id: id, place: place || null })
+      });
+    },
+
+    deleteFabric: function (id) {
+      return req('/rest/v1/fabrics?id=eq.' + encodeURIComponent(id), { method: 'DELETE' });
+    },
+
     /* ---------- bố cục Studio Gem (owner lắp trong admin.html) ---------- */
 
     // id = 'live' (ai cũng đọc được) hoặc 'draft' (chỉ owner). Trả data hoặc null.

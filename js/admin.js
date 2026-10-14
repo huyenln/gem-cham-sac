@@ -52,6 +52,9 @@
   var noteFilter = 'pending';   // pending | approved | hidden
   var wtypes = [];
   var editingProduct = null;
+  var fabrics = [];             // Kho vải, each with fabric_private.place
+  var fabFilter = 'all';        // all | <tone> | out | hidden
+  var editingFabric = null;     // null = xem kho, {} = tấm mới, {…} = sửa tấm
   var editingPost = null;   // null = xem danh sách, {} = bài mới, {…} = sửa bài
   var tab = 'today';
   var orderFilter = 'open';   // open | done | all
@@ -156,6 +159,7 @@
           '<button type="button" data-tab="orders">Đơn hàng</button>' +
           '<button type="button" data-tab="sessions">Đặt lịch</button>' +
           '<button type="button" data-tab="products">Sản phẩm</button>' +
+          '<button type="button" data-tab="fabrics">Kho vải</button>' +
           '<button type="button" data-tab="posts">Bản tin</button>' +
           '<button type="button" data-tab="notes">Lời nhắn</button>' +
           // Only the owner may change the studio (RLS enforces it too).
@@ -178,6 +182,7 @@
         el.main.classList.toggle('is-wide', tab === 'studio');
         editingPost = null;
         editingProduct = null;
+        editingFabric = null;
         paintTabs();
         el.main.innerHTML = '<p class="ad-loading">Đang tải...</p>';
         load();          // mỗi tab lấy dữ liệu riêng, không nạp sẵn tất cả
@@ -783,6 +788,7 @@
         (o.address ? '<p class="ad-od-addr">' + esc(o.address) + '</p>' : '') +
         (o.note ? '<p class="ad-od-note">“' + esc(o.note) + '”</p>' : '') +
         '<ul class="ad-od-items">' + items + '</ul>' +
+        fabricsToTake(o) +
         '<p class="ad-od-sum"><span>Tổng</span><b>' + esc(money(o.subtotal)) +
           (o.has_unpriced ? ' + món Liên hệ' : '') + '</b></p>' +
         '<div class="ad-acts">' +
@@ -1421,6 +1427,325 @@
     });
   }
 
+  /* ================= KHO VẢI =================
+     Vải thật Gem đang có, cho rổ vải ở Bàn thiết kế (Studio 2D). Khách thấy
+     ảnh + tên + chất liệu; chỗ để nằm ở bảng fabric_private, chỉ nhân sự
+     đọc được (RLS). Tên do nhân sự gõ: luôn qua esc(). */
+  var FAB_TONES = { xanh: 'Xanh lá', lam: 'Xanh lam', hong: 'Hồng – đỏ', nau: 'Nâu đất', trung: 'Trung tính' };
+  var FAB_KINDS = { tron: 'Trơn', caro: 'Caro', soc: 'Sọc / kẻ', cham: 'Chấm bi', hoa: 'Hoa nhí',
+    ren: 'Ren', hoato: 'Hoa to / họa tiết lớn', ono: 'Ô nhỏ', tho: 'Thổ cẩm' };
+  var FAB_MATS = ['Cotton', 'Đũi / linen', 'Kaki', 'Kate', 'Voan', 'Lụa', 'Satin', 'Tafta', 'Nhung', 'Nhung tăm',
+    'Thun', 'Dạ', 'Nỉ', 'Gấm', 'Thổ cẩm', 'Jean', 'Ren', 'Kim tuyến', 'Vải thô', 'Vải pha'];
+
+  function placeOf(f) {
+    var fp = f && f.fabric_private;
+    if (Array.isArray(fp)) fp = fp[0];
+    return (fp && fp.place) || '';
+  }
+  function fabricById(id) { return fabrics.filter(function (f) { return f.id === id; })[0] || null; }
+
+  // A custom design in the order note (studio.html?d=…, after a line
+  // "Thiết kế riêng × 2 — …"): which real fabrics to take, how many patches
+  // of each, and where they are kept.
+  function fabricsToTake(o) {
+    var P = window.GemPatch;
+    if (!P || !o.note || o.note.indexOf('studio.html?d=') < 0) return '';
+    var need = {}, order = [], qty = 1;
+    o.note.split('\n').forEach(function (line) {
+      var q = line.match(/×\s*(\d+)\s*—/);
+      if (q) qty = Math.min(99, +q[1] || 1);
+      var m = line.match(/studio\.html\?d=([^\s&]+)/);
+      if (!m) return;
+      var d = null;
+      try { d = P.parse(decodeURIComponent(m[1])); } catch (e) { d = null; }
+      for (var i = 0; d && d.fab && i < d.fab.length; i++) {
+        var k = P.keyAt(d, i);
+        if (!P.isReal(k)) continue;
+        var id = +k.slice(1);
+        if (!need[id]) { need[id] = 0; order.push(id); }
+        need[id] += qty;
+      }
+      qty = 1;
+    });
+    if (!order.length) return '';
+    return '<div class="ad-od-fab"><b>Vải cần lấy (thiết kế riêng)</b><ul>' + order.map(function (id) {
+      var f = fabricById(id);
+      return '<li>' + (f ? '<img src="' + esc(f.img) + '" alt="" loading="lazy">' : '<span class="ad-fab-none"></span>') +
+        '<span><b>' + esc(f ? f.name_vi : 'Vải #' + id) + '</b> · ' + need[id] + ' mảnh' +
+        (f && !f.in_stock ? ' <em>(đang ghi Hết)</em>' : '') +
+        '<small>' + esc(f ? (placeOf(f) || 'Chưa ghi chỗ để') : 'Tấm này đã bị xoá khỏi kho') + '</small></span></li>';
+    }).join('') + '</ul></div>';
+  }
+
+  function renderFabrics() {
+    if (editingFabric !== null) return renderFabricForm();
+    var count = function (fn) { return fabrics.filter(fn).length; };
+    var tests = {
+      all: function () { return true; },
+      out: function (f) { return !f.in_stock; },
+      hidden: function (f) { return !f.is_visible; }
+    };
+    Object.keys(FAB_TONES).forEach(function (t) { tests[t] = function (f) { return f.tone === t; }; });
+    if (!tests[fabFilter]) fabFilter = 'all';
+    var chips = [['all', 'Tất cả']].concat(Object.keys(FAB_TONES).map(function (t) { return [t, FAB_TONES[t]]; }))
+      .concat([['out', 'Đang hết'], ['hidden', 'Đang ẩn']]).map(function (c) {
+        var n = count(tests[c[0]]);
+        if (!n && (c[0] === 'out' || c[0] === 'hidden')) return '';
+        return '<button type="button" class="ad-filter' + (fabFilter === c[0] ? ' active' : '') + '" data-ff="' + c[0] + '">' +
+          c[1] + ' <b>' + n + '</b></button>';
+      }).join('');
+    var list = fabrics.filter(tests[fabFilter]).slice().sort(function (a, b) {
+      var ta = Object.keys(FAB_TONES).indexOf(a.tone), tb = Object.keys(FAB_TONES).indexOf(b.tone);
+      return fabFilter === 'all' ? (ta - tb || a.sort_order - b.sort_order || a.id - b.id) : (a.sort_order - b.sort_order || a.id - b.id);
+    });
+    var grid = list.length ? '<div class="ad-fabs">' + list.map(function (f) {
+      return '<div class="ad-fab' + (f.in_stock ? '' : ' is-out') + (f.is_visible ? '' : ' is-hidden') + '" data-id="' + f.id + '">' +
+        '<img src="' + esc(f.img) + '" alt="" loading="lazy">' +
+        '<div class="ad-fab-body">' +
+          '<p class="ad-fab-name"><b>' + esc(f.name_vi) + '</b> <span>#' + f.id + '</span></p>' +
+          '<p class="ad-fab-meta">' + esc(FAB_TONES[f.tone] || f.tone) + ' · ' + esc(FAB_KINDS[f.kind] || f.kind) +
+            (f.material ? ' · ' + esc(f.material) : '') + '</p>' +
+          '<p class="ad-fab-place">' + (placeOf(f) ? 'Chỗ để: ' + esc(placeOf(f)) : 'Chưa ghi chỗ để') + '</p>' +
+          (f.is_visible ? '' : '<p class="ad-fab-place">Đang ẩn khỏi rổ vải</p>') +
+          '<div class="ad-acts">' +
+            '<button type="button" class="ad-btn' + (f.in_stock ? '' : ' on') + '" data-fs="stock">' + (f.in_stock ? 'Còn' : 'Hết') + '</button>' +
+            '<button type="button" class="ad-btn" data-fs="edit">Sửa</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('') + '</div>' : '<div class="ad-empty"><p>Chưa có tấm vải nào ở mục này.</p></div>';
+
+    el.main.innerHTML =
+      '<div class="ad-filters">' + chips +
+        '<button type="button" class="ad-filter active ad-new-fab">+ Thêm vải</button></div>' +
+      '<p class="ad-hint">Mỗi tấm là một ảnh vuông khách thấy trong rổ vải ở Bàn thiết kế (Studio 2D). ' +
+        'Hết vải thì bấm “Còn” để chuyển thành “Hết”: khách không chọn được nữa, còn thiết kế cũ vẫn giữ ảnh. ' +
+        'Chỗ để chỉ nhân sự thấy.</p>' + grid;
+
+    el.main.querySelectorAll('[data-ff]').forEach(function (b) {
+      b.addEventListener('click', function () { fabFilter = b.getAttribute('data-ff'); renderFabrics(); });
+    });
+    el.main.querySelector('.ad-new-fab').addEventListener('click', function () { editingFabric = {}; renderFabricForm(); });
+    el.main.querySelectorAll('.ad-fab').forEach(function (card) {
+      var f = fabricById(+card.getAttribute('data-id'));
+      card.querySelector('[data-fs="edit"]').addEventListener('click', function () { editingFabric = f; renderFabricForm(); });
+      card.querySelector('[data-fs="stock"]').addEventListener('click', function (e) {
+        var b = e.currentTarget;
+        b.disabled = true;
+        window.GemDB.saveFabric(f.id, { in_stock: !f.in_stock })
+          .then(function () { toast(f.in_stock ? 'Đã ghi Hết' : 'Đã ghi Còn'); return load(); })
+          .catch(function () { b.disabled = false; toast('Không lưu được', true); });
+      });
+    });
+  }
+
+  /* ---------- thêm / sửa một tấm ----------
+     Ảnh: chụp tấm vải bằng điện thoại, kéo khung vuông vào chỗ phẳng, rõ hoa
+     văn. Web cắt đúng khung, làm đều sáng tối (nếp gấp, bóng) rồi thu còn
+     320px — đúng cỡ rổ vải dùng — trước khi tải lên kho gem-media. */
+  function renderFabricForm() {
+    var f = editingFabric || {};
+    var isNew = !f.id;
+    var crop = null;   // {img, x, y, s, w, h}: the photo and the square on it
+
+    el.main.innerHTML =
+      '<button type="button" class="ad-btn ad-cancel">‹ Về kho vải</button>' +
+      '<form class="ad-post-form ad-fab-form">' +
+        '<h3>' + (isNew ? 'Thêm vải' : 'Sửa vải #' + f.id) + '</h3>' +
+        '<div class="ad-f">' +
+          '<span>Ảnh tấm vải</span>' +
+          '<div class="ad-fab-pics">' +
+            '<figure class="ad-fab-out"><canvas width="320" height="320"' + (f.img ? ' hidden' : '') + '></canvas>' +
+              (f.img ? '<img src="' + esc(f.img) + '" alt="">' : '') +
+              '<figcaption>Khách thấy ảnh này</figcaption></figure>' +
+            '<div class="ad-fab-pick">' +
+              '<label class="ad-btn ad-upload">' + (f.img ? 'Chụp / chọn ảnh khác' : 'Chụp / chọn ảnh') +
+                '<input type="file" accept="image/*" hidden data-fab-photo></label>' +
+              '<p class="ad-hint">Chụp thẳng từ trên xuống, đủ sáng, trải phẳng tấm vải.</p>' +
+            '</div>' +
+          '</div>' +
+          '<div class="ad-crop" hidden>' +
+            '<div class="ad-crop-stage"><canvas class="ad-crop-src"></canvas><div class="ad-crop-box" tabindex="0" ' +
+              'aria-label="Khung vuông: kéo để chọn chỗ"></div></div>' +
+            '<label class="ad-crop-size">Khung <input type="range" min="15" max="100" value="60" data-crop-size></label>' +
+            '<label class="ad-check"><input type="checkbox" data-crop-flat checked> Làm đều nếp gấp và bóng tối</label>' +
+            '<p class="ad-hint">Kéo khung vuông vào chỗ vải phẳng, thấy rõ hoa văn. Khung càng to, ' +
+              'hoa văn trên món càng nhỏ.</p>' +
+          '</div>' +
+        '</div>' +
+        '<label class="ad-f"><span>Tên (tiếng Việt)</span><input name="name_vi" maxlength="60" required placeholder="vd Caro xanh lá"></label>' +
+        '<label class="ad-f"><span>Tên (tiếng Anh, không bắt buộc)</span><input name="name_en" maxlength="60" placeholder="vd Green gingham"></label>' +
+        '<div class="ad-f-row">' +
+          '<label class="ad-f"><span>Tông màu</span><select name="tone">' + Object.keys(FAB_TONES).map(function (k) {
+            return '<option value="' + k + '">' + esc(FAB_TONES[k]) + '</option>';
+          }).join('') + '</select></label>' +
+          '<label class="ad-f"><span>Hoa văn</span><select name="kind">' + Object.keys(FAB_KINDS).map(function (k) {
+            return '<option value="' + k + '">' + esc(FAB_KINDS[k]) + '</option>';
+          }).join('') + '</select></label>' +
+        '</div>' +
+        '<label class="ad-f"><span>Chất liệu</span><input name="material" maxlength="40" list="ad-fab-mats" placeholder="vd Cotton">' +
+          '<datalist id="ad-fab-mats">' + FAB_MATS.map(function (m) { return '<option value="' + esc(m) + '">'; }).join('') + '</datalist></label>' +
+        '<label class="ad-f"><span>Chỗ để ở Gem (chỉ nhân sự thấy)</span><input name="place" maxlength="120" placeholder="vd Phòng nhỏ, ngăn dưới cùng tủ vải to"></label>' +
+        '<label class="ad-check"><input type="checkbox" name="in_stock"> Còn vải (khách chọn được)</label>' +
+        '<label class="ad-check"><input type="checkbox" name="is_visible"> Cho khách thấy trong rổ vải</label>' +
+        '<p class="ad-hint">Tông màu và hoa văn giúp web chọn vải cho từng “tâm trạng” và cho nút lọc màu ở rổ vải.</p>' +
+        '<div class="ad-acts">' +
+          '<button type="submit" class="ad-btn ad-primary">Lưu vải</button>' +
+          (isNew ? '' : '<button type="button" class="ad-btn ad-danger ad-fab-del">Xoá tấm này</button>') +
+        '</div>' +
+      '</form>';
+
+    var form = el.main.querySelector('form');
+    var F = form.elements;
+    F['name_vi'].value = f.name_vi || '';
+    F['name_en'].value = f.name_en || '';
+    F['tone'].value = f.tone || 'xanh';
+    F['kind'].value = f.kind || 'tron';
+    F['material'].value = f.material || '';
+    F['place'].value = placeOf(f);
+    F['in_stock'].checked = f.in_stock !== false;
+    F['is_visible'].checked = f.is_visible !== false;
+
+    el.main.querySelector('.ad-cancel').addEventListener('click', function () { editingFabric = null; renderFabrics(); });
+
+    var cropEl = el.main.querySelector('.ad-crop');
+    var src = cropEl.querySelector('.ad-crop-src');
+    var box = cropEl.querySelector('.ad-crop-box');
+    var outFig = el.main.querySelector('.ad-fab-out');
+    var outCv = outFig.querySelector('canvas');
+    var job = 0;
+
+    // the square, in the photo's pixels, drawn over the shrunk copy
+    function placeBox() {
+      var k = src.clientWidth / crop.w;
+      box.style.left = (crop.x * k) + 'px';
+      box.style.top = (crop.y * k) + 'px';
+      box.style.width = box.style.height = (crop.s * k) + 'px';
+    }
+    function preview() {
+      var mine = ++job;
+      return window.GemImg.fabric(crop.img, crop, { flat: cropEl.querySelector('[data-crop-flat]').checked, name: 'vai' })
+        .then(function (r) {
+          if (mine !== job) return r;
+          outCv.hidden = false;
+          var old = outFig.querySelector('img');
+          if (old) old.remove();
+          outCv.getContext('2d').drawImage(r.canvas, 0, 0);
+          return r;
+        });
+    }
+    var previewSoon = (function () {
+      var timer = null;
+      return function () { clearTimeout(timer); timer = setTimeout(preview, 120); };
+    })();
+
+    el.main.querySelector('[data-fab-photo]').addEventListener('change', function (e) {
+      var file = e.target.files && e.target.files[0];
+      if (!file) return;
+      window.GemImg.load(file).then(function (img) {
+        var w = img.naturalWidth, h = img.naturalHeight, s = Math.round(Math.min(w, h) * 0.6);
+        crop = { img: img, w: w, h: h, s: s, x: Math.round((w - s) / 2), y: Math.round((h - s) / 2) };
+        // a shrunk copy to frame on (the full photo is only read when cutting)
+        var k = Math.min(1, 900 / Math.max(w, h));
+        src.width = Math.round(w * k); src.height = Math.round(h * k);
+        src.getContext('2d').drawImage(img, 0, 0, src.width, src.height);
+        cropEl.hidden = false;
+        cropEl.querySelector('[data-crop-size]').value = 60;
+        placeBox();
+        preview();
+      }).catch(function (err) { toast(err.message || 'Không đọc được ảnh', true); });
+    });
+
+    cropEl.querySelector('[data-crop-size]').addEventListener('input', function (e) {
+      if (!crop) return;
+      var cx = crop.x + crop.s / 2, cy = crop.y + crop.s / 2;
+      crop.s = Math.max(40, Math.round(Math.min(crop.w, crop.h) * e.target.value / 100));
+      crop.x = Math.round(Math.max(0, Math.min(crop.w - crop.s, cx - crop.s / 2)));
+      crop.y = Math.round(Math.max(0, Math.min(crop.h - crop.s, cy - crop.s / 2)));
+      placeBox(); previewSoon();
+    });
+    cropEl.querySelector('[data-crop-flat]').addEventListener('change', function () { if (crop) preview(); });
+
+    // drag the square (finger or mouse); arrow keys nudge it
+    var drag = null;
+    box.addEventListener('pointerdown', function (e) {
+      if (!crop) return;
+      drag = { id: e.pointerId, x: e.clientX, y: e.clientY, x0: crop.x, y0: crop.y };
+      try { box.setPointerCapture(e.pointerId); } catch (x) { /* ignore */ }
+      e.preventDefault();
+    });
+    box.addEventListener('pointermove', function (e) {
+      if (!drag || e.pointerId !== drag.id) return;
+      var k = crop.w / src.clientWidth;
+      crop.x = Math.round(Math.max(0, Math.min(crop.w - crop.s, drag.x0 + (e.clientX - drag.x) * k)));
+      crop.y = Math.round(Math.max(0, Math.min(crop.h - crop.s, drag.y0 + (e.clientY - drag.y) * k)));
+      placeBox();
+    });
+    var endDrag = function (e) { if (drag && e.pointerId === drag.id) { drag = null; preview(); } };
+    box.addEventListener('pointerup', endDrag);
+    box.addEventListener('pointercancel', endDrag);
+    box.addEventListener('keydown', function (e) {
+      var dx = { ArrowLeft: -1, ArrowRight: 1 }[e.key] || 0, dy = { ArrowUp: -1, ArrowDown: 1 }[e.key] || 0;
+      if (!crop || (!dx && !dy)) return;
+      e.preventDefault();
+      var step = Math.round(crop.s / 10);
+      crop.x = Math.max(0, Math.min(crop.w - crop.s, crop.x + dx * step));
+      crop.y = Math.max(0, Math.min(crop.h - crop.s, crop.y + dy * step));
+      placeBox(); previewSoon();
+    });
+    window.addEventListener('resize', function onResize() {
+      if (!document.body.contains(box)) { window.removeEventListener('resize', onResize); return; }
+      if (crop) placeBox();
+    });
+
+    var del = el.main.querySelector('.ad-fab-del');
+    if (del) del.addEventListener('click', function () {
+      if (!window.confirm('Xoá hẳn “' + f.name_vi + '” khỏi kho?\n\nThiết kế cũ có tấm này sẽ hiện màu trơn thay cho ảnh. ' +
+          'Nếu chỉ là hết vải, bấm “Còn” → “Hết” thay vì xoá.')) return;
+      del.disabled = true;
+      window.GemDB.deleteFabric(f.id)
+        .then(function () { toast('Đã xoá'); editingFabric = null; return load(); })
+        .catch(function (err) { del.disabled = false; toast(err.message || 'Không xoá được', true); });
+    });
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var name = F['name_vi'].value.trim();
+      if (!name) return toast('Cần tên tấm vải', true);
+      if (isNew && !crop) return toast('Chụp hoặc chọn ảnh tấm vải trước nhé', true);
+      var btn = form.querySelector('[type="submit"]');
+      btn.disabled = true; btn.textContent = 'Đang lưu...';
+      var row = {
+        name_vi: name,
+        name_en: F['name_en'].value.trim() || null,
+        tone: F['tone'].value,
+        kind: F['kind'].value,
+        material: F['material'].value.trim() || null,
+        in_stock: F['in_stock'].checked,
+        is_visible: F['is_visible'].checked
+      };
+      var place = F['place'].value.trim();
+      // a new picture: cut, upload, then the row points at it
+      var pic = crop ? preview().then(function (r) {
+        return window.GemDB.uploadImage(new File([r.file], 'vai-' + slugify(name) + '.' + r.file.name.split('.').pop(), { type: r.file.type }));
+      }).then(function (url) { row.img = url; }) : Promise.resolve();
+      if (isNew) {
+        row.sort_order = fabrics.reduce(function (m, x) { return Math.max(m, x.sort_order || 0); }, 0) + 10;
+      }
+      pic.then(function () { return window.GemDB.saveFabric(f.id || null, row); })
+        .then(function (saved) {
+          var id = (saved && saved.id) || f.id;
+          if (!id || place === placeOf(f)) return null;
+          return window.GemDB.saveFabricPlace(id, place);
+        })
+        .then(function () { toast(isNew ? 'Đã thêm vào kho' : 'Đã lưu'); editingFabric = null; return load(); })
+        .catch(function (err) {
+          btn.disabled = false; btn.textContent = 'Lưu vải';
+          toast(err.message || 'Không lưu được', true);
+        });
+    });
+  }
+
   /* ================= BẢN TIN ================= */
 
   function slugify(s) {
@@ -1690,6 +2015,7 @@
     if (tab === 'today')    return renderToday();
     if (tab === 'orders')   return renderOrders();
     if (tab === 'products') return renderProducts();
+    if (tab === 'fabrics')  return renderFabrics();
     if (tab === 'posts')    return renderPosts();
     if (tab === 'notes')    return renderNotes();
     renderSessions();
@@ -1703,7 +2029,13 @@
       return window.GemStudioEditor.mount(el.main);
     }
     if (tab === 'orders') {
-      job = window.GemDB.adminOrders().then(function (rows) { orders = rows || []; });
+      // the fabrics too: a custom design says which ones to take, from where
+      job = Promise.all([
+        window.GemDB.adminOrders(),
+        window.GemDB.adminFabrics().catch(function () { return []; })
+      ]).then(function (r) { orders = r[0] || []; fabrics = r[1] || []; });
+    } else if (tab === 'fabrics') {
+      job = window.GemDB.adminFabrics().then(function (rows) { fabrics = rows || []; });
     } else if (tab === 'products') {
       job = window.GemDB.adminProducts().then(function (rows) { products = rows || []; });
     } else if (tab === 'notes') {

@@ -144,6 +144,68 @@
   ];
   MOODS.forEach(function (m) { m.ids = m.f.map(function (x) { return fabricId(x[0], x[1]); }); });
 
+  /* ---------- real fabrics (Kho vải) ----------
+     The fabrics Gem actually has: table fabrics, edited in admin.html →
+     Kho vải. A key "r<id>" names one; on a design it takes a letter after
+     the painted 45, like an own colour (d.cus holds {r: id}). Until the list
+     arrives (or if it never does) the painted catalogue stays in use, and a
+     real fabric not known yet is drawn as a plain of its colour family.
+     Names come from staff: callers put them through textContent / esc(). */
+  var REAL = {}, REAL_ON = [], REAL_MIN = 8;
+  var REAL_IMG = /^(images\/[a-z0-9\/_.-]+|https:\/\/dxdovvqsfjeizsoprrfn\.supabase\.co\/storage\/v1\/object\/public\/gem-media\/[A-Za-z0-9%._-]+)$/;
+  // how alike two kinds are, when the exact one is missing
+  var KIND_GROUP = { tron: 0, ren: 0, caro: 1, soc: 1, ono: 1, cham: 2, hoa: 2, hoato: 3, tho: 3 };
+
+  function setReal(rows) {
+    REAL = {}; REAL_ON = [];
+    (rows || []).forEach(function (r) {
+      if (!r || typeof r.id !== 'number' || !TONES[r.tone]) return;
+      var f = { id: r.id, key: 'r' + r.id, vi: String(r.name_vi || ''), en: String(r.name_en || r.name_vi || ''),
+        tone: r.tone, kind: KINDS.indexOf(r.kind) >= 0 ? r.kind : 'tron', mat: String(r.material || ''),
+        src: REAL_IMG.test(r.img || '') ? r.img : null, out: r.in_stock === false, hidden: r.is_visible === false,
+        sort: r.sort_order || 0 };
+      REAL[f.id] = f;
+      if (!f.out && !f.hidden && f.src) REAL_ON.push(f);
+    });
+    REAL_ON.sort(function (a, b) {
+      return TONE_ORDER.indexOf(a.tone) - TONE_ORDER.indexOf(b.tone) || a.sort - b.sort || a.id - b.id;
+    });
+    MOODS.forEach(function (m) {
+      m.real = [];
+      m.f.forEach(function (x) { var k = nearReal(x[0], x[1], m.real); if (k) m.real.push(k); });
+    });
+  }
+  // enough real fabrics in stock to fill the basket: the design table uses them
+  function hasReal() { return REAL_ON.length >= REAL_MIN; }
+
+  // The real fabric closest to a painted one: same colour family and kind,
+  // else the family with a kind of the same weight, else the family.
+  function nearReal(tone, kind, skip) {
+    var best = null, bs = -1;
+    REAL_ON.forEach(function (f) {
+      if (skip && skip.indexOf(f.key) >= 0) return;
+      var s = (f.tone === tone ? 4 : 0) + (f.kind === kind ? 2 : KIND_GROUP[f.kind] === KIND_GROUP[kind] ? 1 : 0);
+      if (s > bs) { bs = s; best = f; }
+    });
+    return best ? best.key : null;
+  }
+  function moodKeys(m) { return hasReal() && m.real && m.real.length ? m.real : m.ids; }
+  function isReal(key) { return typeof key === 'string' && /^r[1-9]\d{0,5}$/.test(key); }
+  function realOf(key) { return isReal(key) ? REAL[+key.slice(1)] || null : null; }
+
+  // studio.html / san-pham.html: fetched once, then gem:fabric redraws
+  var realP = null;
+  function loadReal() {
+    if (realP) return realP;
+    if (!window.GemDB || !window.GemDB.fabrics) return Promise.resolve(false);
+    realP = window.GemDB.fabrics().then(function (rows) {
+      setReal(rows);
+      document.dispatchEvent(new CustomEvent('gem:fabric', { detail: { real: true } }));
+      return hasReal();
+    }, function () { return false; });
+    return realP;
+  }
+
   var GEM = 'gem';            // "let Gem choose" for tones / prints
   var MAX_OTHER = 40, MAX_NOTE = 200;
 
@@ -227,7 +289,7 @@
     return ['2', d.product, d.layout, d.tones.join('.'), d.prints.join('.'), d.fabrics.join('.'),
       txt(d.other), encodeSketch(d.sketch), txt(d.note)]
       .concat(d.fab ? [d.img || '', d.fab] : d.img ? [d.img] : [])
-      .concat(d.fab && d.cus && d.cus.length ? [d.cus.map(function (c) { return c.k + c.hex; }).join('.')] : []).join('~');
+      .concat(d.fab && d.cus && d.cus.length ? [d.cus.map(function (c) { return c.r != null ? 'r' + c.r : c.k + c.hex; }).join('.')] : []).join('~');
   }
 
   function parse(spec) {
@@ -243,6 +305,8 @@
       var cs = f[11].split('.');
       if (cs.length > MAX_CUSTOM) return null;
       for (var ci = 0; ci < cs.length; ci++) {
+        // a real fabric from Kho vải
+        if (/^r[1-9]\d{0,5}$/.test(cs[ci])) { cus.push({ r: +cs[ci].slice(1) }); continue; }
         if (!/^[0-8][0-9a-f]{6}$/.test(cs[ci])) return null;
         cus.push({ k: +cs[ci][0], hex: cs[ci].slice(1) });
       }
@@ -291,7 +355,9 @@
     }
     var fab = names(d.fabrics, FABRICS, l);
     if (d.other) fab = (fab ? fab + ', ' : '') + (vi ? 'khác: ' : 'other: ') + d.other;
-    bits.push((vi ? 'chất vải: ' : 'fabrics: ') + (fab || gem));
+    // real fabrics on every patch: the material is already known
+    var allReal = !!d.fab && d.fab.split('').every(function (ch) { return isReal(keyOf(d, B64.indexOf(ch))); });
+    if (fab || !allReal) bits.push((vi ? 'chất vải: ' : 'fabrics: ') + (fab || gem));
     if (d.layout === 'net') {
       var nn = netRegions(d.sketch).n;
       bits.push(vi ? 'cắt ' + nn + ' mảnh theo nét vẽ (xem hình)' : nn + ' pieces cut along the drawn lines (see picture)');
@@ -310,7 +376,9 @@
       count[id]++;
     }
     return order.map(function (id) {
-      return keyName(keyOf(d, id), l) + (count[id] > 1 ? ' ×' + count[id] : '');
+      var key = keyOf(d, id), rf = realOf(key);
+      return keyName(key, l) + (count[id] > 1 ? ' ×' + count[id] : '') +
+        (rf && rf.out ? (l === 'vi' ? ' (đã hết)' : ' (sold out)') : '');
     }).join(', ');
   }
 
@@ -983,11 +1051,25 @@
     var pick = fabricsFor(d);
     var defs = {}, defsOut = '';
     var maxI = -1;
+    // a real fabric: its photo; not known (yet): a plain of its family,
+    // and the list is fetched (gem:fabric redraws)
+    var realFill = function (rid) {
+      var id = pre + 'r' + rid, rf = REAL[rid];
+      if (!defs[id]) {
+        defs[id] = 1;
+        if (rf && rf.src) defsOut += fabricPattern(null, id, 110, rf.src);
+        else { defsOut += fabricPattern(fabricId(rf ? rf.tone : 'trung', 'tron'), id, 110); if (!rf) loadReal(); }
+      }
+      return 'url(#' + id + ')';
+    };
     var fill = function (i) {
       if (i > maxI) maxI = i;
       var f;
       if (d.fab && i < d.fab.length) {
         var ix = B64.indexOf(d.fab[i]);
+        if (ix >= N_FABRICS && d.cus[ix - N_FABRICS] && d.cus[ix - N_FABRICS].r != null) {
+          return realFill(d.cus[ix - N_FABRICS].r) + (opts.hit ? '" data-i="' + i : '');
+        }
         if (ix >= N_FABRICS && d.cus[ix - N_FABRICS]) {
           // the customer's own colour: the recoloured painting once it is
           // ready (gem:fabric), a drawn print of that colour until then
@@ -1005,7 +1087,12 @@
         }
         var fb = fabric(ix);
         f = { color: fb.color, print: fb.kind };
-      } else f = pick(i);
+      } else {
+        f = pick(i);
+        // "Gem picks": the preview shows real fabrics of those families too
+        var near = hasReal() && nearReal(toneOf(f.color), KINDS.indexOf(f.print) >= 0 ? f.print : 'tron');
+        if (near) return realFill(+near.slice(1)) + (opts.hit ? '" data-i="' + i : '');
+      }
       // the painted swatch for this colour family + kind
       var fid = fabricId(toneOf(f.color), KINDS.indexOf(f.print) >= 0 ? f.print : 'tron');
       var id = pre + 'f' + fid;
@@ -1110,26 +1197,35 @@
   function slots(d) { return svg(d, { count: true }); }
 
   /* ---------- fabric keys ----------
-     A fabric is a key: a number 0..44 (the painted catalogue) or a string
+     A fabric is a key: a number 0..44 (the painted catalogue), a string
      "c<kind><rrggbb>" (one of the 9 kinds recoloured to the customer's own
-     colour). On a design a patch holds one B64 letter: the number itself, or
-     45 + the colour's place in d.cus. */
+     colour) or "r<id>" (a real fabric from Kho vải). On a design a patch
+     holds one B64 letter: the number itself, or 45 + the key's place in
+     d.cus ({k, hex} for a colour, {r} for a real fabric). */
   function isCustom(key) { return typeof key === 'string' && /^c[0-8][0-9a-f]{6}$/.test(key); }
 
   function keyOf(d, ix) {
     if (ix < N_FABRICS) return ix;
     var c = d.cus[ix - N_FABRICS];
-    return c ? 'c' + c.k + c.hex : 0;
+    return !c ? 0 : c.r != null ? 'r' + c.r : 'c' + c.k + c.hex;
   }
   function keyAt(d, i) { return d.fab && i < d.fab.length ? keyOf(d, B64.indexOf(d.fab[i])) : null; }
 
   // The letter for a key on this design (adds the colour to d.cus if new).
   function letter(d, key) {
     if (typeof key === 'number') return key >= 0 && key < N_FABRICS ? B64[key] : null;
-    if (!isCustom(key)) return null;
     d.cus = d.cus || [];
+    var n;
+    if (isReal(key)) {
+      var rid = +key.slice(1);
+      for (n = 0; n < d.cus.length; n++) if (d.cus[n].r === rid) return B64[N_FABRICS + n];
+      if (d.cus.length >= MAX_CUSTOM) return null;
+      d.cus.push({ r: rid });
+      return B64[N_FABRICS + d.cus.length - 1];
+    }
+    if (!isCustom(key)) return null;
     var k = +key[1], hex = key.slice(2);
-    for (var n = 0; n < d.cus.length; n++) if (d.cus[n].k === k && d.cus[n].hex === hex) return B64[N_FABRICS + n];
+    for (n = 0; n < d.cus.length; n++) if (d.cus[n].r == null && d.cus[n].k === k && d.cus[n].hex === hex) return B64[N_FABRICS + n];
     if (d.cus.length >= MAX_CUSTOM) return null;
     d.cus.push({ k: k, hex: hex });
     return B64[N_FABRICS + d.cus.length - 1];
@@ -1165,11 +1261,13 @@
   function info(d, ix) {
     var key = keyOf(d, ix);
     if (typeof key === 'number') { var f = fabric(key); return { tone: f.tone, kind: f.kind, custom: false }; }
+    if (isReal(key)) { var rf = realOf(key); return { tone: rf ? rf.tone : 'trung', kind: rf ? rf.kind : 'tron', custom: false, real: true }; }
     return { tone: nearestTone(key.slice(2)), kind: KINDS[+key[1]], custom: true, hex: key.slice(2) };
   }
   function keyName(key, l) {
     l = l || lang();
     if (typeof key === 'number') { var f = fabric(key); return KIND_NAMES[f.kind][l] + ' ' + TONES[f.tone][l].toLowerCase(); }
+    if (isReal(key)) { var rf = realOf(key); return rf ? rf[l] : (l === 'vi' ? 'Vải #' : 'Fabric #') + key.slice(1); }
     return KIND_NAMES[KINDS[+key[1]]][l] + (l === 'vi' ? ' màu riêng #' : ' own colour #') + key.slice(2);
   }
 
@@ -1197,8 +1295,9 @@
       var pick = fabricsFor(d);
       d.cus = [];
       for (var k = 0; k < n; k++) {
-        var f = pick(k);
-        cur += B64[fabricId(toneOf(f.color), KINDS.indexOf(f.print) >= 0 ? f.print : 'tron')];
+        var f = pick(k), tone = toneOf(f.color), kind = KINDS.indexOf(f.print) >= 0 ? f.print : 'tron';
+        var near = hasReal() && nearReal(tone, kind);   // what the preview shows
+        cur += (near && letter(d, near)) || B64[fabricId(tone, kind)];
       }
     }
     var ch = letter(d, key);
@@ -1225,9 +1324,11 @@
   // one the customer picked (d.moodId, not in the code) wins, then the first.
   function moodOf(d) {
     if (!d.fab) return null;
-    var ids = [];
-    for (var i = 0; i < d.fab.length; i++) ids.push(B64.indexOf(d.fab[i]));
-    var fits = MOODS.filter(function (m) { return ids.every(function (x) { return m.ids.indexOf(x) >= 0; }); });
+    var keys = [];
+    for (var i = 0; i < d.fab.length; i++) keys.push(keyOf(d, B64.indexOf(d.fab[i])));
+    var fits = MOODS.filter(function (m) {
+      return [m.ids, m.real || []].some(function (set) { return keys.every(function (x) { return set.indexOf(x) >= 0; }); });
+    });
     return fits.filter(function (m) { return m.id === d.moodId; })[0] || fits[0] || null;
   }
 
@@ -1237,7 +1338,7 @@
     var p = PRODUCTS[d.product];
     if (d.layout !== 'tuve' && !keepLayout) d.layout = p.layouts.indexOf(mood.layout) >= 0 ? mood.layout
       : p.layouts.indexOf('hai') >= 0 ? 'hai' : p.layouts[0];
-    scatter(d, mood.ids);
+    scatter(d, moodKeys(mood));
     d.moodId = mood.id;
     syncTaste(d);
   }
@@ -1312,7 +1413,14 @@
     return null;
   }
   function keySrc(key) {
+    if (isReal(key)) { var rf = realOf(key); return rf && rf.src; }
     return typeof key === 'number' ? swatchSrc(key) : customSrc(+key[1], key.slice(2));
+  }
+  // a flat colour for a key whose picture isn't there (yet)
+  function keyColor(key) {
+    if (typeof key === 'number') return fabric(key).color;
+    if (isReal(key)) { var rf = realOf(key); return TONES[rf ? rf.tone : 'trung'].c[0]; }
+    return '#' + String(key).slice(2);
   }
 
   // "Sắc tím": a name for a colour the customer picked.
@@ -1341,7 +1449,7 @@
     var own = {}, n = 0;
     for (var i = 0; i < (d.fab || '').length; i++) {
       var ix = B64.indexOf(d.fab[i]);
-      if (ix >= N_FABRICS && d.cus[ix - N_FABRICS]) { var hx = d.cus[ix - N_FABRICS].hex; own[hx] = (own[hx] || 0) + 1; n++; }
+      if (ix >= N_FABRICS && d.cus[ix - N_FABRICS] && d.cus[ix - N_FABRICS].hex) { var hx = d.cus[ix - N_FABRICS].hex; own[hx] = (own[hx] || 0) + 1; n++; }
     }
     if (n * 2 >= (d.fab || '').length && n) {
       var top = Object.keys(own).sort(function (a, b) { return own[b] - own[a]; })[0];
@@ -1380,6 +1488,10 @@
     fabric: fabric, fabricId: fabricId, slots: slots, scatter: scatter, setPatch: setPatch, syncTaste: syncTaste,
     moodOf: moodOf, applyMood: applyMood, title: title, serial: serial, swatch: swatch,
     swatchSrc: swatchSrc, VAI: VAI, netRegions: netRegions, refit: refit, NET_MAX: NET_MAX, keySrc: keySrc, keyAt: keyAt, keyName: keyName, isCustom: isCustom, customSrc: customSrc,
+    // real fabrics (Kho vải)
+    setReal: setReal, loadReal: loadReal, hasReal: hasReal, isReal: isReal, realOf: realOf, moodKeys: moodKeys,
+    keyColor: keyColor, fabricList: fabricList,
+    realList: function () { return REAL_ON.slice(); },
     // by: the designer's name for the card, travels in the link only
     // mood: which mood the fabrics came from (several can fit few patches)
     url: function (spec, by, mood) {

@@ -5,6 +5,7 @@
 //   GemImg.thumb(src, size)       -> Promise<File>  square centre crop (600px)
 //   GemImg.removeWhite(src, opts) -> Promise<File>  white paper/background -> transparent
 //   GemImg.size(src)              -> Promise<{w, h}>
+//   GemImg.fabric(img, box, opts) -> Promise<{file, canvas}>  a framed fabric square, folds evened, 320px
 //
 // `src` is a File/Blob or an image URL. A URL from another site must send
 // CORS headers (Supabase Storage does), otherwise the canvas refuses to export.
@@ -202,5 +203,43 @@ window.GemImg = (function () {
     });
   }
 
-  return { shrink: shrink, thumb: thumb, removeWhite: removeWhite, size: size, load: load };
+  // A fabric photo for Kho vải: the square the staff framed (box, in the
+  // picture's pixels), big shadows and folds evened out, 320px. The light is
+  // the picture shrunk to 8 x 8 and blown back up — a wide, cheap blur — and
+  // each pixel is divided by it, so the weave and the print stay.
+  //   GemImg.fabric(img, {x, y, s}, {flat: true, name}) -> {file, canvas}
+  function flatten(c, strength) {
+    var W = c.width, H = c.height, g = c.getContext('2d');
+    var small = canvas(8, 8), sg = small.getContext('2d');
+    sg.imageSmoothingQuality = 'high';
+    sg.drawImage(c, 0, 0, 8, 8);
+    var big = canvas(W, H), bg = big.getContext('2d');
+    bg.imageSmoothingEnabled = true;
+    bg.imageSmoothingQuality = 'high';
+    bg.drawImage(small, 0, 0, W, H);
+    var light = bg.getImageData(0, 0, W, H).data;
+    var data = g.getImageData(0, 0, W, H), px = data.data, i, sum = 0;
+    for (i = 0; i < light.length; i += 4) sum += 0.299 * light[i] + 0.587 * light[i + 1] + 0.114 * light[i + 2];
+    var mean = sum / (W * H);
+    for (i = 0; i < px.length; i += 4) {
+      var L = Math.max(1, 0.299 * light[i] + 0.587 * light[i + 1] + 0.114 * light[i + 2]);
+      var f = 1 + (mean / L - 1) * strength;
+      px[i] = Math.min(255, px[i] * f); px[i + 1] = Math.min(255, px[i + 1] * f); px[i + 2] = Math.min(255, px[i + 2] * f);
+    }
+    g.putImageData(data, 0, 0);
+  }
+
+  function fabric(img, box, opts) {
+    opts = opts || {};
+    var work = canvas(640, 640), wg = work.getContext('2d');
+    wg.imageSmoothingQuality = 'high';
+    wg.drawImage(img, box.x, box.y, box.s, box.s, 0, 0, 640, 640);
+    if (opts.flat !== false) flatten(work, 0.85);
+    var out = canvas(320, 320), og = out.getContext('2d');
+    og.imageSmoothingQuality = 'high';
+    og.drawImage(work, 0, 0, 320, 320);
+    return encode(out, opts.name || 'vai').then(function (file) { return { file: file, canvas: out }; });
+  }
+
+  return { shrink: shrink, thumb: thumb, removeWhite: removeWhite, size: size, load: load, fabric: fabric };
 })();

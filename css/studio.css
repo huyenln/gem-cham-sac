@@ -1831,3 +1831,24 @@ input.pt-done-name:focus { border-bottom-style: solid; border-bottom-color: var(
 .pt-done-buy .pt-price { margin: 0; }
 /* "Ghép theo nét vẽ": cut lines have no colour or width */
 .pt-drawbar.is-net .pt-inks, .pt-drawbar.is-net .pt-sizes { display: none; }
+
+/* KHO VẢI — real fabrics in the basket: colour chips over it, the fabrics
+   on the piece under it */
+.pt-vtones { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 2px; }
+.pt-vtones[hidden] { display: none; }
+.pt-vtone {
+  min-height: 36px; padding: 4px 12px; border: 1.5px solid var(--sage-light); border-radius: 999px;
+  background: var(--paper-white); color: var(--ink-dark); font: inherit; font-size: var(--text-xs); cursor: pointer;
+}
+.pt-vtone span { color: var(--ink-soft); }
+.pt-vtone.is-on { border-color: var(--sage-deep); background: var(--sage-deep); color: var(--paper-white); }
+.pt-vtone.is-on span { color: inherit; opacity: 0.85; }
+/* a photo, not a painting: no extra colour, a little more of the print */
+.pt-scrap.is-real .pt-sf { filter: none; background-size: 135% auto; }
+.pt-onpiece {
+  margin: 8px auto 0; max-width: 46ch; padding: 8px 12px; text-align: left;
+  border: 1.5px dashed var(--kraft); border-radius: 10px; background: #FBF4E6; color: var(--ink-dark);
+}
+.pt-onpiece[hidden] { display: none; }
+.pt-onpiece b { font-weight: 600; }
+.pt-onpiece span:last-child { color: var(--ink-soft); }

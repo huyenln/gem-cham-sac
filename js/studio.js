@@ -312,6 +312,10 @@
     'studio.pt_shuffle':   { vi: `Xáo mảnh`, en: `Shuffle` },
     'studio.pt_hint':      { vi: `Chạm một mảnh vải trong rổ rồi chạm vào ô trên món, hoặc kéo thả vào ô.`, en: `Tap a scrap in the basket, then tap a patch. Or drag it there.` },
     'studio.pt_hint_held': { vi: `Giờ chạm vào ô muốn đắp mảnh {vai} lên.`, en: `Now tap the patch you want the {vai} on.` },
+    'studio.pt_vt_all':    { vi: `Tất cả`, en: `All` },
+    'studio.pt_vt_label':  { vi: `Lọc vải theo tông màu`, en: `Filter the fabrics by colour` },
+    'studio.pt_onpiece':   { vi: `Vải trên món:`, en: `On the piece:` },
+    'studio.pt_onpiece_p': { vi: `— ảnh chụp đúng các tấm Gem đang có.`, en: `— photos of the very fabrics Gem has.` },
     'studio.pt_hint_draw': { vi: `Kiểu "theo hình mình vẽ": vẽ trong mục Tự chỉnh bên dưới.`, en: `"From my drawing": draw it under Fine-tune below.` },
     'studio.pt_sew':       { vi: `May xong!`, en: `Sew it!` },
     'studio.pt_letter':    { vi: `Tờ nhắn gửi Gem`, en: `A note to Gem` },
@@ -2611,7 +2615,9 @@
      only, and they also travel in the share link. */
   var P = window.GemPatch;
   var D = { d: P ? P.blank('goi') : null, drawing: null, ink: 0, size: 0,
-    held: null, basket: [], sewn: false, card: null, from: false, by: '', title: '' };
+    held: null, basket: [], sewn: false, card: null, from: false, by: '', title: '',
+    // real fabrics: the colour chip picked, and the order "Lục rổ" walks through
+    vtone: '', pool: [], poolAt: 0, poolFor: null, realOk: false };
 
   function specNow() { return P.encode(D.d); }
 
@@ -2623,8 +2629,18 @@
     return D.d.sketch.reduce(function (n, s) { return n + s.pts.length; }, 0);
   }
 
+  var realWait = null;
   function designerSheet() {
     if (!P) return;
+    // The real fabrics (Kho vải, fetched at start): the first open waits a
+    // moment for them, so the piece isn't dressed in painted ones first.
+    if (!D.realOk) {
+      if (!realWait) {
+        realWait = Promise.race([P.loadReal(), new Promise(function (r) { setTimeout(r, 1500); })])
+          .then(function () { D.realOk = true; designerSheet(); });
+      }
+      return;
+    }
     // A fresh piece starts dressed in a mood rather than grey "Gem picks".
     if (!D.d.fab && !D.d.tones.length && !D.d.prints.length && D.d.layout !== 'tuve') P.applyMood(D.d, P.MOODS[0]);
     D.held = null; D.sewn = false; D.card = null;
@@ -2653,6 +2669,7 @@
               '<p class="pt-small pt-draw-msg" aria-live="polite"></p>' +
             '</div>' +
             '<p class="pt-small pt-hint" aria-live="polite"></p>' +
+            '<p class="pt-small pt-onpiece" hidden></p>' +
             // Udon the teacher + the real piece, in a row UNDER the piece so
             // nothing covers what is being designed
             '<div class="gv-row">' +
@@ -2688,6 +2705,7 @@
               '<button type="button" class="st-btn pt-own-go" data-own-go data-i18n="studio.pt_own_go">' + esc(t('studio.pt_own_go')) + '</button>' +
               tr('p', 'studio.pt_own_note', ' class="pt-small"') +
             '</div>' +
+            '<div class="pt-vtones" role="group" hidden data-i18n-attr="aria-label:studio.pt_vt_label" aria-label="' + esc(t('studio.pt_vt_label')) + '"></div>' +
             '<div class="pt-basket"><div class="pt-scraps"></div>' +
               '<img class="pt-ro" src="' + P.VAI + 'ro-truoc.webp" alt="" draggable="false"></div>' +
           '</section>' +
@@ -2850,8 +2868,9 @@
   // fabric and a shading layer for the folds
   var SCRAP_SHAPES = 9;
 
-  // A fabric key: 0..44 (the painted catalogue) or "c<kind><hex>" (own colour).
-  function parseKey(str) { return /^\d+$/.test(str) ? +str : P.isCustom(str) ? str : null; }
+  // A fabric key: 0..44 (the painted catalogue), "c<kind><hex>" (own colour)
+  // or "r<id>" (a real fabric from Kho vải).
+  function parseKey(str) { return /^\d+$/.test(str) ? +str : P.isCustom(str) || P.isReal(str) ? str : null; }
 
   function keysOn(d) {
     var out = [];
@@ -2864,7 +2883,7 @@
 
   function basketFor(d) {
     var m = P.moodOf(d);
-    if (m) return m.ids.slice(0, BASKET_N);
+    if (m) return P.moodKeys(m).slice(0, BASKET_N);
     return fillBasket(keysOn(d).slice(0, BASKET_N));
   }
 
@@ -2882,7 +2901,25 @@
     return out;
   }
 
+  // Real fabrics: the basket holds only what Gem has (in stock, shown). A
+  // colour chip narrows it; "Lục rổ" walks through all of them, 8 at a time.
+  function realMode() { return !!(P && P.hasReal()); }
+  function nextScraps(keep) {
+    if (D.poolFor !== D.vtone || !D.pool.length) {
+      D.pool = P.realList().filter(function (f) { return !D.vtone || f.tone === D.vtone; })
+        .map(function (f) { return f.key; }).sort(function () { return Math.random() - 0.5; });
+      D.poolAt = 0; D.poolFor = D.vtone;
+    }
+    var out = keep.slice(0, BASKET_N);
+    for (var n = 0; n < D.pool.length && out.length < BASKET_N; n++) {
+      var k = D.pool[D.poolAt++ % D.pool.length];
+      if (out.indexOf(k) < 0) out.push(k);
+    }
+    return out;
+  }
+
   function fillBasket(ids) {
+    if (realMode()) return nextScraps(ids);
     var out = ids.slice();
     var tries = 0;
     while (out.length < BASKET_N && tries++ < 200) {
@@ -2893,12 +2930,18 @@
   }
 
   function fabricName(key) { return P.keyName(key, lng()); }
+  // "Caro xanh lá · Cotton": a real fabric with what it is made of
+  function fabricLabel(key) {
+    var rf = P.realOf(key);
+    return fabricName(key) + (rf && rf.mat ? ' · ' + rf.mat : '');
+  }
 
   function scrapHtml(key, k) {
     var shape = P.VAI + 'dang-' + (k % SCRAP_SHAPES + 1) + '.webp';
     // an own colour not dyed yet: plain colour until gem:fabric says it's ready
+    // (real photos and painted swatches are checked paths: no quotes inside)
     var src = P.keySrc(key);
-    var bg = src ? 'background-image:url(' + src + ')' : 'background-color:#' + String(key).slice(2);
+    var bg = src ? 'background-image:url(' + src + ')' : 'background-color:' + P.keyColor(key);
     return '<span class="pt-sf" aria-hidden="true" style="' + bg +
       ';-webkit-mask-image:url(' + shape + ');mask-image:url(' + shape + ')"></span>' +
       '<img class="pt-ss" src="' + shape + '" alt="" draggable="false">';
@@ -2910,10 +2953,38 @@
     box.innerHTML = D.basket.map(function (id, k) {
       // standing loose in the basket: each a little turned and shifted
       var rot = ((k * 37) % 20) - 10, dy = (k % 3) * 4;
-      return '<button type="button" class="pt-scrap' + (D.held === id ? ' is-held' : '') + '" data-scrap="' + id +
-        '" style="--r:' + rot + 'deg;--dy:' + dy + 'px" aria-pressed="' + (D.held === id) + '" aria-label="' + esc(fabricName(id)) + '">' +
-        scrapHtml(id, k) + '</button>';
+      return '<button type="button" class="pt-scrap' + (D.held === id ? ' is-held' : '') + (P.isReal(id) ? ' is-real' : '') + '" data-scrap="' + id +
+        '" style="--r:' + rot + 'deg;--dy:' + dy + 'px" aria-pressed="' + (D.held === id) + '" aria-label="' + esc(fabricLabel(id)) +
+        '" title="' + esc(fabricLabel(id)) + '">' + scrapHtml(id, k) + '</button>';
     }).join('');
+    renderVTones();
+  }
+
+  // the colour chips over the basket (real fabrics only)
+  function renderVTones() {
+    var box = sheetBody.querySelector('.pt-vtones');
+    if (!box) return;
+    box.hidden = !realMode();
+    if (box.hidden) return;
+    var list = P.realList(), l = lng();
+    var n = function (tn) { return list.filter(function (f) { return !tn || f.tone === tn; }).length; };
+    box.innerHTML = [''].concat(P.TONE_ORDER).filter(function (tn) { return !tn || n(tn); }).map(function (tn) {
+      var on = D.vtone === tn;
+      return '<button type="button" class="pt-vtone' + (on ? ' is-on' : '') + '" data-vtone="' + tn + '" aria-pressed="' + on + '">' +
+        esc(tn ? P.TONES[tn][l] : t('studio.pt_vt_all')) + ' <span>' + n(tn) + '</span></button>';
+    }).join('');
+  }
+
+  // "Vải trên món: Caro xanh lá ×3, …" under the piece, once real fabrics are on it
+  function renderOnPiece() {
+    var el = sheetBody.querySelector('.pt-onpiece');
+    if (!el) return;
+    el.hidden = D.d.layout === 'tuve' || !keysOn(D.d).some(P.isReal);
+    if (el.hidden) return;
+    el.innerHTML = '<b></b> <span></span> <span></span>';
+    el.children[0].textContent = t('studio.pt_onpiece');
+    el.children[1].textContent = P.fabricList(D.d, lng());
+    el.children[2].textContent = t('studio.pt_onpiece_p');
   }
 
   function renderMoods() {
@@ -3333,7 +3404,9 @@
     // a short instruction when it matters; otherwise Udon's line shows
     root.querySelector('.pt-hint').textContent = d.layout === 'net' ? t('studio.pt_net_on')
       : d.layout === 'tuve' ? t('studio.pt_draw_on')
-      : D.held != null ? t('studio.pt_hint_held').replace('{vai}', fabricName(D.held).toLowerCase()) : '';
+      : D.held != null ? t('studio.pt_hint_held').replace('{vai}', fabricName(D.held).toLowerCase() +
+          (P.realOf(D.held) && P.realOf(D.held).mat ? ' (' + P.realOf(D.held).mat + ')' : '')) : '';
+    renderOnPiece();
     drawCanvas();
     root.querySelector('[data-pt="undo"]').disabled = !d.sketch.length;
     root.querySelector('[data-pt="clear"]').disabled = !d.sketch.length;
@@ -3586,6 +3659,15 @@
       if (scr) { scr.classList.remove('is-rummage'); void scr.offsetWidth; scr.classList.add('is-rummage'); }
       return true;
     }
+    if ((el = e.target.closest('[data-vtone]'))) {
+      D.vtone = el.getAttribute('data-vtone');
+      D.basket = fillBasket([]);
+      D.held = null;
+      renderBasket(); renderPreview();
+      var scv = sheetBody.querySelector('.pt-scraps');
+      if (scv) { scv.classList.remove('is-rummage'); void scv.offsetWidth; scv.classList.add('is-rummage'); }
+      return true;
+    }
     if ((el = e.target.closest('[data-own-pick]'))) {
       sheetBody.querySelector('[name="own"]').value = '#' + el.getAttribute('data-own-pick');
       return true;
@@ -3602,7 +3684,8 @@
       var mood = P.MOODS.filter(function (m) { return m.id === el.getAttribute('data-mood'); })[0];
       if (!mood) return true;
       P.applyMood(D.d, mood, true);
-      D.basket = mood.ids.slice(0, BASKET_N);
+      D.basket = P.moodKeys(mood).slice(0, BASKET_N);
+      D.vtone = '';
       D.held = null;
       unsew();
       renderDesigner();
@@ -3654,12 +3737,13 @@
       } else if (act === 'photo-del') {
         D.d.img = '';
       } else if (act === 'random') {
-        var rm = P.MOODS[Math.floor(Math.random() * P.MOODS.length)];
+        var rm = P.MOODS[Math.floor(Math.random() * P.MOODS.length)], rk = P.moodKeys(rm);
         var lays = P.PRODUCTS[D.d.product].layouts.filter(function (x) { return x !== 'tuve'; });
         D.d.layout = lays[Math.floor(Math.random() * lays.length)];
-        D.d.fab = P.scatter(D.d, rm.ids);
+        D.d.fab = P.scatter(D.d, rk);
         P.syncTaste(D.d);
-        D.basket = rm.ids.slice(0, BASKET_N);
+        D.basket = rk.slice(0, BASKET_N);
+        D.vtone = '';
         D.held = null;
         shuffled = true;
         teachAfter = 'taste';
@@ -4985,6 +5069,8 @@
     shareCuts();
     cartCount = window.GemBasket ? window.GemBasket.count() : 0;
     loadNotes();   // pins on the memo board
+
+    if (P) P.loadReal();   // Kho vải, ready before the design table opens
 
     // A shared design link (studio.html?d=…): walk to the table and open it.
     var shared = null;
