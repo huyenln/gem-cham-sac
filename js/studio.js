@@ -330,10 +330,12 @@
     'studio.pt_square':    { vi: `Vuông`, en: `Square` },
     'studio.pt_shuffle':   { vi: `Xáo mảnh`, en: `Shuffle` },
     'studio.pt_hint':      { vi: `Chạm một mảnh vải trong rổ rồi chạm vào ô trên món, hoặc kéo thả vào ô.`, en: `Tap a scrap in the basket, then tap a patch. Or drag it there.` },
-    'studio.pt_hint_held': { vi: `Giờ chạm vào ô muốn đắp mảnh {vai} lên. Chạm lại ô đã có vải này để xoay vải.`, en: `Now tap the patch you want the {vai} on. Tap a patch that already has it to turn the fabric.` },
+    'studio.pt_hint_held': { vi: `Giờ chạm vào ô muốn đắp mảnh {vai} lên. Chạm lại mảnh trong rổ để bỏ xuống.`, en: `Now tap the patch you want the {vai} on. Tap the scrap again to put it down.` },
+    'studio.pt_hint_sel':  { vi: `Ô đang chọn: {vai}. Bấm "Xoay vải" để xoay vải ô này; muốn thay vải thì lấy một mảnh trong rổ rồi chạm ô.`, en: `Picked patch: {vai}. Press "Turn fabric" to turn it; to change it, take a scrap from the basket, then tap the patch.` },
+    'studio.pt_vai_gem':   { vi: `vải Gem chọn`, en: `a fabric Gem picks` },
     'studio.pt_turn':      { vi: `Xoay vải`, en: `Turn fabric` },
-    'studio.pt_turned':    { vi: `Vải ô này xoay {deg}° — chạm lần nữa để xoay tiếp.`, en: `This patch's fabric is turned {deg}° — tap again to turn on.` },
-    'studio.pt_turned0':   { vi: `Vải ô này về lại thẳng — chạm lần nữa để xoay.`, en: `This patch's fabric is straight again — tap again to turn it.` },
+    'studio.pt_turned':    { vi: `Vải ô này xoay {deg}° — bấm "Xoay vải" lần nữa để xoay tiếp.`, en: `This patch's fabric is turned {deg}° — press "Turn fabric" again to turn it on.` },
+    'studio.pt_turned0':   { vi: `Vải ô này về lại thẳng.`, en: `This patch's fabric is straight again.` },
     'studio.pt_vt_all':    { vi: `Tất cả`, en: `All` },
     'studio.pt_kho':       { vi: `Kho vải`, en: `All fabrics` },
     'studio.kho_h':        { vi: `Kho vải của Gem`, en: `Gem's fabric store` },
@@ -352,7 +354,7 @@
     'studio.pt_letter_p':  { vi: `Không bắt buộc: chất vải, lời nhắn, ảnh tham khảo`, en: `Optional: fabrics, a message, a reference photo` },
     'studio.pt_real_cap':  { vi: `Đồ thật`, en: `The real one` },
     'studio.pt_mood_gem':  { vi: `Gem chọn giúp`, en: `Gem picks` },
-    'studio.pt_net_on':    { vi: `Vẽ đường cắt lên món: nét khép kín, hoặc chạy từ mép này sang mép kia. Chạm vào từng mảnh để đắp vải.`, en: `Draw cut lines on the piece: a closed shape, or edge to edge. Tap each piece to lay a fabric on it.` },
+    'studio.pt_net_on':    { vi: `Vẽ đường cắt lên món: nét khép kín, hoặc chạy từ mép này sang mép kia. Lấy một mảnh vải trong rổ rồi chạm vào từng mảnh để đắp.`, en: `Draw cut lines on the piece: a closed shape, or edge to edge. Take a scrap from the basket, then tap each piece to lay it on.` },
     'studio.pt_net_full':  { vi: `Nhiều mảnh quá, Gem gộp bớt mảnh nhỏ (tối đa {n} mảnh).`, en: `That's a lot of pieces — Gem merges the small ones (up to {n}).` },
     'studio.pt_draw_on':   { vi: `Vẽ thẳng lên món bằng ngón tay. Chạm một mảnh trong rổ để đổi vải nền.`, en: `Draw right on the piece with your finger. Tap a scrap in the basket to change the fabric under it.` },
     'studio.pt_title_label': { vi: `Tên mẫu`, en: `Design name` },
@@ -3272,18 +3274,16 @@
     renderDesigner();
   }
 
+  // A tap on a patch. A scrap in hand goes on it. With nothing in hand (or
+  // that very scrap already there) the patch is only picked: its fabric
+  // stays, and "Xoay vải" turns it (Anna: "bấm ô vải sẽ đổi trước, lại phải
+  // đổi lại cho đúng mảnh mong muốn rồi mới nhấn xoay vải được" — a tap used
+  // to put the next scrap on, or turn it).
   function tapPatch(i) {
-    var id;
-    // the scrap held is already on this patch: turn it instead
-    if (D.held != null && P.keyAt(D.d, i) === D.held) return turnFabric(i);
-    if (D.held != null) id = D.held;
-    else {
-      // nothing picked up: the next scrap in the basket
-      var cur = P.keyAt(D.d, i);
-      var at = D.basket.indexOf(cur);
-      id = D.basket[(at + 1) % D.basket.length];
-    }
-    putFabric(i, id);
+    if (D.held != null && P.keyAt(D.d, i) !== D.held) return putFabric(i, D.held);
+    D.last = i; D.turnMsg = '';
+    renderPreview();
+    sheetBody.querySelectorAll('.pt-board [data-i="' + i + '"]').forEach(function (el) { el.classList.add('pt-pop'); });
   }
 
   // Drag a scrap onto a patch. A short press without moving stays a tap.
@@ -3698,13 +3698,19 @@
     if (!root) return;
     var d = D.d, spec = specNow(), ok = P.isComplete(d);
     root.querySelector('.pt-board').innerHTML = P.svg(d, { title: esc(P.describe(d)), hit: true });
-    // a short instruction when it matters; otherwise Udon's line shows
+    // the patch picked (tapped, or the last one dressed): outlined, and the
+    // one "Xoay vải" turns
+    var sel = D.last != null && d.layout !== 'tuve' && D.last < P.slots(d) ? D.last : null;
+    if (sel != null) root.querySelectorAll('.pt-board [data-i="' + sel + '"]').forEach(function (el) { el.classList.add('is-sel'); });
     var turnBtn = root.querySelector('.pt-turn');
-    if (turnBtn) turnBtn.hidden = D.last == null || d.layout === 'tuve' || !d.fab || D.last >= d.fab.length;
-    root.querySelector('.pt-hint').textContent = D.turnMsg && D.last != null && d.fab ? D.turnMsg : d.layout === 'net' ? t('studio.pt_net_on')
+    if (turnBtn) turnBtn.hidden = sel == null;
+    // a short instruction when it matters; otherwise Udon's line shows
+    var selKey = sel != null ? P.keyShown(d, sel) : null;
+    root.querySelector('.pt-hint').textContent = D.turnMsg && sel != null ? D.turnMsg : d.layout === 'net' && D.held == null && sel == null ? t('studio.pt_net_on')
       : d.layout === 'tuve' ? t('studio.pt_draw_on')
       : D.held != null ? t('studio.pt_hint_held').replace('{vai}', fabricName(D.held).toLowerCase() +
-          (P.realOf(D.held) && P.realOf(D.held).mat ? ' (' + P.realOf(D.held).mat + ')' : '')) : '';
+          (P.realOf(D.held) && P.realOf(D.held).mat ? ' (' + P.realOf(D.held).mat + ')' : ''))
+      : sel != null ? t('studio.pt_hint_sel').replace('{vai}', selKey != null ? fabricName(selKey) : t('studio.pt_vai_gem')) : '';
     renderOnPiece();
     drawCanvas();
     root.querySelector('[data-pt="undo"]').disabled = !d.sketch.length;

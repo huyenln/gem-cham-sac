@@ -2124,7 +2124,10 @@
     fabric: fabric, fabricId: fabricId, slots: slots, scatter: scatter, setPatch: setPatch, syncTaste: syncTaste,
     turnPatch: turnPatch, rotAt: rotAt, TURN_STEP: TURN_STEP,
     moodOf: moodOf, applyMood: applyMood, title: title, serial: serial, swatch: swatch,
-    swatchSrc: swatchSrc, VAI: VAI, netRegions: netRegions, refit: refit, NET_MAX: NET_MAX, keySrc: keySrc, keyAt: keyAt, keyName: keyName, isCustom: isCustom, customSrc: customSrc,
+    swatchSrc: swatchSrc, VAI: VAI, netRegions: netRegions, refit: refit, NET_MAX: NET_MAX, keySrc: keySrc, keyAt: keyAt, keyName: keyName,
+    isCustom: isCustom, customSrc: customSrc,
+    // the fabric a patch shows, set on it or not (the mood's / Gem's pick)
+    keyShown: function (d, i) { var k = keyAt(d, i); return k != null ? k : shownKey(d, i); },
     layoutName: layoutName, slotNames: slotNames,
     // pieces under one tab (Lót cốc tròn / vuông, the bags, the laptop sleeve)
     GROUPS: GROUPS, groupOf: groupOf, tabOf: tabOf, tabName: tabName,

@@ -2126,8 +2126,12 @@ buộc vai thắt nơ 190.000–220.000đ, mã 14 trường cùng giá, field 14
   - Mã thiết kế thêm field 13, ví dụ `s1.q.p2.z.n` hoặc `c30x25`. Khi field này có mặt thì
     field 11–12 được phép rỗng.
 - **Xoay vải từng ô** (Anna 14/10: "cho phép xoay vải khi ghép, vd vải kẻ dọc thành kẻ chéo"):
-  - Đang cầm một mảnh vải mà chạm lại ô đã có đúng vải đó → vải ô ấy xoay 45° (0 → 45 → 90 →
-    135 → 0). Nút "Xoay vải ô vừa chọn" dưới món làm việc tương tự cho ô vừa chạm.
+  - **Chạm ô = chọn ô** (14/10, Anna: "bấm ô vải sẽ đổi trước, lại phải đổi lại cho đúng mảnh
+    mong muốn rồi mới nhấn xoay vải được"): không cầm vải thì chạm ô chỉ chọn ô đó (viền xanh,
+    vải giữ nguyên), rồi nút **"Xoay vải"** ở góc món xoay vải ô đang chọn 45° mỗi lần (0 → 45 →
+    90 → 135 → 0). Cầm vải mà chạm ô thì đắp vải như cũ; chạm ô đã có đúng vải đang cầm thì chỉ
+    chọn, không tự xoay. Bỏ hai cách cũ: chạm ô không cầm vải thì đổi sang vải kế trong rổ, và
+    chạm lại ô cùng vải thì xoay.
   - Mã thiết kế thêm **field 14**: một chữ số cho mỗi ô (0–3, × 45°), bỏ số 0 ở cuối; không có
     ô nào xoay thì không có field này. Ô xoay thì field 11 (vải từng ô) bắt buộc.
   - Vẽ: mẫu vải của ô quay quanh tâm ô (`patternTransform`); ảnh vải thật được phóng đủ phủ ô

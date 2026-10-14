@@ -109,9 +109,17 @@ class Quiet(http.server.SimpleHTTPRequestHandler):
         pass
 
 
+class QuietServer(http.server.ThreadingHTTPServer):
+    # a page closed while a picture was still coming (the slow-photo check):
+    # the browser hung up, nothing to report
+    def handle_error(self, request, client_address):
+        if not isinstance(sys.exc_info()[1], (BrokenPipeError, ConnectionResetError)):
+            super().handle_error(request, client_address)
+
+
 def serve():
     handler = functools.partial(Quiet, directory=str(ROOT))
-    srv = http.server.ThreadingHTTPServer(('localhost', PORT), handler)
+    srv = QuietServer(('localhost', PORT), handler)
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     return srv
 
@@ -1048,8 +1056,8 @@ async def design(browser, db):
         await pg.wait_for_timeout(300)
         cell = await pg.evaluate("document.querySelector('.pt-board [data-i=\"4\"]').getAttribute('fill')")
         want = f'-f{sid})'
-        # (already that fabric there: the tap turns it, "-f<id>o45)")
-        check(re.search(r'-f%s(o\d+)?\)$' % sid, cell), f'{name}: tap scrap, tap patch puts that fabric there ({want} in {cell})')
+        # (already that fabric there: the tap only picks the patch)
+        check(re.search(r'-f%s\)$' % sid, cell), f'{name}: tap scrap, tap patch puts that fabric there ({want} in {cell})')
         # drag another scrap onto patch 0
         sid2 = await pg.evaluate("document.querySelectorAll('.pt-scrap')[2].getAttribute('data-scrap')")
         await pg.evaluate("document.querySelector('.pt-board').scrollIntoView({block: 'start'})")
@@ -3024,19 +3032,31 @@ async def vai(browser, db):
         # a real fabric's fill: its own pattern per patch, "…-r<id>p<n>)"
         check(re.search(r'-r(\d+)p\d+\)$', fill or '') and re.search(r'-r(\d+)p\d+\)$', fill)[1] == k[1:],
               f'{name}: tap scrap, tap patch: that fabric ({k} in {fill})')
-        # the same scrap on the same patch again: the fabric turns 45°
-        pat = """(() => { const f = document.querySelector('.pt-board [data-i="4"]').getAttribute('fill').match(/#([^)]+)\\)/)[1];
-            return document.getElementById(f).getAttribute('patternTransform') || ''; })()"""
-        await pg.click('.pt-board [data-i="4"]')
+        # turning: a tap only picks a patch, "Xoay vải" turns the picked one
+        # (Anna: a tap used to change the fabric before it could be turned)
+        pat = """(i) => { const f = document.querySelector('.pt-board [data-i="' + i + '"]').getAttribute('fill').match(/#([^)]+)\\)/)[1];
+            return document.getElementById(f).getAttribute('patternTransform') || ''; }"""
+        fab = "(i) => document.querySelector('.pt-board [data-i=\"' + i + '\"]').getAttribute('fill').replace(/^url\\(#gp\\d+-/, '').replace(/p\\d+\\)$/, '')"
+        await pg.click('.pt-board [data-i="4"]')   # the same scrap again: nothing turns by itself
         await pg.wait_for_timeout(300)
-        rot, hint = await pg.evaluate(pat), await pg.evaluate("document.querySelector('.pt-hint').textContent")
-        check(rot.startswith('rotate(45') and '45°' in hint, f'{name}: tap the patch again with that scrap: its fabric turns 45° ({rot}, {hint})')
-        # "Xoay vải ô vừa chọn": on to 90°, and the order line says so
+        check(await pg.evaluate(pat, 4) == '', f'{name}: the scrap in hand on its own patch again: no turn')
+        await js_click(pg, f'.pt-scrap[data-scrap="{k}"]')   # put it down
+        before = await pg.evaluate(fab, 2)
+        await pg.click('.pt-board [data-i="2"]')
+        await pg.wait_for_timeout(300)
+        after, sel, hint = await pg.evaluate(fab, 2), await pg.evaluate("document.querySelector('.pt-board [data-i=\"2\"]').classList.contains('is-sel')"), await pg.evaluate("document.querySelector('.pt-hint').textContent")
+        check(before == after and sel and 'Xoay vải' in hint, f'{name}: nothing in hand, a tap picks the patch and keeps its fabric ({before} → {after}, {hint})')
+        await pg.click('.pt-board [data-i="4"]')
         await js_click(pg, '[data-pt="turn"]')
         await pg.wait_for_timeout(300)
-        rot = await pg.evaluate(pat)
+        rot, hint = await pg.evaluate(pat, 4), await pg.evaluate("document.querySelector('.pt-hint').textContent")
+        check(rot.startswith('rotate(45') and '45°' in hint and await pg.evaluate(fab, 4) == 'r' + k[1:],
+              f'{name}: pick a patch, "Xoay vải": its fabric turns 45°, the same fabric ({rot}, {hint})')
+        await js_click(pg, '[data-pt="turn"]')
+        await pg.wait_for_timeout(300)
+        rot = await pg.evaluate(pat, 4)
         title = await pg.evaluate("document.querySelector('.pt-board svg title').textContent")
-        check(rot.startswith('rotate(90') and 'vải xoay: mảnh 5 90°' in title, f'{name}: "Xoay vải" turns it on to 90°; the order says so ({rot})')
+        check(rot.startswith('rotate(90') and 'vải xoay: mảnh 5 90°' in title, f'{name}: "Xoay vải" again: on to 90°; the order says so ({rot})')
         await pg.screenshot(path=OUT / f'vai-{name}.png')
         check(not any('fabric_private' in x for x in db.fab_urls), f'{name}: the studio never asks where fabrics are kept')
         check(not pg.errors, f'{name}: no script errors {pg.errors}')

@@ -1578,6 +1578,8 @@ html:has(.studio-page) { overscroll-behavior: none; }   /* own rule: a Safari wi
 .pt-board svg * { pointer-events: none; }
 .pt-board svg [data-i] { pointer-events: auto; cursor: pointer; }
 .pt-board [data-i]:hover { filter: brightness(1.06); }
+/* the patch picked (a tap with no scrap in hand): what "Xoay vải" turns */
+.pt-board [data-i].is-sel { stroke: var(--sage-deep); stroke-width: 4; stroke-dasharray: none; stroke-opacity: 1; stroke-linejoin: round; }
 .pt-hint { text-align: center; min-height: 3em; max-width: 34ch; }
 /* turn the fabric of the patch last touched: on the piece's corner */
 .pt-turn {
