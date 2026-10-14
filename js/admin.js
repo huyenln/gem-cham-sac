@@ -1568,9 +1568,13 @@
             '<div class="ad-crop-stage"><canvas class="ad-crop-src"></canvas><div class="ad-crop-box" tabindex="0" ' +
               'aria-label="Khung vuông: kéo để chọn chỗ"></div></div>' +
             '<label class="ad-crop-size">Khung <input type="range" min="15" max="100" value="60" data-crop-size></label>' +
-            '<label class="ad-check"><input type="checkbox" data-crop-flat checked> Làm đều nếp gấp và bóng tối</label>' +
+            '<label class="ad-f"><span>Làm phẳng</span><select data-crop-mode>' +
+              '<option value="plain">Vải trơn: vẽ lại cho phẳng hẳn (giữ màu, thớ sợi)</option>' +
+              '<option value="print">Vải có hoa văn: làm đều chỗ sáng chỗ tối</option>' +
+              '<option value="none">Giữ nguyên ảnh chụp</option></select></label>' +
+            '<label class="ad-crop-size">Độ sáng <input type="range" min="-30" max="30" value="0" step="5" data-crop-bright></label>' +
             '<p class="ad-hint">Kéo khung vuông vào chỗ vải phẳng, thấy rõ hoa văn. Khung càng to, ' +
-              'hoa văn trên món càng nhỏ.</p>' +
+              'hoa văn trên món càng nhỏ. Web tự làm sáng và bớt vàng do đèn trong phòng.</p>' +
           '</div>' +
         '</div>' +
         '<label class="ad-f"><span>Tên (tiếng Việt)</span><input name="name_vi" maxlength="60" required placeholder="vd Caro xanh lá"></label>' +
@@ -1624,7 +1628,14 @@
     }
     function preview() {
       var mine = ++job;
-      return window.GemImg.fabric(crop.img, crop, { flat: cropEl.querySelector('[data-crop-flat]').checked, name: 'vai' })
+      var mat = (F['material'].value || '').trim().toLowerCase();
+      return window.GemImg.fabric(crop.img, crop, {
+        mode: cropEl.querySelector('[data-crop-mode]').value,
+        bright: +cropEl.querySelector('[data-crop-bright]').value,
+        shiny: /^(satin|tafta|lụa|nhung)$/.test(mat),
+        ribbed: /^(nhung tăm|thun)/.test(mat),
+        name: 'vai'
+      })
         .then(function (r) {
           if (mine !== job) return r;
           outCv.hidden = false;
@@ -1664,7 +1675,16 @@
       crop.y = Math.round(Math.max(0, Math.min(crop.h - crop.s, cy - crop.s / 2)));
       placeBox(); previewSoon();
     });
-    cropEl.querySelector('[data-crop-flat]').addEventListener('change', function () { if (crop) preview(); });
+    // how to flatten follows the kind (plain or not) until staff pick it themselves
+    var modeEl = cropEl.querySelector('[data-crop-mode]'), modeSet = false;
+    modeEl.value = (f.kind || 'tron') === 'tron' ? 'plain' : 'print';
+    modeEl.addEventListener('change', function () { modeSet = true; if (crop) preview(); });
+    F['kind'].addEventListener('change', function () {
+      if (!modeSet) modeEl.value = F['kind'].value === 'tron' ? 'plain' : 'print';
+      if (crop) preview();
+    });
+    F['material'].addEventListener('change', function () { if (crop) preview(); });
+    cropEl.querySelector('[data-crop-bright]').addEventListener('input', function () { if (crop) previewSoon(); });
 
     // drag the square (finger or mouse); arrow keys nudge it
     var drag = null;

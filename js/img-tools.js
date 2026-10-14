@@ -5,7 +5,7 @@
 //   GemImg.thumb(src, size)       -> Promise<File>  square centre crop (600px)
 //   GemImg.removeWhite(src, opts) -> Promise<File>  white paper/background -> transparent
 //   GemImg.size(src)              -> Promise<{w, h}>
-//   GemImg.fabric(img, box, opts) -> Promise<{file, canvas}>  a framed fabric square, folds evened, 320px
+//   GemImg.fabric(img, box, opts) -> Promise<{file, canvas}>  a framed fabric square for Kho vải, 320px
 //
 // `src` is a File/Blob or an image URL. A URL from another site must send
 // CORS headers (Supabase Storage does), otherwise the canvas refuses to export.
@@ -204,29 +204,107 @@ window.GemImg = (function () {
   }
 
   // A fabric photo for Kho vải: the square the staff framed (box, in the
-  // picture's pixels), big shadows and folds evened out, 320px. The light is
-  // the picture shrunk to 8 x 8 and blown back up — a wide, cheap blur — and
-  // each pixel is divided by it, so the weave and the print stay.
-  //   GemImg.fabric(img, {x, y, s}, {flat: true, name}) -> {file, canvas}
-  function flatten(c, strength) {
-    var W = c.width, H = c.height, g = c.getContext('2d');
-    var small = canvas(8, 8), sg = small.getContext('2d');
-    sg.imageSmoothingQuality = 'high';
-    sg.drawImage(c, 0, 0, 8, 8);
-    var big = canvas(W, H), bg = big.getContext('2d');
-    bg.imageSmoothingEnabled = true;
-    bg.imageSmoothingQuality = 'high';
-    bg.drawImage(small, 0, 0, W, H);
-    var light = bg.getImageData(0, 0, W, H).data;
-    var data = g.getImageData(0, 0, W, H), px = data.data, i, sum = 0;
-    for (i = 0; i < light.length; i += 4) sum += 0.299 * light[i] + 0.587 * light[i + 1] + 0.114 * light[i + 2];
-    var mean = sum / (W * H);
-    for (i = 0; i < px.length; i += 4) {
-      var L = Math.max(1, 0.299 * light[i] + 0.587 * light[i + 1] + 0.114 * light[i + 2]);
-      var f = 1 + (mean / L - 1) * strength;
-      px[i] = Math.min(255, px[i] * f); px[i + 1] = Math.min(255, px[i + 1] * f); px[i + 2] = Math.min(255, px[i + 2] * f);
+  // picture's pixels) made into a 320px swatch, the same way as the first 71
+  // (tools/kv-swatches.py):
+  //   mode 'plain'  plain cloth drawn again flat: its own colour (the median,
+  //                 so folds don't pull it) times its own weave (the finest
+  //                 detail of the photo); satin / silk / velvet keep a soft
+  //                 sheen, corduroy / rib knit keep their ribs
+  //   mode 'print'  big light changes evened out, the print kept
+  //   mode 'none'   as photographed
+  // then the shop's lights corrected: a little less yellow-red (not for
+  // cream / beige, they would turn mint), brighter, a little fresher.
+  //   GemImg.fabric(img, {x, y, s}, {mode, bright, shiny, ribbed, name}) -> {file, canvas}
+  var LW = [0.299, 0.587, 0.114];
+  var SHOP_LIGHT = [0.966, 1.010, 1.028];   // 60% of the cast measured on the first photos
+
+  // box blur, 3 passes (~ a Gaussian of sigma r), on a W x H float array
+  function boxBlur(src, W, H, r) {
+    r = Math.max(1, Math.round(r));
+    var a = new Float32Array(src), b = new Float32Array(src.length), pass, x, y, i, acc, n;
+    for (pass = 0; pass < 3; pass++) {
+      for (y = 0; y < H; y++) {           // rows: a -> b
+        var row = y * W;
+        acc = 0; n = 0;
+        for (x = 0; x <= Math.min(r, W - 1); x++) { acc += a[row + x]; n++; }
+        for (x = 0; x < W; x++) {
+          b[row + x] = acc / n;
+          var add = x + r + 1, del = x - r;
+          if (add < W) { acc += a[row + add]; n++; }
+          if (del >= 0) { acc -= a[row + del]; n--; }
+        }
+      }
+      for (x = 0; x < W; x++) {           // columns: b -> a
+        acc = 0; n = 0;
+        for (y = 0; y <= Math.min(r, H - 1); y++) { acc += b[y * W + x]; n++; }
+        for (y = 0; y < H; y++) {
+          a[y * W + x] = acc / n;
+          var addY = y + r + 1, delY = y - r;
+          if (addY < H) { acc += b[addY * W + x]; n++; }
+          if (delY >= 0) { acc -= b[delY * W + x]; n--; }
+        }
+      }
     }
-    g.putImageData(data, 0, 0);
+    return a;
+  }
+
+  function median(arr) {
+    var s = Array.prototype.slice.call(arr).sort(function (p, q) { return p - q; });
+    return s[s.length >> 1] || 0;
+  }
+
+  function fabricPixels(px, W, H, opts) {
+    var N = W * H, i, L = new Float32Array(N), sum = 0;
+    for (i = 0; i < N; i++) { L[i] = Math.max(1, LW[0] * px[i * 4] + LW[1] * px[i * 4 + 1] + LW[2] * px[i * 4 + 2]); sum += L[i]; }
+    var mean = sum / N, f = new Float32Array(N), k;
+    var col = null;
+    if (opts.mode === 'plain') {
+      // its own colour: the median (every 7th pixel is plenty), or the mean for a shiny cloth
+      var ch = [[], [], []];
+      for (i = 0; i < N; i += 7) for (k = 0; k < 3; k++) ch[k].push(px[i * 4 + k]);
+      col = ch.map(function (c) {
+        if (!opts.shiny) return median(c);
+        return c.reduce(function (p, q) { return p + q; }, 0) / c.length;
+      });
+      var fine = boxBlur(L, W, H, opts.ribbed ? 5 : 2), broad = boxBlur(L, W, H, W / 3);
+      var sheen = opts.shiny ? boxBlur(L, W, H, W / 14) : null;
+      for (i = 0; i < N; i++) {
+        f[i] = (1 + (L[i] / Math.max(1, fine[i]) - 1) * 1.1) * (1 + (broad[i] / mean - 1) * (opts.shiny ? 0.5 : 0.25));
+        if (sheen) f[i] *= 1 + (sheen[i] / Math.max(1, broad[i]) - 1) * 0.45;
+      }
+    } else if (opts.mode === 'print') {
+      var light = boxBlur(L, W, H, W / 6);
+      for (i = 0; i < N; i++) f[i] = 1 + (mean / Math.max(1, light[i]) - 1) * 0.7;
+    } else {
+      for (i = 0; i < N; i++) f[i] = 1;
+    }
+    var out = new Float32Array(N * 3);
+    for (i = 0; i < N; i++) {
+      for (k = 0; k < 3; k++) out[i * 3 + k] = Math.min(255, (col ? col[k] : px[i * 4 + k]) * f[i]) / 255;
+    }
+    // cream / beige (pale, warm, little colour): no light correction
+    var avg = [0, 0, 0];
+    for (i = 0; i < N; i += 5) for (k = 0; k < 3; k++) avg[k] += out[i * 3 + k];
+    var mx = Math.max(avg[0], avg[1], avg[2]), mn = Math.min(avg[0], avg[1], avg[2]);
+    var warm = mx > 0 && (mx - mn) / mx < 0.14 && avg[0] >= avg[2];
+    var cast = warm ? [1.02, 1, 0.96] : SHOP_LIGHT;
+    // exposure: the light part of the cloth near white, never darker
+    var hist = new Uint32Array(256);
+    for (i = 0; i < N; i++) {
+      for (k = 0; k < 3; k++) out[i * 3 + k] *= cast[k];
+      hist[Math.min(255, Math.round(255 * (LW[0] * out[i * 3] + LW[1] * out[i * 3 + 1] + LW[2] * out[i * 3 + 2])))]++;
+    }
+    var c97 = 0, p97 = 255;
+    for (k = 0; k < 256; k++) { c97 += hist[k]; if (c97 >= N * 0.97) { p97 = k; break; } }
+    var gain = Math.min(1.35, Math.max(1, 0.9 / Math.max(p97 / 255, 0.01))) * (1 + (opts.bright || 0) / 100);
+    for (i = 0; i < N; i++) {
+      var r = Math.pow(Math.min(1, out[i * 3] * gain), 0.94), g = Math.pow(Math.min(1, out[i * 3 + 1] * gain), 0.94),
+          bb = Math.pow(Math.min(1, out[i * 3 + 2] * gain), 0.94);
+      var l = LW[0] * r + LW[1] * g + LW[2] * bb;
+      px[i * 4] = 255 * Math.max(0, Math.min(1, l + (r - l) * 1.06));
+      px[i * 4 + 1] = 255 * Math.max(0, Math.min(1, l + (g - l) * 1.06));
+      px[i * 4 + 2] = 255 * Math.max(0, Math.min(1, l + (bb - l) * 1.06));
+    }
   }
 
   function fabric(img, box, opts) {
@@ -234,7 +312,9 @@ window.GemImg = (function () {
     var work = canvas(640, 640), wg = work.getContext('2d');
     wg.imageSmoothingQuality = 'high';
     wg.drawImage(img, box.x, box.y, box.s, box.s, 0, 0, 640, 640);
-    if (opts.flat !== false) flatten(work, 0.85);
+    var data = wg.getImageData(0, 0, 640, 640);
+    fabricPixels(data.data, 640, 640, opts);
+    wg.putImageData(data, 0, 0);
     var out = canvas(320, 320), og = out.getContext('2d');
     og.imageSmoothingQuality = 'high';
     og.drawImage(work, 0, 0, 320, 320);

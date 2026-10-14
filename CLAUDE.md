@@ -24,7 +24,7 @@ Static website cho cửa hàng **Gem Chạm Sắc** — pop-up store sustainabil
 ├── season-02.html            Câu chuyện Season 02 (A Space To Stay + link FB reel)
 ├── workshop.html             Đặt lịch workshop (đọc từ Supabase)
 ├── ban-tin.html              Bản tin — bài viết đọc từ Supabase
-├── admin.html                Trang quản trị cho Anna + nhân viên (noindex, không có link từ nav)
+├── admin.html                Trang quản trị cho Anna + nhân viên (noindex, không có link từ nav); tab Kho vải
 ├── studio.html               Studio Gem 2D — bản thử, tranh tạm từ ChatGPT (noindex, chưa có trên nav)
 ├── 404.html                  Fallback page (Udon lạc đường)
 ├── CNAME                     gemchamsac.com (cho GitHub Pages custom domain)
@@ -54,10 +54,12 @@ Static website cho cửa hàng **Gem Chạm Sắc** — pop-up store sustainabil
 ├── tools/clean-white.py      Xoá phần giấy trắng còn sót trong asset đã tách nền
 ├── tools/design-assets.py    Chạy tay khi có tranh bàn thiết kế mới: cắt vải, khuôn mảnh, rổ, món → images/studio/vai/
 ├── tools/check-studio.py     Kiểm tra studio + trình lắp bằng Playwright (Supabase giả lập)
+├── tools/kv-swatches.py      Chạy tay khi làm lại ảnh 71 tấm vải nhập sẵn (ảnh gốc trên Drive) → images/studio/vai-that/
 ├── images/
 │   ├── logo/                 Logo Gem variants
 │   ├── mascot/               6 pose Udon (PNG transparent)
 │   ├── products/             Product photos (full + thumb; -2/-3… cho ảnh thêm góc)
+│   ├── studio/vai-that/      Ảnh 320px các tấm vải thật nhập sẵn (Kho vải); tấm mới thêm trong admin nằm ở gem-media
 │   ├── space/                Ảnh studio + sự kiện (WebP, từ Portfolio 2026)
 │   ├── workshop/             Ảnh workshop / Chạm Mùa (WebP)
 │   └── partners/             Logo đối tác (mo-hinh.html)
@@ -69,7 +71,8 @@ Static website cho cửa hàng **Gem Chạm Sắc** — pop-up store sustainabil
 
 **Backend (từ Sprint 3):** Supabase (project `dxdovvqsfjeizsoprrfn`, Singapore,
 Postgres 17). Bảng: `products`, `orders`, `order_items`, `sessions`, `bookings`,
-`workshop_types`, `staff`, `settings`, `posts`, `notes` (bảng lời nhắn Studio), `studio_layout` (bố cục studio, chỉ owner ghi), `studio_assets` (thư viện ảnh của trình lắp, chỉ owner), `studio_info` (loại + câu chuyện + lời thoại theo ảnh; khách đọc, owner ghi — SQL ở `supabase/migrations/20261006_studio_info.sql`). Kho ảnh: Storage bucket
+`workshop_types`, `staff`, `settings`, `posts`, `notes` (bảng lời nhắn Studio),
+`fabrics` (Kho vải: ai cũng đọc, nhân sự ghi) + `fabric_private` (chỗ để vải, chỉ nhân sự), `studio_layout` (bố cục studio, chỉ owner ghi), `studio_assets` (thư viện ảnh của trình lắp, chỉ owner), `studio_info` (loại + câu chuyện + lời thoại theo ảnh; khách đọc, owner ghi — SQL ở `supabase/migrations/20261006_studio_info.sql`). Kho ảnh: Storage bucket
 `gem-media` (đọc công khai, tải lên chỉ nhân sự). Chi tiết ở `docs/design.md`.
 
 > ⚠️ **Hai luật bảo mật, đọc trước khi đụng vào database:**
@@ -370,6 +373,10 @@ Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
   thẻ chia sẻ 9:16, vải + rổ + món + Udon may bằng tranh (`tools/design-assets.py`).
   Chi tiết: `docs/design.md` → "Bàn thiết kế — chơi". Đợt 2: Mảnh hiếm (vải thật).
 - 👕 Đợt 2 đồ mặc (áo) — chỉ làm nếu khách dùng nút "Đeo thử"; cần vẽ lại khung.
+- 🧵 **Kho vải** (14/10/2026): rổ vải ở Bàn thiết kế = vải thật trong bảng `fabrics`
+  (71 tấm nhập sẵn, nhân sự thêm / Còn-Hết / chỗ để ở admin → Kho vải). Mã thiết kế: khoá
+  `r<id>`. Làm tiếp: (2) Kho vải cho khách chọn tấm vào rổ, (3) chỉnh họa tiết từng ô (khung =
+  hình ô). Chi tiết: `docs/design.md` → "Kho vải".
 - 🛍️ Ảnh cắt nền sản phẩm: giờ làm trong admin → Sản phẩm → Sửa → "Ảnh cắt nền"
   (nút "Xoá nền trắng", hoặc "Chọn từ thư viện" lấy ảnh đã tải ở Lắp studio). Tab
   "Sản phẩm thật" của trình lắp có mọi món (chưa cắt nền thì ảnh chụp trong khung);

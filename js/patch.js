@@ -1035,7 +1035,11 @@
       });
     }
     out += '</g>';
-    out += '<image href="' + VAI + 'mon-' + name + '-bong.webp" width="340" height="340" style="mix-blend-mode:multiply" opacity="0.8" pointer-events="none"/>';
+    // photos of real fabric already carry their own light: a lighter shading
+    // over them, or they come out dull (painted swatches are flat and bright)
+    var photo = (d.cus || []).some(function (c) { return c.r != null; }) || (!d.fab && hasReal());
+    out += '<image href="' + VAI + 'mon-' + name + '-bong.webp" width="340" height="340" style="mix-blend-mode:multiply" opacity="' +
+      (photo ? 0.6 : 0.8) + '" pointer-events="none"/>';
     if (A.top) out += '<image href="' + VAI + 'mon-' + name + '-top.webp" width="340" height="340" pointer-events="none"/>';
     return out;
   }
