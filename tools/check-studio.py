@@ -160,6 +160,12 @@ def fabric_rows():
         r['place'] = places.get(r['id'])
         if r['img'] in photos:
             r['photo'], r['photo_k'] = photos[r['img']]
+    # 20261015c: the checks / stripes drawn again show 3 swatch widths
+    drawn = (ROOT / 'supabase/migrations/20261015c_ke_ve_lai_xoay_vai.sql').read_text(encoding='utf-8')
+    m = re.search(r"set photo_k = ([\d.]+) where photo in \(([^)]*)\)", drawn)
+    for r in rows:
+        if r.get('photo') and "'%s'" % r['photo'] in m[2]:
+            r['photo_k'] = float(m[1])
     # 20261014d: second photos of the same cloth removed, a few renamed
     gop = (ROOT / 'supabase/migrations/20261014d_kho_vai_gop.sql').read_text(encoding='utf-8')
     gone = {int(x) for x in re.search(r'where id in \(([\d, ]+)\)', gop)[1].split(',')}
@@ -1038,7 +1044,8 @@ async def design(browser, db):
         await pg.wait_for_timeout(300)
         cell = await pg.evaluate("document.querySelector('.pt-board [data-i=\"4\"]').getAttribute('fill')")
         want = f'-f{sid})'
-        check(cell.endswith(want), f'{name}: tap scrap, tap patch puts that fabric there ({want} in {cell})')
+        # (already that fabric there: the tap turns it, "-f<id>o45)")
+        check(re.search(r'-f%s(o\d+)?\)$' % sid, cell), f'{name}: tap scrap, tap patch puts that fabric there ({want} in {cell})')
         # drag another scrap onto patch 0
         sid2 = await pg.evaluate("document.querySelectorAll('.pt-scrap')[2].getAttribute('data-scrap')")
         await pg.evaluate("document.querySelector('.pt-board').scrollIntoView({block: 'start'})")
@@ -1051,6 +1058,16 @@ async def design(browser, db):
         want2 = f'-f{sid2})'
         check(cell0.endswith(want2), f'{name}: drag a scrap onto a patch ({want2} in {cell0})')
         await pg.screenshot(path=OUT / f'design-{name}-1.png')
+        if name == 'mobile':
+            # phone: scrolled to the piece, the basket is docked right above
+            # the action bar - the piece and the scraps on screen together
+            await pg.evaluate("document.querySelector('.st-sheet').scrollTop = 140")
+            await pg.wait_for_timeout(300)
+            box = await pg.evaluate("""(() => { const r = e => document.querySelector(e).getBoundingClientRect();
+                const b = r('.pt-board'), s = r('.pt-scraps'), a = r('.pt-actions');
+                return [Math.round(b.top), Math.round(b.bottom), Math.round(s.top), Math.round(s.bottom), Math.round(a.top), innerHeight]; })()""")
+            check(box[0] >= 0 and box[1] <= box[2] + 20 and box[3] <= box[4] + 2 and box[4] < box[5],
+                  f'{name}: the piece, the docked basket and the action bar fit one screen ({box})')
         # a mood changes the fabrics, not the layout the customer picked
         await js_click(pg, '[data-layout="chong"]')
         await js_click(pg, '[data-mood="tet"]')
@@ -2904,6 +2921,19 @@ async def vai(browser, db):
         # a real fabric's fill: its own pattern per patch, "…-r<id>p<n>)"
         check(re.search(r'-r(\d+)p\d+\)$', fill or '') and re.search(r'-r(\d+)p\d+\)$', fill)[1] == k[1:],
               f'{name}: tap scrap, tap patch: that fabric ({k} in {fill})')
+        # the same scrap on the same patch again: the fabric turns 45°
+        pat = """(() => { const f = document.querySelector('.pt-board [data-i="4"]').getAttribute('fill').match(/#([^)]+)\\)/)[1];
+            return document.getElementById(f).getAttribute('patternTransform') || ''; })()"""
+        await pg.click('.pt-board [data-i="4"]')
+        await pg.wait_for_timeout(300)
+        rot, hint = await pg.evaluate(pat), await pg.evaluate("document.querySelector('.pt-hint').textContent")
+        check(rot.startswith('rotate(45') and '45°' in hint, f'{name}: tap the patch again with that scrap: its fabric turns 45° ({rot}, {hint})')
+        # "Xoay vải ô vừa chọn": on to 90°, and the order line says so
+        await js_click(pg, '[data-pt="turn"]')
+        await pg.wait_for_timeout(300)
+        rot = await pg.evaluate(pat)
+        title = await pg.evaluate("document.querySelector('.pt-board svg title').textContent")
+        check(rot.startswith('rotate(90') and 'vải xoay: mảnh 5 90°' in title, f'{name}: "Xoay vải" turns it on to 90°; the order says so ({rot})')
         await pg.screenshot(path=OUT / f'vai-{name}.png')
         check(not any('fabric_private' in x for x in db.fab_urls), f'{name}: the studio never asks where fabrics are kept')
         check(not pg.errors, f'{name}: no script errors {pg.errors}')

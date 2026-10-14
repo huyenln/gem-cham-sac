@@ -1920,6 +1920,16 @@ Gem đang có**, nhân sự tự thêm tấm mới trong admin.
     bạc hà vì đèn cửa hàng. `WHITE` trong `tools/kv-swatches.py`: phần sáng nhất (1/5) của ảnh
     được đưa về màu thật, phần còn lại theo đó. Tấm nào lệch màu thì thêm một dòng vào `WHITE`
     rồi chạy lại riêng ảnh đó (`python3 tools/kv-swatches.py <thư mục ảnh> <tên ảnh>`).
+  - **Vải kẻ / caro vẽ lại cho thẳng** (Anna 14/10: "pattern vải thật vẫn lệch, chỉnh cho thẳng
+    như vải vẽ, không được thì vẽ lại"). Đường kẻ trong ảnh cong theo nếp vải; thử nắn thẳng
+    chính ảnh (dò pha từng đường kẻ) thì chỉ tấm sọc đen trắng ra đẹp, các tấm có nếp gấp bị rách
+    hình. Nên 6 tấm được **dệt lại** từ số đo (`DRAWN` trong `tools/kv-swatches.py`): lưới 1 cm
+    đặt lên ảnh để đếm, màu lấy từ ảnh; sợi dọc / sợi ngang theo dải cm, chỗ hai màu bắt chéo là
+    vân chéo twill (ô giữa caro, răng cưa houndstooth tự ra). Caro trám là vải in nên vẽ thêm ô
+    vuông. Chỉ ảnh lớn cho bàn thiết kế (`lon/`) là bản vẽ (photo_k 3, `20261015c_ke_ve_lai_xoay_vai.sql`); thẻ Kho vải vẫn là ảnh
+    thật. Sáu tấm: Caro xanh lá, Sọc đen trắng, Ô nhỏ xanh coban, Kẻ ô nâu đen, Nhung đen kẻ sọc,
+    Caro lớn xanh đen. Ba tấm sau là bản gần đúng (hoạ tiết phức tạp) — tấm nào chưa giống thì
+    sửa dải màu trong `DRAWN` rồi chạy lại riêng ảnh đó.
   - **Vải kẻ / caro chụp nghiêng thì xoay thẳng** trước khi cắt ảnh (Anna 14/10: "kẻ dọc
     nhưng chụp bị chéo"). Góc đo bằng độ sắc của đường chiếu dọc / ngang (lần lượt thử từng
     góc, lấy góc mà các đường kẻ thẳng hàng nhất). Đã xoay: #46 −45° (đổi tên "Kẻ ô nâu
@@ -1992,11 +2002,25 @@ Gem đang có**, nhân sự tự thêm tấm mới trong admin.
       từng tấm. Ảnh cũ không có thước, nên số này là ước lượng.
     - Vải vụn bị cắt dần, nên web phải ghi "Gem cắt sát chỗ bạn chọn nhất có thể".
 
+### Bàn thiết kế trên điện thoại: rổ vải neo (14/10/2026)
+
+Anna: "rổ vải ở tận dưới phải scroll qua lại hơi bất tiện". Trên điện thoại (dưới 768px),
+khối **Rổ vải vụn** dính ngay trên thanh "May xong" (`position: sticky`, `bottom` theo
+chiều cao thanh — `--pt-bar-h`, `js/studio.js` đo lại mỗi lần vẽ), nên món và rổ cùng trên
+màn hình: chạm vải rồi chạm ô, không phải cuộn. Cuộn xuống tới chỗ của nó thì rổ nằm lại
+như cũ. Cột phải (`.pt-side`) thành `display: contents` để rổ dính được suốt trang. Rổ gọn
+lại: dải màu một hàng vuốt ngang, rổ rộng tối đa 290px. Món tự co theo chiều cao màn hình
+(`100svh - 430px`, không dưới 240px) để món + rổ + thanh vừa một màn hình. Mở "Màu riêng"
+thì rổ về lại chỗ cũ (là bảng để đọc, không phải khay). Máy tính giữ nguyên 2 cột. Test:
+`check-studio.py design` (điện thoại: món, rổ, thanh cùng vừa màn hình).
+
 ### Bàn thiết kế — túi, cỡ, tuỳ chọn, giá (14–15/10/2026)
 
-Anna: "cứ thử làm hết rồi mình duyệt một thể". Tất cả nằm ở một PR để duyệt, **chưa merge**. Có
-hai migration chỉ chạy khi merge: `20261015_kho_vai_photo.sql` (ảnh lớn của từng tấm) và
-`20261015b_design_pricing.sql` (giá thiết kế).
+Anna: "cứ thử làm hết rồi mình duyệt một thể". Đã merge (#65, 14/10). Migration chạy theo thứ tự:
+`20261015_kho_vai_photo.sql` (ảnh lớn của từng tấm), `20261015b_design_pricing.sql` (giá thiết
+kế), rồi `20261015c_ke_ve_lai_xoay_vai.sql` (sau #65: 6 tấm kẻ vẽ lại có `photo_k` 3; `design_price`
+nhận mã 14 trường — xoay vải). Khi chưa chạy hai file đầu, đơn có túi thiết kế bị từ chối
+("need_option": `create_order` cũ bắt chọn "Mẫu") và thiết kế khác bị tính giá món may sẵn.
 
 - **A. Vải thật không còn "chéo vải"**
   - Mỗi tấm có thêm một ảnh lớn (`images/studio/vai-that/lon/`, 640px, cột `photo`), kèm
@@ -2049,6 +2073,16 @@ hai migration chỉ chạy khi merge: `20261015_kho_vai_photo.sql` (ảnh lớn 
   - Cỡ lớn hơn thì ảnh vải thật trông nhỏ lại theo đúng tỉ lệ.
   - Mã thiết kế thêm field 13, ví dụ `s1.q.p2.z.n` hoặc `c30x25`. Khi field này có mặt thì
     field 11–12 được phép rỗng.
+- **Xoay vải từng ô** (Anna 14/10: "cho phép xoay vải khi ghép, vd vải kẻ dọc thành kẻ chéo"):
+  - Đang cầm một mảnh vải mà chạm lại ô đã có đúng vải đó → vải ô ấy xoay 45° (0 → 45 → 90 →
+    135 → 0). Nút "Xoay vải ô vừa chọn" dưới món làm việc tương tự cho ô vừa chạm.
+  - Mã thiết kế thêm **field 14**: một chữ số cho mỗi ô (0–3, × 45°), bỏ số 0 ở cuối; không có
+    ô nào xoay thì không có field này. Ô xoay thì field 11 (vải từng ô) bắt buộc.
+  - Vẽ: mẫu vải của ô quay quanh tâm ô (`patternTransform`); ảnh vải thật được phóng đủ phủ ô
+    ở góc đó. Dòng đơn ghi "vải xoay: mảnh 5 90°" (hoặc tên phần, vd "Quai 45°").
+  - Không tính thêm tiền (`design_price` nhận mã 14 trường, chỉ kiểm định dạng field 14 —
+    `20261015c_ke_ve_lai_xoay_vai.sql`). Cắt
+    xéo tốn vải hơn: nếu muốn thu thêm thì thêm phí vào bảng giá sau.
 - **D. Chất liệu**:
   - Danh sách có thêm Kaki / canvas, Lụa / satin, Nỉ / dạ.
   - Trong "Màu riêng" có hàng "Chất liệu bạn thấy ổn": chọn nhiều loại, hoặc "Để Gem chọn"
