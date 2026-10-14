@@ -160,6 +160,12 @@ def fabric_rows():
         r['place'] = places.get(r['id'])
         if r['img'] in photos:
             r['photo'], r['photo_k'] = photos[r['img']]
+    # 20261015c: the checks / stripes drawn again show 3 swatch widths
+    drawn = (ROOT / 'supabase/migrations/20261015c_ke_ve_lai_xoay_vai.sql').read_text(encoding='utf-8')
+    m = re.search(r"set photo_k = ([\d.]+) where photo in \(([^)]*)\)", drawn)
+    for r in rows:
+        if r.get('photo') and "'%s'" % r['photo'] in m[2]:
+            r['photo_k'] = float(m[1])
     # 20261014d: second photos of the same cloth removed, a few renamed
     gop = (ROOT / 'supabase/migrations/20261014d_kho_vai_gop.sql').read_text(encoding='utf-8')
     gone = {int(x) for x in re.search(r'where id in \(([\d, ]+)\)', gop)[1].split(',')}

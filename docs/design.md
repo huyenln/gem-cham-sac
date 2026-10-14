@@ -1926,7 +1926,7 @@ Gem đang có**, nhân sự tự thêm tấm mới trong admin.
     hình. Nên 6 tấm được **dệt lại** từ số đo (`DRAWN` trong `tools/kv-swatches.py`): lưới 1 cm
     đặt lên ảnh để đếm, màu lấy từ ảnh; sợi dọc / sợi ngang theo dải cm, chỗ hai màu bắt chéo là
     vân chéo twill (ô giữa caro, răng cưa houndstooth tự ra). Caro trám là vải in nên vẽ thêm ô
-    vuông. Chỉ ảnh lớn cho bàn thiết kế (`lon/`) là bản vẽ (photo_k 3); thẻ Kho vải vẫn là ảnh
+    vuông. Chỉ ảnh lớn cho bàn thiết kế (`lon/`) là bản vẽ (photo_k 3, `20261015c_ke_ve_lai_xoay_vai.sql`); thẻ Kho vải vẫn là ảnh
     thật. Sáu tấm: Caro xanh lá, Sọc đen trắng, Ô nhỏ xanh coban, Kẻ ô nâu đen, Nhung đen kẻ sọc,
     Caro lớn xanh đen. Ba tấm sau là bản gần đúng (hoạ tiết phức tạp) — tấm nào chưa giống thì
     sửa dải màu trong `DRAWN` rồi chạy lại riêng ảnh đó.
@@ -2016,9 +2016,11 @@ thì rổ về lại chỗ cũ (là bảng để đọc, không phải khay). M�
 
 ### Bàn thiết kế — túi, cỡ, tuỳ chọn, giá (14–15/10/2026)
 
-Anna: "cứ thử làm hết rồi mình duyệt một thể". Tất cả nằm ở một PR để duyệt, **chưa merge**. Có
-hai migration chỉ chạy khi merge: `20261015_kho_vai_photo.sql` (ảnh lớn của từng tấm) và
-`20261015b_design_pricing.sql` (giá thiết kế).
+Anna: "cứ thử làm hết rồi mình duyệt một thể". Đã merge (#65, 14/10). Migration chạy theo thứ tự:
+`20261015_kho_vai_photo.sql` (ảnh lớn của từng tấm), `20261015b_design_pricing.sql` (giá thiết
+kế), rồi `20261015c_ke_ve_lai_xoay_vai.sql` (sau #65: 6 tấm kẻ vẽ lại có `photo_k` 3; `design_price`
+nhận mã 14 trường — xoay vải). Khi chưa chạy hai file đầu, đơn có túi thiết kế bị từ chối
+("need_option": `create_order` cũ bắt chọn "Mẫu") và thiết kế khác bị tính giá món may sẵn.
 
 - **A. Vải thật không còn "chéo vải"**
   - Mỗi tấm có thêm một ảnh lớn (`images/studio/vai-that/lon/`, 640px, cột `photo`), kèm
@@ -2078,7 +2080,8 @@ hai migration chỉ chạy khi merge: `20261015_kho_vai_photo.sql` (ảnh lớn 
     ô nào xoay thì không có field này. Ô xoay thì field 11 (vải từng ô) bắt buộc.
   - Vẽ: mẫu vải của ô quay quanh tâm ô (`patternTransform`); ảnh vải thật được phóng đủ phủ ô
     ở góc đó. Dòng đơn ghi "vải xoay: mảnh 5 90°" (hoặc tên phần, vd "Quai 45°").
-  - Không tính thêm tiền (`design_price` nhận mã 14 trường, chỉ kiểm định dạng field 14). Cắt
+  - Không tính thêm tiền (`design_price` nhận mã 14 trường, chỉ kiểm định dạng field 14 —
+    `20261015c_ke_ve_lai_xoay_vai.sql`). Cắt
     xéo tốn vải hơn: nếu muốn thu thêm thì thêm phí vào bảng giá sau.
 - **D. Chất liệu**:
   - Danh sách có thêm Kaki / canvas, Lụa / satin, Nỉ / dạ.

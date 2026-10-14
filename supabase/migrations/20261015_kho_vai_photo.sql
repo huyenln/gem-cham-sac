@@ -2,9 +2,7 @@
 -- table each patch shows its own part of it, at the piece's real scale, so a
 -- check no longer repeats in tiles with seams (Anna: "bị chéo vải").
 --   photo    the bigger square round the swatch (640px), same checks as img
---   photo_k  its side in swatch widths (a swatch is about 13 cm of cloth);
---            3 for the six checks / stripes drawn again straight
---            (tools/kv-swatches.py DRAWN)
+--   photo_k  its side in swatch widths (a swatch is about 13 cm of cloth)
 -- Admin uploads both when a fabric is added. Run before the JS that asks for
 -- these columns goes live (js/gem-db.js falls back to the swatch without).
 
@@ -18,7 +16,7 @@ alter table public.fabrics
 update public.fabrics f set photo = v.photo, photo_k = v.k
 from (values
   ('images/studio/vai-that/tho-xanh-reu.webp', 'images/studio/vai-that/lon/tho-xanh-reu.webp', 1.36),
-  ('images/studio/vai-that/caro-xanh-la.webp', 'images/studio/vai-that/lon/caro-xanh-la.webp', 3),
+  ('images/studio/vai-that/caro-xanh-la.webp', 'images/studio/vai-that/lon/caro-xanh-la.webp', 1.6),
   ('images/studio/vai-that/gam-la-xanh.webp', 'images/studio/vai-that/lon/gam-la-xanh.webp', 1.43),
   ('images/studio/vai-that/hoa-nen-vang-chanh.webp', 'images/studio/vai-that/lon/hoa-nen-vang-chanh.webp', 1.6),
   ('images/studio/vai-that/hoa-ruc-ro.webp', 'images/studio/vai-that/lon/hoa-ruc-ro.webp', 1.6),
@@ -27,8 +25,8 @@ from (values
   ('images/studio/vai-that/xanh-coban.webp', 'images/studio/vai-that/lon/xanh-coban.webp', 1.6),
   ('images/studio/vai-that/xanh-than.webp', 'images/studio/vai-that/lon/xanh-than.webp', 1.6),
   ('images/studio/vai-that/to-ong-xanh-nhat.webp', 'images/studio/vai-that/lon/to-ong-xanh-nhat.webp', 1.0),
-  ('images/studio/vai-that/o-nho-xanh-than.webp', 'images/studio/vai-that/lon/o-nho-xanh-than.webp', 3),
-  ('images/studio/vai-that/caro-tram-xanh.webp', 'images/studio/vai-that/lon/caro-tram-xanh.webp', 3),
+  ('images/studio/vai-that/o-nho-xanh-than.webp', 'images/studio/vai-that/lon/o-nho-xanh-than.webp', 1.15),
+  ('images/studio/vai-that/caro-tram-xanh.webp', 'images/studio/vai-that/lon/caro-tram-xanh.webp', 1.0),
   ('images/studio/vai-that/voan-hoa-hong-nen-xanh.webp', 'images/studio/vai-that/lon/voan-hoa-hong-nen-xanh.webp', 1.6),
   ('images/studio/vai-that/hoa-tiet-o-mau.webp', 'images/studio/vai-that/lon/hoa-tiet-o-mau.webp', 1.0),
   ('images/studio/vai-that/mau-nuoc-tim-xanh.webp', 'images/studio/vai-that/lon/mau-nuoc-tim-xanh.webp', 1.6),
@@ -59,7 +57,7 @@ from (values
   ('images/studio/vai-that/satin-sam-panh.webp', 'images/studio/vai-that/lon/satin-sam-panh.webp', 1.6),
   ('images/studio/vai-that/voan-nau.webp', 'images/studio/vai-that/lon/voan-nau.webp', 1.6),
   ('images/studio/vai-that/nhung-tam-nau.webp', 'images/studio/vai-that/lon/nhung-tam-nau.webp', 1.33),
-  ('images/studio/vai-that/ke-cheo-nau-den.webp', 'images/studio/vai-that/lon/ke-cheo-nau-den.webp', 3),
+  ('images/studio/vai-that/ke-cheo-nau-den.webp', 'images/studio/vai-that/lon/ke-cheo-nau-den.webp', 1.28),
   ('images/studio/vai-that/la-tre-nen-nau.webp', 'images/studio/vai-that/lon/la-tre-nen-nau.webp', 1.6),
   ('images/studio/vai-that/la-phong-nen-kem.webp', 'images/studio/vai-that/lon/la-phong-nen-kem.webp', 1.6),
   ('images/studio/vai-that/da-bao-hoa-ly.webp', 'images/studio/vai-that/lon/da-bao-hoa-ly.webp', 1.6),
@@ -74,8 +72,8 @@ from (values
   ('images/studio/vai-that/nhung-den-anh-tim.webp', 'images/studio/vai-that/lon/nhung-den-anh-tim.webp', 1.0),
   ('images/studio/vai-that/kim-tuyen-be.webp', 'images/studio/vai-that/lon/kim-tuyen-be.webp', 1.6),
   ('images/studio/vai-that/xam-ke-cheo.webp', 'images/studio/vai-that/lon/xam-ke-cheo.webp', 1.6),
-  ('images/studio/vai-that/soc-den-trang.webp', 'images/studio/vai-that/lon/soc-den-trang.webp', 3),
-  ('images/studio/vai-that/nhung-den-ke-soc.webp', 'images/studio/vai-that/lon/nhung-den-ke-soc.webp', 3),
+  ('images/studio/vai-that/soc-den-trang.webp', 'images/studio/vai-that/lon/soc-den-trang.webp', 1.5),
+  ('images/studio/vai-that/nhung-den-ke-soc.webp', 'images/studio/vai-that/lon/nhung-den-ke-soc.webp', 1.2),
   ('images/studio/vai-that/cham-bi-den.webp', 'images/studio/vai-that/lon/cham-bi-den.webp', 1.25),
   ('images/studio/vai-that/cham-bi-trang-nen-den.webp', 'images/studio/vai-that/lon/cham-bi-trang-nen-den.webp', 1.15),
   ('images/studio/vai-that/sao-nho-nen-den.webp', 'images/studio/vai-that/lon/sao-nho-nen-den.webp', 1.6),
