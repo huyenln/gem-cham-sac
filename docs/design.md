@@ -1869,6 +1869,88 @@ luôn xem lại được. Code: mục `GUIDE` + `THE SHOP BELL` trong `js/studio
   + lời chào, gợi ý trong studio, "?" + "Đi tới", lần sau không gợi ý / không chuông, xem lại,
   bỏ qua, ← trên máy tính, ✕, EN, tắt hiệu ứng. Các nhóm kiểm khác tắt hướng dẫn (`GUIDE_OFF`).
 
+### Kho vải — vải thật ở Bàn thiết kế (14/10/2026)
+
+Anna chọn phương án B (mockup trong buổi bàn 14/10): rổ vải ở Bàn thiết kế chỉ có **vải thật
+Gem đang có**, nhân sự tự thêm tấm mới trong admin.
+
+- **Database** (`supabase/migrations/20261014_kho_vai.sql`, đã chạy):
+  - `fabrics`: tên VI/EN, tông (5 họ màu của Bàn thiết kế), hoa văn (9 kiểu), chất liệu,
+    ảnh vuông 320px, `in_stock`, `is_visible`, `sort_order`.
+    - Ai cũng **đọc** được, kể cả tấm đã hết, để thiết kế cũ vẫn hiện đúng ảnh. Chỉ
+      `is_staff()` được **ghi**.
+    - Cột `img` có ràng buộc: chỉ nhận đường dẫn `images/…` trong repo hoặc URL kho
+      `gem-media`.
+  - `fabric_private`: **chỗ để** từng tấm. Chỉ nhân sự đọc/ghi; `anon` không có GRANT nào.
+    Chỗ để nằm bảng riêng vì RLS lọc dòng chứ không lọc cột.
+  - Đã kiểm cả ba vai, có dữ liệu thật:
+    - khách: đọc chỗ để hay ghi đều bị chặn ở GRANT;
+    - đăng nhập nhưng không phải nhân sự: đọc được 0 chỗ để, sửa được 0 dòng;
+    - nhân sự: đọc/ghi được, tấm mới nhận số 72.
+  - Câu kiểm GRANT-vs-policy: không có dòng nào của hai bảng này.
+- **71 tấm nhập sẵn** (`20261014b_kho_vai_seed.sql`, đã chạy):
+  - Nguồn: 94 ảnh Drive "Vải". A = phòng lớn, tủ trưng bày vàng; B = phòng nhỏ, ngăn dưới
+    cùng tủ vải to. Bỏ các ảnh trùng tấm.
+  - Ảnh nằm ở `images/studio/vai-that/` (khoảng 1,8 MB), làm bằng `tools/kv-swatches.py`.
+  - Tên, chất liệu, hoa văn là **đoán từ ảnh**: Anna sửa trong admin.
+- **Xử lý ảnh** (cùng một cách ở `tools/kv-swatches.py` và `GemImg.fabric` trong
+  `js/img-tools.js`):
+  - **Vải trơn** được vẽ lại cho phẳng hẳn: màu của chính tấm vải (trung vị, nên nếp gấp
+    không kéo lệch) nhân với thớ sợi của nó (chi tiết nhỏ nhất của ảnh). Satin/lụa/nhung giữ
+    chút bóng mềm; nhung tăm/thun gân giữ gân.
+  - **Vải hoa văn** chỉ làm đều chỗ sáng chỗ tối. Nếp gấp làm méo hoa văn thì **không sửa**:
+    vẽ lại thì không còn là vải thật.
+  - Sau đó làm sáng kiểu "C" (Anna duyệt 14/10):
+    - bớt ám vàng đỏ của đèn, đo trên toàn bộ ảnh từng phòng, giữ 60% (phòng B lệch đỏ rõ:
+      R 125 / B 109); vải kem/be thì không bớt ám, kẻo ngả xanh bạc hà;
+    - nâng sáng (phân vị 97 lên khoảng 0,9, tối đa ×1,35), gamma 0,94, độ tươi ×1,06.
+  - Trên món, lớp bóng vẽ (`mon-*-bong`) phủ 60% thay vì 80% khi món có vải thật. Ảnh thật đã
+    có bóng sẵn; phủ 80% thì vải trông tối, cũ.
+- **Mã thiết kế:** vải thật là khoá `r<id>`, nằm chung danh sách `d.cus` với màu riêng
+  (`{r: id}`, field 12 ghi `r12`).
+  - 45 vải vẽ cộng màu riêng cộng vải thật vẫn tối đa 64 chữ.
+  - Mã cũ (vải vẽ) đọc và vẽ y như trước.
+  - Tấm không còn trong kho thì vẽ màu trơn của họ màu, tên ghi "Vải #id".
+  - Dòng đơn hàng ghi tên thật; tấm đang hết có "(đã hết)"; bỏ "chất vải: Gem chọn" khi mọi
+    mảnh đều là vải thật.
+- **Bàn thiết kế** (`js/studio.js`):
+  - Lần mở đầu chờ tối đa 1,5 giây để danh sách vải về; danh sách được tải từ lúc vào trang.
+  - Rổ có 8 tấm đang còn và đang hiện. Chip lọc theo tông (kèm số tấm). "Lục rổ" đi lần lượt
+    qua mọi tấm của lọc đang chọn.
+  - Tâm trạng tự chọn tấm thật gần nhất: cùng tông và cùng hoa văn, rồi cùng nhóm hoa văn,
+    rồi cùng tông (`nearReal`).
+  - Cầm một tấm thì gợi ý ghi cả chất liệu. Dòng "Vải trên món: …" nằm dưới món.
+  - Database có ít hơn 8 tấm, hoặc không trả lời: dùng lại vải vẽ như trước.
+- **Admin → Kho vải** (mọi nhân sự):
+  - Lưới thẻ: ảnh, tên, `#id`, tông · hoa văn · chất liệu, chỗ để. Chip lọc: Tất cả / 5 tông
+    / Đang hết / Đang ẩn. Nút Còn ↔ Hết.
+  - Sửa / "+ Thêm vải": chụp hoặc chọn ảnh, kéo khung vuông, chỉnh cỡ khung và độ sáng
+    (±30). Ô "Làm phẳng" mặc định theo hoa văn: Trơn thì "vẽ lại phẳng", khác thì "làm đều
+    sáng tối", có thêm "giữ nguyên". Xem trước ảnh khách sẽ thấy.
+  - Bấm Lưu thì tải ảnh 320px WebP lên `gem-media`, ghi dòng, rồi ghi chỗ để; chỗ để không
+    đổi thì không ghi lại.
+  - Xoá có hỏi lại, và nhắc rằng hết vải thì bấm "Hết" chứ đừng xoá.
+- **Admin → Đơn hàng:** đơn có thiết kế riêng hiện khung **"Vải cần lấy"**: ảnh, tên, số mảnh
+  (nhân số lượng ở dòng "Thiết kế riêng × 2 — …"), chỗ để. Lấy từ link `studio.html?d=` trong
+  ghi chú đơn, nên `admin.html` nạp thêm `js/patch.js`.
+- **Kiểm:**
+  - `tools/check-studio.py vai`: rổ thật, ảnh trên món, lớp bóng 60%, "Vải trên món", chip
+    tông, lục rổ, tấm hết/ẩn không ra, chất liệu khi cầm, đắp lên ô, mã đọc lại, dòng đơn, link
+    chia sẻ, không bao giờ hỏi `fabric_private`, database rỗng thì dùng vải vẽ.
+  - `tools/check-studio.py kho`: thẻ, lọc, Còn → Hết, thêm mà không có ảnh, khung vuông kéo
+    được, vải trơn thì nếp biến mất còn "giữ nguyên" thì vẫn còn, tải 320px WebP, chỗ để, sửa,
+    xoá, đơn có "Vải cần lấy" (đếm 18 mảnh).
+- **Làm tiếp (Anna duyệt luồng 14/10, không chụp lại vải):**
+  - (2) **Kho vải cho khách**: lưới ảnh, lọc tông, chọn tối đa 8 tấm vào "rổ của bạn", bấm
+    "Ghép thử" là sang Bàn thiết kế.
+  - (3) **Chỉnh họa tiết từng ô**: chạm một ô thì thấy ảnh cả tấm; khung đúng hình ô (vuông,
+    tam giác, vùng tự vẽ), khách không tự chọn hình khung. Khách kéo và xoay khung; cỡ khung
+    theo kích thước thật của mảnh. Mã lưu vị trí từng ô; đơn hiện khung trên ảnh cả tấm cho
+    nhân viên cắt.
+    - Cần ảnh cả tấm, lấy từ ảnh đã chụp (1600px), và một con số "ảnh rộng khoảng … cm" cho
+      từng tấm. Ảnh cũ không có thước, nên số này là ước lượng.
+    - Vải vụn bị cắt dần, nên web phải ghi "Gem cắt sát chỗ bạn chọn nhất có thể".
+
 ### Studio hiện cảnh mặc định thay cho bố cục đã lắp (sửa 13/10/2026)
 
 **Triệu chứng:** mở `studio.html` thấy mặt phố mặc định (monstera, bình tưới, ghế gỗ,

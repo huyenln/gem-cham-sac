@@ -798,3 +798,52 @@
   .ad-choice-pic { flex-direction: row; justify-content: flex-start; }
   .ad-choice-pic img { width: 64px; height: 64px; }
 }
+
+/* ==========================================================
+   KHO VẢI
+   ========================================================== */
+.ad-fabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+@media (min-width: 640px) { .ad-fabs { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1000px) { .ad-fabs { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.ad-fab {
+  display: flex; flex-direction: column; overflow: hidden;
+  background: var(--paper-white); border: 1px solid rgba(135, 150, 90, 0.18); border-radius: var(--radius-md);
+}
+.ad-fab > img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; background: var(--paper-cream); }
+.ad-fab-body { padding: var(--space-3); display: flex; flex-direction: column; flex: 1; }
+.ad-fab-body .ad-acts { margin-top: auto; padding-top: var(--space-2); }
+.ad-fab-body .ad-btn { min-height: 40px; padding: 0 0.9em; }
+.ad-fab-name { margin: 0; font-size: var(--text-sm); color: var(--ink-dark); line-height: 1.35; }
+.ad-fab-name span { color: var(--ink-soft); font-size: var(--text-xs); }
+.ad-fab-meta { margin: 2px 0 0; font-size: var(--text-xs); color: var(--ink-soft); }
+.ad-fab-place { margin: 2px 0 0; font-size: var(--text-xs); color: var(--kraft); }
+/* hết vải / đang ẩn: nhìn là biết */
+.ad-fab.is-out > img { filter: grayscale(0.8); opacity: 0.6; }
+.ad-fab.is-out { background: #F6EFE6; }
+.ad-fab.is-hidden { border-style: dashed; opacity: 0.75; }
+
+.ad-fab-pics { display: flex; gap: var(--space-4); align-items: flex-start; flex-wrap: wrap; }
+.ad-fab-out { margin: 0; width: 160px; flex: none; }
+.ad-fab-out canvas, .ad-fab-out img { display: block; width: 160px; height: 160px; border-radius: var(--radius-sm); object-fit: cover; background: var(--paper-cream); }
+.ad-fab-out canvas[hidden] { display: none; }
+.ad-fab-out figcaption { font-size: var(--text-xs); color: var(--ink-soft); margin-top: 4px; }
+.ad-fab-pick { flex: 1 1 200px; }
+.ad-crop { margin-top: var(--space-3); }
+.ad-crop[hidden] { display: none; }
+.ad-crop-stage { position: relative; display: inline-block; max-width: 100%; line-height: 0; overflow: hidden; border-radius: var(--radius-sm); }
+.ad-crop-src { display: block; max-width: 100%; height: auto; max-height: 70vh; }
+.ad-crop-box {
+  position: absolute; box-sizing: border-box; border: 2px solid #fff; outline: 1px solid rgba(0, 0, 0, 0.45);
+  box-shadow: 0 0 0 9999px rgba(30, 30, 30, 0.45); cursor: move; touch-action: none;
+}
+.ad-crop-box:focus-visible { outline: 3px solid var(--sage-deep); }
+.ad-crop-size { display: flex; align-items: center; gap: var(--space-2); margin: var(--space-3) 0; font-size: var(--text-sm); color: var(--ink-body); }
+.ad-crop-size input { flex: 1; max-width: 280px; accent-color: var(--sage-deep); }
+
+/* đơn có thiết kế riêng: vải cần lấy, ở đâu */
+.ad-od-fab { margin-top: var(--space-3); padding: var(--space-3); border: 1.5px dashed var(--kraft); border-radius: var(--radius-md); background: #FBF4E6; font-size: var(--text-sm); }
+.ad-od-fab ul { list-style: none; margin: var(--space-2) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.ad-od-fab li { display: flex; gap: var(--space-3); align-items: center; }
+.ad-od-fab img, .ad-fab-none { width: 44px; height: 44px; border-radius: 6px; object-fit: cover; flex: none; background: var(--paper-cream); }
+.ad-od-fab small { display: block; color: var(--kraft); font-size: var(--text-xs); }
+.ad-od-fab em { color: #A6503C; font-style: normal; }
