@@ -3489,7 +3489,7 @@
         : id === 'tuve' && !d.sketch.length
         ? '<svg viewBox="0 0 24 24" width="40" height="40" aria-hidden="true"><path d="M5 19l3-1L18 8l-2-2L6 16z" fill="none" stroke="#8A6A44" stroke-width="1.6" stroke-linejoin="round"/></svg>'
         : P.svg(preview, { size: 40 });
-      return chip('data-layout', id, id === d.layout, P.LAYOUTS[id][l], icon);
+      return chip('data-layout', id, id === d.layout, P.layoutName(d.product, id, l), icon);
     }).join('');
 
     root.querySelector('.pt-fabrics').innerHTML = P.FABRIC_ORDER.map(function (id) {

@@ -154,8 +154,12 @@ def fabric_rows():
              'in_stock': True, 'is_visible': True, 'sort_order': int(m[8])}
             for m in re.finditer(r"\((\d+), '((?:[^']|'')*)', '((?:[^']|'')*)', '(\w+)', '(\w+)', '((?:[^']|'')*)', '([^']+)', (\d+)\)", sql)]
     places = {int(a): b for a, b in re.findall(r"\((\d+), '(Phòng[^']*)'\)", sql)}
+    big = (ROOT / 'supabase/migrations/20261015_kho_vai_photo.sql').read_text(encoding='utf-8')
+    photos = {a: (b, float(k)) for a, b, k in re.findall(r"\('(images/[^']+)', '(images/[^']+)', ([\d.]+)\)", big)}
     for r in rows:
         r['place'] = places.get(r['id'])
+        if r['img'] in photos:
+            r['photo'], r['photo_k'] = photos[r['img']]
     return rows
 
 

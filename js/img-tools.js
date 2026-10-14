@@ -307,18 +307,38 @@ window.GemImg = (function () {
     }
   }
 
-  function fabric(img, box, opts) {
-    opts = opts || {};
+  // one square of the photo made up the same way, out at `size` px
+  function fabricSquare(img, x, y, s, size, opts) {
     var work = canvas(640, 640), wg = work.getContext('2d');
     wg.imageSmoothingQuality = 'high';
-    wg.drawImage(img, box.x, box.y, box.s, box.s, 0, 0, 640, 640);
+    wg.drawImage(img, x, y, s, s, 0, 0, 640, 640);
     var data = wg.getImageData(0, 0, 640, 640);
     fabricPixels(data.data, 640, 640, opts);
     wg.putImageData(data, 0, 0);
-    var out = canvas(320, 320), og = out.getContext('2d');
+    if (size === 640) return work;
+    var out = canvas(size, size), og = out.getContext('2d');
     og.imageSmoothingQuality = 'high';
-    og.drawImage(work, 0, 0, 320, 320);
-    return encode(out, opts.name || 'vai').then(function (file) { return { file: file, canvas: out }; });
+    og.drawImage(work, 0, 0, size, size);
+    return out;
+  }
+
+  // The swatch (the framed square, 320px) and the bigger photo round it
+  // (up to 1.6 times the frame, 640px): on the design table each patch
+  // shows its own part of the bigger one. k = its side / the frame's.
+  function fabric(img, box, opts) {
+    opts = opts || {};
+    var out = fabricSquare(img, box.x, box.y, box.s, 320, opts);
+    var W = img.naturalWidth || img.width, H = img.naturalHeight || img.height;
+    var big = Math.min(Math.round(box.s * 1.6), W, H);
+    var bx = Math.round(Math.min(Math.max(0, box.x + box.s / 2 - big / 2), W - big));
+    var by = Math.round(Math.min(Math.max(0, box.y + box.s / 2 - big / 2), H - big));
+    var bigC = opts.small ? null : fabricSquare(img, bx, by, big, 640, opts);
+    return encode(out, opts.name || 'vai').then(function (file) {
+      if (!bigC) return { file: file, canvas: out };
+      return encode(bigC, (opts.name || 'vai') + '-lon').then(function (bigFile) {
+        return { file: file, canvas: out, big: bigFile, k: Math.round(big / box.s * 100) / 100 };
+      });
+    });
   }
 
   return { shrink: shrink, thumb: thumb, removeWhite: removeWhite, size: size, load: load, fabric: fabric };

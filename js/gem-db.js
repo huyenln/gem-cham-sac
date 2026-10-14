@@ -330,8 +330,10 @@ window.GemDB = (function () {
     // cũ vẫn hiện đúng ảnh). Chỗ để vải nằm ở bảng riêng, chỉ nhân sự đọc.
     // Bảng chưa có / mạng lỗi thì trả [] — bàn thiết kế dùng vải vẽ.
     fabrics: function () {
-      return req('/rest/v1/fabrics?select=id,name_vi,name_en,tone,kind,material,img,in_stock,is_visible,sort_order' +
-        '&order=sort_order.asc,id.asc').catch(function () { return []; });
+      var cols = 'id,name_vi,name_en,tone,kind,material,img,in_stock,is_visible,sort_order';
+      var q = function (c) { return req('/rest/v1/fabrics?select=' + c + '&order=sort_order.asc,id.asc'); };
+      // photo / photo_k came later (20261015): without them, the swatch only
+      return q(cols + ',photo,photo_k').catch(function () { return q(cols); }).catch(function () { return []; });
     },
 
     adminFabrics: function () {

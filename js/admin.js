@@ -1626,7 +1626,7 @@
       box.style.top = (crop.y * k) + 'px';
       box.style.width = box.style.height = (crop.s * k) + 'px';
     }
-    function preview() {
+    function preview(full) {
       var mine = ++job;
       var mat = (F['material'].value || '').trim().toLowerCase();
       return window.GemImg.fabric(crop.img, crop, {
@@ -1634,7 +1634,8 @@
         bright: +cropEl.querySelector('[data-crop-bright]').value,
         shiny: /^(satin|tafta|lụa|nhung)$/.test(mat),
         ribbed: /^(nhung tăm|thun)/.test(mat),
-        name: 'vai'
+        name: 'vai',
+        small: !full
       })
         .then(function (r) {
           if (mine !== job) return r;
@@ -1746,9 +1747,14 @@
       };
       var place = F['place'].value.trim();
       // a new picture: cut, upload, then the row points at it
-      var pic = crop ? preview().then(function (r) {
-        return window.GemDB.uploadImage(new File([r.file], 'vai-' + slugify(name) + '.' + r.file.name.split('.').pop(), { type: r.file.type }));
-      }).then(function (url) { row.img = url; }) : Promise.resolve();
+      // a new picture: the swatch and the bigger photo round it, both uploaded
+      var pic = crop ? preview(true).then(function (r) {
+        var ext = function (f) { return f.name.split('.').pop(); };
+        return Promise.all([
+          window.GemDB.uploadImage(new File([r.file], 'vai-' + slugify(name) + '.' + ext(r.file), { type: r.file.type })),
+          window.GemDB.uploadImage(new File([r.big], 'vai-' + slugify(name) + '-lon.' + ext(r.big), { type: r.big.type }))
+        ]).then(function (urls) { row.img = urls[0]; row.photo = urls[1]; row.photo_k = r.k; });
+      }) : Promise.resolve();
       if (isNew) {
         row.sort_order = fabrics.reduce(function (m, x) { return Math.max(m, x.sort_order || 0); }, 0) + 10;
       }
