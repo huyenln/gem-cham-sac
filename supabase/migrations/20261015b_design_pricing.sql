@@ -1,6 +1,7 @@
 -- Giá thiết kế riêng (Bàn thiết kế, 15/10/2026). Một thiết kế không còn lấy
 -- giá cố định của món: giá = nền (cỡ thường) + công kiểu ghép + mỗi vải thêm
--- + cỡ lớn hơn + tuỳ chọn túi (chần bông, túi trong, khoá kéo, nút bấm).
+-- + cỡ lớn hơn + tuỳ chọn túi (chần bông, túi trong, khoá kéo, nút bấm, kiểu
+-- buộc vai của túi buộc vai).
 -- Cỡ khách tự điền: Gem báo giá sau (dòng đơn không có giá, đơn "có món chưa
 -- có giá" như món "Liên hệ").
 --
@@ -188,8 +189,8 @@ insert into public.settings (key, value) values ('design_pricing', $json$
       "zip": 30000,
       "snap": 10000
     },
-    "tuibannguyet": {
-      "base": 200000,
+    "tuibuoc": {
+      "base": 180000,
       "fabric": 10000,
       "layouts": {
         "hai": 10000,
@@ -198,9 +199,15 @@ insert into public.settings (key, value) values ('design_pricing', $json$
         "net": 40000,
         "tuve": 30000
       },
-      "quilt": 50000,
+      "quilt": 60000,
       "pocket": 20000,
-      "snap": 10000
+      "snap": 10000,
+      "ties": [
+        0,
+        0,
+        10000,
+        15000
+      ]
     },
     "laptop": {
       "base": 260000,
@@ -280,7 +287,7 @@ begin
   if p_sku is distinct from (case
        when v_prod = 'lotcocv' then 'lotcoc'
        when v_prod = 'tuitote' then 'tui-di-cho'
-       when v_prod in ('tuino', 'tuikhoa', 'tuitamgiac', 'tuibannguyet') then 'tui-di-choi'
+       when v_prod in ('tuino', 'tuikhoa', 'tuitamgiac', 'tuibuoc') then 'tui-di-choi'
        when v_prod in ('laptop', 'laptopq') then 'tui-laptop'
        else v_prod end) then
     return null;
@@ -312,6 +319,8 @@ begin
         total := total + coalesce((cfg->>'zip')::int, 0);
       elsif tok = 'n' then
         total := total + coalesce((cfg->>'snap')::int, 0);
+      elsif tok ~ '^t[1-9]$' then
+        total := total + coalesce((cfg->'ties'->>(substr(tok, 2)::int))::int, 0);
       else
         return null;
       end if;

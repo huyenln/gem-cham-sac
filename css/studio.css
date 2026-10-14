@@ -1719,6 +1719,7 @@ html:has(.studio-page) { overscroll-behavior: none; }   /* own rule: a Safari wi
 .pt-pockets > span { margin-right: var(--space-1); }
 .pt-pockets .pt-mini { min-width: 44px; justify-content: center; font-size: var(--text-base); }
 .pt-chip-fixed { cursor: default; border-style: dashed; color: var(--ink-soft); }
+.pt-ties-h { flex: 1 1 100%; margin-top: var(--space-1); }
 /* what the price is made of, under the buttons */
 .pt-price-lines { flex: 1 1 100%; }
 .pt-price-lines:empty { display: none; }

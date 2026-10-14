@@ -96,8 +96,11 @@
                     short: { vi: 'Khoá kéo', en: 'Zipped' }, layouts: BAG_LAYOUTS, names: BAG_NAMES, def: 'mot', opts: 'qpn', zip: 1 },
     tuitamgiac:   { sku: 'tui-di-choi', group: 'tui', vi: 'Túi tam giác', en: 'Triangle bag', shape: 'tuitamgiac', grid: 3, span: 61,
                     short: { vi: 'Tam giác', en: 'Triangle' }, layouts: BAG_LAYOUTS, names: BAG_NAMES, def: 'mot', opts: 'qpzn' },
-    tuibannguyet: { sku: 'tui-di-choi', group: 'tui', vi: 'Túi bán nguyệt', en: 'Half-moon bag', shape: 'tuibannguyet', grid: 3, span: 50,
-                    short: { vi: 'Bán nguyệt', en: 'Half-moon' }, layouts: BAG_LAYOUTS, names: BAG_NAMES, def: 'doc', opts: 'qpn', zip: 1 },
+    // the tie shoulder bag (a pattern Anna liked): two points tied on the
+    // shoulder, four ways (ties)
+    tuibuoc:      { sku: 'tui-di-choi', group: 'tui', vi: 'Túi buộc vai', en: 'Tie shoulder bag', shape: 'tuibuoc', grid: 3, span: 53,
+                    short: { vi: 'Buộc vai', en: 'Tie' }, layouts: BAG_LAYOUTS, names: BAG_NAMES, def: 'mot', opts: 'qpnt',
+                    ties: ['no', 'thuong', 'xoan', 'ren'] },
     laptop:       { sku: 'tui-laptop',  group: 'laptop', vi: 'Túi laptop', en: 'Laptop sleeve', shape: 'laptop', grid: 3, span: 33,
                     short: { vi: 'Không quai', en: 'No strap' }, layouts: BAG_LAYOUTS, names: BAG_NAMES, def: 'doc', opts: 'qpn', zip: 1 },
     laptopq:      { sku: 'tui-laptop',  group: 'laptop', vi: 'Túi laptop có quai', en: 'Laptop sleeve with strap', shape: 'laptopq', grid: 3, span: 42,
@@ -106,7 +109,7 @@
   // pieces shown under one tab, a shape picked on it (the first is the tab)
   var GROUPS = {
     lotcoc: ['lotcoc', 'lotcocv'],
-    tui: ['tuitote', 'tuino', 'tuikhoa', 'tuitamgiac', 'tuibannguyet'],
+    tui: ['tuitote', 'tuino', 'tuikhoa', 'tuitamgiac', 'tuibuoc'],
     laptop: ['laptop', 'laptopq']
   };
   var GROUP_NAMES = { tui: { vi: 'Túi', en: 'Bags' }, laptop: { vi: 'Túi laptop', en: 'Laptop sleeve' } };
@@ -195,13 +198,17 @@
     tuino:        [{ w: 30, h: 38, vi: 'Nhỏ', en: 'Small' }, { w: 36, h: 44, vi: 'Vừa', en: 'Medium' }],
     tuikhoa:      [{ w: 28, h: 20 }],
     tuitamgiac:   [{ w: 38, h: 40 }],
-    tuibannguyet: [{ w: 32, h: 18 }],
+    tuibuoc:      [{ w: 30, h: 34 }],
     laptop:       [{ w: 33, h: 24, vi: '13 inch · 33 × 24 cm', en: '13 inch · 33 × 24 cm' },
                    { w: 35, h: 25, vi: '14 inch · 35 × 25 cm', en: '14 inch · 35 × 25 cm' },
                    { w: 39, h: 28, vi: '15,6 inch · 39 × 28 cm', en: '15.6 inch · 39 × 28 cm' }]
   };
   SIZES.laptopq = SIZES.laptop;
   var MAX_POCKETS = 5, CUSTOM_CM = [3, 200];
+  // how a tie bag is tied on the shoulder (PRODUCTS[x].ties)
+  var TIES = { no: { vi: 'Nơ', en: 'Bow' }, thuong: { vi: 'Thắt thường', en: 'Plain knot' },
+    xoan: { vi: 'Xoắn', en: 'Twisted' }, ren: { vi: 'Dây ren', en: 'Lace ribbon' } };
+  function tieOf(d) { var p = PRODUCTS[d.product]; return p.ties ? p.ties[(d.ext && d.ext.t) || 0] || p.ties[0] : null; }
   function sizesOf(product) { return SIZES[product] || [{ w: 0, h: 0 }]; }
   function sizeLabel(product, i, l) {
     var z = sizesOf(product)[i] || sizesOf(product)[0];
@@ -212,13 +219,13 @@
      "s<i>" a bigger usual size, "c<W>x<H>" the customer's own size in cm,
      "q" quilted (chần bông), "p<n>" n more inside pockets (one is free),
      "z" a zip, "n" a snap. Only what the piece offers (PRODUCTS[x].opts). */
-  function blankExt() { return { s: 0, c: null, q: false, p: 0, z: false, n: false }; }
+  function blankExt() { return { s: 0, c: null, q: false, p: 0, z: false, n: false, t: 0 }; }
   function parseExt(str, product) {
     var e = blankExt(), p = PRODUCTS[product], seen = {};
     if (!str) return e;
     var toks = str.split('.');
     for (var i = 0; i < toks.length; i++) {
-      var t = toks[i], m = /^(?:s([1-9])|c(\d{1,3})x(\d{1,3})|(q)|p([1-5])|(z)|(n))$/.exec(t);
+      var t = toks[i], m = /^(?:s([1-9])|c(\d{1,3})x(\d{1,3})|(q)|p([1-5])|(z)|(n)|t([1-9]))$/.exec(t);
       if (!m) return null;
       var k = t[0];
       if (seen[k] || (k === 's' && seen.c) || (k === 'c' && seen.s)) return null;
@@ -230,7 +237,8 @@
         e.c = [w, h];
       } else {
         if ((p.opts || '').indexOf(k) < 0) return null;
-        if (k === 'p') e.p = +m[5]; else e[k] = true;
+        if (k === 't' && +m[8] >= (p.ties || []).length) return null;
+        if (k === 'p') e.p = +m[5]; else if (k === 't') e.t = +m[8]; else e[k] = true;
       }
     }
     return e;
@@ -243,6 +251,7 @@
     if (e.p) out.push('p' + e.p);
     if (e.z) out.push('z');
     if (e.n) out.push('n');
+    if (e.t) out.push('t' + e.t);
     return out.join('.');
   }
   // after the piece changed (another shape of the same tab): keep what the
@@ -254,6 +263,7 @@
     if (o.indexOf('p') < 0) e.p = 0;
     if (o.indexOf('z') < 0) e.z = false;
     if (o.indexOf('n') < 0) e.n = false;
+    if (o.indexOf('t') < 0 || e.t >= (PRODUCTS[d.product].ties || []).length) e.t = 0;
     d.ext = e;
     return d;
   }
@@ -291,7 +301,7 @@
       tuino:        { base: 220000, fabric: 10000, layouts: BAG_FEES, sizes: [0, 30000], quilt: 60000, pocket: 20000, zip: 30000, snap: 10000 },
       tuikhoa:      { base: 200000, fabric: 10000, layouts: BAG_FEES, quilt: 50000, pocket: 20000, snap: 10000 },
       tuitamgiac:   { base: 100000, fabric: 10000, layouts: BAG_FEES, quilt: 60000, pocket: 20000, zip: 30000, snap: 10000 },
-      tuibannguyet: { base: 200000, fabric: 10000, layouts: BAG_FEES, quilt: 50000, pocket: 20000, snap: 10000 },
+      tuibuoc:      { base: 180000, fabric: 10000, layouts: BAG_FEES, quilt: 60000, pocket: 20000, snap: 10000, ties: [0, 0, 10000, 15000] },
       laptop:       { base: 260000, fabric: 10000, layouts: BAG_FEES, sizes: [0, 10000, 20000], quilt: 50000, pocket: 20000, snap: 10000 },
       laptopq:      { base: 290000, fabric: 10000, layouts: BAG_FEES, sizes: [0, 10000, 20000], quilt: 50000, pocket: 20000, snap: 10000 }
     }
@@ -321,7 +331,9 @@
         });
         dst.layouts = lay;
       }
-      if (Array.isArray(src.sizes) && dst.sizes) dst.sizes = dst.sizes.map(function (v, i) { var a = amount(src.sizes[i]); return a != null ? a : v; });
+      ['sizes', 'ties'].forEach(function (k) {
+        if (Array.isArray(src[k]) && dst[k]) dst[k] = dst[k].map(function (v, i) { var a = amount(src[k][i]); return a != null ? a : v; });
+      });
     });
   }
   var pricingP = null;
@@ -357,13 +369,14 @@
     if (e.p) add('pocket', e.p * (pr.pocket || 0), e.p);
     if (e.z) add('zip', pr.zip || 0);
     if (e.n) add('snap', pr.snap || 0);
+    if (e.t) add('tie', (pr.ties || [])[e.t] || 0);
     return { base: pr.base, total: total, lines: lines, quote: !!e.c };
   }
   var PRICE_NAMES = {
     layout: { vi: 'Kiểu ghép', en: 'Piecing' }, fabric: { vi: 'Thêm {n} vải', en: '{n} more fabrics' },
     size: { vi: 'Cỡ lớn hơn', en: 'Bigger size' }, quilt: { vi: 'Chần bông', en: 'Quilted' },
     pocket: { vi: 'Thêm {n} túi trong', en: '{n} more inside pockets' }, zip: { vi: 'Khoá kéo', en: 'Zip' },
-    snap: { vi: 'Nút bấm', en: 'Snap' }
+    snap: { vi: 'Nút bấm', en: 'Snap' }, tie: { vi: 'Kiểu buộc vai', en: 'Shoulder tie' }
   };
   function priceLine(x, l) { return PRICE_NAMES[x.k][l].replace('{n}', x.n); }
 
@@ -659,6 +672,7 @@
     if (p.zip) out.push(vi ? 'khoá kéo có sẵn' : 'zip included');
     if (e.z) out.push(vi ? 'thêm khoá kéo' : 'add a zip');
     if (e.n) out.push(vi ? 'thêm nút bấm' : 'add a snap');
+    if (p.ties) out.push((vi ? 'buộc vai: ' : 'shoulder tie: ') + TIES[tieOf(d)][l].toLowerCase());
     return out;
   }
 
@@ -1326,8 +1340,13 @@
       parts: [{ id: 'day', d: 'M6 232L327 232L327 239L325 244L325 265L323 271L318 276L311 278L249 282L122 277L36 276L19 273L9 266Z' }] },
     tuitote: { n: 'tuitote', bag: 1, box: [83, 149, 256, 328], zip: [[98, 153], [242, 153]], snap: [170, 158],
       parts: [{ id: 'quai', d: 'M112 178L112.1 146.8L112.5 136.1L114.1 116.3L115.2 107.2L118.2 90.5L119.9 82.9L124.1 69.2L129 57.5L131.7 52.4L137.6 43.5L144.1 36.5L151 31.3L154.6 29.4L162.2 26.8L170 26L177.8 26.8L185.4 29.4L189 31.3L195.9 36.5L202.4 43.5L208.3 52.4L211 57.5L215.9 69.2L220.1 82.9L221.8 90.5L224.8 107.2L225.9 116.3L227.5 136.1L227.9 146.8L228 178L212 178L211.6 138.5L209.7 112.9L207.5 98.2L204.8 85.3L199.7 69.2L195.6 60.7L193.4 57.1L188.8 51L186.3 48.6L183.8 46.6L178.4 43.6L175.7 42.7L170 42L164.3 42.7L161.6 43.6L156.2 46.6L151.2 51L146.6 57.1L142.3 64.8L140.3 69.2L136.8 79.5L135.2 85.3L132.5 98.2L131.3 105.3L129.5 120.9L128.1 148L128 178Z' }] },
-    tuibannguyet: { n: 'tuibannguyet', bag: 1, box: [61, 140, 279, 312], top: 1, snap: [170, 152],
-      parts: [{ id: 'quai', d: 'M74 150L74.2 121.2L74.9 112.7L77.4 96.7L79.3 89.2L84.2 75.4L90.5 62.9L94.1 57.2L98 51.9L106.7 42.4L116.4 34.5L121.6 31L127.1 28L138.6 23.1L144.6 21.3L157 18.8L170 18L183 18.8L195.4 21.3L201.4 23.1L212.9 28L218.4 31L223.6 34.5L233.3 42.4L242 51.9L245.9 57.2L249.5 62.9L255.8 75.4L260.7 89.2L262.6 96.7L265.1 112.7L265.8 121.2L266 150L252 150L251.8 122.2L251.2 114.6L249.1 100.5L245.5 87.7L240.8 76.1L234.9 65.9L231.5 61.3L224.1 53L220 49.4L215.8 46.1L206.7 40.6L196.9 36.4L191.7 34.8L181.1 32.7L170 32L158.9 32.7L148.3 34.8L143.1 36.4L133.3 40.6L124.2 46.1L115.9 53L112.1 57L105.1 65.9L99.2 76.1L96.7 81.8L92.5 93.9L90.9 100.5L88.8 114.6L88.2 122.2L88 150Z' }] },
+    // styles: one set of pictures per way of tying it (mon-tuibuoc-<style>-*)
+    tuibuoc: { n: 'tuibuoc', bag: 1, box: [74, 111, 266, 324], snap: [170, 182], styles: {
+      no: { parts: [{ id: 'quai', d: 'M125 112L161 52L171 58L141 112ZM215 112L179 52L169 58L199 112ZM164 50L146 76L154 80L170 54ZM176 50L194 76L186 80L170 54ZM167.5 37.6L167.6 39.6L167.1 41.6L164.2 45.6L159.3 49.1L156.2 50.6L149.3 52.8L145.7 53.4L138.7 53.5L132.7 52.3L128.5 49.8L127.2 48.2L126.5 46.4L126.4 44.4L126.9 42.4L129.8 38.4L134.7 34.9L137.8 33.4L144.7 31.2L151.9 30.4L158.5 31L161.3 31.7L163.6 32.8L165.5 34.2L166.8 35.8ZM213.5 46.4L212.8 48.2L211.5 49.8L207.3 52.3L201.3 53.5L194.3 53.4L190.7 52.8L183.8 50.6L178 47.4L174.1 43.6L172.9 41.6L172.4 39.6L172.5 37.6L173.2 35.8L174.5 34.2L178.7 31.7L184.7 30.5L191.7 30.6L195.3 31.2L202.2 33.4L208 36.6L211.9 40.4L213.1 42.4L213.6 44.4ZM162 36L178 36L179 52L161 52Z' }] },
+      thuong: { parts: [{ id: 'quai', d: 'M125 112L161 52L171 58L141 112ZM215 112L179 52L169 58L199 112ZM163 44L149 22L157 18L170 40ZM177 44L191 22L183 18L170 40ZM161 40L179 40L181 57L159 57Z' }] },
+      xoan: { parts: [{ id: 'quai', d: 'M125 112L161 86L172 93L141 112ZM215 112L179 86L168 93L199 112ZM161 96L158.5 92L158.5 90L161 86L158.5 82L158.5 80L161 76L158.5 72L158.5 70L161 66L158.5 62L158.5 60L161 56L158.5 52L158.5 50L161 46L158.5 42L158.5 40L161 36L158.5 32L158.5 30L160 30L160.8 26.2L162.9 22.9L166.2 20.8L170 20L173.8 20.8L177.1 22.9L179.2 26.2L180 30L179.8 32L181.1 34L181.6 36L181.1 38L179.8 40L179.8 42L181.1 44L181.6 46L181.1 48L179.8 50L179.8 52L181.1 54L181.6 56L181.1 58L179.8 60L179.8 62L181.1 64L181.6 66L181.1 68L179.8 70L179.8 72L181.1 74L181.6 76L181.1 78L179.8 80L179.8 82L181.1 84L181.6 86L181.1 88L179.8 90L179.8 92L181.1 94L181.6 96Z' }] },
+      ren: { parts: [], top: 1 }
+    } },
     laptopq: { n: 'laptopq', bag: 1, box: [37, 136, 302, 272], top: 1, snap: [170, 142],
       parts: [{ id: 'quai', d: 'M58 150L58.3 120.7L59 111.8L62 95L64.2 87.2L66.8 79.8L69.9 72.8L73.3 66.1L81.4 54L90.9 43.5L96.1 38.8L101.7 34.5L107.5 30.7L119.9 24.1L126.5 21.4L140.3 17.3L154.9 14.8L170 14L185.1 14.8L199.7 17.3L213.5 21.4L220.1 24.1L232.5 30.7L238.3 34.5L243.9 38.8L249.1 43.5L258.6 54L266.7 66.1L270.1 72.8L273.2 79.8L275.8 87.2L278 95L281 111.8L281.7 120.7L282 150L269 150L268.8 121.6L267 105.8L265.4 98.4L263.5 91.4L258.5 78.5L252 67.1L244.3 57.1L235.3 48.5L230.4 44.8L225.3 41.4L214.3 35.7L202.4 31.4L196.2 29.8L183.4 27.7L170 27L156.6 27.7L143.8 29.8L137.6 31.4L125.7 35.7L114.7 41.4L104.7 48.5L95.7 57.1L91.7 61.9L84.6 72.6L81.5 78.5L76.5 91.4L74.6 98.4L73 105.8L71.2 121.6L71 150Z' }, { id: 'day', d: 'M41.7 273L292.1 273L292.1 278.4L290.5 282.3L290.5 298.7L288.9 303.4L285 307.3L279.6 308.8L231.2 312L132.2 308.1L65.1 307.3L51.8 304.9L44 299.5Z' }] }
   };
@@ -1371,6 +1390,7 @@
   function partsOf(d) {
     if (d.layout === 'tuve') return [];
     var A = ART[PRODUCTS[d.product].shape] || {};
+    if (A.styles) return A.styles[tieOf(d)].parts;
     if (A.parts) return A.parts;
     if (A.buds) return A.buds.slice(0, d.layout === 'hoa1' ? 1 : d.layout === 'hoa2' ? 2 : 3);
     return [];
@@ -1380,6 +1400,9 @@
   // shading over it. f(i, bbox) gives patch i's fill.
   function artBody(d, p, f, pre) {
     var A = ART[p.shape], name = A.n, out = '';
+    // a piece drawn several ways (the tie bag): that way's pictures
+    var st = A.styles ? A.styles[tieOf(d)] : null;
+    if (st) { name = A.n + '-' + tieOf(d); A = Object.assign({}, A, { top: st.top }); }
     // flowers left out: hidden in the fabric and in the shading alike
     var hide = A.buds ? A.buds.slice(d.layout === 'hoa1' ? 1 : d.layout === 'hoa2' ? 2 : 3) : [];
     if (d.layout === 'tuve') hide = [];
@@ -1985,7 +2008,7 @@
     // pieces under one tab (Lót cốc tròn / vuông, the bags, the laptop sleeve)
     GROUPS: GROUPS, groupOf: groupOf, tabOf: tabOf, tabName: tabName,
     // size + options, price
-    SIZES: SIZES, sizesOf: sizesOf, sizeLabel: sizeLabel, blankExt: blankExt, fitExt: fitExt, MAX_POCKETS: MAX_POCKETS, CUSTOM_CM: CUSTOM_CM,
+    SIZES: SIZES, TIES: TIES, sizesOf: sizesOf, sizeLabel: sizeLabel, blankExt: blankExt, fitExt: fitExt, MAX_POCKETS: MAX_POCKETS, CUSTOM_CM: CUSTOM_CM,
     PRICING: PRICING, price: price, priceLine: priceLine, setPricing: setPricing, loadPricing: loadPricing,
     // real fabrics (Kho vải)
     setReal: setReal, loadReal: loadReal, hasReal: hasReal, isReal: isReal, realOf: realOf, moodKeys: moodKeys,

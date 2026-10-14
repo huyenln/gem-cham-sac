@@ -321,6 +321,7 @@
     'studio.pt_zip':       { vi: `Thêm khoá kéo`, en: `Add a zip` },
     'studio.pt_zip_in':    { vi: `Khoá kéo có sẵn`, en: `Zip included` },
     'studio.pt_snap':      { vi: `Thêm nút bấm`, en: `Add a snap` },
+    'studio.pt_ties':      { vi: `Kiểu buộc vai`, en: `Shoulder tie` },
     'studio.pt_mats':      { vi: `Chất liệu bạn thấy ổn`, en: `Fabrics you're happy with` },
     'studio.pt_mats_gem':  { vi: `Để Gem chọn`, en: `Let Gem choose` },
     'studio.pt_from':      { vi: `từ`, en: `from` },
@@ -3589,6 +3590,12 @@
     if (p.zip) bits.push('<span class="pt-chip pt-chip-fixed">' + esc(t('studio.pt_zip_in')) + '</span>');
     else if (o.indexOf('z') >= 0) bits.push(chip('data-bagopt', 'z', e.z, t('studio.pt_zip') + plus(pr.zip)));
     if (o.indexOf('n') >= 0) bits.push(chip('data-bagopt', 'n', e.n, t('studio.pt_snap') + plus(pr.snap)));
+    // the tie bag: how it is tied on the shoulder
+    if (p.ties) {
+      bits.push('<span class="pt-label pt-ties-h">' + esc(t('studio.pt_ties')) + '</span>' + p.ties.map(function (k, i) {
+        return chip('data-tie', i, (e.t || 0) === i, P.TIES[k][l] + plus((pr.ties || [])[i]));
+      }).join(''));
+    }
     var bag = root.querySelector('.pt-bagopts');
     bag.hidden = !bits.length;
     bag.innerHTML = bits.join('');
@@ -3943,6 +3950,10 @@
     } else if ((el = e.target.closest('[data-bagopt]'))) {
       var bo = el.getAttribute('data-bagopt');
       D.d.ext[bo] = !D.d.ext[bo];
+    } else if ((el = e.target.closest('[data-tie]'))) {
+      // lace ribbon is not sewn from the basket: one fabric slot fewer
+      D.d.ext.t = +el.getAttribute('data-tie');
+      if (D.d.fab && D.d.fab.length !== P.slots(D.d)) { P.scatter(D.d, paletteNow()); P.syncTaste(D.d); }
     } else if ((el = e.target.closest('[data-pocket]'))) {
       D.d.ext.p = Math.max(0, Math.min(P.MAX_POCKETS, D.d.ext.p + (+el.getAttribute('data-pocket'))));
     } else if ((el = e.target.closest('[data-ink]'))) {

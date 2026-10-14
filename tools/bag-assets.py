@@ -15,7 +15,9 @@ Two kinds of bag:
             painting sags with the cloth; the design shows the bag as made):
               tuitote           tote, one handle arch (front and back handles
                                 line up), box-X stitched tabs
-              tuibannguyet      half-moon shoulder bag, zipped
+              tuibuoc-<style>   tie shoulder bag: two points tied on the shoulder,
+                                as a bow (no), a plain knot (thuong), twisted
+                                (xoan) or with lace ribbon (ren)
               laptopq           the laptop sleeve painting, smaller, with a
                                 shoulder strap drawn over it
 
@@ -338,7 +340,7 @@ def path(pts):
     return 'M' + 'L'.join(f'{x:g} {y:g}' for x, y in pts) + 'Z'
 
 
-def drawn(name, src=None):
+def drawn(name, src=None, style='no'):
     """(alpha 0-255, shade, parts {id: path}, part masks, top RGBA | None)"""
     A, marks, lights = canvas(), canvas(), canvas()   # silhouette, stitch / fold marks, highlights
     top = None
@@ -355,25 +357,86 @@ def drawn(name, src=None):
             line(marks, [(x + 2, 154), (x + 14, 174)], 150, 1.0)
             line(marks, [(x + 14, 154), (x + 2, 174)], 150, 1.0)
         line(marks, [(96, 150), (244, 150)], 70, 2)                          # the fold at the mouth
-    elif name == 'tuibannguyet':
-        # flat top, round bottom; zipped along the top
-        bot = cubic((278, 150), (282, 270), (210, 312), (170, 312)) + cubic((170, 312), (130, 312), (58, 270), (62, 150))[1:]
-        body = [(70, 140), (270, 140)] + bot
-        quai = arch(74, 266, 14, 150, 18)
-        fill(A, body); fill(A, quai)
-        parts['quai'] = path(quai)
-        line(marks, [(68, 156), (272, 156)], 110, 1.0, dash=(5, 4))
-        T = Image.new('RGBA', (SIDE * S2, SIDE * S2))
-        dr = ImageDraw.Draw(T)
-        y0, y1 = 140 * K * S2, 148 * K * S2
-        dr.rectangle([86 * K * S2, y0, 254 * K * S2, y1], fill=(92, 84, 72, 255))
-        for i in range(84):                                                  # the teeth
-            x = (88 + i * 2) * K * S2
-            dr.line([(x, y0 + 1.5 * K * S2), (x, y1 - 1.5 * K * S2)], fill=(196, 186, 160, 255), width=int(0.8 * K * S2))
-        px, py = 246 * K * S2, 150 * K * S2
-        dr.rounded_rectangle([px - 3 * K * S2, py, px + 3 * K * S2, py + 16 * K * S2], radius=2 * K * S2,
-                             fill=(196, 186, 160, 255), outline=(120, 110, 90, 255), width=int(0.8 * K * S2))
-        top = T.resize((SIDE, SIDE), Image.LANCZOS)
+    elif name == 'tuibuoc':
+        # the tie shoulder bag (a pattern Anna liked, 14/10/2026): a round
+        # body with two points rising from a scooped mouth; a strap from each
+        # point, tied in a bow on the shoulder. Front view, as made.
+        def side(m):   # the left half, mirrored for the right (m = -1)
+            X = lambda x: 170 + m * (170 - x)
+            pts = cubic((170, 324), (128, 326), (96, 318), (84, 300)) + \
+                cubic((84, 300), (72, 282), (72, 256), (78, 232))[1:] + \
+                cubic((78, 232), (84, 196), (108, 156), (120, 128))[1:] + \
+                cubic((120, 128), (121, 120), (122, 114), (125, 110))[1:] + [(141, 110)] + \
+                cubic((141, 110), (146, 118), (149, 130), (151, 142))[1:] + \
+                cubic((151, 142), (155, 162), (161, 174), (170, 176))[1:]
+            return [(X(x), y) for x, y in pts]
+        left = side(1)
+        body = left + side(-1)[::-1]
+        # the straps from each point, and how they meet on the shoulder
+        # (style): a bow, a plain knot, twisted together, or lace ribbon tied
+        # in a bow (lace is drawn as is, cream, over the fabric)
+        def loop(cx, cy, rx, ry, rot):
+            r = math.radians(rot)
+            return [(cx + rx * math.cos(t) * math.cos(r) - ry * math.sin(t) * math.sin(r),
+                     cy + rx * math.cos(t) * math.sin(r) + ry * math.sin(t) * math.cos(r))
+                    for t in [k * math.pi / 18 for k in range(36)]]
+        mirror = lambda q: [(340 - x, y) for x, y in q]
+        tie_l = [(125, 112), (161, 52), (171, 58), (141, 112)]
+        if style in ('no', 'ren'):
+            tail_l = [(164, 50), (146, 76), (154, 80), (170, 54)]
+            ties = [tie_l, mirror(tie_l), tail_l, mirror(tail_l), loop(147, 42, 21, 11, -12), loop(193, 42, 21, 11, 12),
+                    [(162, 36), (178, 36), (179, 52), (161, 52)]]
+            folds = [[(158, 40), (182, 40)], [(158, 47), (182, 47)]]
+        elif style == 'thuong':
+            tail_l = [(163, 44), (149, 22), (157, 18), (170, 40)]
+            ties = [tie_l, mirror(tie_l), tail_l, mirror(tail_l), [(161, 40), (179, 40), (181, 57), (159, 57)]]
+            folds = [[(160, 48), (180, 48)]]
+        else:   # xoan: the two straps twisted round each other, up over the shoulder
+            tie_l = [(125, 112), (161, 86), (172, 93), (141, 112)]
+            # the twist: the edges swell and pinch every turn, the turns lean
+            ys = [96 - i for i in range(0, 67, 2)]
+            lft = [(170 - 9 - 2.6 * abs(math.sin((96 - y) * math.pi / 10)), y) for y in ys]
+            rgt = [(170 + 9 + 2.6 * abs(math.sin((96 - y) * math.pi / 10 + math.pi / 2)), y) for y in ys]
+            cap = [(170 - 10 * math.cos(k * math.pi / 8), 30 - 10 * math.sin(k * math.pi / 8)) for k in range(9)]
+            col = lft + cap + rgt[::-1]
+            ties = [tie_l, mirror(tie_l), col]
+            folds = [[(159, y + 4), (181, y - 6)] for y in range(36, 100, 10)]
+        fill(A, body)
+        if style == 'ren':
+            T = Image.new('RGBA', (SIDE * S2, SIDE * S2))
+            m = canvas()
+            for q in ties:
+                fill(m, q)
+            lace = Image.new('RGBA', T.size, (243, 236, 222, 245))
+            dr = ImageDraw.Draw(lace)
+            u = K * S2
+            for gy in range(0, 340, 4):                                      # the lace's holes
+                for gx in range(0, 340, 4):
+                    ox = 2 if (gy // 4) % 2 else 0
+                    dr.ellipse([(gx + ox - 0.9) * u, (gy - 0.9) * u, (gx + ox + 0.9) * u, (gy + 0.9) * u], fill=(214, 202, 180, 255))
+            T.paste(lace, (0, 0), m)
+            dr = ImageDraw.Draw(T)
+            for q in ties:                                                   # scalloped edges
+                for (x0, y0), (x1, y1) in zip(q, q[1:] + q[:1]):
+                    n = max(1, int(math.hypot(x1 - x0, y1 - y0) / 3))
+                    for i in range(n):
+                        x, y = x0 + (x1 - x0) * i / n, y0 + (y1 - y0) * i / n
+                        dr.ellipse([(x - 1.7) * u, (y - 1.7) * u, (x + 1.7) * u, (y + 1.7) * u],
+                                   fill=(246, 240, 228, 255), outline=(190, 176, 150, 255), width=max(1, int(0.35 * u)))
+            for f in folds:
+                dr.line([(x * u, y * u) for x, y in f], fill=(176, 160, 132, 255), width=max(1, int(0.8 * u)))
+            top = T.resize((SIDE, SIDE), Image.LANCZOS)
+        else:
+            for q in ties:
+                fill(A, q)
+            parts['quai'] = ''.join(path(q) for q in ties)
+            for f in folds:
+                line(marks, f, 150 if style == 'xoan' else 90, 1.6 if style == 'xoan' else 1.0)
+        # topstitch round the mouth and the points, the side seam of the gusset
+        inner = [(x + (6 if x < 170 else -6 if x > 170 else 0), y + 6) for x, y in left[-14:]]
+        line(marks, inner, 110, 1.0, dash=(5, 4))
+        line(marks, [(340 - x, y) for x, y in inner], 110, 1.0, dash=(5, 4))
+        line(marks, [(x, y - 7) for x, y in cubic((96, 312), (128, 322), (212, 322), (244, 312))], 70, 1.2)
     elif name == 'laptopq':
         # the sleeve painting, smaller and lower, and a strap above it
         f, ox, oy = 0.78, 37, 92
@@ -427,12 +490,14 @@ def main(folder):
             body &= ~clean(m, 7)
         art[out] = write(out, alpha, shade, t, {k: to_path(m) for k, m in parts.items()}, body)
 
-    for name in ['tuitote', 'tuibannguyet']:
-        alpha, shade, parts, pmask, top = drawn(name)
+    # the tie bag: one set of pictures per way of tying it on the shoulder
+    for name, style in [('tuitote', 'no')] + [('tuibuoc', t) for t in ('no', 'thuong', 'xoan', 'ren')]:
+        alpha, shade, parts, pmask, top = drawn(name, style=style)
         body = alpha > 128
         for m in pmask.values():
             body &= ~clean(m, 7)
-        art[name] = write(name, alpha, shade, top, parts, body)
+        out = name if name == 'tuitote' else f'{name}-{style}'
+        art[out] = write(out, alpha, shade, top, parts, body)
 
     # the laptop sleeve with a strap: the painting's own outputs, smaller,
     # under a drawn strap
