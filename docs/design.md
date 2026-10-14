@@ -1940,9 +1940,18 @@ Gem đang có**, nhân sự tự thêm tấm mới trong admin.
   - `tools/check-studio.py kho`: thẻ, lọc, Còn → Hết, thêm mà không có ảnh, khung vuông kéo
     được, vải trơn thì nếp biến mất còn "giữ nguyên" thì vẫn còn, tải 320px WebP, chỗ để, sửa,
     xoá, đơn có "Vải cần lấy" (đếm 18 mảnh).
+- **Kho vải cho khách** (bước 2, 14/10):
+  - Mở từ nút "Kho vải" ở rổ vải trên Bàn thiết kế, hoặc từ một "Khu vực" mà owner chọn hành
+    động "Kho vải" trong Lắp studio (act `khovai`).
+  - Lưới mọi tấm đang còn (ảnh, tên, chất liệu), chip lọc theo tông. Chạm để chọn hoặc bỏ;
+    chọn tối đa 8 tấm, tấm thứ 9 thì báo "Rổ đầy".
+  - Thanh dưới hiện các tấm đã chọn và nút "Ghép thử": các tấm đó thành rổ vải và được đắp lên
+    món. Kiểu "Ghép theo nét vẽ" thì vải xếp theo các vùng đã vẽ, còn kiểu "Theo hình mình vẽ"
+    chỉ thay rổ.
+  - "‹ Về bàn thiết kế" giữ rổ cũ.
+  - Code: `khoSheet` / `khoClick` trong `js/studio.js`; `designerSheet(true)` giữ nguyên rổ.
+    Kiểm trong `tools/check-studio.py vai`.
 - **Làm tiếp (Anna duyệt luồng 14/10, không chụp lại vải):**
-  - (2) **Kho vải cho khách**: lưới ảnh, lọc tông, chọn tối đa 8 tấm vào "rổ của bạn", bấm
-    "Ghép thử" là sang Bàn thiết kế.
   - (3) **Chỉnh họa tiết từng ô**: chạm một ô thì thấy ảnh cả tấm; khung đúng hình ô (vuông,
     tam giác, vùng tự vẽ), khách không tự chọn hình khung. Khách kéo và xoay khung; cỡ khung
     theo kích thước thật của mảnh. Mã lưu vị trí từng ô; đơn hiện khung trên ảnh cả tấm cho
