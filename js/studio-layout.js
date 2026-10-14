@@ -222,6 +222,7 @@ window.GemLayout = (function () {
     { id: 'counter',  vi: 'Quầy (mở giỏ hàng)' },
     { id: 'memo',     vi: 'Bảng lời nhắn' },
     { id: 'dantranh', vi: 'Chơi đàn tranh' },
+    { id: 'khovai',   vi: 'Kho vải (khách chọn vải thật)' },
     { id: 'enter',    vi: 'Vào studio' },
     { id: 'link',     vi: 'Mở trang khác' },
     { id: 'none',     vi: 'Không làm gì (chỉ đi tới)' }

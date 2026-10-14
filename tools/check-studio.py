@@ -2865,6 +2865,35 @@ async def vai(browser, db):
         check(not pg.errors, f'{name}: no script errors {pg.errors}')
         await pg.context.close()
 
+    # Kho vải for customers: pick fabrics, "Ghép thử" puts them on the piece
+    for name, w, h in (('mobile', 393, 852), ('desktop', 1440, 900)):
+        pg = await open_table(browser, db, w, h)
+        await js_click(pg, '[data-pt="kho"]')
+        await pg.wait_for_timeout(500)
+        n = await pg.evaluate("document.querySelectorAll('.kho-f').length")
+        check(n == 69, f'{name}: Kho vải shows every fabric in stock ({n})')
+        names = await pg.evaluate("[...document.querySelectorAll('.kho-f b')].map(b => b.textContent).slice(0, 3)")
+        check(names[0] == 'Thô xanh rêu', f'{name}: each card has its name ({names})')
+        await js_click(pg, '[data-ktone="hong"]')
+        n2 = await pg.evaluate("document.querySelectorAll('.kho-f').length")
+        check(n2 == 22, f'{name}: the "Hồng – đỏ" chip: 22 fabrics ({n2})')
+        await js_click(pg, '[data-kho="clear"]')
+        picks = await pg.evaluate("[...document.querySelectorAll('.kho-f')].slice(0, 9).map(b => b.dataset.khoF)")
+        for k in picks:
+            await js_click(pg, f'[data-kho-f="{k}"]')
+        bar = await pg.evaluate("document.querySelector('.kho-n').textContent")
+        on = await pg.evaluate("document.querySelectorAll('.kho-f.is-on').length")
+        check(on == 8 and 'đầy' in bar, f'{name}: eight at most, the ninth is refused ({on}, {bar})')
+        await pg.screenshot(path=OUT / f'kho-khach-{name}.png')
+        await js_click(pg, '[data-kho="go"]')
+        await pg.wait_for_timeout(800)
+        basket = await pg.evaluate("[...document.querySelectorAll('.pt-scrap')].map(b => b.dataset.scrap)")
+        check(basket == picks[:8], f'{name}: "Ghép thử": the basket is the eight picked')
+        used = await pg.evaluate("[...new Set([...document.querySelectorAll('.pt-board [data-i]')].map(p => (p.getAttribute('fill').match(/r(\\d+)\\)$/) || [])[1]))]")
+        check(all(u and 'r' + u in picks[:8] for u in used), f'{name}: every patch wears one of them ({used})')
+        check(not pg.errors, f'{name}: no script errors {pg.errors}')
+        await pg.context.close()
+
     # a design code with real fabrics: the shared link, the order line
     pg = await page(browser, db, 1440, 900)
     await pg.goto(f'{BASE}/studio.html')
