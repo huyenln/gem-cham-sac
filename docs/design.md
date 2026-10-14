@@ -1659,8 +1659,19 @@ Góp ý: bàn thiết kế giống tờ khảo sát, bản vẽ trông rẻ, chi
 
 **Tranh đã vào (10/2026)** — `images/studio/vai/`, làm bằng
 `python3 tools/design-assets.py <thư mục ảnh gốc>` (ảnh gốc không để trong repo):
-- `vai-<tông>-<1..9>.webp`: 45 mẫu vải. Trên món, mỗi mẫu lát 2×2 có lật gương
-  (`fabricPattern` trong `js/patch.js`) nên không thấy đường nối giữa các lát.
+- `vai-<tông>-<1..9>.webp`: 45 mẫu vải, **mỗi tấm tự khớp mép** nên lát thẳng cạnh nhau
+  (`fabricPattern` trong `js/patch.js`) không thấy đường nối.
+  - Trước 14/10 lát 2×2 có lật gương: caro / kẻ sọc bị gập thành hình mũi tên ở trục gương,
+    hoa thành hoa văn đối xứng (Anna: "trông lộn xộn quá"). Màu riêng dùng tranh `vai-lam-*`
+    nên cũng sửa theo.
+  - Cách làm khớp mép: `seamless()` trong `tools/design-assets.py` (chạy trong `swatches()`;
+    `--seamless` cho ảnh đã có, **chỉ chạy một lần**). Bản cuộn nửa tấm (mép của nó là phần
+    giữa nên tự khớp) được vá đường nối giữa bằng phần giữa của tấm, cắt theo đường hai bản
+    giống nhau nhất và đi qua nền, không cắt ngang họa tiết. Caro / sọc / caro nhỏ / thổ cẩm /
+    ren cắt đúng số chu kỳ trước (giữ tỉ lệ), cuộn đúng bội chu kỳ.
+  - Ngoại lệ, đã xem từng tấm: ren hồng (`vai-hong-6`) vốn tự khớp, giữ nguyên; hoa to nền
+    nâu (`vai-nau-7`) hoa to bằng nửa tấm nên không cắt quanh được → dùng khối 2×2 lật gương
+    thu nhỏ một nửa làm tấm.
 - `dang-1..9.webp`: khuôn mảnh vải (vừa làm mask, vừa làm lớp bóng multiply) cho rổ.
 - `ro-truoc.webp`: thành trước của rổ, vải đứng *sau* nó và ló lên khỏi vành.
 - `mon-goi|lotcoc|scrunchie-mask/-bong.webp`: gối, lót cốc, dây buộc tóc vẽ bằng
@@ -1905,6 +1916,10 @@ Gem đang có**, nhân sự tự thêm tấm mới trong admin.
     xa, mặt trái), seed đã tính mỗi ảnh một tấm. Xoá 5 dòng trùng (3→2, 16→15, 14→12,
     57→59, 53→41), còn **66 tấm**. Mã thiết kế cũ có `r3`… vẫn hiện đúng vải nhờ bảng
     `MERGED` trong `js/patch.js`.
+  - **Màu thật:** "Caro xanh lá" là xanh lá + trắng kem (Anna 14/10), ảnh chụp ra ô sáng xanh
+    bạc hà vì đèn cửa hàng. `WHITE` trong `tools/kv-swatches.py`: phần sáng nhất (1/5) của ảnh
+    được đưa về màu thật, phần còn lại theo đó. Tấm nào lệch màu thì thêm một dòng vào `WHITE`
+    rồi chạy lại riêng ảnh đó (`python3 tools/kv-swatches.py <thư mục ảnh> <tên ảnh>`).
   - **Vải kẻ / caro chụp nghiêng thì xoay thẳng** trước khi cắt ảnh (Anna 14/10: "kẻ dọc
     nhưng chụp bị chéo"). Góc đo bằng độ sắc của đường chiếu dọc / ngang (lần lượt thử từng
     góc, lấy góc mà các đường kẻ thẳng hàng nhất). Đã xoay: #46 −45° (đổi tên "Kẻ ô nâu

@@ -1313,16 +1313,13 @@
     return VAI + 'vai-' + f.tone + '-' + (KINDS.indexOf(f.kind) + 1) + '.webp';
   }
 
-  // A painted swatch as an SVG pattern, tiled 2 x 2 with mirrored copies so
-  // the edges of the square meet themselves (no visible tile seams).
+  // A painted swatch as an SVG pattern, laid side by side. Each swatch is
+  // made to meet itself (tools/design-assets.py seamless()), so there is no
+  // seam and no mirroring (mirrored copies folded checks into arrows).
   function fabricPattern(id, pid, T, src) {
     src = src || swatchSrc(id);
-    var im = function (tr) {
-      return '<image href="' + src + '" width="' + T + '" height="' + T + '" preserveAspectRatio="none"' + (tr ? ' transform="' + tr + '"' : '') + '/>';
-    };
-    return '<pattern id="' + pid + '" width="' + 2 * T + '" height="' + 2 * T + '" patternUnits="userSpaceOnUse">' +
-      im('') + im('translate(' + 2 * T + ' 0) scale(-1 1)') + im('translate(0 ' + 2 * T + ') scale(1 -1)') +
-      im('translate(' + 2 * T + ' ' + 2 * T + ') scale(-1 -1)') + '</pattern>';
+    return '<pattern id="' + pid + '" width="' + T + '" height="' + T + '" patternUnits="userSpaceOnUse">' +
+      '<image href="' + src + '" width="' + T + '" height="' + T + '" preserveAspectRatio="none"/></pattern>';
   }
 
   // Pieces with a painting: the fabric is laid inside the piece's silhouette
