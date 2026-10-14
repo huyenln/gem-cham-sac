@@ -1578,6 +1578,14 @@ hương trước nhé.” Món không có lựa chọn / ký gửi / ghi chú v�
 là ảnh của lựa chọn đó. Khi database trả lời, dòng có lựa chọn đã hết / không còn bị
 bỏ ra. `GemBasket.add` từ chối món có lựa chọn khi thiếu `opt` (hoặc lựa chọn đã hết).
 
+**Lỗi đã sửa (14/10/2026): món chỉ database biết rơi khỏi giỏ khi sang trang khác.**
+`load()` lúc mở trang lọc giỏ theo `CATALOG` (16 món gốc), trước khi database trả lời —
+nên món thêm qua admin (cả hàng ký gửi, túi thiết kế) biến khỏi giỏ ở trang sau (huy hiệu
+về 0), và lần lưu giỏ kế tiếp xoá hẳn. Giờ các dòng đó được **giữ riêng** (`waiting`),
+vẫn ghi lại vào `gem-basket`, và quay về giỏ khi database trả lời (món đã gỡ thì bỏ như
+cũ). Cùng lúc: dòng **thiết kế** của túi có "Mẫu" không còn bị bỏ vì "thiếu lựa chọn".
+Kiểm tra: `check-studio.py choices` (sang `san-pham.html` với 3 món ký gửi trong giỏ).
+
 **Studio (bổ sung 13/10/2026):** món có lựa chọn / ký gửi / ghi chú bày được trong
 Studio. Trên kệ chỉ cần **một hình vẽ** cho cả dòng (một hũ nến cho 13 mùi, một đôi
 tất cho mọi cỡ); khách chạm vào thì mở **bảng chi tiết** (`pdSheet` trong
@@ -1651,8 +1659,19 @@ Góp ý: bàn thiết kế giống tờ khảo sát, bản vẽ trông rẻ, chi
 
 **Tranh đã vào (10/2026)** — `images/studio/vai/`, làm bằng
 `python3 tools/design-assets.py <thư mục ảnh gốc>` (ảnh gốc không để trong repo):
-- `vai-<tông>-<1..9>.webp`: 45 mẫu vải. Trên món, mỗi mẫu lát 2×2 có lật gương
-  (`fabricPattern` trong `js/patch.js`) nên không thấy đường nối giữa các lát.
+- `vai-<tông>-<1..9>.webp`: 45 mẫu vải, **mỗi tấm tự khớp mép** nên lát thẳng cạnh nhau
+  (`fabricPattern` trong `js/patch.js`) không thấy đường nối.
+  - Trước 14/10 lát 2×2 có lật gương: caro / kẻ sọc bị gập thành hình mũi tên ở trục gương,
+    hoa thành hoa văn đối xứng (Anna: "trông lộn xộn quá"). Màu riêng dùng tranh `vai-lam-*`
+    nên cũng sửa theo.
+  - Cách làm khớp mép: `seamless()` trong `tools/design-assets.py` (chạy trong `swatches()`;
+    `--seamless` cho ảnh đã có, **chỉ chạy một lần**). Bản cuộn nửa tấm (mép của nó là phần
+    giữa nên tự khớp) được vá đường nối giữa bằng phần giữa của tấm, cắt theo đường hai bản
+    giống nhau nhất và đi qua nền, không cắt ngang họa tiết. Caro / sọc / caro nhỏ / thổ cẩm /
+    ren cắt đúng số chu kỳ trước (giữ tỉ lệ), cuộn đúng bội chu kỳ.
+  - Ngoại lệ, đã xem từng tấm: ren hồng (`vai-hong-6`) vốn tự khớp, giữ nguyên; hoa to nền
+    nâu (`vai-nau-7`) hoa to bằng nửa tấm nên không cắt quanh được → dùng khối 2×2 lật gương
+    thu nhỏ một nửa làm tấm.
 - `dang-1..9.webp`: khuôn mảnh vải (vừa làm mask, vừa làm lớp bóng multiply) cho rổ.
 - `ro-truoc.webp`: thành trước của rổ, vải đứng *sau* nó và ló lên khỏi vành.
 - `mon-goi|lotcoc|scrunchie-mask/-bong.webp`: gối, lót cốc, dây buộc tóc vẽ bằng
@@ -1897,6 +1916,10 @@ Gem đang có**, nhân sự tự thêm tấm mới trong admin.
     xa, mặt trái), seed đã tính mỗi ảnh một tấm. Xoá 5 dòng trùng (3→2, 16→15, 14→12,
     57→59, 53→41), còn **66 tấm**. Mã thiết kế cũ có `r3`… vẫn hiện đúng vải nhờ bảng
     `MERGED` trong `js/patch.js`.
+  - **Màu thật:** "Caro xanh lá" là xanh lá + trắng kem (Anna 14/10), ảnh chụp ra ô sáng xanh
+    bạc hà vì đèn cửa hàng. `WHITE` trong `tools/kv-swatches.py`: phần sáng nhất (1/5) của ảnh
+    được đưa về màu thật, phần còn lại theo đó. Tấm nào lệch màu thì thêm một dòng vào `WHITE`
+    rồi chạy lại riêng ảnh đó (`python3 tools/kv-swatches.py <thư mục ảnh> <tên ảnh>`).
   - **Vải kẻ / caro chụp nghiêng thì xoay thẳng** trước khi cắt ảnh (Anna 14/10: "kẻ dọc
     nhưng chụp bị chéo"). Góc đo bằng độ sắc của đường chiếu dọc / ngang (lần lượt thử từng
     góc, lấy góc mà các đường kẻ thẳng hàng nhất). Đã xoay: #46 −45° (đổi tên "Kẻ ô nâu
@@ -1968,6 +1991,94 @@ Gem đang có**, nhân sự tự thêm tấm mới trong admin.
     - Cần ảnh cả tấm, lấy từ ảnh đã chụp (1600px), và một con số "ảnh rộng khoảng … cm" cho
       từng tấm. Ảnh cũ không có thước, nên số này là ước lượng.
     - Vải vụn bị cắt dần, nên web phải ghi "Gem cắt sát chỗ bạn chọn nhất có thể".
+
+### Bàn thiết kế — túi, cỡ, tuỳ chọn, giá (14–15/10/2026)
+
+Anna: "cứ thử làm hết rồi mình duyệt một thể". Tất cả nằm ở một PR để duyệt, **chưa merge**. Có
+hai migration chỉ chạy khi merge: `20261015_kho_vai_photo.sql` (ảnh lớn của từng tấm) và
+`20261015b_design_pricing.sql` (giá thiết kế).
+
+- **A. Vải thật không còn "chéo vải"**
+  - Mỗi tấm có thêm một ảnh lớn (`images/studio/vai-that/lon/`, 640px, cột `photo`), kèm
+    `photo_k` là cạnh ảnh lớn gấp mấy lần ô 320px. Ô 320px là khoảng 13 cm vải (`SWATCH_CM`).
+  - Mỗi mảnh đặt ảnh lớn theo đúng tỉ lệ thật của món (`PRODUCTS[x].span`, số cm của khung
+    340), lệch ngẫu nhiên. Không lặp, không lật, nên mảnh này cho thấy một chỗ khác trên tấm vải
+    so với mảnh kia.
+- **B. Món nhiều phần** (`ART[x].parts` là đa giác hoặc path SVG; vải của các phần nằm sau vải
+  của các mảnh thân):
+  - Oxford: thân + cổ + quai.
+  - Bloom: dây + 1, 2 hoặc 3 bông.
+  - Bookmark: hai mảnh rời, vuông và tam giác.
+  - Dây đeo: mặt ngoài và mặt trong.
+  - Mã thiết kế cũ được đổi qua bảng `LEGACY`.
+- **F. Túi** (`tools/bag-assets.py`):
+  - Tab **"Túi"** có 5 dáng:
+    - 4 dáng từ tranh túi của Gem: tote, quai nơ (size nhỏ / vừa), khoá kéo đeo vai, tam giác.
+    - **Túi buộc vai** (mẫu Anna gửi 14/10, thay túi bán nguyệt vì dáng bán nguyệt trông già): thân
+      2 đỉnh nhô, miệng khoét, mảnh hông/đáy, hai đỉnh buộc trên vai. **Kiểu buộc vai** là một
+      lựa chọn (field 13 `t<i>`): **dây thẳng** (mặc định, đã gồm trong giá), **thắt nơ +10–40k
+      tuỳ cỡ nơ** (Anna chốt; giá khoảng, xem C), **dây xoắn = dây nhún bèo** (+30k, Anna chốt), **dây viền ren** = dây thẳng may thêm ren dọc
+      hai mép (+20k, tạm; ren vẽ màu kem trên dây vải). "Dây tạo kiểu thì cộng thêm tiền" (Anna
+      14/10). Mỗi kiểu một bộ tranh `mon-tuibuoc-<kiểu>-*`.
+    - Túi dây rút đã bỏ (Anna 14/10: không làm chính).
+  - Tote **vẽ lại cho đứng thẳng, không rủ như ảnh** (Anna 14/10): đáy phẳng, miệng thẳng, quai
+    vòng đều, tab quai may chữ X.
+  - Tab **"Túi laptop"**: không quai / có quai đeo. Bản có quai là chính tranh đó thu nhỏ, thêm
+    quai vẽ và khoen chữ D.
+  - Kiểu ghép của túi: một vải, trên – dưới, sọc dọc (`doc`, 5 dải), ô vuông, theo nét vẽ, theo
+    hình vẽ. Các phần riêng: quai, lót (chỗ lộ ra), mảnh giữa, đáy, túi ngoài, viền miệng.
+  - **Tuỳ chọn** (`PRODUCTS[x].opts`):
+    - chần bông (lưới trám may chỉ trên thân);
+    - túi trong: luôn có sẵn 1 túi miễn phí, thêm tối đa 5;
+    - khoá kéo: có sẵn, miễn phí ở túi khoá kéo và túi laptop; các túi khác thêm
+      thì tính tiền;
+    - nút bấm.
+  - Túi thiết kế được đặt dưới sku của túi may sẵn cùng loại: tote là `tui-di-cho`, laptop là
+    `tui-laptop`, các dáng còn lại là `tui-di-choi`.
+    - Không bắt chọn "Mẫu" và không chặn khi túi may sẵn đã hết, vì thiết kế là may theo đơn.
+    - Món khác (gối, oxford…) đặt theo thiết kế cũng không còn bị chặn khi bản may sẵn hết hàng.
+- **E. Cỡ** (`SIZES` trong `js/patch.js`):
+  - Mỗi món có cỡ thường, vài món có cỡ lớn hơn:
+    - gối 40 / 45 / 50;
+    - túi Oxford 16 × 12;
+    - Origami rộng khoảng 10 cm (theo các mẫu trên mạng);
+    - túi laptop 13 / 14 / 15,6 inch;
+    - tote 35 × 40 / 40 × 45.
+  - Khách có thể điền **cỡ riêng** (rộng × cao, 3–200 cm). Khi đó dòng đơn ghi "báo giá sau":
+    đơn không tính giá dòng đó, giống món "Liên hệ".
+  - Cỡ lớn hơn thì ảnh vải thật trông nhỏ lại theo đúng tỉ lệ.
+  - Mã thiết kế thêm field 13, ví dụ `s1.q.p2.z.n` hoặc `c30x25`. Khi field này có mặt thì
+    field 11–12 được phép rỗng.
+- **D. Chất liệu**:
+  - Danh sách có thêm Kaki / canvas, Lụa / satin, Nỉ / dạ.
+  - Trong "Màu riêng" có hàng "Chất liệu bạn thấy ổn": chọn nhiều loại, hoặc "Để Gem chọn"
+    (không chọn loại nào).
+- **C. Giá thiết kế** (`PRICING` trong `js/patch.js`, settings `design_pricing`):
+  - Giá = nền (cỡ thường) + công kiểu ghép + mỗi vải từ vải thứ hai + cỡ lớn hơn + tuỳ chọn.
+  - Mỗi vải thêm tính +5k cho món nhỏ, +10k cho gối, oxford và túi. Kiểu ghép khó thì cộng
+    nhiều hơn, ví dụ gối: sao +50k, nhà gỗ +30k, chong chóng +30k, nét vẽ +40k.
+  - Gem tự chọn vải thì tính theo số vải ước của kiểu ghép (`PRICING.gem`).
+  - Anna chốt (14/10): túi quai nơ 220k size nhỏ, 250k size vừa; túi tam giác 100k; dây xoắn +30k;
+    thắt nơ +10–40k tuỳ cỡ nơ. Túi buộc vai 180k và dây viền ren +20k là số tạm ("còn lại oke").
+  - **Giá theo khoảng** (chỉ kiểu buộc vai, `ties[i] = [từ, đến]`): bàn thiết kế và giỏ hiện
+    khoảng ("190.000–220.000đ"), tổng giỏ cộng mức thấp và ghi "từ", dòng đơn ghi "thắt nơ
+    +10–40k (tuỳ cỡ nơ, Gem tư vấn cỡ)". `design_price` trả thêm `max`; `create_order` ghi
+    `price` = từ, `price_max` = đến, như món có khoảng giá. Admin: ô "… đến" (trống = một giá).
+  - **Các con số còn lại là ước lượng của Claude**, chưa có đối chiếu: giá nền túi 160–290k, chần
+    bông 50–70k, túi trong 20k, khoá kéo 30k, nút bấm 10k. Không tìm được bảng phí chần bông
+    tin cậy trên mạng. Dây đeo cổ tay chưa có giá trong database, đang tạm để 35k. Owner sửa ở
+    **admin → Sản phẩm → Giá thiết kế**.
+  - **Database tính lại khi đặt đơn**:
+    - giỏ gửi kèm mã thiết kế (`items[].spec`) nhưng không gửi giá;
+    - `create_order` gọi `design_price(spec, sku)`, cùng phép tính với `GemPatch.price()` (đã
+      đối chiếu 10 mã mẫu, rồi 9 mã túi kể cả nơ theo khoảng, khớp hết);
+    - sai sku hoặc mã lạ thì trả lỗi `bad_design`.
+  - Settings `design_pricing`: khách đọc được, vì policy `st_read_public` giờ cho cả
+    `payment` lẫn `design_pricing`. Chỉ nhân sự ghi được.
+  - Bàn thiết kế hiện giá và dòng chi tiết ("Giá nền 160.000đ · Kiểu ghép +20.000đ · Thêm 2 vải
+    +20.000đ · Chần bông +70.000đ"). Giỏ hàng tính dòng thiết kế theo mã.
+- **Kiểm tra**: `python3 tools/check-studio.py tui` kiểm dáng, tuỳ chọn, giá, cỡ riêng, laptop,
+  chất liệu, giỏ, `create_order` nhận mã chứ không nhận giá, settings, và editor giá trong admin.
 
 ### Studio hiện cảnh mặc định thay cho bố cục đã lắp (sửa 13/10/2026)
 

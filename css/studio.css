@@ -1702,6 +1702,28 @@ html:has(.studio-page) { overscroll-behavior: none; }   /* own rule: a Safari wi
 .pt-shape-ic { width: 20px; height: 20px; border: 2px solid var(--kraft); background: var(--paper-cream); flex: none; }
 .pt-shape-lotcoc { border-radius: 50%; }
 .pt-shape-lotcocv { border-radius: 4px; }
+/* bag shapes: a small drawing of each */
+.pt-shape-pic { display: block; width: 38px; height: 38px; flex: none; }
+.pt-shape-pic svg { width: 38px; height: 38px; }
+
+/* size + bag options */
+.pt-opts { display: grid; gap: var(--space-2); }
+.pt-own-size { display: flex; flex-wrap: wrap; align-items: end; gap: var(--space-2); }
+.pt-own-size[hidden] { display: none; }
+.pt-own-size label { display: grid; gap: 2px; font-size: var(--text-xs); color: var(--ink-soft); }
+.pt-own-size input { width: 88px; min-height: 44px; padding: 0 var(--space-2); border: 1.5px solid var(--sage-light); border-radius: 10px; font: inherit; font-size: var(--text-base); background: var(--paper-white); }
+.pt-own-size > span { padding-bottom: 12px; color: var(--ink-soft); }
+.pt-own-size .pt-small { flex: 1 1 100%; }
+.pt-bagopts[hidden] { display: none; }
+.pt-pockets { display: inline-flex; align-items: center; gap: var(--space-1); min-height: 44px; font-size: var(--text-sm); }
+.pt-pockets > span { margin-right: var(--space-1); }
+.pt-pockets .pt-mini { min-width: 44px; justify-content: center; font-size: var(--text-base); }
+.pt-chip-fixed { cursor: default; border-style: dashed; color: var(--ink-soft); }
+.pt-ties-h { flex: 1 1 100%; margin-top: var(--space-1); }
+/* what the price is made of, under the buttons */
+.pt-price-lines { flex: 1 1 100%; }
+.pt-price-lines:empty { display: none; }
+.pt-own-mats { margin-bottom: var(--space-1); }
 
 /* what is in the basket rides in the character's cart: above the rim,
    the lower part hidden as if inside */

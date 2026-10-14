@@ -170,8 +170,10 @@
     'basket.minus_aria':    { vi: `Giảm một`, en: `Decrease by one` },
     'basket.plus_aria':     { vi: `Thêm một`, en: `Increase by one` },
     'basket.price_tbd':     { vi: `Liên hệ`, en: `Ask us` },
+    'basket.price_quote':   { vi: `Báo giá sau`, en: `Quoted later` },
+    'basket.design_gone':   { vi: `Một thiết kế trong giỏ không còn đọc được. Bạn mở lại Bàn thiết kế giúp chúng mình nhé.`, en: `One design in the basket can no longer be read. Please open it again at the design table.` },
     'basket.from':          { vi: `từ`, en: `from` },
-    'basket.has_range':     { vi: `Vài món có giá theo khoảng vì mỗi cái một mẫu vải khác nhau — chúng mình báo giá đúng khi nhắn lại nhé.`, en: `Some pieces have a price range because every one is made from different fabric — we'll confirm the exact price when we reply.` },
+    'basket.has_range':     { vi: `Vài món có giá theo khoảng (tuỳ mẫu vải, tuỳ cỡ nơ…) — chúng mình báo giá đúng khi nhắn lại nhé.`, en: `Some pieces have a price range (it depends on the fabric, or the size of the bow…) — we'll confirm the exact price when we reply.` },
     'basket.all_unpriced':  { vi: `Chúng mình sẽ báo giá cho bạn khi nhắn lại nhé.`, en: `We'll quote you when we reply.` },
     'basket.some_unpriced': { vi: `Vài món chưa có giá trên web — chúng mình báo bạn khi nhắn lại nhé.`, en: `Some pieces aren't priced online yet — we'll let you know when we reply.` },
     'basket.subtotal':      { vi: `Tổng`, en: `Subtotal` },
@@ -259,6 +261,10 @@
   var items = [];   // [{ sku, qty, spec?, opt?, pics? }]  spec = design code from js/patch.js,
                     // opt = key of the scent / size picked (products.options)
   var liveSkus = null;   // skus the database sells, in its order; null until it answers
+  // Lines read back for products only the database knows (added in admin:
+  // consignment, the bags a design is ordered as). Held, not dropped, until
+  // it answers; still written back meanwhile so nothing is lost.
+  var waiting = [];
 
   // A custom design is its own line even when the product is the same, and
   // so is each scent / size of one product.
@@ -397,10 +403,10 @@
   function load() {
     try {
       var raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-      items = raw.filter(function (it) {
+      var all = raw.filter(function (it) {
         // A design that no longer parses (or patch.js missing) is dropped,
         // never sent as a plain product the customer didn't choose.
-        return it && bySku(it.sku) && it.qty > 0 && (!it.spec || validSpec(it.spec));
+        return it && typeof it.sku === 'string' && it.sku.length <= 80 && it.qty > 0 && (!it.spec || validSpec(it.spec));
       }).map(function (it) {
         var out = { sku: it.sku, qty: Math.min(99, Math.round(it.qty)) };
         if (it.spec) out.spec = it.spec;
@@ -412,11 +418,13 @@
         }
         return out;
       });
-    } catch (e) { items = []; }
+      items = all.filter(function (it) { return bySku(it.sku); });
+      waiting = all.filter(function (it) { return !bySku(it.sku); });
+    } catch (e) { items = []; waiting = []; }
   }
 
   function save() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); } catch (e) { /* ignore */ }
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items.concat(waiting))); } catch (e) { /* ignore */ }
     // Studio 2D listens for this to fill the character's cart.
     try {
       document.dispatchEvent(new CustomEvent('gem:basket', { detail: { count: count() } }));
@@ -427,9 +435,28 @@
     return items.reduce(function (n, it) { return n + it.qty; }, 0);
   }
 
+  // A design is priced by its own code (GemPatch.price: layout, fabrics,
+  // size, bag options — the same sum the database does when the order
+  // comes in). undefined: not a design; null: own size, Gem quotes it;
+  // else { a, b }: b above a when a part is priced as a range (the bow on
+  // the tie bag, by its size).
+  function designPrice(it) {
+    if (!it.spec || !window.GemPatch || !window.GemPatch.price) return undefined;
+    var pr = window.GemPatch.price(it.spec);
+    return pr ? (pr.quote ? null : { a: pr.total, b: pr.max }) : undefined;
+  }
+  function lineLabel(it, qty) {
+    var dp = designPrice(it), q = qty || 1;
+    if (dp === undefined) return priceLabel(bySku(it.sku), qty);
+    if (dp === null) return t('basket.price_quote', 'Báo giá sau');
+    return dp.b > dp.a ? (dp.a * q).toLocaleString('vi-VN') + '–' + money(dp.b * q) : money(dp.a * q);
+  }
+
   // Chỉ cộng những món đã có giá — món chưa chốt giá không được đoán thành 0đ
   function subtotal() {
     return items.reduce(function (sum, it) {
+      var dp = designPrice(it);
+      if (dp !== undefined) return sum + (dp ? dp.a : 0) * it.qty;
       var p = bySku(it.sku);
       return sum + (p && p.price != null ? p.price * it.qty : 0);
     }, 0);
@@ -437,6 +464,8 @@
 
   function hasUnpriced() {
     return items.some(function (it) {
+      var dp = designPrice(it);
+      if (dp !== undefined) return dp === null;
       var p = bySku(it.sku);
       return p && p.price == null;
     });
@@ -451,7 +480,10 @@
   function isRange(p) { return !!(p && p.price != null && p.priceMax != null); }
 
   function hasRange() {
-    return items.some(function (it) { return isRange(bySku(it.sku)); });
+    return items.some(function (it) {
+      var dp = designPrice(it);
+      return dp === undefined ? isRange(bySku(it.sku)) : !!dp && dp.b > dp.a;
+    });
   }
 
   // price == null nghĩa là chưa chốt giá → hiện "Liên hệ", không bịa ra con số.
@@ -826,7 +858,7 @@
             : '') +
           // unit price only earns its line once there's more than one
           '<span class="gb-row-price">' +
-            (it.qty > 1 ? priceLabel(p) + ' × ' + it.qty : '') +
+            (it.qty > 1 ? lineLabel(it) + ' × ' + it.qty : '') +
           '</span>' +
         '</span>' +
         '<span class="gb-stepper">' +
@@ -836,7 +868,7 @@
           '<button type="button" class="gb-step" data-act="plus" ' +
             'data-i18n-attr="aria-label:basket.plus_aria">+</button>' +
         '</span>' +
-        '<span class="gb-row-total">' + priceLabel(p, it.qty) + '</span>' +
+        '<span class="gb-row-total">' + lineLabel(it, it.qty) + '</span>' +
         '<button type="button" class="gb-row-remove" data-act="remove" ' +
           'data-i18n-attr="aria-label:basket.remove_aria">&times;</button>' +
       '</li>';
@@ -881,7 +913,7 @@
       view = 'chat'; renderPanel();
     });
     panelBody.querySelector('.gb-clear').addEventListener('click', function () {
-      items = []; save(); renderWidget(); renderBasketView();
+      items = []; waiting = []; save(); renderWidget(); renderBasketView();
     });
 
     translate();
@@ -1148,7 +1180,7 @@
     items.forEach(function (it, i) {
       var p = bySku(it.sku);
       lines.push((i + 1) + '. ' + pName(p) + ' × ' + it.qty +
-        ' — ' + priceLabel(p, it.qty));
+        ' — ' + lineLabel(it, it.qty));
       var choice = choiceOf(p, it.opt);
       if (choice) lines.push('   ' + optLabel(p) + ': ' + choiceName(choice));
       if (it.spec && window.GemPatch) {
@@ -1220,7 +1252,7 @@
     function finish(mode) {
       doneMode = mode;
       orderCustom = custom;
-      items = []; save(); renderWidget();
+      items = []; waiting = []; save(); renderWidget();
       view = 'done'; renderPanel();
     }
 
@@ -1235,8 +1267,9 @@
     submitBtn.disabled = true;
     submitBtn.textContent = t('basket.sending', 'Đang gửi...');
 
-    // Đơn vào thẳng database để em gái xem trong trang quản trị. Chỉ gửi sku
-    // và số lượng — giá do database tự tra, không gửi giá từ trình duyệt lên.
+    // Đơn vào thẳng database để nhân sự xem trong trang quản trị. Chỉ gửi sku,
+    // số lượng (và mã thiết kế) — giá do database tự tra / tự tính, không gửi
+    // giá từ trình duyệt lên.
     if (window.GemDB && window.GemDB.createOrder) {
       var picked = custom ? null : form.querySelector('[name="pay"]:checked');
       // Designs ride in the order note (Anna sees it in admin): what each
@@ -1265,6 +1298,7 @@
         items: items.map(function (it) {
           var line = { sku: it.sku, qty: it.qty };
           if (it.opt) line.option = it.opt;
+          if (it.spec) line.spec = it.spec;   // a design: priced from its code
           return line;
         })
       }).then(function (res) {
@@ -1288,6 +1322,10 @@
             'Đơn này cần chuyển khoản trước. Bạn chọn “Chuyển khoản QR” giúp chúng mình nhé.'));
         }
         // A scent / size sold out (or vanished) after the page loaded
+        if (res && res.error === 'bad_design') {
+          return fail(t('basket.design_gone',
+            'Một thiết kế trong giỏ không còn đọc được. Bạn mở lại Bàn thiết kế giúp chúng mình nhé.'));
+        }
         if (res && (res.error === 'option_out' || res.error === 'need_option')) {
           return fail(t('basket.option_gone',
             'Một lựa chọn trong giỏ (mùi, cỡ…) vừa hết hàng. Bạn xem lại giỏ giúp chúng mình nhé.'));
@@ -1433,9 +1471,11 @@
       // stock, for a product with choices
       add: function (sku, sourceEl, spec, cut, opt) {
         var p = bySku(sku);
-        if (!p || p.inStock === false) return false;
+        // a design is made to order: the ready-made ones being sold out, or
+        // the bag "Mẫu" to pick, don't apply to it
+        if (!p || (p.inStock === false && !spec)) return false;
         if (spec && !validSpec(spec)) return false;
-        if (choices(p)) {
+        if (choices(p) && !spec) {
           var c = choiceOf(p, opt);
           if (!c || c.out) return false;
         } else {
@@ -1472,6 +1512,16 @@
       if (liveSkus) cards.forEach(refreshCard);
     });
 
+    // the owner's design prices (settings "design_pricing"): designs in the
+    // basket are priced by them once they arrive
+    if (window.GemPatch && window.GemPatch.loadPricing) {
+      document.addEventListener('gem:pricing', function () {
+        if (panel.classList.contains('open') && view === 'basket') renderBasketView();
+        renderWidget();
+      });
+      window.GemPatch.loadPricing();
+    }
+
     /* ---------- giá thật từ Supabase ----------
        Vẽ ngay bằng CATALOG trước cho trang hiện tức thì, rồi cập nhật khi
        database trả lời. Giá hiếm khi đổi nên thường không thấy nhấp nháy gì;
@@ -1486,17 +1536,26 @@
         cards.forEach(refreshCard);
         document.dispatchEvent(new CustomEvent('gem:products', { detail: { rows: rows } }));
 
+        // Dòng giữ lại lúc mở trang (món chỉ database biết) quay về giỏ; trùng
+        // dòng vừa thêm thì cộng số lượng.
+        var held = waiting.length;
+        waiting.forEach(function (w) {
+          var same = items.filter(function (it) { return keyOf(it) === keyOf(w); })[0];
+          if (same) same.qty = Math.min(99, same.qty + w.qty); else items.push(w);
+        });
+        waiting = [];
         // Giỏ đang có món vừa bị gỡ/ẩn thì bỏ ra, kẻo đặt đơn sẽ lỗi sku. Món có
         // lựa chọn cũng vậy: mùi / cỡ đã hết hay không còn thì bỏ dòng đó.
         var before = items.length;
         items = items.filter(function (it) {
           if (!live[it.sku]) return false;
           var p = bySku(it.sku);
-          if (!choices(p)) return true;
+          // a design is its own "Mẫu": the bag's choices don't apply
+          if (it.spec || !choices(p)) return true;
           var c = choiceOf(p, it.opt);
           return !!(c && !c.out);
         });
-        if (items.length !== before) { save(); }
+        if (items.length !== before || held) { save(); }
         renderWidget();
         if (panel.classList.contains('open') && view === 'basket') renderBasketView();
       }).catch(function () { /* giữ nguyên giá dự phòng */ });

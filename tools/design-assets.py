@@ -30,7 +30,7 @@ import sys
 from pathlib import Path
 
 import numpy as np
-from PIL import Image, ImageFilter
+from PIL import Image, ImageFilter, ImageOps
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / 'images/studio/vai'
@@ -121,6 +121,159 @@ def bands(profile, n):
     return sorted(runs[:n])
 
 
+""" ---------- swatches that repeat with no seam (14/10/2026) ----------
+The page tiles each swatch side by side (js/patch.js fabricPattern). A
+painting's left edge doesn't meet its right edge, so a plain repeat shows a
+seam; the old fix (mirrored copies) folded checks and stripes into
+arrow shapes. Now each tile is made to meet itself: the copy rolled half a
+tile (whose edges are its middle, so they meet) has its own middle seam
+covered by the tile's middle, cut along a path where the two agree and
+through the ground, not across a motif. Regular prints are first cropped
+to whole repeats (scale kept) and rolled by whole repeats, so the two copies
+line up and the cut is clean. Left-right first, then top-bottom on that
+(the second cut wraps round so the first stays seamless)."""
+KINDS = ['tron', 'caro', 'soc', 'cham', 'hoa', 'ren', 'hoato', 'ono', 'tho']
+REGULAR = {'caro', 'soc', 'ono', 'tho', 'ren'}
+LUMA = np.array([0.299, 0.587, 0.114])
+# looked at one by one: lace bands that already meet themselves stay as
+# painted; a floral whose flowers are half the tile can't be cut round, so
+# its mirrored 2 x 2 block (half size) becomes the tile
+KEEP = {'vai-hong-6'}
+BAKE = {'vai-nau-7'}
+
+
+def repeat(a, axis):
+    """The print's repeat along an axis (pixels), if it has a clear one."""
+    prof = (a @ LUMA).mean(axis=1 - axis)
+    p = prof - prof.mean()
+    n = len(p)
+    if p.std() < 1.5:
+        return None
+    top = int(n * 0.55)
+    ac = np.array([np.dot(p[:n - l], p[l:]) / (n - l) for l in range(top + 1)]) / p.var()
+    peaks = [l for l in range(16, top) if ac[l] > ac[l - 1] and ac[l] >= ac[l + 1] and ac[l] > 0.5]
+    if not peaks:
+        return None
+    best = max(ac[l] for l in peaks)
+    return min(l for l in peaks if ac[l] >= 0.8 * best)
+
+
+def shift_for(a, axis, F):
+    """How far to roll: whole repeats when the print has a clear one, else
+    where the rolled copy agrees best with the tile round the wrap line."""
+    S = a.shape[axis]
+    p = repeat(a, axis)
+    lo, hi = F + 2, S - F - 2
+    cands = sorted({c for k in range(1, S // p + 1) for c in range(int(k * p) - 3, int(k * p) + 4)
+                    if lo <= c <= hi}) if p else []
+    if not cands:
+        cands = range(max(lo, S // 4), min(hi, 3 * S // 4) + 1)
+    best, bs = None, S // 2
+    for s in cands:
+        b = np.roll(a, s, axis=axis)
+        sl = [slice(None)] * 2
+        sl[axis] = np.r_[s - F:s - 2, s + 2:s + F]
+        d = np.abs(a[tuple(sl)] - b[tuple(sl)]).mean()
+        if best is None or d < best:
+            best, bs = d, s
+    return bs
+
+
+def vpath(D, cyclic=False):
+    """Cheapest top-to-bottom path through D, one column per row, moving at
+    most one column a row. cyclic: it ends within a column of where it began
+    (it wraps round the tile)."""
+    H, W = D.shape
+    best, bp = None, None
+    for x0 in (range(W) if cyclic else [None]):
+        M = D[0].copy() if x0 is None else np.where(np.arange(W) == x0, D[0, x0], np.inf)
+        back = np.zeros((H, W), dtype=int)
+        for y in range(1, H):
+            cand = np.stack([np.r_[np.inf, M[:-1]], M, np.r_[M[1:], np.inf]])
+            k = cand.argmin(axis=0)
+            M = D[y] + cand[k, np.arange(W)]
+            back[y] = np.arange(W) + k - 1
+        ends = range(W) if x0 is None else [x for x in (x0 - 1, x0, x0 + 1) if 0 <= x < W]
+        x = min(ends, key=lambda e: M[e])
+        if best is None or M[x] < best:
+            path = [x]
+            for y in range(H - 1, 0, -1):
+                x = back[y, x]
+                path.append(x)
+            best, bp = M[path[0]], np.array(path[::-1])
+    return bp
+
+
+def patch_x(a, F, cyclic):
+    """Left-right seamless; returns the tile, the roll and the cuts' cost."""
+    s = shift_for(a, 1, F)
+    b = np.roll(a, s, axis=1)
+    ground = np.median(a.reshape(-1, 3), axis=0)
+    feat = lambda x: np.abs(x - ground).sum(axis=2)
+    diff = np.abs(a - b).sum(axis=2)
+    D = diff + 0.6 * (feat(a) + feat(b))
+    left = vpath(D[:, s - F:s - 1], cyclic) + (s - F)
+    right = vpath(D[:, s + 1:s + F], cyclic) + (s + 1)
+    out = b.copy()
+    ys = np.arange(a.shape[0])
+    for y in ys:
+        out[y, left[y]:right[y] + 1] = a[y, left[y]:right[y] + 1]
+    return out, (diff[ys, left].mean() + diff[ys, right].mean()) / 2
+
+
+def regular(a):
+    """Crop to whole repeats on each axis the print repeats along (stripes:
+    across them only), keeping its scale: k repeats are sized so m fill the
+    tile (k = m, or one repeat twice)."""
+    S = a.shape[0]
+    P = [repeat(a, 1), repeat(a, 0)]
+    L = a @ LUMA
+    px, py = L.mean(axis=0), L.mean(axis=1)
+    if P[0] and px.std() < 0.25 * py.std():
+        P[0] = None
+    if P[1] and py.std() < 0.25 * px.std():
+        P[1] = None
+    if P == [None, None]:
+        return a
+    box, size, reps = [0, 0, S, S], [S, S], [1, 1]
+    for ax, p in enumerate(P):
+        if p:
+            k = S // p
+            m = 2 if k == 1 else k
+            o = (S - k * p) // 2
+            box[ax], box[ax + 2] = o, o + k * p
+            size[ax] = int(round(S * k / m))
+            reps[ax] = m // k
+    t = Image.fromarray(np.clip(a, 0, 255).astype('uint8')).crop(tuple(box)).resize(tuple(size), Image.LANCZOS)
+    full = Image.new('RGB', (size[0] * reps[0], size[1] * reps[1]))
+    for i in range(reps[0]):
+        for j in range(reps[1]):
+            full.paste(t, (i * size[0], j * size[1]))
+    return np.asarray(full.resize((S, S), Image.LANCZOS), dtype=float)
+
+
+def seamless(im, kind, name=''):
+    if name in KEEP:
+        return im
+    if name in BAKE:
+        T = im.size[0]
+        m = Image.new('RGB', (2 * T, 2 * T))
+        for (x, y), f in (((0, 0), lambda i: i), ((T, 0), ImageOps.mirror), ((0, T), ImageOps.flip),
+                          ((T, T), lambda i: ImageOps.flip(ImageOps.mirror(i)))):
+            m.paste(f(im), (x, y))
+        return m.resize((T, T), Image.LANCZOS)
+    a = np.asarray(im.convert('RGB'), dtype=float)
+    if kind in REGULAR:
+        a = regular(a)
+    best = None
+    for F in (36, 48, 64, 80, 100):   # the band width that joins most cleanly
+        a1, c1 = patch_x(a, F, cyclic=False)
+        a2, c2 = patch_x(np.ascontiguousarray(a1.transpose(1, 0, 2)), F, cyclic=True)
+        if best is None or c1 + c2 < best[0]:
+            best = (c1 + c2, a2.transpose(1, 0, 2))
+    return Image.fromarray(np.clip(best[1], 0, 255).astype('uint8'))
+
+
 def swatches(src, tone):
     rgb = Image.open(src).convert('RGB')
     a = np.asarray(rgb).astype(np.int16)
@@ -136,7 +289,8 @@ def swatches(src, tone):
             tile = rgb.crop(box)
             s = min(tile.size)
             tile = tile.crop(((tile.size[0] - s) // 2, (tile.size[1] - s) // 2, (tile.size[0] + s) // 2, (tile.size[1] + s) // 2))
-            save(tile.resize((320, 320), Image.LANCZOS), OUT / f'vai-{tone}-{k}.webp', q=80)
+            tile = seamless(tile.resize((320, 320), Image.LANCZOS), KINDS[k - 1], f'vai-{tone}-{k}')
+            save(tile, OUT / f'vai-{tone}-{k}.webp', q=80)
             k += 1
 
 
@@ -252,6 +406,12 @@ PIECES = [
 
 
 def main(folder, only=None):
+    if folder == '--seamless':
+        # swatches already in the repo, made before the seamless step: once
+        # (running it again re-cuts a tile that already meets itself)
+        for f in sorted(OUT.glob('vai-*-[1-9].webp')):
+            save(seamless(Image.open(f).convert('RGB'), KINDS[int(f.stem[-1]) - 1], f.stem), f, q=80)
+        return
     src = Path(folder)
     if only == 'pieces':
         for name, med, hole, hw in PIECES[3:]:

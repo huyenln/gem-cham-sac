@@ -308,6 +308,24 @@
     'studio.pt_own_go':    { vi: `Nhuộm vào rổ`, en: `Dye the basket` },
     'studio.pt_own_note':  { vi: `Gem tìm vải vụn gần màu này nhất và nhắn ảnh cho bạn duyệt trước khi may.`, en: `Gem finds the scraps closest to this colour and sends you a photo to approve before sewing.` },
     'studio.pt_shape':     { vi: `Dáng`, en: `Shape` },
+    'studio.pt_opts':      { vi: `Cỡ & tuỳ chọn`, en: `Size & options` },
+    'studio.pt_size_own':  { vi: `Cỡ riêng`, en: `My own size` },
+    'studio.pt_size_w':    { vi: `Rộng (cm)`, en: `Width (cm)` },
+    'studio.pt_size_hh':   { vi: `Cao (cm)`, en: `Height (cm)` },
+    'studio.pt_size_q':    { vi: `Cỡ riêng: Gem xem rồi báo giá cho bạn khi nhắn lại.`, en: `Your own size: Gem looks and tells you the price when we reply.` },
+    'studio.pt_quilt':     { vi: `Chần bông`, en: `Quilted` },
+    'studio.pt_pockets':   { vi: `Túi trong`, en: `Inside pockets` },
+    'studio.pt_pocket_in': { vi: `1 túi có sẵn`, en: `1 included` },
+    'studio.pt_pocket_add':{ vi: `Thêm túi trong`, en: `Add a pocket` },
+    'studio.pt_pocket_rm': { vi: `Bớt túi trong`, en: `One pocket fewer` },
+    'studio.pt_zip':       { vi: `Thêm khoá kéo`, en: `Add a zip` },
+    'studio.pt_zip_in':    { vi: `Khoá kéo có sẵn`, en: `Zip included` },
+    'studio.pt_snap':      { vi: `Thêm nút bấm`, en: `Add a snap` },
+    'studio.pt_ties':      { vi: `Kiểu buộc vai`, en: `Shoulder tie` },
+    'studio.pt_mats':      { vi: `Chất liệu bạn thấy ổn`, en: `Fabrics you're happy with` },
+    'studio.pt_mats_gem':  { vi: `Để Gem chọn`, en: `Let Gem choose` },
+    'studio.pt_from':      { vi: `từ`, en: `from` },
+    'studio.pt_base':      { vi: `Giá nền`, en: `Base` },
     'studio.pt_round':     { vi: `Tròn`, en: `Round` },
     'studio.pt_square':    { vi: `Vuông`, en: `Square` },
     'studio.pt_shuffle':   { vi: `Xáo mảnh`, en: `Shuffle` },
@@ -2723,6 +2741,8 @@
               '</div>' +
               '<button type="button" class="st-btn pt-own-go" data-own-go data-i18n="studio.pt_own_go">' + esc(t('studio.pt_own_go')) + '</button>' +
               tr('p', 'studio.pt_own_note', ' class="pt-small"') +
+              // by colour, any print: which materials are fine (or Gem picks)
+              tr('p', 'studio.pt_mats', ' class="pt-own-h"') + '<div class="pt-own-mats pt-chips pt-tags"></div>' +
             '</div>' +
             '<div class="pt-vtones" role="group" hidden data-i18n-attr="aria-label:studio.pt_vt_label" aria-label="' + esc(t('studio.pt_vt_label')) + '"></div>' +
             '<div class="pt-basket"><div class="pt-scraps"></div>' +
@@ -2736,10 +2756,22 @@
                 '<button type="button" class="pt-tool pt-mini" data-pt="random" data-i18n="studio.pt_random">' + esc(t('studio.pt_random')) + '</button>' +
               '</span></div>' +
             '<div class="pt-layouts pt-chips"></div></section>' +
+          // size (usual / bigger / own) and the bag's options
+          '<section class="pt-sec pt-opts">' + tr('h3', 'studio.pt_opts', ' class="pt-label"') +
+            '<div class="pt-sizes-row pt-chips"></div>' +
+            '<div class="pt-own-size" hidden>' +
+              '<label>' + tr('span', 'studio.pt_size_w') + '<input type="number" name="cw" min="' + P.CUSTOM_CM[0] + '" max="' + P.CUSTOM_CM[1] + '" inputmode="numeric"></label>' +
+              '<span aria-hidden="true">×</span>' +
+              '<label>' + tr('span', 'studio.pt_size_hh') + '<input type="number" name="ch" min="' + P.CUSTOM_CM[0] + '" max="' + P.CUSTOM_CM[1] + '" inputmode="numeric"></label>' +
+              tr('p', 'studio.pt_size_q', ' class="pt-small"') +
+            '</div>' +
+            '<div class="pt-bagopts pt-chips"></div>' +
+          '</section>' +
           '<div class="pt-actions">' +
             '<span class="pt-price"></span>' +
             '<button type="button" class="pt-tool pt-add" data-pt="add" data-i18n="studio.pt_add">' + esc(t('studio.pt_add')) + '</button>' +
             '<button type="button" class="st-btn pt-sew" data-pt="sew" data-i18n="studio.pt_sew">' + esc(t('studio.pt_sew')) + '</button>' +
+            '<p class="pt-small pt-price-lines"></p>' +
           '</div>' +
           // after "May xong": the name, the number and the card to share
           '<section class="pt-done" hidden aria-live="polite">' +
@@ -3463,18 +3495,22 @@
     if (!root || !P) return;
     var l = lng(), d = D.d, prod = P.PRODUCTS[d.product];
 
-    var tab = d.product === 'lotcocv' ? 'lotcoc' : d.product;   // the square coaster lives under "Lót cốc"
+    // pieces of one kind share a tab (the square coaster under "Lót cốc", the
+    // bag shapes under "Túi"), the shape picked under it
+    var tab = P.tabOf(d.product), group = P.groupOf(d.product);
     root.querySelector('.pt-tabs').innerHTML = P.PRODUCT_ORDER.map(function (id) {
       return '<button type="button" class="pt-tab' + (id === tab ? ' is-on' : '') +
-        '" data-product="' + id + '" aria-pressed="' + (id === tab) + '">' + esc(P.PRODUCTS[id][l]) + '</button>';
+        '" data-product="' + id + '" aria-pressed="' + (id === tab) + '">' + esc(P.tabName(id, l)) + '</button>';
     }).join('');
     var shapes = root.querySelector('.pt-shapes');
-    shapes.hidden = tab !== 'lotcoc';
-    shapes.innerHTML = tab !== 'lotcoc' ? '' : '<span class="pt-label">' + esc(t('studio.pt_shape')) + '</span>' +
-      [['lotcoc', 'studio.pt_round'], ['lotcocv', 'studio.pt_square']].map(function (x) {
-        var on = d.product === x[0];
-        return '<button type="button" class="pt-chip' + (on ? ' is-on' : '') + '" data-shape="' + x[0] + '" aria-pressed="' + on + '">' +
-          '<span class="pt-shape-ic pt-shape-' + x[0] + '" aria-hidden="true"></span><span>' + esc(t(x[1])) + '</span></button>';
+    shapes.hidden = group.length < 2;
+    shapes.innerHTML = group.length < 2 ? '' : '<span class="pt-label">' + esc(t('studio.pt_shape')) + '</span>' +
+      group.map(function (id) {
+        var on = d.product === id;
+        var ic = tab === 'lotcoc' ? '<span class="pt-shape-ic pt-shape-' + id + '" aria-hidden="true"></span>'
+          : '<span class="pt-shape-pic" aria-hidden="true">' + P.svg(Object.assign(P.blank(id), { layout: 'mot', fab: d.fab ? d.fab[0] : '', cus: d.cus }), { size: 38 }) + '</span>';
+        return '<button type="button" class="pt-chip' + (on ? ' is-on' : '') + '" data-shape="' + id + '" aria-pressed="' + on + '">' +
+          ic + '<span>' + esc(P.PRODUCTS[id].short[l]) + '</span></button>';
       }).join('');
     var onTab = root.querySelector('.pt-tab.is-on');
     if (onTab) {   // keep the chosen piece in view in the scrolling row
@@ -3489,12 +3525,16 @@
         : id === 'tuve' && !d.sketch.length
         ? '<svg viewBox="0 0 24 24" width="40" height="40" aria-hidden="true"><path d="M5 19l3-1L18 8l-2-2L6 16z" fill="none" stroke="#8A6A44" stroke-width="1.6" stroke-linejoin="round"/></svg>'
         : P.svg(preview, { size: 40 });
-      return chip('data-layout', id, id === d.layout, P.LAYOUTS[id][l], icon);
+      return chip('data-layout', id, id === d.layout, P.layoutName(d.product, id, l), icon);
     }).join('');
 
     root.querySelector('.pt-fabrics').innerHTML = P.FABRIC_ORDER.map(function (id) {
       return chip('data-fabric', id, d.fabrics.indexOf(id) >= 0, P.FABRICS[id][l]);
     }).join('');
+    // the same choice in "Màu riêng": materials that are fine, or Gem picks
+    root.querySelector('.pt-own-mats').innerHTML = chip('data-fabric', P.GEM, !d.fabrics.length, t('studio.pt_mats_gem')) +
+      P.FABRIC_ORDER.map(function (id) { return chip('data-fabric', id, d.fabrics.indexOf(id) >= 0, P.FABRICS[id][l]); }).join('');
+    renderOpts();
 
     root.querySelector('.pt-inks').innerHTML = P.INKS.map(function (c, i) {
       return '<button type="button" class="pt-ink' + (i === D.ink ? ' is-on' : '') + '" data-ink="' + i +
@@ -3519,6 +3559,50 @@
     renderBasket();
     renderShared();
     renderPreview();
+  }
+
+  // Size and the bag's options. Numbers typed for an own size are not
+  // rebuilt here (the input keeps its caret); the rest is.
+  function renderOpts() {
+    var root = sheetBody.querySelector('.pt');
+    if (!root) return;
+    var d = D.d, l = lng(), p = P.PRODUCTS[d.product], e = d.ext, pr = P.PRICING.products[d.product] || {};
+    var plus = function (n) { return n ? ' +' + (n / 1000) + 'k' : ''; };
+    var sizes = P.sizesOf(d.product);
+    root.querySelector('.pt-sizes-row').innerHTML = sizes.map(function (z, i) {
+      return chip('data-psize', i, !e.c && e.s === i, P.sizeLabel(d.product, i, l) + plus((pr.sizes || [])[i]));
+    }).join('') + chip('data-psize', 'c', !!e.c, t('studio.pt_size_own'));
+    var own = root.querySelector('.pt-own-size');
+    own.hidden = !e.c;
+    if (e.c) {
+      var iw = own.querySelector('[name="cw"]'), ih = own.querySelector('[name="ch"]');
+      if (document.activeElement !== iw) iw.value = e.c[0];
+      if (document.activeElement !== ih) ih.value = e.c[1];
+    }
+    var o = p.opts || '', bits = [];
+    if (o.indexOf('q') >= 0) bits.push(chip('data-bagopt', 'q', e.q, t('studio.pt_quilt') + plus(pr.quilt)));
+    if (o.indexOf('p') >= 0) {
+      bits.push('<span class="pt-pockets"><span>' + esc(t('studio.pt_pockets')) + ': ' + esc(t('studio.pt_pocket_in')) +
+        (e.p ? ' + ' + e.p + plus(e.p * (pr.pocket || 0)) : '') + '</span>' +
+        '<button type="button" class="pt-tool pt-mini" data-pocket="-1"' + (e.p ? '' : ' disabled') + ' aria-label="' + esc(t('studio.pt_pocket_rm')) + '">−</button>' +
+        '<button type="button" class="pt-tool pt-mini" data-pocket="1"' + (e.p >= P.MAX_POCKETS ? ' disabled' : '') + ' aria-label="' + esc(t('studio.pt_pocket_add')) + '">+</button></span>');
+    }
+    if (p.zip) bits.push('<span class="pt-chip pt-chip-fixed">' + esc(t('studio.pt_zip_in')) + '</span>');
+    else if (o.indexOf('z') >= 0) bits.push(chip('data-bagopt', 'z', e.z, t('studio.pt_zip') + plus(pr.zip)));
+    if (o.indexOf('n') >= 0) bits.push(chip('data-bagopt', 'n', e.n, t('studio.pt_snap') + plus(pr.snap)));
+    // the tie bag: how it is tied on the shoulder
+    if (p.ties) {
+      bits.push('<span class="pt-label pt-ties-h">' + esc(t('studio.pt_ties')) + '</span>' + p.ties.map(function (k, i) {
+        // a range (the bow): "+10–40k (tuỳ cỡ nơ)"
+        var f = P.fee((pr.ties || [])[i]);
+        return chip('data-tie', i, (e.t || 0) === i, P.TIES[k][l] + (f[1] > f[0]
+          ? ' +' + f[0] / 1000 + '–' + f[1] / 1000 + 'k (' + P.tieWhy(k, l) + ')'
+          : plus(f[0])));
+      }).join(''));
+    }
+    var bag = root.querySelector('.pt-bagopts');
+    bag.hidden = !bits.length;
+    bag.innerHTML = bits.join('');
   }
 
   // The parts that change while typing / drawing, without rebuilding inputs.
@@ -3551,10 +3635,19 @@
       prev.querySelector('figcaption').textContent = t(photoUrls[d.img] ? 'studio.pt_photo_on' : 'studio.pt_photo_hidden');
     }
 
+    // the design's own price (GemPatch.price: the same sum the order is
+    // charged), what it is made of underneath
     var sku = P.PRODUCTS[d.product].sku;
     var info = window.GemBasket ? window.GemBasket.info(sku) : null;
-    root.querySelectorAll('.pt-price').forEach(function (el) { el.textContent = info ? info.price : ''; });
-    root.querySelectorAll('[data-pt="add"]').forEach(function (add) { add.disabled = !ok || (info && !info.inStock); });
+    var pr = P.price(d), l = lng(), mny = function (n) { return n.toLocaleString('vi-VN') + 'đ'; };
+    root.querySelectorAll('.pt-price').forEach(function (el) {
+      el.textContent = !pr ? (info ? info.price : '') : pr.quote ? t('studio.pt_from') + ' ' + mny(pr.total) : P.priceRange(pr.total, pr.max);
+    });
+    root.querySelector('.pt-price-lines').textContent = !pr ? '' : [t('studio.pt_base') + ' ' + mny(pr.base)]
+      .concat(pr.lines.map(function (x) { return P.priceLine(x, l) + ' +' + P.priceRange(x.a, x.b); }))
+      .concat(pr.quote ? [t('studio.pt_size_q')] : []).join(' · ');
+    // made to order: a ready-made one being sold out doesn't stop a design
+    root.querySelectorAll('[data-pt="add"]').forEach(function (add) { add.disabled = !ok || !info; });
     var keep = root.querySelector('[data-pt="keep"]');
     if (keep) keep.disabled = !ok;
     root.querySelector('[data-pt="sew"]').disabled = !ok;
@@ -3736,7 +3829,8 @@
   function setShape(product) {
     var pal = paletteNow(), keep = D.d;
     D.d = P.blank(product);
-    ['tones', 'prints', 'fabrics', 'other', 'note', 'sketch', 'img'].forEach(function (k) { D.d[k] = keep[k]; });
+    ['tones', 'prints', 'fabrics', 'other', 'note', 'sketch', 'img', 'ext'].forEach(function (k) { D.d[k] = keep[k]; });
+    P.fitExt(D.d);
     D.d.layout = P.PRODUCTS[product].layouts.indexOf(keep.layout) >= 0 ? keep.layout : D.d.layout;
     if (keep.fab && D.d.layout !== 'tuve') { P.scatter(D.d, pal); P.syncTaste(D.d); }
   }
@@ -3847,7 +3941,25 @@
       D.basket = basketFor(D.d);
       teachAfter = 'taste';
     } else if ((el = e.target.closest('[data-fabric]'))) {
-      toggle('fabrics', el.getAttribute('data-fabric'));
+      // "Để Gem chọn" = no material named
+      if (el.getAttribute('data-fabric') === P.GEM) D.d.fabrics = [];
+      else toggle('fabrics', el.getAttribute('data-fabric'));
+    } else if ((el = e.target.closest('[data-psize]'))) {
+      var ps = el.getAttribute('data-psize'), ex = D.d.ext;
+      if (ps === 'c') {
+        var z0 = P.sizesOf(D.d.product)[ex.s] || P.sizesOf(D.d.product)[0];
+        ex.c = ex.c || [z0.w, z0.h];
+        ex.s = 0;
+      } else { ex.c = null; ex.s = +ps; }
+    } else if ((el = e.target.closest('[data-bagopt]'))) {
+      var bo = el.getAttribute('data-bagopt');
+      D.d.ext[bo] = !D.d.ext[bo];
+    } else if ((el = e.target.closest('[data-tie]'))) {
+      // lace ribbon is not sewn from the basket: one fabric slot fewer
+      D.d.ext.t = +el.getAttribute('data-tie');
+      if (D.d.fab && D.d.fab.length !== P.slots(D.d)) { P.scatter(D.d, paletteNow()); P.syncTaste(D.d); }
+    } else if ((el = e.target.closest('[data-pocket]'))) {
+      D.d.ext.p = Math.max(0, Math.min(P.MAX_POCKETS, D.d.ext.p + (+el.getAttribute('data-pocket'))));
     } else if ((el = e.target.closest('[data-ink]'))) {
       D.ink = +el.getAttribute('data-ink');
     } else if ((el = e.target.closest('[data-size]'))) {
@@ -3996,6 +4108,16 @@
       try { localStorage.setItem('gem-designer', e.target.value.trim().slice(0, 24)); } catch (x) { /* private mode */ }
       clearTimeout(byTimer);
       byTimer = setTimeout(function () { if (D.sewn) showDone(); }, 500);
+      return;
+    }
+    if (n === 'cw' || n === 'ch') {
+      // an own size: whole cm in range, else the last good number stays
+      var v = Math.round(+e.target.value), c = D.d.ext.c;
+      if (!c || !(v >= P.CUSTOM_CM[0] && v <= P.CUSTOM_CM[1])) return;
+      c[n === 'cw' ? 0 : 1] = v;
+      unsew();
+      renderOpts();
+      renderPreview();
       return;
     }
     if (n !== 'other' && n !== 'note') return;
@@ -5140,6 +5262,9 @@
         if (sheetBody.querySelector('.pt')) { renderBasket(); renderPreview(); }
         if (sheetBody.querySelector('.kho')) renderKho();
       }, 60);
+    });
+    document.addEventListener('gem:pricing', function () {
+      if (sheetBody.querySelector('.pt')) { renderOpts(); renderPreview(); }
     });
     document.addEventListener('gem:tu', function () {
       // Another tab, or an order just went through: refresh what's open.

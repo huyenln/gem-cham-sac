@@ -124,6 +124,19 @@ def bright(a, room, warm=False):
     L = a @ W
     return np.clip(L[..., None] + (a - L[..., None]) * 1.06, 0, 1)
 
+# fabrics whose light part came out tinted by the shop's light, and the
+# colour it really is (Anna 14/10/2026: "Caro xanh lá" is green and cream,
+# the photo's light squares came out mint): the light part (the brightest
+# fifth) is brought to that colour, the rest follows
+WHITE = {'A-185105': np.array([0.94, 0.92, 0.85])}
+
+def white(a, name):
+    if name not in WHITE:
+        return a
+    L = a @ W
+    m = a[L >= np.percentile(L, 80)].mean(axis=0)
+    return np.clip(a * (WHITE[name] / np.maximum(m, 1e-3)), 0, 1)
+
 def flat(a, r, strength):
     L = np.maximum(a @ W, 1e-3)
     base = np.maximum(blur(L, r), 1e-3)
@@ -184,18 +197,57 @@ def make(src, row, new=True):
         a = rebuild(a, mat)
     else:
         a = flat(a, 640 / (10 if plain else 6), 1.0 if plain else 0.7)
-    a = bright(a, name[0], warm)
+    a = white(bright(a, name[0], warm), name)
     if warm:   # cream / beige: keep them warm, the room correction cools them
         a = np.clip(a * np.array([1.02, 1.0, 0.96]), 0, 1)
     out = Image.fromarray((a * 255).astype('uint8')).resize((320, 320), Image.LANCZOS)
     return out.filter(ImageFilter.UnsharpMask(1.2, 40, 2))
 
 
+# The bigger photo round each swatch (images/studio/vai-that/lon/): each patch
+# on the design table shows its own part of it. K: its side in swatch widths,
+# smaller where the photo runs out or something else shows round the cloth.
+K = {'A-185505': 1.0, 'A-190250': 1.15, 'A-190149': 1.0, 'A-184917': 1.0, 'A-185719': 1.0,
+     'A-185836': 1.2, 'B-174537': 1.15, 'B-174441': 1.1, 'B-174820': 1.2}
+
+
+def make_big(src, row):
+    name, box, vi, en, tone, kind, mat, plain, warm = row
+    im = photo(src, name)
+    box = default_box(im, box, plain)
+    if name in KEEP:
+        plain = 0
+    s = box[2] - box[0]
+    cx, cy = (box[0] + box[2]) / 2, (box[1] + box[3]) / 2
+    big = min(int(s * K.get(name, 1.6)), im.width, im.height)
+    valid = None
+    if name in ROT:   # turned straight: no empty corner inside the big square
+        valid = Image.new('L', im.size, 255).rotate(ROT[name], center=(cx, cy), resample=Image.NEAREST)
+        im = im.rotate(ROT[name], center=(cx, cy), resample=Image.BICUBIC)
+    x0 = int(min(max(0, cx - big / 2), im.width - big)); y0 = int(min(max(0, cy - big / 2), im.height - big))
+    while valid is not None and big > s and min(valid.crop((x0, y0, x0 + big, y0 + big)).getextrema()) < 255:
+        big -= 8
+        x0 = int(min(max(0, cx - big / 2), im.width - big)); y0 = int(min(max(0, cy - big / 2), im.height - big))
+    a = np.asarray(im.crop((x0, y0, x0 + big, y0 + big)).resize((800, 800), Image.LANCZOS), dtype=float) / 255
+    a = rebuild(a, mat) if plain else flat(a, 800 / 6, 0.7)
+    a = white(bright(a, name[0], warm), name)
+    if warm:
+        a = np.clip(a * np.array([1.02, 1.0, 0.96]), 0, 1)
+    out = Image.fromarray((a * 255).astype('uint8')).resize((640, 640), Image.LANCZOS)
+    return out.filter(ImageFilter.UnsharpMask(1.2, 40, 2)), round(big / s, 2)
+
+
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        sys.exit(__doc__ or 'usage: python3 tools/kv-swatches.py <folder of the photos>')
+    # python3 tools/kv-swatches.py <folder> [photo…]: all, or only those photos
+    if len(sys.argv) < 2:
+        sys.exit(__doc__ or 'usage: python3 tools/kv-swatches.py <folder of the photos> [photo…]')
     out = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'images', 'studio', 'vai-that')
     os.makedirs(out, exist_ok=True)
+    os.makedirs(os.path.join(out, 'lon'), exist_ok=True)
     for r in F:
+        if sys.argv[2:] and r[0] not in sys.argv[2:]:
+            continue
         make(sys.argv[1], r, True).save(os.path.join(out, slug(r[2]) + '.webp'), quality=82, method=6)
-        print(slug(r[2]))
+        im, k = make_big(sys.argv[1], r)
+        im.save(os.path.join(out, 'lon', slug(r[2]) + '.webp'), quality=78, method=6)
+        print(slug(r[2]), 'k', k)   # photo_k in supabase/migrations/20261015_kho_vai_photo.sql
