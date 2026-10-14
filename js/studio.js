@@ -330,9 +330,12 @@
     'studio.pt_square':    { vi: `Vuông`, en: `Square` },
     'studio.pt_shuffle':   { vi: `Xáo mảnh`, en: `Shuffle` },
     'studio.pt_hint':      { vi: `Chạm một mảnh vải trong rổ rồi chạm vào ô trên món, hoặc kéo thả vào ô.`, en: `Tap a scrap in the basket, then tap a patch. Or drag it there.` },
-    'studio.pt_hint_held': { vi: `Giờ chạm vào ô muốn đắp mảnh {vai} lên. Chạm lại ô đã có vải này để xoay vải.`, en: `Now tap the patch you want the {vai} on. Tap a patch that already has it to turn the fabric.` },
+    'studio.pt_hint_held': { vi: `Giờ chạm vào ô muốn đắp mảnh {vai} lên. Chạm lại mảnh trong rổ để bỏ xuống.`, en: `Now tap the patch you want the {vai} on. Tap the scrap again to put it down.` },
+    'studio.pt_hint_sel':  { vi: `Ô đang chọn: {vai}. Bấm "Xoay vải" để xoay vải ô này; muốn thay vải thì lấy một mảnh trong rổ rồi chạm ô.`, en: `Picked patch: {vai}. Press "Turn fabric" to turn it; to change it, take a scrap from the basket, then tap the patch.` },
+    'studio.pt_vai_gem':   { vi: `vải Gem chọn`, en: `a fabric Gem picks` },
     'studio.pt_turn':      { vi: `Xoay vải`, en: `Turn fabric` },
-    'studio.pt_turned':    { vi: `Vải ô này xoay {deg}° — chạm lần nữa để xoay tiếp.`, en: `This patch's fabric is turned {deg}° — tap again to turn on.` },
+    'studio.pt_turned':    { vi: `Vải ô này xoay {deg}° — bấm "Xoay vải" lần nữa để xoay tiếp.`, en: `This patch's fabric is turned {deg}° — press "Turn fabric" again to turn it on.` },
+    'studio.pt_turned0':   { vi: `Vải ô này về lại thẳng.`, en: `This patch's fabric is straight again.` },
     'studio.pt_vt_all':    { vi: `Tất cả`, en: `All` },
     'studio.pt_kho':       { vi: `Kho vải`, en: `All fabrics` },
     'studio.kho_h':        { vi: `Kho vải của Gem`, en: `Gem's fabric store` },
@@ -351,7 +354,7 @@
     'studio.pt_letter_p':  { vi: `Không bắt buộc: chất vải, lời nhắn, ảnh tham khảo`, en: `Optional: fabrics, a message, a reference photo` },
     'studio.pt_real_cap':  { vi: `Đồ thật`, en: `The real one` },
     'studio.pt_mood_gem':  { vi: `Gem chọn giúp`, en: `Gem picks` },
-    'studio.pt_net_on':    { vi: `Vẽ đường cắt lên món: nét khép kín, hoặc chạy từ mép này sang mép kia. Chạm vào từng mảnh để đắp vải.`, en: `Draw cut lines on the piece: a closed shape, or edge to edge. Tap each piece to lay a fabric on it.` },
+    'studio.pt_net_on':    { vi: `Vẽ đường cắt lên món: nét khép kín, hoặc chạy từ mép này sang mép kia. Lấy một mảnh vải trong rổ rồi chạm vào từng mảnh để đắp.`, en: `Draw cut lines on the piece: a closed shape, or edge to edge. Take a scrap from the basket, then tap each piece to lay it on.` },
     'studio.pt_net_full':  { vi: `Nhiều mảnh quá, Gem gộp bớt mảnh nhỏ (tối đa {n} mảnh).`, en: `That's a lot of pieces — Gem merges the small ones (up to {n}).` },
     'studio.pt_draw_on':   { vi: `Vẽ thẳng lên món bằng ngón tay. Chạm một mảnh trong rổ để đổi vải nền.`, en: `Draw right on the piece with your finger. Tap a scrap in the basket to change the fabric under it.` },
     'studio.pt_title_label': { vi: `Tên mẫu`, en: `Design name` },
@@ -695,8 +698,71 @@
       var o = L.hot[h.id];
       if (o) { h.abs = o.box; h.standAbs = o.stand; }
     });
-    // "Khu vực" pieces: read their pictures early (where to stop, where the notes go)
-    L.items.forEach(function (it) { if (it.kind === 'zone') alphaOf(it.src); });
+    // "Khu vực" pieces' pictures (where to stop, where the notes go) are
+    // read when the studio is built, or a little after the street shows
+    // (insideSoon), not while the street's own pictures are loading
+  }
+
+  // On the street, once its pictures had a head start: the studio's wall and
+  // its "Khu vực" pictures, so going in is quick.
+  function insideSoon() {
+    setTimeout(function () {
+      if (sceneName !== 'out') return;
+      new Image().src = INSIDE.bg;
+      if (LAYOUT) LAYOUT.items.forEach(function (it) { if (it.kind === 'zone') alphaOf(it.src); });
+    }, 2500);
+  }
+
+  /* ---------- pictures far along the strip wait ----------
+     A phone shows about a twelfth of the studio, and all 90-odd pictures at
+     once made the first ones take seconds (Anna: "bật lên mất hơn 10s mới
+     load hết"). The ones in view and a screen and a half either side load
+     first (wake, on every move); the rest follow a few at a time, nearest
+     first. Our bucket's pictures go with CORS like alphaOf's copy, so the
+     two are one download. */
+  var LAZY = [], lazyTimer = null, lazyBusy = 0;
+  var BUCKET = /^https:\/\/dxdovvqsfjeizsoprrfn\.supabase\.co\/storage\//;
+  function lazyAdd(img, it, el) {
+    img.setAttribute('data-src', it.src);
+    LAZY.push({ img: img, el: el, x0: it.x - it.w / 2, x1: it.x + it.w / 2,
+      alpha: !!(it.sku || (it.kind && it.kind !== 'product')) });
+  }
+  function lazyLoad(e) {
+    var src = e.img.getAttribute('data-src');
+    if (BUCKET.test(src)) {
+      e.img.crossOrigin = 'anonymous';
+      // no CORS after all: shown anyway, without it (taps then go by its box)
+      e.img.addEventListener('error', function () {
+        if (e.img.hasAttribute('crossorigin')) { e.img.removeAttribute('crossorigin'); e.img.src = src; }
+      }, { once: true });
+    }
+    lazyBusy++;
+    var done = function () { lazyBusy = Math.max(0, lazyBusy - 1); };
+    e.img.addEventListener('load', done, { once: true });
+    e.img.addEventListener('error', done, { once: true });
+    e.img.src = src;
+    e.img.removeAttribute('data-src');
+    if (e.alpha) prepAlpha(e.el);
+  }
+  function wake(viewW) {
+    if (!LAZY.length || !k) return;
+    var span = viewW / k, x0 = cam / k - span * 1.5, x1 = (cam + viewW) / k + span * 1.5;
+    LAZY = LAZY.filter(function (e) {
+      if (e.x1 < x0 || e.x0 > x1) return true;
+      lazyLoad(e);
+      return false;
+    });
+    if (LAZY.length && !lazyTimer) lazyTimer = setTimeout(trickle, 2500);
+  }
+  function trickle() {
+    lazyTimer = null;
+    if (!LAZY.length) return;
+    // a slow line: the ones on their way first (those in view among them)
+    if (lazyBusy > 2) { lazyTimer = setTimeout(trickle, 400); return; }
+    var mid = (cam + stage.clientWidth / 2) / k;
+    LAZY.sort(function (a, b) { return Math.abs(a.x0 + a.x1 - 2 * mid) - Math.abs(b.x0 + b.x1 - 2 * mid); });
+    LAZY.splice(0, 6).forEach(lazyLoad);
+    if (LAZY.length) lazyTimer = setTimeout(trickle, 400);
   }
 
   function buildItems(items) {
@@ -713,7 +779,7 @@
       }
       if (it.layer === 'front') el.classList.add('is-front');
       if (it.sku) { el.classList.add('st-shelf-prod'); el.setAttribute('data-sku', it.sku); }
-      img.src = it.src;
+      lazyAdd(img, it, el);   // its picture comes when it is near (wake)
       img.alt = '';
       img.draggable = false;
       el.style.left = pct(it.x - it.w / 2, SCENE.width);
@@ -723,7 +789,6 @@
       el.style.transform = 'rotate(' + it.rot + 'deg)' + (it.flip ? ' scaleX(-1)' : '');
       world.appendChild(el);
       if (it.kind && it.kind !== 'product') thing(el, it);
-      if (it.sku || (it.kind && it.kind !== 'product')) prepAlpha(el);
     });
   }
 
@@ -779,6 +844,7 @@
   // Is the picture of el solid at screen point (x, y)? Unknown -> yes.
   function solidAt(el, x, y) {
     if (el.tagName !== 'IMG') return true;            // a framed photo: solid all over
+    if (!el.getAttribute('src')) return false;        // its picture not fetched yet (LAZY): nothing to hit
     var m = alphaOf(el.getAttribute('src'));
     if (typeof m === 'string') return true;
     var w = el.offsetWidth, h = el.offsetHeight;
@@ -1378,6 +1444,7 @@
       if (!n.classList.contains('st-bg')) n.remove();   // .st-bgx too: paintBg redraws it
     });
     udonEl = null; memoPins = null; THINGS = []; OWN_HOT = [];
+    LAZY = []; clearTimeout(lazyTimer); lazyTimer = null; lazyBusy = 0;
     restX = null; hovered = null;   // a scene starts with nowhere "visited"
     if (name === 'out') {
       var O = outsideScene();
@@ -1606,6 +1673,7 @@
     var worldW = SCENE.width * k;
     cam = Math.max(0, Math.min(player.x * k - viewW / 2, worldW - viewW));
     world.style.transform = 'translate3d(' + (-cam) + 'px,0,0)';
+    wake(viewW);
     placeTags(viewW);
     edges(viewW);
   }
@@ -2727,7 +2795,7 @@
           '</div>' +
         '</div>' +
         '<div class="pt-side">' +
-          '<section class="pt-sec">' + tr('h3', 'studio.pt_moods', ' class="pt-label"') + '<div class="pt-moods" role="group"></div></section>' +
+          '<section class="pt-sec pt-sec-moods">' + tr('h3', 'studio.pt_moods', ' class="pt-label"') + '<div class="pt-moods" role="group"></div></section>' +
           '<section class="pt-sec pt-sec-basket">' +
             '<div class="pt-sec-row">' + tr('h3', 'studio.pt_basket', ' class="pt-label"') +
               '<span class="pt-sec-acts">' +
@@ -2754,7 +2822,7 @@
               '<img class="pt-ro" src="' + P.VAI + 'ro-truoc.webp" alt="" draggable="false"></div>' +
           '</section>' +
           '<div class="pt-shapes pt-chips" role="group" hidden></div>' +
-          '<section class="pt-sec">' +
+          '<section class="pt-sec pt-sec-layout">' +
             '<div class="pt-sec-row">' + tr('h3', 'studio.pt_layout', ' class="pt-label"') +
               '<span class="pt-sec-acts">' +
                 '<button type="button" class="pt-tool pt-mini" data-pt="shuffle" data-i18n="studio.pt_shuffle">' + esc(t('studio.pt_shuffle')) + '</button>' +
@@ -3113,6 +3181,7 @@
   function renderBasket() {
     var box = sheetBody.querySelector('.pt-scraps');
     if (!box) return;
+    P.warm(D.basket);   // their big photos, before a scrap is dropped
     box.innerHTML = D.basket.map(function (id, k) {
       // standing loose in the basket: each a little turned and shifted
       var rot = ((k * 37) % 20) - 10, dy = (k % 3) * 4;
@@ -3199,23 +3268,22 @@
   function turnFabric(i) {
     P.turnPatch(D.d, i);
     D.last = i;
-    D.turnMsg = t('studio.pt_turned').replace('{deg}', P.rotAt(D.d, i) * P.TURN_STEP);
+    var deg = P.rotAt(D.d, i) * P.TURN_STEP;   // round to 0 again: "straight", not "turned 0°"
+    D.turnMsg = deg ? t('studio.pt_turned').replace('{deg}', deg) : t('studio.pt_turned0');
     unsew();
     renderDesigner();
   }
 
+  // A tap on a patch. A scrap in hand goes on it. With nothing in hand (or
+  // that very scrap already there) the patch is only picked: its fabric
+  // stays, and "Xoay vải" turns it (Anna: "bấm ô vải sẽ đổi trước, lại phải
+  // đổi lại cho đúng mảnh mong muốn rồi mới nhấn xoay vải được" — a tap used
+  // to put the next scrap on, or turn it).
   function tapPatch(i) {
-    var id;
-    // the scrap held is already on this patch: turn it instead
-    if (D.held != null && P.keyAt(D.d, i) === D.held) return turnFabric(i);
-    if (D.held != null) id = D.held;
-    else {
-      // nothing picked up: the next scrap in the basket
-      var cur = P.keyAt(D.d, i);
-      var at = D.basket.indexOf(cur);
-      id = D.basket[(at + 1) % D.basket.length];
-    }
-    putFabric(i, id);
+    if (D.held != null && P.keyAt(D.d, i) !== D.held) return putFabric(i, D.held);
+    D.last = i; D.turnMsg = '';
+    renderPreview();
+    sheetBody.querySelectorAll('.pt-board [data-i="' + i + '"]').forEach(function (el) { el.classList.add('pt-pop'); });
   }
 
   // Drag a scrap onto a patch. A short press without moving stays a tap.
@@ -3226,6 +3294,7 @@
       var b = e.target.closest('[data-scrap]');
       if (!b || (e.pointerType === 'mouse' && e.button !== 0)) return;
       st = { b: b, id: parseKey(b.getAttribute('data-scrap')), x: e.clientX, y: e.clientY, ghost: null, pid: e.pointerId };
+      P.warm([st.id]);
     });
     document.addEventListener('pointermove', function (e) {
       if (!st || e.pointerId !== st.pid) return;
@@ -3629,13 +3698,19 @@
     if (!root) return;
     var d = D.d, spec = specNow(), ok = P.isComplete(d);
     root.querySelector('.pt-board').innerHTML = P.svg(d, { title: esc(P.describe(d)), hit: true });
-    // a short instruction when it matters; otherwise Udon's line shows
+    // the patch picked (tapped, or the last one dressed): outlined, and the
+    // one "Xoay vải" turns
+    var sel = D.last != null && d.layout !== 'tuve' && D.last < P.slots(d) ? D.last : null;
+    if (sel != null) root.querySelectorAll('.pt-board [data-i="' + sel + '"]').forEach(function (el) { el.classList.add('is-sel'); });
     var turnBtn = root.querySelector('.pt-turn');
-    if (turnBtn) turnBtn.hidden = D.last == null || d.layout === 'tuve' || !d.fab || D.last >= d.fab.length;
-    root.querySelector('.pt-hint').textContent = D.turnMsg && D.last != null && d.fab ? D.turnMsg : d.layout === 'net' ? t('studio.pt_net_on')
+    if (turnBtn) turnBtn.hidden = sel == null;
+    // a short instruction when it matters; otherwise Udon's line shows
+    var selKey = sel != null ? P.keyShown(d, sel) : null;
+    root.querySelector('.pt-hint').textContent = D.turnMsg && sel != null ? D.turnMsg : d.layout === 'net' && D.held == null && sel == null ? t('studio.pt_net_on')
       : d.layout === 'tuve' ? t('studio.pt_draw_on')
       : D.held != null ? t('studio.pt_hint_held').replace('{vai}', fabricName(D.held).toLowerCase() +
-          (P.realOf(D.held) && P.realOf(D.held).mat ? ' (' + P.realOf(D.held).mat + ')' : '')) : '';
+          (P.realOf(D.held) && P.realOf(D.held).mat ? ' (' + P.realOf(D.held).mat + ')' : ''))
+      : sel != null ? t('studio.pt_hint_sel').replace('{vai}', selKey != null ? fabricName(selKey) : t('studio.pt_vai_gem')) : '';
     renderOnPiece();
     drawCanvas();
     root.querySelector('[data-pt="undo"]').disabled = !d.sketch.length;
@@ -3668,9 +3743,6 @@
       .concat(pr.quote ? [t('studio.pt_size_q')] : []).join(' · ');
     // made to order: a ready-made one being sold out doesn't stop a design
     root.querySelectorAll('[data-pt="add"]').forEach(function (add) { add.disabled = !ok || !info; });
-    // phone: the basket docks just above the action bar (css/studio.css)
-    var bar = root.querySelector('.pt-actions');
-    if (bar && bar.offsetHeight) root.style.setProperty('--pt-bar-h', bar.offsetHeight + 'px');
     var keep = root.querySelector('[data-pt="keep"]');
     if (keep) keep.disabled = !ok;
     root.querySelector('[data-pt="sew"]').disabled = !ok;
@@ -5384,8 +5456,7 @@
     try { was = sessionStorage.getItem('gem-scene'); } catch (e) { /* private mode */ }
     setScene(was === 'in' ? 'in' : 'out');
     if (sceneName === 'in') { hello(false); return; }
-    // the studio wall, fetched while they look at the street
-    new Image().src = INSIDE.bg;
+    insideSoon();   // the studio's wall and places, fetched while they look at the street
     setTimeout(function () { guideTip('swipe'); }, 700);   // first visit: swipe to walk
   }
 })();

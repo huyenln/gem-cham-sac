@@ -19,6 +19,9 @@ Source names (as listed in the "Prompt vẽ cho Bàn thiết kế" prompt pack):
                          images/studio/vai/mon-<piece>-top.webp (rings, clasps:
                          drawn as painted over the fabric)
                       and prints where the fabric sits (box / centre) for js/patch.js
+    python3 tools/design-assets.py --sang origami
+                      -> images/studio/vai/mon-origami-sang.webp: the lit faces
+                         of the folds, screened over the fabric (light())
   ud-may.png, ud-reo.png, kim-chi.png -> images/studio/udon/ (cut out)
   mood-<id>.png       -> images/studio/vai/mood-<id>.webp (square, 240 px)
   the-khung.png       -> images/studio/vai/the-khung.webp (1080 x 1920)
@@ -306,6 +309,21 @@ def shading(im, pct=80):
     return out
 
 
+def light(name, lo=0.8, span=0.17, blur=4):
+    """mon-<name>-sang.webp from the piece's -bong: where the painting is
+    lit (the faces of the folds), a light layer screened over the fabric.
+    The multiply shading only darkens, which shows nothing on a dark fabric
+    (Anna: "vải che luôn nếp gấp origami" on a dark green brocade); this
+    lifts the lit faces so the folds read on any fabric. Grey = how much,
+    alpha = the piece."""
+    im = Image.open(OUT / f'mon-{name}-bong.webp').convert('RGBA')
+    lum = np.asarray(im.convert('L').filter(ImageFilter.GaussianBlur(blur))).astype(np.float32) / 255
+    g = np.clip((lum - lo) / span, 0, 1) ** 1.3
+    out = Image.fromarray((g * 255).astype(np.uint8)).convert('RGBA')
+    out.putalpha(im.getchannel('A'))
+    save(out, OUT / f'mon-{name}-sang.webp')
+
+
 def largest(mask):
     """Only the biggest connected blob of a boolean mask."""
     h, w = mask.shape
@@ -406,6 +424,9 @@ PIECES = [
 
 
 def main(folder, only=None):
+    if folder == '--sang':
+        # the light layer of a piece already in the repo (js/patch.js ART sang)
+        return light(only or 'origami')
     if folder == '--seamless':
         # swatches already in the repo, made before the seamless step: once
         # (running it again re-cuts a tile that already meets itself)
