@@ -117,6 +117,7 @@ Quick reference:
   - Handwriting: Dancing Script (đã chốt — migration từ Caveat đã hoàn tất)
 - **Voice tone:**
   - Xưng "chúng mình" (KHÔNG "chúng tôi")
+- Chữ cho khách KHÔNG nhắc người riêng ("em gái mình", tên nhân sự…): trung tính, gọi là "Gem" / "Gem Chạm Sắc Studio" (Anna 14/10/2026)
   - Câu ngắn, line break theo nhịp đọc
   - Vintage handmade slow living — KHÔNG kawaii pop, KHÔNG corporate
   - KHÔNG slogan rỗng, KHÔNG superlatives ("tốt nhất", "số 1")
@@ -144,6 +145,8 @@ Quick reference:
 6. Hàng ký gửi (`ky-gui`, D22–D23): nến Tiny's Herbal (hũ 120g 13 mùi, cupcake, macaron), tất Re.socks, sổ khâu tay Tiệm sổ Cún Con. Mỗi thẻ có nhãn "Ký gửi · <nơi gửi>" (cột `consignor`). Món nhiều mùi / cỡ / mẫu = một thẻ + lựa chọn (cột `options`), ghi chú ở cột `notes_vi/en` — đều sửa trong admin. KHÔNG hiện số tồn, chỉ còn / hết từng lựa chọn.
 
 Ảnh sản phẩm mới là full-size (1080px+), KHÔNG kèm `-thumb`. Thumbnail card 600×600 được tạo bằng Pillow (center-crop). `.heic` (vd `gom-2`) KHÔNG hiển thị trên browser — convert sang `.jpg` trước khi dùng.
+
+**Thứ tự trên `san-pham.html`** (Anna 14/10/2026): Phụ kiện vải vụn → Hàng ký gửi → Set quà → Quần áo 2hand → Dịch vụ đặc biệt. **Văn phòng phẩm và Gốm sứ Nhật tạm ẩn**: khối `#van-phong-pham` / `#gom-su-nhat` có `hidden data-off` (catalog.js giữ ẩn), không có trong danh mục; mở lại thì bỏ hai thuộc tính đó và thêm lại mục danh mục.
 
 **Loại trừ:**
 - Generic pens (bút bi nhập), sticky notes, tiger cartoon bookmarks — **KHÔNG đăng lên web** dù có bán tại cửa hàng. Lý do: clash với brand vintage/sustainable.

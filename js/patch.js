@@ -155,6 +155,9 @@
   var REAL_IMG = /^(images\/[a-z0-9\/_.-]+|https:\/\/dxdovvqsfjeizsoprrfn\.supabase\.co\/storage\/v1\/object\/public\/gem-media\/[A-Za-z0-9%._-]+)$/;
   // how alike two kinds are, when the exact one is missing
   var KIND_GROUP = { tron: 0, ren: 0, caro: 1, soc: 1, ono: 1, cham: 2, hoa: 2, hoato: 3, tho: 3 };
+  // rows that were a second photo of the same cloth (removed 14/10/2026,
+  // 20261014d_kho_vai_gop.sql): an old design's r<id> shows the kept one
+  var MERGED = { 3: 2, 16: 15, 14: 12, 57: 59, 53: 41 };
 
   function setReal(rows) {
     REAL = {}; REAL_ON = [];
@@ -167,6 +170,7 @@
       REAL[f.id] = f;
       if (!f.out && !f.hidden && f.src) REAL_ON.push(f);
     });
+    Object.keys(MERGED).forEach(function (id) { if (!REAL[id] && REAL[MERGED[id]]) REAL[id] = REAL[MERGED[id]]; });
     REAL_ON.sort(function (a, b) {
       return TONE_ORDER.indexOf(a.tone) - TONE_ORDER.indexOf(b.tone) || a.sort - b.sort || a.id - b.id;
     });
