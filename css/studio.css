@@ -1649,6 +1649,33 @@ html:has(.studio-page) { overscroll-behavior: none; }   /* own rule: a Safari wi
   .st-sheet.is-full .pt-actions { padding-right: 84px; }
   .st-sheet.is-full .pt-sew { order: -1; flex: 1 1 100%; }
 }
+/* phone: the fabric basket docks just above "May xong", so the piece and the
+   scraps are on screen together (tap a scrap, tap a patch, no scrolling
+   between them); scrolled down to its place, it sits there as before. The
+   side column flattens so the dock spans the whole sheet. Open "Màu riêng"
+   is a panel to read, not a tray: it goes back in line. */
+@media (max-width: 767px) {
+  .st-sheet.is-full .pt-side { display: contents; }
+  .st-sheet.is-full .pt-sec-basket {
+    position: sticky; bottom: calc(var(--pt-bar-h, 132px) - var(--space-6)); z-index: 2;
+    margin: 0 calc(-1 * var(--space-4)); padding: var(--space-2) var(--space-4) 0;
+    background: rgba(251, 247, 240, 0.97); border-top: 1px solid var(--sage-light);
+    box-shadow: 0 -6px 14px rgba(61, 74, 46, 0.08);
+  }
+  .st-sheet.is-full .pt-sec-basket:has(.pt-own:not([hidden])) { position: static; box-shadow: none; }
+  /* kept low, so the piece above it stays in view: one swipeable row of
+     colour chips, a smaller basket */
+  .st-sheet.is-full .pt-sec-basket { gap: 2px; }
+  .st-sheet.is-full .pt-sec-basket .pt-vtones {
+    flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 2px calc(-1 * var(--space-4)) 0; padding: 0 var(--space-4);
+  }
+  .st-sheet.is-full .pt-sec-basket .pt-vtones::-webkit-scrollbar { display: none; }
+  .st-sheet.is-full .pt-sec-basket .pt-vtone { flex: none; }
+  .st-sheet.is-full .pt-sec-basket .pt-basket { width: min(100%, 290px); margin: 0 auto; padding-top: 10px; }
+  /* the piece sized so it, the docked basket and the action bar share one
+     screen (about 430px below it), never smaller than 240px */
+  .st-sheet.is-full .pt-stage { max-width: max(240px, min(420px, calc(100svh - 430px))); }
+}
 
 /* after "May xong" */
 .pt-done {

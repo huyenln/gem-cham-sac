@@ -2002,6 +2002,18 @@ Gem đang có**, nhân sự tự thêm tấm mới trong admin.
       từng tấm. Ảnh cũ không có thước, nên số này là ước lượng.
     - Vải vụn bị cắt dần, nên web phải ghi "Gem cắt sát chỗ bạn chọn nhất có thể".
 
+### Bàn thiết kế trên điện thoại: rổ vải neo (14/10/2026)
+
+Anna: "rổ vải ở tận dưới phải scroll qua lại hơi bất tiện". Trên điện thoại (dưới 768px),
+khối **Rổ vải vụn** dính ngay trên thanh "May xong" (`position: sticky`, `bottom` theo
+chiều cao thanh — `--pt-bar-h`, `js/studio.js` đo lại mỗi lần vẽ), nên món và rổ cùng trên
+màn hình: chạm vải rồi chạm ô, không phải cuộn. Cuộn xuống tới chỗ của nó thì rổ nằm lại
+như cũ. Cột phải (`.pt-side`) thành `display: contents` để rổ dính được suốt trang. Rổ gọn
+lại: dải màu một hàng vuốt ngang, rổ rộng tối đa 290px. Món tự co theo chiều cao màn hình
+(`100svh - 430px`, không dưới 240px) để món + rổ + thanh vừa một màn hình. Mở "Màu riêng"
+thì rổ về lại chỗ cũ (là bảng để đọc, không phải khay). Máy tính giữ nguyên 2 cột. Test:
+`check-studio.py design` (điện thoại: món, rổ, thanh cùng vừa màn hình).
+
 ### Bàn thiết kế — túi, cỡ, tuỳ chọn, giá (14–15/10/2026)
 
 Anna: "cứ thử làm hết rồi mình duyệt một thể". Tất cả nằm ở một PR để duyệt, **chưa merge**. Có

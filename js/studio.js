@@ -344,7 +344,7 @@
     'studio.kho_back':     { vi: `‹ Về bàn thiết kế`, en: `‹ Back to the table` },
     'studio.pt_vt_label':  { vi: `Lọc vải theo tông màu`, en: `Filter the fabrics by colour` },
     'studio.pt_onpiece':   { vi: `Vải trên món:`, en: `On the piece:` },
-    'studio.pt_onpiece_p': { vi: `— ảnh chụp đúng các tấm Gem đang có.`, en: `— photos of the very fabrics Gem has.` },
+    'studio.pt_onpiece_p': { vi: `— đúng các tấm Gem đang có (vải kẻ, caro được vẽ lại cho thẳng).`, en: `— the very fabrics Gem has (checks and stripes drawn again, straight).` },
     'studio.pt_hint_draw': { vi: `Kiểu "theo hình mình vẽ": vẽ trong mục Tự chỉnh bên dưới.`, en: `"From my drawing": draw it under Fine-tune below.` },
     'studio.pt_sew':       { vi: `May xong!`, en: `Sew it!` },
     'studio.pt_letter':    { vi: `Tờ nhắn gửi Gem`, en: `A note to Gem` },
@@ -2728,7 +2728,7 @@
         '</div>' +
         '<div class="pt-side">' +
           '<section class="pt-sec">' + tr('h3', 'studio.pt_moods', ' class="pt-label"') + '<div class="pt-moods" role="group"></div></section>' +
-          '<section class="pt-sec">' +
+          '<section class="pt-sec pt-sec-basket">' +
             '<div class="pt-sec-row">' + tr('h3', 'studio.pt_basket', ' class="pt-label"') +
               '<span class="pt-sec-acts">' +
                 '<button type="button" class="pt-tool pt-mini" data-pt="own" aria-expanded="false" data-i18n="studio.pt_own">' + esc(t('studio.pt_own')) + '</button>' +
@@ -3668,6 +3668,9 @@
       .concat(pr.quote ? [t('studio.pt_size_q')] : []).join(' · ');
     // made to order: a ready-made one being sold out doesn't stop a design
     root.querySelectorAll('[data-pt="add"]').forEach(function (add) { add.disabled = !ok || !info; });
+    // phone: the basket docks just above the action bar (css/studio.css)
+    var bar = root.querySelector('.pt-actions');
+    if (bar && bar.offsetHeight) root.style.setProperty('--pt-bar-h', bar.offsetHeight + 'px');
     var keep = root.querySelector('[data-pt="keep"]');
     if (keep) keep.disabled = !ok;
     root.querySelector('[data-pt="sew"]').disabled = !ok;

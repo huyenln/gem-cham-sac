@@ -1052,6 +1052,16 @@ async def design(browser, db):
         want2 = f'-f{sid2})'
         check(cell0.endswith(want2), f'{name}: drag a scrap onto a patch ({want2} in {cell0})')
         await pg.screenshot(path=OUT / f'design-{name}-1.png')
+        if name == 'mobile':
+            # phone: scrolled to the piece, the basket is docked right above
+            # the action bar - the piece and the scraps on screen together
+            await pg.evaluate("document.querySelector('.st-sheet').scrollTop = 140")
+            await pg.wait_for_timeout(300)
+            box = await pg.evaluate("""(() => { const r = e => document.querySelector(e).getBoundingClientRect();
+                const b = r('.pt-board'), s = r('.pt-scraps'), a = r('.pt-actions');
+                return [Math.round(b.top), Math.round(b.bottom), Math.round(s.top), Math.round(s.bottom), Math.round(a.top), innerHeight]; })()""")
+            check(box[0] >= 0 and box[1] <= box[2] + 20 and box[3] <= box[4] + 2 and box[4] < box[5],
+                  f'{name}: the piece, the docked basket and the action bar fit one screen ({box})')
         # a mood changes the fabrics, not the layout the customer picked
         await js_click(pg, '[data-layout="chong"]')
         await js_click(pg, '[data-mood="tet"]')
