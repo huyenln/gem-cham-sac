@@ -90,14 +90,12 @@
     // in already, free (tools/bag-assets.py draws them)
     tuitote:      { sku: 'tui-di-cho',  group: 'tui', vi: 'Túi tote', en: 'Tote bag', shape: 'tuitote', grid: 3, span: 69,
                     short: { vi: 'Tote', en: 'Tote' }, layouts: BAG_LAYOUTS, names: BAG_NAMES, def: 'doc', opts: 'qpzn' },
-    tuinut:       { sku: 'tui-di-choi', group: 'tui', vi: 'Túi quai nút', en: 'Knot bag', shape: 'tuinut', grid: 3, span: 63,
-                    short: { vi: 'Quai nút', en: 'Knot' }, layouts: BAG_LAYOUTS, names: BAG_NAMES, def: 'hai', opts: 'qpzn' },
+    tuino:        { sku: 'tui-di-choi', group: 'tui', vi: 'Túi quai nơ', en: 'Bow bag', shape: 'tuino', grid: 3, span: 63,
+                    short: { vi: 'Quai nơ', en: 'Bow' }, layouts: BAG_LAYOUTS, names: BAG_NAMES, def: 'mot', opts: 'qpzn' },
     tuikhoa:      { sku: 'tui-di-choi', group: 'tui', vi: 'Túi khoá kéo đeo vai', en: 'Zipped shoulder bag', shape: 'tuikhoa', grid: 3, span: 51,
                     short: { vi: 'Khoá kéo', en: 'Zipped' }, layouts: BAG_LAYOUTS, names: BAG_NAMES, def: 'mot', opts: 'qpn', zip: 1 },
     tuitamgiac:   { sku: 'tui-di-choi', group: 'tui', vi: 'Túi tam giác', en: 'Triangle bag', shape: 'tuitamgiac', grid: 3, span: 61,
                     short: { vi: 'Tam giác', en: 'Triangle' }, layouts: BAG_LAYOUTS, names: BAG_NAMES, def: 'mot', opts: 'qpzn' },
-    tuidayrut:    { sku: 'tui-di-choi', group: 'tui', vi: 'Túi dây rút', en: 'Drawstring bag', shape: 'tuidayrut', grid: 3, span: 53,
-                    short: { vi: 'Dây rút', en: 'Drawstring' }, layouts: BAG_LAYOUTS, names: BAG_NAMES, def: 'hai', opts: 'qp' },
     tuibannguyet: { sku: 'tui-di-choi', group: 'tui', vi: 'Túi bán nguyệt', en: 'Half-moon bag', shape: 'tuibannguyet', grid: 3, span: 50,
                     short: { vi: 'Bán nguyệt', en: 'Half-moon' }, layouts: BAG_LAYOUTS, names: BAG_NAMES, def: 'doc', opts: 'qpn', zip: 1 },
     laptop:       { sku: 'tui-laptop',  group: 'laptop', vi: 'Túi laptop', en: 'Laptop sleeve', shape: 'laptop', grid: 3, span: 33,
@@ -108,7 +106,7 @@
   // pieces shown under one tab, a shape picked on it (the first is the tab)
   var GROUPS = {
     lotcoc: ['lotcoc', 'lotcocv'],
-    tui: ['tuitote', 'tuinut', 'tuikhoa', 'tuitamgiac', 'tuidayrut', 'tuibannguyet'],
+    tui: ['tuitote', 'tuino', 'tuikhoa', 'tuitamgiac', 'tuibannguyet'],
     laptop: ['laptop', 'laptopq']
   };
   var GROUP_NAMES = { tui: { vi: 'Túi', en: 'Bags' }, laptop: { vi: 'Túi laptop', en: 'Laptop sleeve' } };
@@ -193,10 +191,10 @@
     bookmark:     [{ w: 6, h: 6 }],
     daydeo:       [{ w: 30, h: 2, vi: 'Dài 30 cm', en: '30 cm long' }],
     tuitote:      [{ w: 35, h: 40 }, { w: 40, h: 45 }],
-    tuinut:       [{ w: 30, h: 40 }],
+    // Túi quai nơ: Gem's two sizes (cm only roughly, for the fabric's scale)
+    tuino:        [{ w: 30, h: 38, vi: 'Nhỏ', en: 'Small' }, { w: 36, h: 44, vi: 'Vừa', en: 'Medium' }],
     tuikhoa:      [{ w: 28, h: 20 }],
     tuitamgiac:   [{ w: 38, h: 40 }],
-    tuidayrut:    [{ w: 22, h: 28 }],
     tuibannguyet: [{ w: 32, h: 18 }],
     laptop:       [{ w: 33, h: 24, vi: '13 inch · 33 × 24 cm', en: '13 inch · 33 × 24 cm' },
                    { w: 35, h: 25, vi: '14 inch · 35 × 25 cm', en: '14 inch · 35 × 25 cm' },
@@ -290,10 +288,9 @@
       bookmark:     { base: 22000, layouts: { tuve: 5000 } },
       daydeo:       { base: 35000, layouts: { tuve: 5000 } },
       tuitote:      { base: 160000, fabric: 10000, layouts: BAG_FEES, sizes: [0, 20000], quilt: 70000, pocket: 20000, zip: 30000, snap: 10000 },
-      tuinut:       { base: 180000, fabric: 10000, layouts: BAG_FEES, quilt: 60000, pocket: 20000, zip: 30000, snap: 10000 },
+      tuino:        { base: 220000, fabric: 10000, layouts: BAG_FEES, sizes: [0, 30000], quilt: 60000, pocket: 20000, zip: 30000, snap: 10000 },
       tuikhoa:      { base: 200000, fabric: 10000, layouts: BAG_FEES, quilt: 50000, pocket: 20000, snap: 10000 },
-      tuitamgiac:   { base: 190000, fabric: 10000, layouts: BAG_FEES, quilt: 60000, pocket: 20000, zip: 30000, snap: 10000 },
-      tuidayrut:    { base: 170000, fabric: 10000, layouts: BAG_FEES, quilt: 50000, pocket: 20000 },
+      tuitamgiac:   { base: 100000, fabric: 10000, layouts: BAG_FEES, quilt: 60000, pocket: 20000, zip: 30000, snap: 10000 },
       tuibannguyet: { base: 200000, fabric: 10000, layouts: BAG_FEES, quilt: 50000, pocket: 20000, snap: 10000 },
       laptop:       { base: 260000, fabric: 10000, layouts: BAG_FEES, sizes: [0, 10000, 20000], quilt: 50000, pocket: 20000, snap: 10000 },
       laptopq:      { base: 290000, fabric: 10000, layouts: BAG_FEES, sizes: [0, 10000, 20000], quilt: 50000, pocket: 20000, snap: 10000 }
@@ -1319,7 +1316,7 @@
     // bags (tools/bag-assets.py): box = the body, parts as SVG paths;
     // zip / snap: where an added zip runs and a snap sits (none drawn on a
     // bag without them: the order note still says so)
-    tuinut: { n: 'tuinut', bag: 1, box: [68, 101, 272, 340],
+    tuino: { n: 'tuino', bag: 1, box: [68, 101, 272, 340],
       parts: [{ id: 'quai', d: 'M176 0L182 1L202 13L203 20L201 27L197 33L200 40L200 45L193 54L184 60L191 99L185 99L181 95L175 95L169 92L167 69L164 69L155 99L142 99L146 82L139 77L139 73L147 43L157 27L151 15L152 10L158 8L162 4L171 4Z' }, { id: 'lot', d: 'M147 156L161 205L162 212L161 216L159 216L155 214L151 208L144 190L143 174Z' }] },
     tuikhoa: { n: 'tuikhoa', bag: 1, box: [77, 202, 263, 340], top: 1, snap: [172, 216],
       parts: [{ id: 'quai', d: 'M158 0L165 1L171 6L180 25L238 198L238 200L225 202L158 209L124 214L118 214L117 211L103 213L99 217L90 217L135 56L141 29L149 9Z' }, { id: 'tui', d: 'M199 216L207 216L208 223L209 289L173 310L149 297L138 291L137 222Z' }] },
@@ -1329,8 +1326,6 @@
       parts: [{ id: 'day', d: 'M6 232L327 232L327 239L325 244L325 265L323 271L318 276L311 278L249 282L122 277L36 276L19 273L9 266Z' }] },
     tuitote: { n: 'tuitote', bag: 1, box: [83, 149, 256, 328], zip: [[98, 153], [242, 153]], snap: [170, 158],
       parts: [{ id: 'quai', d: 'M112 178L112.1 146.8L112.5 136.1L114.1 116.3L115.2 107.2L118.2 90.5L119.9 82.9L124.1 69.2L129 57.5L131.7 52.4L137.6 43.5L144.1 36.5L151 31.3L154.6 29.4L162.2 26.8L170 26L177.8 26.8L185.4 29.4L189 31.3L195.9 36.5L202.4 43.5L208.3 52.4L211 57.5L215.9 69.2L220.1 82.9L221.8 90.5L224.8 107.2L225.9 116.3L227.5 136.1L227.9 146.8L228 178L212 178L211.6 138.5L209.7 112.9L207.5 98.2L204.8 85.3L199.7 69.2L195.6 60.7L193.4 57.1L188.8 51L186.3 48.6L183.8 46.6L178.4 43.6L175.7 42.7L170 42L164.3 42.7L161.6 43.6L156.2 46.6L151.2 51L146.6 57.1L142.3 64.8L140.3 69.2L136.8 79.5L135.2 85.3L132.5 98.2L131.3 105.3L129.5 120.9L128.1 148L128 178Z' }] },
-    tuidayrut: { n: 'tuidayrut', bag: 1, box: [99, 101, 240, 322], top: 1,
-      parts: [{ id: 'quai', d: 'M104 124L104 104L104.6 93.6L105.3 88.4L107.7 78.4L111 68.7L113 64.1L117.8 55.3L123.4 47.2L129.7 40.1L136.8 33.9L140.5 31.3L148.4 26.9L156.7 23.8L165.5 22.2L170 22L174.5 22.2L183.3 23.8L191.6 26.9L199.5 31.3L203.2 33.9L210.3 40.1L216.6 47.2L222.2 55.3L227 64.1L229 68.7L232.3 78.4L234.7 88.4L235.4 93.6L236 104L236 124L224 124L223.9 99.5L222.1 86.3L219.7 77.9L216.6 69.9L212.7 62.4L208.1 55.5L205.6 52.3L200.1 46.7L197.2 44.1L191 39.9L187.7 38.1L180.8 35.5L177.3 34.7L170 34L162.7 34.7L159.2 35.5L152.3 38.1L145.9 41.9L139.9 46.7L134.4 52.3L129.5 58.8L127.3 62.4L121.7 73.8L117.9 86.3L116.1 99.5L116 124Z' }, { id: 'mieng', d: 'M98 118L242 118L242 140L98 140Z' }] },
     tuibannguyet: { n: 'tuibannguyet', bag: 1, box: [61, 140, 279, 312], top: 1, snap: [170, 152],
       parts: [{ id: 'quai', d: 'M74 150L74.2 121.2L74.9 112.7L77.4 96.7L79.3 89.2L84.2 75.4L90.5 62.9L94.1 57.2L98 51.9L106.7 42.4L116.4 34.5L121.6 31L127.1 28L138.6 23.1L144.6 21.3L157 18.8L170 18L183 18.8L195.4 21.3L201.4 23.1L212.9 28L218.4 31L223.6 34.5L233.3 42.4L242 51.9L245.9 57.2L249.5 62.9L255.8 75.4L260.7 89.2L262.6 96.7L265.1 112.7L265.8 121.2L266 150L252 150L251.8 122.2L251.2 114.6L249.1 100.5L245.5 87.7L240.8 76.1L234.9 65.9L231.5 61.3L224.1 53L220 49.4L215.8 46.1L206.7 40.6L196.9 36.4L191.7 34.8L181.1 32.7L170 32L158.9 32.7L148.3 34.8L143.1 36.4L133.3 40.6L124.2 46.1L115.9 53L112.1 57L105.1 65.9L99.2 76.1L96.7 81.8L92.5 93.9L90.9 100.5L88.8 114.6L88.2 122.2L88 150Z' }] },
     laptopq: { n: 'laptopq', bag: 1, box: [37, 136, 302, 272], top: 1, snap: [170, 142],

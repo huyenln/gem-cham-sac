@@ -140,8 +140,8 @@ insert into public.settings (key, value) values ('design_pricing', $json$
       "zip": 30000,
       "snap": 10000
     },
-    "tuinut": {
-      "base": 180000,
+    "tuino": {
+      "base": 220000,
       "fabric": 10000,
       "layouts": {
         "hai": 10000,
@@ -150,6 +150,10 @@ insert into public.settings (key, value) values ('design_pricing', $json$
         "net": 40000,
         "tuve": 30000
       },
+      "sizes": [
+        0,
+        30000
+      ],
       "quilt": 60000,
       "pocket": 20000,
       "zip": 30000,
@@ -170,7 +174,7 @@ insert into public.settings (key, value) values ('design_pricing', $json$
       "snap": 10000
     },
     "tuitamgiac": {
-      "base": 190000,
+      "base": 100000,
       "fabric": 10000,
       "layouts": {
         "hai": 10000,
@@ -183,19 +187,6 @@ insert into public.settings (key, value) values ('design_pricing', $json$
       "pocket": 20000,
       "zip": 30000,
       "snap": 10000
-    },
-    "tuidayrut": {
-      "base": 170000,
-      "fabric": 10000,
-      "layouts": {
-        "hai": 10000,
-        "doc": 20000,
-        "vuong": 30000,
-        "net": 40000,
-        "tuve": 30000
-      },
-      "quilt": 50000,
-      "pocket": 20000
     },
     "tuibannguyet": {
       "base": 200000,
@@ -289,7 +280,7 @@ begin
   if p_sku is distinct from (case
        when v_prod = 'lotcocv' then 'lotcoc'
        when v_prod = 'tuitote' then 'tui-di-cho'
-       when v_prod in ('tuinut', 'tuikhoa', 'tuitamgiac', 'tuidayrut', 'tuibannguyet') then 'tui-di-choi'
+       when v_prod in ('tuino', 'tuikhoa', 'tuitamgiac', 'tuibannguyet') then 'tui-di-choi'
        when v_prod in ('laptop', 'laptopq') then 'tui-laptop'
        else v_prod end) then
     return null;

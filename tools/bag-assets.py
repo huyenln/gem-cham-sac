@@ -7,7 +7,7 @@ Two kinds of bag:
 
   painted   from Anna's paintings of Gem's own bags (14/10/2026), with a
             transparent background:
-              tui-nut.webp      knotted-handle bag   (túi đi chơi, hoa hồng nền xanh)
+              tui-no.webp       bow-handle bag       (túi quai nơ, hoa hồng nền xanh)
               tui-khoa.webp     zipped shoulder bag  (túi đi chơi, jeans vàng)
               tui-tamgiac.webp  triangle shoulder bag (túi đi chơi, đỏ – đen)
               laptop.webp       laptop sleeve        (túi đựng laptop)
@@ -15,7 +15,6 @@ Two kinds of bag:
             painting sags with the cloth; the design shows the bag as made):
               tuitote           tote, one handle arch (front and back handles
                                 line up), box-X stitched tabs
-              tuidayrut         drawstring bucket bag with a shoulder strap
               tuibannguyet      half-moon shoulder bag, zipped
               laptopq           the laptop sleeve painting, smaller, with a
                                 shoulder strap drawn over it
@@ -182,8 +181,8 @@ def parts_of(name, sq):
     yy = np.arange(SIDE)[:, None] * np.ones((1, SIDE))
     xx = np.ones((SIDE, 1)) * np.arange(SIDE)[None, :]
     parts, top = {}, np.zeros_like(a)
-    if name == 'tui-nut':
-        # the knot and its two tails above the body; the beige inside that
+    if name == 'tui-no':
+        # the bow and its two tails above the body; the beige inside that
         # shows where the bag folds open (traced by hand on the painting)
         parts['quai'] = a & (yy < 100 * K)
         parts['lot'] = a & poly_mask([[147, 156], [150, 166], [155, 180], [159, 196], [163, 210], [161, 218],
@@ -356,32 +355,6 @@ def drawn(name, src=None):
             line(marks, [(x + 2, 154), (x + 14, 174)], 150, 1.0)
             line(marks, [(x + 14, 154), (x + 2, 174)], 150, 1.0)
         line(marks, [(96, 150), (244, 150)], 70, 2)                          # the fold at the mouth
-    elif name == 'tuidayrut':
-        # body under a gathered top; the casing the cord runs in
-        body = rounded(100, 132, 240, 322, 2, 34)
-        ruffle = [(102, 132)] + [(102 + i * 2, 105 - 3.2 * abs(math.sin(i * math.pi / 8))) for i in range(69)] + [(238, 132)]
-        casing = [(98, 118), (242, 118), (242, 140), (98, 140)]
-        quai = arch(104, 236, 12, 124, 22)
-        for p in (body, ruffle, casing, quai):
-            fill(A, p)
-        parts['quai'] = path(quai)
-        parts['mieng'] = path(casing)
-        for i in range(17):                                                  # gathers
-            x = 106 + i * 8
-            line(marks, [(x, 108), (x + 1, 118)], 90, 1.2)
-            line(marks, [(x + 2, 141), (x + 3 + (i - 8) * 0.4, 196)], 40, 2.2)
-        line(marks, [(100, 129), (240, 129)], 120, 0.9, dash=(4, 4))
-        # the cord: out of the casing, two knotted ends hanging
-        T = Image.new('RGBA', (SIDE * S2, SIDE * S2))
-        dr = ImageDraw.Draw(T)
-        rope, dark = (231, 220, 196, 255), (150, 130, 100, 255)
-        for xs, xe in ((160, 150), (180, 192)):
-            P = [(xs * K * S2, 132 * K * S2), (xe * K * S2, 186 * K * S2)]
-            dr.line(P, fill=dark, width=int(5 * K * S2))
-            dr.line(P, fill=rope, width=int(3.4 * K * S2))
-            cx, cy, r = xe * K * S2, 190 * K * S2, 5 * K * S2
-            dr.ellipse([cx - r, cy - r, cx + r, cy + r], fill=rope, outline=dark, width=int(1 * K * S2))
-        top = T.resize((SIDE, SIDE), Image.LANCZOS)
     elif name == 'tuibannguyet':
         # flat top, round bottom; zipped along the top
         bot = cubic((278, 150), (282, 270), (210, 312), (170, 312)) + cubic((170, 312), (130, 312), (58, 270), (62, 150))[1:]
@@ -435,7 +408,7 @@ def write(out, alpha, shade, top, parts, boxm):
 def main(folder):
     art = {}
     src = {}
-    for name in ['tui-nut', 'tui-khoa', 'tui-tamgiac', 'laptop']:
+    for name in ['tui-no', 'tui-khoa', 'tui-tamgiac', 'laptop']:
         sq = square(Path(folder) / f'{name}.webp')
         src[name] = sq
         out = name.replace('-', '')
@@ -454,7 +427,7 @@ def main(folder):
             body &= ~clean(m, 7)
         art[out] = write(out, alpha, shade, t, {k: to_path(m) for k, m in parts.items()}, body)
 
-    for name in ['tuitote', 'tuidayrut', 'tuibannguyet']:
+    for name in ['tuitote', 'tuibannguyet']:
         alpha, shade, parts, pmask, top = drawn(name)
         body = alpha > 128
         for m in pmask.values():

@@ -1989,9 +1989,9 @@ hai migration chỉ chạy khi merge: `20261015_kho_vai_photo.sql` (ảnh lớn 
   - Dây đeo: mặt ngoài và mặt trong.
   - Mã thiết kế cũ được đổi qua bảng `LEGACY`.
 - **F. Túi** (`tools/bag-assets.py`):
-  - Tab **"Túi"** có 6 dáng:
-    - 4 dáng từ tranh túi của Gem: tote, quai nút, khoá kéo đeo vai, tam giác.
-    - 2 dáng phổ biến trên mạng: dây rút, bán nguyệt.
+  - Tab **"Túi"** có 5 dáng:
+    - 4 dáng từ tranh túi của Gem: tote, quai nơ (size nhỏ / vừa), khoá kéo đeo vai, tam giác.
+    - 1 dáng phổ biến trên mạng: bán nguyệt. Túi dây rút đã bỏ (Anna 14/10: không làm chính).
   - Tote **vẽ lại cho đứng thẳng, không rủ như ảnh** (Anna 14/10): đáy phẳng, miệng thẳng, quai
     vòng đều, tab quai may chữ X.
   - Tab **"Túi laptop"**: không quai / có quai đeo. Bản có quai là chính tranh đó thu nhỏ, thêm
@@ -2029,7 +2029,8 @@ hai migration chỉ chạy khi merge: `20261015_kho_vai_photo.sql` (ảnh lớn 
   - Mỗi vải thêm tính +5k cho món nhỏ, +10k cho gối, oxford và túi. Kiểu ghép khó thì cộng
     nhiều hơn, ví dụ gối: sao +50k, nhà gỗ +30k, chong chóng +30k, nét vẽ +40k.
   - Gem tự chọn vải thì tính theo số vải ước của kiểu ghép (`PRICING.gem`).
-  - **Con số ban đầu là ước lượng của Claude**, chưa có đối chiếu: giá nền túi 160–290k, chần
+  - Anna chốt (14/10): túi quai nơ 220k size nhỏ, 250k size vừa; túi tam giác 100k.
+  - **Các con số còn lại là ước lượng của Claude**, chưa có đối chiếu: giá nền túi 160–290k, chần
     bông 50–70k, túi trong 20k, khoá kéo 30k, nút bấm 10k. Không tìm được bảng phí chần bông
     tin cậy trên mạng. Dây đeo cổ tay chưa có giá trong database, đang tạm để 35k. Owner sửa ở
     **admin → Sản phẩm → Giá thiết kế**.

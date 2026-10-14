@@ -2985,9 +2985,9 @@ async def tui(browser, db):
         await js_click(pg, '.pt-tab[data-product="tuitote"]')
         await pg.wait_for_timeout(500)
         shapes = await pg.evaluate("[...document.querySelectorAll('.pt-shapes [data-shape]')].map(b => b.textContent)")
-        check(len(shapes) == 6, f'{name}: "Túi" offers six shapes ({shapes})')
+        check(shapes == ['Tote', 'Quai nơ', 'Khoá kéo', 'Tam giác', 'Bán nguyệt'], f'{name}: "Túi" offers five shapes ({shapes})')
         drawn = []
-        for sid in ('tuitote', 'tuinut', 'tuikhoa', 'tuitamgiac', 'tuidayrut', 'tuibannguyet'):
+        for sid in ('tuitote', 'tuino', 'tuikhoa', 'tuitamgiac', 'tuibannguyet'):
             await js_click(pg, f'.pt-shapes [data-shape="{sid}"]')
             await pg.wait_for_timeout(250)
             drawn.append(await pg.evaluate(f"!!document.querySelector('.pt-board image[href*=\"mon-{sid}-mask\"]')"))
@@ -3085,7 +3085,7 @@ async def tui(browser, db):
     await js_click(pg, '.ad-dp-open')
     await pg.wait_for_timeout(600)
     n = await pg.evaluate("document.querySelectorAll('.ad-dp').length")
-    check(n == 17, f'admin: one price card per designed piece ({n})')
+    check(n == 16, f'admin: one price card per designed piece ({n})')
     await pg.fill('[name="o.tuitote.quilt"]', '80000')
     await js_click(pg, '.ad-dp-save')
     await pg.wait_for_timeout(800)
