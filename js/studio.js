@@ -331,7 +331,7 @@
     'studio.pt_shuffle':   { vi: `Xáo mảnh`, en: `Shuffle` },
     'studio.pt_hint':      { vi: `Chạm một mảnh vải trong rổ rồi chạm vào ô trên món, hoặc kéo thả vào ô.`, en: `Tap a scrap in the basket, then tap a patch. Or drag it there.` },
     'studio.pt_hint_held': { vi: `Giờ chạm vào ô muốn đắp mảnh {vai} lên. Chạm lại mảnh trong rổ để bỏ xuống.`, en: `Now tap the patch you want the {vai} on. Tap the scrap again to put it down.` },
-    'studio.pt_hint_sel':  { vi: `Ô đang chọn: {vai}. Bấm "Xoay vải" để xoay vải ô này; muốn thay vải thì lấy một mảnh trong rổ rồi chạm ô.`, en: `Picked patch: {vai}. Press "Turn fabric" to turn it; to change it, take a scrap from the basket, then tap the patch.` },
+    'studio.pt_hint_sel':  { vi: `Ô đang chọn: {vai}. Bấm "Xoay vải" để xoay vải ô này; chạm lại ô hoặc chạm ra ngoài để bỏ chọn.`, en: `Picked patch: {vai}. Press "Turn fabric" to turn it; tap it again, or anywhere else, to let go.` },
     'studio.pt_vai_gem':   { vi: `vải Gem chọn`, en: `a fabric Gem picks` },
     'studio.pt_turn':      { vi: `Xoay vải`, en: `Turn fabric` },
     'studio.pt_turned':    { vi: `Vải ô này xoay {deg}° — bấm "Xoay vải" lần nữa để xoay tiếp.`, en: `This patch's fabric is turned {deg}° — press "Turn fabric" again to turn it on.` },
@@ -3256,7 +3256,7 @@
   function putFabric(i, id) {
     P.setPatch(D.d, i, id);
     P.syncTaste(D.d);
-    D.last = i; D.turnMsg = '';
+    D.last = null; D.turnMsg = '';   // dressing a patch does not pick it: no outline over the piece
     unsew();
     renderDesigner();
     var hit = sheetBody.querySelectorAll('.pt-board [data-i="' + i + '"]');
@@ -3281,9 +3281,15 @@
   // to put the next scrap on, or turn it).
   function tapPatch(i) {
     if (D.held != null && P.keyAt(D.d, i) !== D.held) return putFabric(i, D.held);
+    // tapped again: let go, the outline goes (Anna: "allow unselecting,
+    // since the green square affects the visual")
+    pickPatch(D.last === i ? null : i);
+  }
+  // pick patch i (outlined, what "Xoay vải" turns); null: none
+  function pickPatch(i) {
     D.last = i; D.turnMsg = '';
     renderPreview();
-    sheetBody.querySelectorAll('.pt-board [data-i="' + i + '"]').forEach(function (el) { el.classList.add('pt-pop'); });
+    if (i != null) sheetBody.querySelectorAll('.pt-board [data-i="' + i + '"]').forEach(function (el) { el.classList.add('pt-pop'); });
   }
 
   // Drag a scrap onto a patch. A short press without moving stays a tap.
@@ -3698,8 +3704,8 @@
     if (!root) return;
     var d = D.d, spec = specNow(), ok = P.isComplete(d);
     root.querySelector('.pt-board').innerHTML = P.svg(d, { title: esc(P.describe(d)), hit: true });
-    // the patch picked (tapped, or the last one dressed): outlined, and the
-    // one "Xoay vải" turns
+    // the patch picked (tapped; tapped again, or a tap anywhere else, lets
+    // go): outlined, and the one "Xoay vải" turns
     var sel = D.last != null && d.layout !== 'tuve' && D.last < P.slots(d) ? D.last : null;
     if (sel != null) root.querySelectorAll('.pt-board [data-i="' + sel + '"]').forEach(function (el) { el.classList.add('is-sel'); });
     var turnBtn = root.querySelector('.pt-turn');
@@ -3816,6 +3822,7 @@
           drawCanvas();
           var pt = patchUnder(e.clientX, e.clientY);
           if (pt) tapPatch(+pt.getAttribute('data-i'));
+          else if (D.last != null) pickPatch(null);   // beside the piece: none picked
           return;
         }
       }
@@ -3824,7 +3831,8 @@
       // over the point budget: keep what fits
       var room = P.MAX_POINTS - (pointsUsed() - st.pts.length);
       if (st.pts.length > room) st.pts = st.pts.slice(0, Math.max(1, room));
-      if (D.d.layout === 'net') { refitNet(); unsew(); renderDesigner(); return; }
+      // a new cut line renumbers the patches: the picked one would outline another
+      if (D.d.layout === 'net') { D.last = null; D.turnMsg = ''; refitNet(); unsew(); renderDesigner(); return; }
       renderPreview();
     };
     cv.addEventListener('pointerup', end);
@@ -3932,6 +3940,10 @@
 
   function designerClick(e) {
     var el, teachAfter = null, shuffled = false;
+    // the picked patch is only there for "Xoay vải": a tap anywhere else (a
+    // bare spot, a scrap, another button) lets it go, and its outline with it
+    // (Anna: "allow unselecting, since the green square affects the visual")
+    if (D.last != null && !e.target.closest('.pt-board [data-i], [data-pt="turn"], .pt-canvas')) pickPatch(null);
     if (e.target.closest('[data-gv-next]')) { teach('next'); return true; }
     var stz = sheetBody.querySelector('.pt-view.is-zoom');
     if (stz && !e.target.closest('[data-gv-zoom], [data-gv-next]')) {

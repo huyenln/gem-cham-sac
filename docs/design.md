@@ -2132,6 +2132,13 @@ buộc vai thắt nơ 190.000–220.000đ, mã 14 trường cùng giá, field 14
     90 → 135 → 0). Cầm vải mà chạm ô thì đắp vải như cũ; chạm ô đã có đúng vải đang cầm thì chỉ
     chọn, không tự xoay. Bỏ hai cách cũ: chạm ô không cầm vải thì đổi sang vải kế trong rổ, và
     chạm lại ô cùng vải thì xoay.
+  - **Bỏ chọn** (15/10, Anna: "allow unselecting, since the green square affects the visual"):
+    viền xanh chỉ để biết "Xoay vải" xoay ô nào, nên chạm lại ô đang chọn, hay chạm bất cứ đâu
+    khác trong bàn thiết kế (chỗ trống, dòng gợi ý, mảnh trong rổ, nút khác, May xong / Đặt Gem
+    may) đều bỏ chọn — một luật ở đầu `designerClick`, trừ ô, nút "Xoay vải" và khung vẽ.
+    Kiểu "Ghép theo nét vẽ": chạm ngoài món qua khung vẽ cũng bỏ chọn, vẽ thêm nét cắt (ô đánh
+    số lại) cũng bỏ. Đắp vải lên ô không chọn ô đó nữa (trước đây đắp xong ô có viền). Viền
+    mỏng lại 4 → 3.
   - Mã thiết kế thêm **field 14**: một chữ số cho mỗi ô (0–3, × 45°), bỏ số 0 ở cuối; không có
     ô nào xoay thì không có field này. Ô xoay thì field 11 (vải từng ô) bắt buộc.
   - Vẽ: mẫu vải của ô quay quanh tâm ô (`patternTransform`); ảnh vải thật được phóng đủ phủ ô
