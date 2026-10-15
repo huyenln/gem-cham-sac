@@ -1150,22 +1150,20 @@ async def design(browser, db):
         check(f'f{sid3})' in fill1 or 'c' in sid3, f'{name}: tapping a cut patch through the canvas lays the held scrap on it')
         await pg.screenshot(path=OUT / f'design-{name}-net.png')
         # through the canvas too: nothing in hand, a tap picks the patch; a tap
-        # beside the piece lets go; a new cut line (patches renumbered) drops it
+        # elsewhere lets go; a new cut line (patches renumbered) drops it
         await js_click(pg, f'.pt-scrap[data-scrap="{sid3}"]')   # put it down
         nsel = "document.querySelectorAll('.pt-board .is-sel').length"
         await pg.mouse.click(cx, cy)
         await pg.wait_for_timeout(200)
         picked = await pg.evaluate(nsel)
-        bare = await pg.evaluate("""(() => { const cv = document.querySelector('.pt-canvas'), r = cv.getBoundingClientRect(); let out = null;
-            cv.style.pointerEvents = 'none';
-            for (const [fx, fy] of [[0.02, 0.02], [0.98, 0.02], [0.02, 0.98], [0.5, 0.02], [0.02, 0.5]]) {
-              const x = r.left + r.width * fx, y = r.top + r.height * fy, e = document.elementFromPoint(x, y);
-              if (e && !e.closest('[data-i], [data-pt]')) { out = [x, y]; break; } }
-            cv.style.pointerEvents = ''; return out; })()""")
+        # the cushion fills the whole canvas: "elsewhere" is just above it
+        bare = await pg.evaluate("""(() => { const s = document.querySelector('.pt-stage').getBoundingClientRect();
+            const x = s.left + s.width / 2, y = s.top - 6, e = document.elementFromPoint(x, y);
+            return e && e.closest('.st-sheet') && !e.closest('button, a, input, [data-i], [data-pt], .pt-canvas') ? [x, y] : null; })()""")
         if bare:
             await pg.mouse.click(*bare)
             await pg.wait_for_timeout(200)
-        check(picked == 1 and bare and await pg.evaluate(nsel) == 0, f'{name}: net: a tap picks the patch, a tap beside the piece lets go ({picked}, {bare})')
+        check(picked == 1 and bare and await pg.evaluate(nsel) == 0, f'{name}: net: a tap picks the patch, a tap elsewhere lets go ({picked}, {bare})')
         await pg.mouse.click(cx, cy)
         await pg.wait_for_timeout(200)
         picked = await pg.evaluate(nsel)
@@ -1247,6 +1245,32 @@ async def design(browser, db):
     await js_click(pg, '[data-product="goi"]')
     await pg.wait_for_timeout(300)
     check(await pg.evaluate("document.querySelector('.pt-shapes').hidden"), 'no shape choice on other pieces')
+    check(not pg.errors, f'no script errors {pg.errors}')
+    await pg.context.close()
+
+    # "Ghép theo nét vẽ" on the round coaster: the canvas has bare corners, and
+    # a tap there (through the canvas, beside the piece) lets the patch go
+    pg = await page(browser, db, 393, 852, "sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-studio-intro-touch','1')")
+    await pg.goto(f'{BASE}/studio.html')
+    await pg.wait_for_timeout(1500)
+    await js_click(pg, '[data-go="sewing"]')
+    await pg.wait_for_timeout(2500)
+    await js_click(pg, '[data-product="lotcoc"]')
+    await js_click(pg, '[data-layout="net"]')
+    await pg.wait_for_timeout(300)
+    await pg.evaluate("document.querySelector('.pt-board').scrollIntoView({block: 'center'})")
+    cb = await pg.evaluate("(() => { const r = document.querySelector('.pt-canvas').getBoundingClientRect(); return [r.x, r.y, r.width, r.height]; })()")
+    nsel = "document.querySelectorAll('.pt-board .is-sel').length"
+    await pg.mouse.click(cb[0] + cb[2] * 0.5, cb[1] + cb[3] * 0.5)
+    await pg.wait_for_timeout(200)
+    picked = await pg.evaluate(nsel)
+    corner = await pg.evaluate("""(() => { const cv = document.querySelector('.pt-canvas'), r = cv.getBoundingClientRect();
+        cv.style.pointerEvents = 'none'; const e = document.elementFromPoint(r.left + r.width * 0.04, r.top + r.height * 0.04);
+        cv.style.pointerEvents = ''; return !!e && !e.closest('[data-i]'); })()""")
+    await pg.mouse.click(cb[0] + cb[2] * 0.04, cb[1] + cb[3] * 0.04)
+    await pg.wait_for_timeout(200)
+    check(picked == 1 and corner and await pg.evaluate(nsel) == 0,
+          f'round coaster, net: a tap on the piece picks it; a tap on the bare corner beside it lets go ({picked}, {corner})')
     check(not pg.errors, f'no script errors {pg.errors}')
     await pg.context.close()
 
