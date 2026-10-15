@@ -1613,6 +1613,16 @@
       '<circle cx="' + (c[0] - 1.5) + '" cy="' + (c[1] - 1.5) + '" r="1.8" fill="#fff" fill-opacity="0.6"/></g>';
   }
 
+  // The piece's silhouette: its mask picture, and where it is drawn (the strap
+  // shown twice sits at -52 and +52). Taps outside it are beside the piece,
+  // even where a patch runs on under the mask (the round coaster's corners).
+  function silhouette(d) {
+    var p = PRODUCTS[d.product], A = p && ART[p.shape];
+    if (!A) return null;
+    var t = A.styles && A.styles[tieOf(d)] ? tieOf(d) : null;
+    return { src: VAI + 'mon-' + (t ? A.n + '-' + t : A.n) + '-mask.webp', dx: A.faces && d.layout === 'hai' ? [-52, 52] : [0] };
+  }
+
   function artPiece(d, p, fill, pre) {
     var A = ART[p.shape];
     // which patch numbers this drawing used (parts come after them)
@@ -2128,7 +2138,7 @@
     isCustom: isCustom, customSrc: customSrc,
     // the fabric a patch shows, set on it or not (the mood's / Gem's pick)
     keyShown: function (d, i) { var k = keyAt(d, i); return k != null ? k : shownKey(d, i); },
-    layoutName: layoutName, slotNames: slotNames,
+    layoutName: layoutName, slotNames: slotNames, silhouette: silhouette,
     // pieces under one tab (Lót cốc tròn / vuông, the bags, the laptop sleeve)
     GROUPS: GROUPS, groupOf: groupOf, tabOf: tabOf, tabName: tabName,
     // size + options, price

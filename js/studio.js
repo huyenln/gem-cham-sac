@@ -3292,6 +3292,43 @@
     if (i != null) sheetBody.querySelectorAll('.pt-board [data-i="' + i + '"]').forEach(function (el) { el.classList.add('pt-pop'); });
   }
 
+  // The piece's silhouette, read once per picture onto a 170 x 170 grid of
+  // the 340 board. The fabric is laid under a mask, and a mask hides without
+  // stopping taps: a patch runs on under the round coaster's corners, round
+  // a bag. A tap there is beside the piece, not on that patch.
+  var SIL = {};
+  function silOf(src) {
+    var m = SIL[src];
+    if (m) return m;
+    m = SIL[src] = { a: null, n: 170 };
+    var im = new Image();
+    im.onload = function () {
+      var c = document.createElement('canvas');
+      c.width = c.height = m.n;
+      var g = c.getContext('2d');
+      g.drawImage(im, 0, 0, m.n, m.n);
+      try { m.a = g.getImageData(0, 0, m.n, m.n).data; } catch (x) { /* unreadable: every tap counts as on the piece */ }
+    };
+    im.src = src;
+    return m;
+  }
+  function onPiece(cx, cy) {
+    var s = P.silhouette ? P.silhouette(D.d) : null, svg = sheetBody.querySelector('.pt-board svg');
+    if (!s || !svg) return true;
+    var m = silOf(s.src);
+    if (!m.a) return true;   // not read yet: as before
+    var r = svg.getBoundingClientRect(), k = m.n / 340;
+    var x = (cx - r.left) / r.width * 340, y = (cy - r.top) / r.height * 340;
+    // 3 cells (6 units) of slack: a finger just off the edge still counts
+    return s.dx.some(function (dx) {
+      for (var j = -3; j <= 3; j++) for (var i = -3; i <= 3; i++) {
+        var u = Math.floor((x - dx) * k) + i, v = Math.floor(y * k) + j;
+        if (u >= 0 && v >= 0 && u < m.n && v < m.n && m.a[(v * m.n + u) * 4] > 127) return true;
+      }
+      return false;
+    });
+  }
+
   // Drag a scrap onto a patch. A short press without moving stays a tap.
   var scrapDragged = 0;
   function bindScrapDrag(box) {
@@ -3704,6 +3741,8 @@
     if (!root) return;
     var d = D.d, spec = specNow(), ok = P.isComplete(d);
     root.querySelector('.pt-board').innerHTML = P.svg(d, { title: esc(P.describe(d)), hit: true });
+    var sil = P.silhouette ? P.silhouette(d) : null;
+    if (sil) silOf(sil.src);   // read before the first tap (the board already loaded the picture)
     // the patch picked (tapped; tapped again, or a tap anywhere else, lets
     // go): outlined, and the one "Xoay vải" turns
     var sel = D.last != null && d.layout !== 'tuve' && D.last < P.slots(d) ? D.last : null;
@@ -3821,6 +3860,7 @@
           D.d.sketch.pop();
           drawCanvas();
           var pt = patchUnder(e.clientX, e.clientY);
+          if (pt && !onPiece(e.clientX, e.clientY)) pt = null;   // under the mask, beside the piece
           if (pt) tapPatch(+pt.getAttribute('data-i'));
           else if (D.last != null) pickPatch(null);   // beside the piece: none picked
           return;
@@ -3940,10 +3980,17 @@
 
   function designerClick(e) {
     var el, teachAfter = null, shuffled = false;
+    // a patch tapped outside the piece's silhouette (it runs on under the
+    // mask) is a tap beside the piece; a click from a script or the keyboard
+    // has no point to test
+    var hit = e.target.closest('.pt-board [data-i]');
+    var beside = !!hit && !!e.detail && !onPiece(e.clientX, e.clientY);
+    if (beside) hit = null;
     // the picked patch is only there for "Xoay vải": a tap anywhere else (a
     // bare spot, a scrap, another button) lets it go, and its outline with it
     // (Anna: "allow unselecting, since the green square affects the visual")
-    if (D.last != null && !e.target.closest('.pt-board [data-i], [data-pt="turn"], .pt-canvas')) pickPatch(null);
+    if (D.last != null && !hit && !e.target.closest('[data-pt="turn"], .pt-canvas')) pickPatch(null);
+    if (beside) return true;
     if (e.target.closest('[data-gv-next]')) { teach('next'); return true; }
     var stz = sheetBody.querySelector('.pt-view.is-zoom');
     if (stz && !e.target.closest('[data-gv-zoom], [data-gv-next]')) {
@@ -3966,8 +4013,8 @@
       renderPreview();
       return true;
     }
-    if ((el = e.target.closest('.pt-board [data-i]'))) {
-      tapPatch(+el.getAttribute('data-i'));
+    if (hit) {
+      tapPatch(+hit.getAttribute('data-i'));
       return true;
     }
     if ((el = e.target.closest('[data-shape]'))) {

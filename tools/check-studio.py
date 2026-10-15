@@ -1248,29 +1248,45 @@ async def design(browser, db):
     check(not pg.errors, f'no script errors {pg.errors}')
     await pg.context.close()
 
-    # "Ghép theo nét vẽ" on the round coaster: the canvas has bare corners, and
-    # a tap there (through the canvas, beside the piece) lets the patch go
+    # the round coaster: its quarters run on under the mask into the board's
+    # bare corners. A tap there is beside the piece: it lets the picked patch
+    # go and lays no fabric; the same through the "Ghép theo nét vẽ" canvas
     pg = await page(browser, db, 393, 852, "sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-studio-intro-touch','1')")
     await pg.goto(f'{BASE}/studio.html')
     await pg.wait_for_timeout(1500)
     await js_click(pg, '[data-go="sewing"]')
     await pg.wait_for_timeout(2500)
     await js_click(pg, '[data-product="lotcoc"]')
-    await js_click(pg, '[data-layout="net"]')
     await pg.wait_for_timeout(300)
     await pg.evaluate("document.querySelector('.pt-board').scrollIntoView({block: 'center'})")
+    nsel = "[...document.querySelectorAll('.pt-board .is-sel')].map(p => p.dataset.i).join()"
+    fill0 = "document.querySelector('.pt-board [data-i=\"0\"]').getAttribute('fill')"
+    bb = await pg.evaluate("(() => { const r = document.querySelector('.pt-board svg').getBoundingClientRect(); return [r.x, r.y, r.width, r.height]; })()")
+    corner = (bb[0] + bb[2] * 0.04, bb[1] + bb[3] * 0.04)   # over quarter 0's square, outside the circle
+    on0 = await pg.evaluate("([x, y]) => { const e = document.elementFromPoint(x, y); return !!e && e.getAttribute('data-i') === '0'; }", list(corner))
+    await pg.mouse.click(bb[0] + bb[2] * 0.75, bb[1] + bb[3] * 0.75)
+    await pg.wait_for_timeout(200)
+    picked = await pg.evaluate(nsel)
+    await pg.mouse.click(*corner)
+    await pg.wait_for_timeout(200)
+    check(on0 and picked == '3' and await pg.evaluate(nsel) == '',
+          f'round coaster: a tap on the bare corner (quarter 0 runs on under it) lets go, picks nothing ({on0}, {picked})')
+    before = await pg.evaluate(fill0)
+    await js_click(pg, '.pt-scrap:nth-child(2)')
+    await pg.mouse.click(*corner)
+    await pg.wait_for_timeout(200)
+    check(await pg.evaluate(fill0) == before, 'round coaster: with a scrap in hand, a tap on the bare corner lays no fabric')
+    await js_click(pg, '.pt-scrap:nth-child(2)')   # put it down
+    await js_click(pg, '[data-layout="net"]')
+    await pg.wait_for_timeout(300)
     cb = await pg.evaluate("(() => { const r = document.querySelector('.pt-canvas').getBoundingClientRect(); return [r.x, r.y, r.width, r.height]; })()")
-    nsel = "document.querySelectorAll('.pt-board .is-sel').length"
     await pg.mouse.click(cb[0] + cb[2] * 0.5, cb[1] + cb[3] * 0.5)
     await pg.wait_for_timeout(200)
     picked = await pg.evaluate(nsel)
-    corner = await pg.evaluate("""(() => { const cv = document.querySelector('.pt-canvas'), r = cv.getBoundingClientRect();
-        cv.style.pointerEvents = 'none'; const e = document.elementFromPoint(r.left + r.width * 0.04, r.top + r.height * 0.04);
-        cv.style.pointerEvents = ''; return !!e && !e.closest('[data-i]'); })()""")
     await pg.mouse.click(cb[0] + cb[2] * 0.04, cb[1] + cb[3] * 0.04)
     await pg.wait_for_timeout(200)
-    check(picked == 1 and corner and await pg.evaluate(nsel) == 0,
-          f'round coaster, net: a tap on the piece picks it; a tap on the bare corner beside it lets go ({picked}, {corner})')
+    check(picked == '0' and await pg.evaluate(nsel) == '',
+          f'round coaster, net: a tap on the piece picks it; a tap on the bare corner (through the canvas) lets go ({picked})')
     check(not pg.errors, f'no script errors {pg.errors}')
     await pg.context.close()
 

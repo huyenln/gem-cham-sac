@@ -2139,6 +2139,12 @@ buộc vai thắt nơ 190.000–220.000đ, mã 14 trường cùng giá, field 14
     Kiểu "Ghép theo nét vẽ": chạm ngoài món qua khung vẽ cũng bỏ chọn, vẽ thêm nét cắt (ô đánh
     số lại) cũng bỏ. Đắp vải lên ô không chọn ô đó nữa (trước đây đắp xong ô có viền). Viền
     mỏng lại 4 → 3.
+  - **Chạm cạnh món = chạm ra ngoài**: vải được đắp dưới mặt nạ hình món (`mon-*-mask.webp`),
+    mà mặt nạ chỉ che hình chứ không chặn chạm — ô vuông của lót cốc tròn chạy ra tận góc
+    khung, ô của túi phủ cả khoảng trống quanh túi. Nên chạm được kiểm theo hình món:
+    `GemPatch.silhouette(d)` cho ảnh mặt nạ (dây đeo "hai" vẽ hai lần, lệch ±52), `studio.js`
+    đọc ảnh một lần thành lưới 170×170, chừa 6 đơn vị quanh mép cho ngón tay. Chạm ngoài hình
+    = bỏ chọn, không chọn ô khác, cầm vải cũng không đắp. Kéo thả vải thì giữ như cũ (dễ dãi).
   - Mã thiết kế thêm **field 14**: một chữ số cho mỗi ô (0–3, × 45°), bỏ số 0 ở cuối; không có
     ô nào xoay thì không có field này. Ô xoay thì field 11 (vải từng ô) bắt buộc.
   - Vẽ: mẫu vải của ô quay quanh tâm ô (`patternTransform`); ảnh vải thật được phóng đủ phủ ô
