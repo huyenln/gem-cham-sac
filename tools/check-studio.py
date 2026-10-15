@@ -1260,7 +1260,8 @@ async def design(browser, db):
     await pg.wait_for_timeout(300)
     await pg.evaluate("document.querySelector('.pt-board').scrollIntoView({block: 'center'})")
     nsel = "[...document.querySelectorAll('.pt-board .is-sel')].map(p => p.dataset.i).join()"
-    fill0 = "document.querySelector('.pt-board [data-i=\"0\"]').getAttribute('fill')"
+    # its fabric, without the render's own prefix (url(#gp<n>-…) changes on every redraw)
+    fill0 = "document.querySelector('.pt-board [data-i=\"0\"]').getAttribute('fill').replace(/#gp\\d+-/, '#')"
     bb = await pg.evaluate("(() => { const r = document.querySelector('.pt-board svg').getBoundingClientRect(); return [r.x, r.y, r.width, r.height]; })()")
     corner = (bb[0] + bb[2] * 0.04, bb[1] + bb[3] * 0.04)   # over quarter 0's square, outside the circle
     on0 = await pg.evaluate("([x, y]) => { const e = document.elementFromPoint(x, y); return !!e && e.getAttribute('data-i') === '0'; }", list(corner))
@@ -1275,7 +1276,11 @@ async def design(browser, db):
     await js_click(pg, '.pt-scrap:nth-child(2)')
     await pg.mouse.click(*corner)
     await pg.wait_for_timeout(200)
-    check(await pg.evaluate(fill0) == before, 'round coaster: with a scrap in hand, a tap on the bare corner lays no fabric')
+    mid = await pg.evaluate(fill0)
+    await pg.mouse.click(bb[0] + bb[2] * 0.25, bb[1] + bb[3] * 0.25)   # quarter 0 itself: that one takes it
+    await pg.wait_for_timeout(200)
+    after = await pg.evaluate(fill0)
+    check(mid == before != after, f'round coaster: with a scrap in hand, a tap on the bare corner lays no fabric; on the quarter it does ({before} {mid} {after})')
     await js_click(pg, '.pt-scrap:nth-child(2)')   # put it down
     await js_click(pg, '[data-layout="net"]')
     await pg.wait_for_timeout(300)
