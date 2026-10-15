@@ -477,7 +477,12 @@ async def editor(browser, db):
         await js_click(pg, '[data-hd="publish"]')
         await pg.wait_for_timeout(200)
         await js_click(pg, '.se-dlg .ad-btn.on')
-        await pg.wait_for_timeout(600)
+        # publishing is three round trips (read live, keep it as prev, save):
+        # wait for the row, not a fixed time (600 ms lost the race once)
+        for _ in range(25):
+            await pg.wait_for_timeout(200)
+            if (db.rows.get('live') or {}).get('items'):
+                break
         live = db.rows.get('live') or {}
         check(len(live.get('items', [])) == 1, f'{name}: publish saves the studio piece')
         check(live.get('bg', {}).get('w') == 5792 + 2 * 1040, f'{name}: publish saves the longer wall ({live.get("bg")})')
