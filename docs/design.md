@@ -2099,6 +2099,27 @@ buộc vai thắt nơ 190.000–220.000đ, mã 14 trường cùng giá, field 14
     - Túi dây rút đã bỏ (Anna 14/10: không làm chính).
   - Tote **vẽ lại cho đứng thẳng, không rủ như ảnh** (Anna 14/10): đáy phẳng, miệng thẳng, quai
     vòng đều, tab quai may chữ X.
+  - **Vẽ chì cho có khối** (Anna 17/10: túi trông phẳng so với gối / Origami / Oxford). Bóng cũ
+    của túi do code tự tính (tối dần ở mép), tranh túi có vải hoa nên phải làm phẳng gần hết khi
+    đổi sang bóng xám. Anna vẽ lại bằng ChatGPT theo đúng phong cách gối / Origami / Oxford: vải
+    trắng không màu, nét chì + bóng xám, nền trong, nhìn thẳng (prompt + ảnh mẫu phong cách ghép từ
+    lớp bóng của ba món đó).
+    - Đã thay: **khoá kéo, quai nơ, tote, laptop, laptop có quai**
+      (`tools/bag-assets.py --pencil <thư mục tranh>`, tranh gốc không để trong repo).
+    - Chưa thay, Anna chưa muốn thêm: **tam giác** và **buộc vai**. Ba kiểu buộc vai nơ / xoắn /
+      viền ren đã có tranh nhưng chưa vào; dây thẳng chưa vẽ.
+    - Cách làm: tranh chính là lớp bóng. Nền giấy được đưa về trắng; vân vải lanh vẽ trong tranh
+      giữ 35% (`WEAVE`), vì để nguyên thì vải satin, vải hoa cũng trông như vải lanh. Nét viền,
+      đường may, nếp, độ phồng giữ nguyên. Mỗi phần là polygon trong khung 340 (`PENCIL`), cắt theo
+      alpha của tranh: quai đứng tự do trên nền trong nên polygon chỉ cần đúng ở chỗ nối (tab, gốc
+      nút thắt). Nét chì quá nhạt để tô loang tự tách phần, nên không dùng cách đó.
+    - Tên và thứ tự các phần giữ như cũ (quai / lot / tui / day), nên mã thiết kế cũ vẫn đúng ô.
+    - Khoá kéo, khoen chữ D, đầu kéo khoá nằm luôn trong tranh, nhân theo màu vải; bỏ lớp `-top`
+      của khoá kéo / laptop / laptop có quai. Đầu kéo khoá laptop nằm ngoài khung thân nên không
+      có vải, trông như miếng da màu kem.
+    - Laptop có quai giờ là tranh riêng, cùng cỡ với laptop (trước là tranh laptop thu nhỏ + quai
+      vẽ bằng code).
+    - Chạy `bag-assets.py <thư mục tranh cũ>` (cách cũ) sẽ bỏ qua các túi đã có trong `PENCIL`.
   - Tab **"Túi laptop"**: không quai / có quai đeo. Bản có quai là chính tranh đó thu nhỏ, thêm
     quai vẽ và khoen chữ D.
   - Kiểu ghép của túi: một vải, trên – dưới, sọc dọc (`doc`, 5 dải), ô vuông, theo nét vẽ, theo
@@ -2132,6 +2153,19 @@ buộc vai thắt nơ 190.000–220.000đ, mã 14 trường cùng giá, field 14
     90 → 135 → 0). Cầm vải mà chạm ô thì đắp vải như cũ; chạm ô đã có đúng vải đang cầm thì chỉ
     chọn, không tự xoay. Bỏ hai cách cũ: chạm ô không cầm vải thì đổi sang vải kế trong rổ, và
     chạm lại ô cùng vải thì xoay.
+  - **Bỏ chọn** (15/10, Anna: "allow unselecting, since the green square affects the visual"):
+    viền xanh chỉ để biết "Xoay vải" xoay ô nào, nên chạm lại ô đang chọn, hay chạm bất cứ đâu
+    khác trong bàn thiết kế (chỗ trống, dòng gợi ý, mảnh trong rổ, nút khác, May xong / Đặt Gem
+    may) đều bỏ chọn — một luật ở đầu `designerClick`, trừ ô, nút "Xoay vải" và khung vẽ.
+    Kiểu "Ghép theo nét vẽ": chạm ngoài món qua khung vẽ cũng bỏ chọn, vẽ thêm nét cắt (ô đánh
+    số lại) cũng bỏ. Đắp vải lên ô không chọn ô đó nữa (trước đây đắp xong ô có viền). Viền
+    mỏng lại 4 → 3.
+  - **Chạm cạnh món = chạm ra ngoài**: vải được đắp dưới mặt nạ hình món (`mon-*-mask.webp`),
+    mà mặt nạ chỉ che hình chứ không chặn chạm — ô vuông của lót cốc tròn chạy ra tận góc
+    khung, ô của túi phủ cả khoảng trống quanh túi. Nên chạm được kiểm theo hình món:
+    `GemPatch.silhouette(d)` cho ảnh mặt nạ (dây đeo "hai" vẽ hai lần, lệch ±52), `studio.js`
+    đọc ảnh một lần thành lưới 170×170, chừa 6 đơn vị quanh mép cho ngón tay. Chạm ngoài hình
+    = bỏ chọn, không chọn ô khác, cầm vải cũng không đắp. Kéo thả vải thì giữ như cũ (dễ dãi).
   - Mã thiết kế thêm **field 14**: một chữ số cho mỗi ô (0–3, × 45°), bỏ số 0 ở cuối; không có
     ô nào xoay thì không có field này. Ô xoay thì field 11 (vải từng ô) bắt buộc.
   - Vẽ: mẫu vải của ô quay quanh tâm ô (`patternTransform`); ảnh vải thật được phóng đủ phủ ô
