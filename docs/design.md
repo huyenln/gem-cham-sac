@@ -2099,6 +2099,27 @@ buộc vai thắt nơ 190.000–220.000đ, mã 14 trường cùng giá, field 14
     - Túi dây rút đã bỏ (Anna 14/10: không làm chính).
   - Tote **vẽ lại cho đứng thẳng, không rủ như ảnh** (Anna 14/10): đáy phẳng, miệng thẳng, quai
     vòng đều, tab quai may chữ X.
+  - **Vẽ chì cho có khối** (Anna 17/10: túi trông phẳng so với gối / Origami / Oxford). Bóng cũ
+    của túi do code tự tính (tối dần ở mép), tranh túi có vải hoa nên phải làm phẳng gần hết khi
+    đổi sang bóng xám. Anna vẽ lại bằng ChatGPT theo đúng phong cách gối / Origami / Oxford: vải
+    trắng không màu, nét chì + bóng xám, nền trong, nhìn thẳng (prompt + ảnh mẫu phong cách ghép từ
+    lớp bóng của ba món đó).
+    - Đã thay: **khoá kéo, quai nơ, tote, laptop, laptop có quai**
+      (`tools/bag-assets.py --pencil <thư mục tranh>`, tranh gốc không để trong repo).
+    - Chưa thay, Anna chưa muốn thêm: **tam giác** và **buộc vai**. Ba kiểu buộc vai nơ / xoắn /
+      viền ren đã có tranh nhưng chưa vào; dây thẳng chưa vẽ.
+    - Cách làm: tranh chính là lớp bóng. Nền giấy được đưa về trắng; vân vải lanh vẽ trong tranh
+      giữ 35% (`WEAVE`), vì để nguyên thì vải satin, vải hoa cũng trông như vải lanh. Nét viền,
+      đường may, nếp, độ phồng giữ nguyên. Mỗi phần là polygon trong khung 340 (`PENCIL`), cắt theo
+      alpha của tranh: quai đứng tự do trên nền trong nên polygon chỉ cần đúng ở chỗ nối (tab, gốc
+      nút thắt). Nét chì quá nhạt để tô loang tự tách phần, nên không dùng cách đó.
+    - Tên và thứ tự các phần giữ như cũ (quai / lot / tui / day), nên mã thiết kế cũ vẫn đúng ô.
+    - Khoá kéo, khoen chữ D, đầu kéo khoá nằm luôn trong tranh, nhân theo màu vải; bỏ lớp `-top`
+      của khoá kéo / laptop / laptop có quai. Đầu kéo khoá laptop nằm ngoài khung thân nên không
+      có vải, trông như miếng da màu kem.
+    - Laptop có quai giờ là tranh riêng, cùng cỡ với laptop (trước là tranh laptop thu nhỏ + quai
+      vẽ bằng code).
+    - Chạy `bag-assets.py <thư mục tranh cũ>` (cách cũ) sẽ bỏ qua các túi đã có trong `PENCIL`.
   - Tab **"Túi laptop"**: không quai / có quai đeo. Bản có quai là chính tranh đó thu nhỏ, thêm
     quai vẽ và khoen chữ D.
   - Kiểu ghép của túi: một vải, trên – dưới, sọc dọc (`doc`, 5 dải), ô vuông, theo nét vẽ, theo

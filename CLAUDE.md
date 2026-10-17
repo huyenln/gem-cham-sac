@@ -53,7 +53,7 @@ Static website cho cửa hàng **Gem Chạm Sắc** — pop-up store sustainabil
 ├── tools/studio-assets.py    Chạy tay khi có tranh mới: ghép dải studio, tách nền nhân vật → images/studio/
 ├── tools/clean-white.py      Xoá phần giấy trắng còn sót trong asset đã tách nền
 ├── tools/design-assets.py    Chạy tay khi có tranh bàn thiết kế mới: cắt vải, khuôn mảnh, rổ, món → images/studio/vai/
-├── tools/bag-assets.py       Chạy tay khi có tranh túi mới: dáng túi (tranh của Gem + dáng vẽ đứng thẳng), phần quai/lót/đáy → images/studio/vai/mon-*
+├── tools/bag-assets.py       Chạy tay khi có tranh túi mới: dáng túi (tranh của Gem + dáng vẽ đứng thẳng), phần quai/lót/đáy → images/studio/vai/mon-*; `--pencil` cho tranh vẽ chì nền trong (ChatGPT, 10/2026)
 ├── tools/check-studio.py     Kiểm tra studio + trình lắp bằng Playwright (Supabase giả lập)
 ├── tools/kv-swatches.py      Chạy tay khi làm lại ảnh 71 tấm vải nhập sẵn (ảnh gốc trên Drive) → images/studio/vai-that/
 ├── images/
