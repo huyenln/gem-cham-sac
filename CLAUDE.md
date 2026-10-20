@@ -53,7 +53,7 @@ Static website cho cửa hàng **Gem Chạm Sắc** — pop-up store sustainabil
 ├── tools/studio-assets.py    Chạy tay khi có tranh mới: ghép dải studio, tách nền nhân vật → images/studio/
 ├── tools/clean-white.py      Xoá phần giấy trắng còn sót trong asset đã tách nền
 ├── tools/design-assets.py    Chạy tay khi có tranh bàn thiết kế mới: cắt vải, khuôn mảnh, rổ, món → images/studio/vai/
-├── tools/bag-assets.py       Chạy tay khi có tranh túi mới: dáng túi (tranh của Gem + dáng vẽ đứng thẳng), phần quai/lót/đáy → images/studio/vai/mon-*
+├── tools/bag-assets.py       Chạy tay khi có tranh túi mới: dáng túi (tranh của Gem + dáng vẽ đứng thẳng), phần quai/lót/đáy → images/studio/vai/mon-*; `--pencil` cho tranh vẽ chì nền trong (ChatGPT, 10/2026)
 ├── tools/check-studio.py     Kiểm tra studio + trình lắp bằng Playwright (Supabase giả lập)
 ├── tools/kv-swatches.py      Chạy tay khi làm lại ảnh 71 tấm vải nhập sẵn (ảnh gốc trên Drive) → images/studio/vai-that/
 ├── images/
@@ -387,7 +387,9 @@ Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
   "Sửa thư viện" → chạm món = "Thay ảnh trên kệ" (ảnh thư viện / tải lên, món trên kệ đổi theo, giữ sku).
   `CUTOUT`/`THUMB`/`SHELVES` trong `js/studio.js` chỉ còn là
   bản dự phòng khi database chưa trả lời.
-- 👜 Túi / cỡ / tuỳ chọn / giá thiết kế (14–15/10, **đã merge** #65): tab Túi (5 dáng) + Túi laptop,
+- 👜 Túi / cỡ / tuỳ chọn / giá thiết kế (14–15/10, **đã merge** #65): tab Túi + Túi laptop. Tab Túi còn
+  3 dáng (tote, quai nơ, khoá kéo); tam giác + buộc vai tắt (Anna 20/10, `off: 1`). Năm túi vẽ lại bằng chì
+  cho có khối (`bag-assets.py --pencil`). Tuỳ chọn túi:
   chần bông / túi trong / khoá kéo / nút bấm, cỡ riêng → báo giá, giá thiết kế tính cả ở database
   (`design_price`). Ba migration `20261015_kho_vai_photo.sql` → `20261015b_design_pricing.sql` →
   `20261015c_ke_ve_lai_xoay_vai.sql` **đã chạy 14/10** (#66 merge cùng ngày), câu kiểm GRANT-vs-policy

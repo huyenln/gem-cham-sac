@@ -1311,7 +1311,8 @@
       return '<label class="ad-dp-n"><span>' + esc(label) + '</span><input type="number" min="0" max="10000000" step="1000" name="' +
         esc(name) + '" value="' + (v == null ? '' : v) + '"></label>';
     };
-    var cards = Object.keys(PR.products).map(function (id) {
+    // bags taken off the table (PRODUCTS off) keep their prices, unshown
+    var cards = Object.keys(PR.products).filter(function (id) { return !P.PRODUCTS[id].off; }).map(function (id) {
       var pr = PR.products[id], p = P.PRODUCTS[id];
       var lay = p.layouts.map(function (x) { return num('l.' + id + '.' + x, (pr.layouts || {})[x] || 0, P.layoutName(id, x, 'vi')); }).join('');
       var sizes = P.sizesOf(id).slice(1).map(function (z, i) {
@@ -1337,8 +1338,7 @@
       '<div class="ad-filters"><button type="button" class="ad-filter ad-dp-back">← Sản phẩm</button></div>' +
       '<p class="ad-hint">Giá một thiết kế = giá nền + kiểu ghép + mỗi vải thêm (từ vải thứ hai) + cỡ lớn hơn + tuỳ chọn. ' +
         'Khách tự điền cỡ riêng thì đơn ghi “báo giá sau”. Túi trong: 1 túi luôn miễn phí; khoá kéo của túi khoá kéo ' +
-        'và túi laptop có sẵn, không tính. Kiểu buộc vai có ô “đến” (vd nơ 10.000–40.000đ tuỳ cỡ nơ): ' +
-        'khách thấy khoảng giá, đơn ghi giá thấp nhất “từ”, Gem chốt khi nhắn lại.' +
+        'và túi laptop có sẵn, không tính.' +
         '<br>Đơn mới tính theo giá đang lưu; đơn cũ giữ giá lúc đặt.</p>' +
       '<form class="ad-dp-form">' +
         '<div class="ad-dp-row">' + num('fabric', PR.fabric, 'Mỗi vải thêm (mặc định)') + '</div>' + cards +
@@ -1357,6 +1357,7 @@
       };
       var out = { fabric: val('fabric'), gem: PR.gem, products: {} };
       Object.keys(PR.products).forEach(function (id) {
+        if (P.PRODUCTS[id].off) { out.products[id] = PR.products[id]; return; }   // not shown: as saved
         var pr = PR.products[id], o = { base: val('b.' + id), layouts: {} };
         if (o.base == null) bad = true;
         var f = val('f.' + id);

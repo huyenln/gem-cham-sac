@@ -2,6 +2,14 @@
 """The bags for the design table (Bàn thiết kế -> Túi, Túi laptop).
 
     python3 tools/bag-assets.py <folder with the paintings>
+    python3 tools/bag-assets.py --pencil <folder with the drawings> [name …]
+
+--pencil (10/2026): the bags redrawn by Anna in ChatGPT in plain white
+fabric, pencil lines and grey shading (the style of the cushion, origami and
+Oxford), transparent background: tui-khoa, tui-no, tote, laptop, laptopq
+(.png / .webp). The drawing is the shading; parts are polygons (PENCIL). The
+bags listed there are skipped by the run below, which still makes the
+triangle bag and the tie bag:
 
 Two kinds of bag:
 
@@ -504,13 +512,103 @@ def write(out, alpha, shade, top, parts, boxm):
     return {'n': out, 'box': box340(boxm), 'top': top is not None, 'parts': parts}
 
 
+# ---------- pencil drawings (10/2026) ----------
+# Anna's ChatGPT drawings of the bags in plain white fabric, pencil lines and
+# grey shading, on a transparent background: the style of the cushion,
+# origami and Oxford, so the drawing itself is the shading. Each part is a
+# polygon in the 340 square, cut by the drawing's own outline: a strap stands
+# free against the background, so a polygon only has to follow its joints.
+# src: the file in the folder; box: the body (patch layouts); zip / snap:
+# where an added zip runs and a snap sits.
+PENCIL = {
+    'tuikhoa': {'src': 'tui-khoa', 'snap': [170, 216], 'parts': {
+        # the strap, its tabs and D-rings: everything above the bag, and the
+        # two tabs sewn over its top corners
+        'quai': [[[0, 0], [340, 0], [340, 161], [0, 161]],
+                 [[49.5, 159], [61.5, 160], [57.5, 183.5], [45.5, 182]],
+                 [[271.5, 159.5], [285, 158], [288.5, 182], [276.5, 183.5]]],
+        'tui': [[[106.5, 222.5], [234, 222.5], [234.5, 296], [171, 324], [105.5, 295.5]]]}},
+    'tuino': {'src': 'tui-no', 'parts': {
+        # the knot and its two tails (the straps under it are the bag's own corners)
+        'quai': [[[76, 0], [250, 0], [247, 23], [238, 29], [222, 33.5],
+                  [204, 34.5], [195, 34], [189, 33], [187.5, 38], [185.5, 43], [183, 48], [178, 52.5], [166, 50],
+                  [158, 46], [154, 50],
+                  [149, 56], [144, 60], [138, 65], [132, 67], [126, 70.6], [120, 73.3], [114, 75.2], [108, 76.3],
+                  [102, 78.2], [96, 79.7], [90, 81.6], [84, 83.1], [78, 84], [76, 84]]],
+        # the inside seen through the opening: down to the front's top edge
+        'lot': [[[134.5, 126], [208.5, 126], [208.5, 138.5], [217, 140], [223, 140], [225, 142], [220, 146], [214, 150],
+                 [209, 155], [206, 161.3], [200, 165.8], [194, 169.6], [188, 172.3], [182, 173.8], [176, 174.5],
+                 [170, 174.2], [164, 173], [158, 171.5], [152, 170], [146, 166.6], [140, 161.7], [134, 155],
+                 [129, 149], [123, 146], [120, 143], [121, 141], [126, 140], [134.5, 138.5]]]}},
+    'tuitote': {'src': 'tote', 'zip': [[124, 137], [216, 137]], 'snap': [170, 150], 'parts': {
+        # the handle arch, down through the rim into its two box-X tabs
+        'quai': [[[0, 0], [340, 0], [340, 127.5], [0, 127.5]],
+                 [[103, 127], [123.8, 127], [123.8, 166.5], [103, 166.5]],
+                 [[216, 127], [237, 127], [237, 166.5], [216, 166.5]]]}},
+    'laptop': {'src': 'laptop', 'box': [15, 74, 338, 222], 'snap': [170, 92], 'parts': {
+        'day': [[[0, 222], [340, 222], [340, 340], [0, 340]]]}},
+    'laptopq': {'src': 'laptopq', 'box': [15, 100, 338, 252], 'snap': [170, 118], 'parts': {
+        # the handle, its tabs and rings: above the zipped top (not the pull)
+        'quai': [[[26, 0], [340, 0], [340, 100.5], [26, 100.5]],
+                 [[76, 99], [100, 99], [99.5, 103.5], [76.5, 103.5]], [[240.5, 99], [264.5, 99], [264, 103.5], [241, 103.5]]],
+        'day': [[[0, 252.5], [340, 252.5], [340, 340], [0, 340]]]}},
+}
+WEAVE = 0.35   # how much of the drawn linen's weave stays in the shading
+
+
+def pencil_shade(sq):
+    """The drawing's greys as the multiply layer. Its white brought to white;
+    the weave of the drawn linen softened (it would print linen onto a satin
+    or a floral); outlines, stitches, folds and puffs kept."""
+    a = np.asarray(sq.getchannel('A')) > 128
+    rgb = np.asarray(sq.convert('RGB')).astype(np.float32)
+    lum = rgb @ np.array([0.299, 0.587, 0.114], dtype=np.float32) / 255
+    n = np.clip(lum / np.percentile(lum[a], 92), 0, 1)
+    base = blur(n, 2.2)
+    d = n - base
+    return np.clip(base + np.where(d < -0.1, d, d * WEAVE), 0, 1)
+
+
+def pencil(folder, only=None):
+    art = {}
+    for out, cfg in PENCIL.items():
+        if only and out not in only:
+            continue
+        sq = square(next(Path(folder).glob(cfg['src'] + '.*')))
+        alpha = np.asarray(sq.getchannel('A')).copy()
+        alpha[alpha < 24] = 0   # the faint fringe round the drawing
+        a = alpha > 128
+        parts = {}
+        for k, polys in cfg['parts'].items():
+            m = np.zeros_like(a)
+            for p in polys:
+                m |= poly_mask(p)
+            parts[k] = m & a
+        body = a.copy()
+        for m in parts.values():
+            body &= ~m
+        art[out] = write(out, alpha, pencil_shade(sq), None, {k: to_path(m) for k, m in parts.items()}, body)
+        if 'box' in cfg:
+            art[out]['box'] = cfg['box']
+        for k in ('zip', 'snap'):
+            if k in cfg:
+                art[out][k] = cfg[k]
+        top = OUT / f'mon-{out}-top.webp'
+        if top.exists():
+            top.unlink()   # the hardware is in the drawing now
+    for k, v in art.items():
+        print(k, json.dumps(v, ensure_ascii=False))
+
+
 def main(folder):
     art = {}
     src = {}
     for name in ['tui-no', 'tui-khoa', 'tui-tamgiac', 'laptop']:
+        out = name.replace('-', '')
+        if out in PENCIL:
+            continue   # redrawn in pencil (--pencil)
         sq = square(Path(folder) / f'{name}.webp')
         src[name] = sq
-        out = name.replace('-', '')
         parts, top = parts_of(name, sq)
         alpha = np.asarray(sq.getchannel('A')).copy()
         t = None
@@ -528,6 +626,8 @@ def main(folder):
 
     # the tie bag: one set of pictures per way of tying it on the shoulder
     for name, style in [('tuitote', 'no')] + [('tuibuoc', t) for t in ('no', 'thuong', 'xoan', 'ren')]:
+        if (name if name == 'tuitote' else f'{name}-{style}') in PENCIL:
+            continue
         alpha, shade, parts, pmask, top = drawn(name, style=style)
         body = alpha > 128
         for m in pmask.values():
@@ -535,6 +635,10 @@ def main(folder):
         out = name if name == 'tuitote' else f'{name}-{style}'
         art[out] = write(out, alpha, shade, top, parts, body)
 
+    if 'laptopq' in PENCIL:   # redrawn in pencil (--pencil)
+        for k, v in art.items():
+            print(k, json.dumps(v, ensure_ascii=False))
+        return
     # the laptop sleeve with a strap: the painting's own outputs, smaller,
     # under a drawn strap
     sq, quai = drawn('laptopq', src['laptop'])
@@ -584,6 +688,9 @@ def main(folder):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
+    if len(sys.argv) >= 3 and sys.argv[1] == '--pencil':
+        pencil(sys.argv[2], sys.argv[3:])
+    elif len(sys.argv) == 2:
+        main(sys.argv[1])
+    else:
         sys.exit(__doc__)
-    main(sys.argv[1])
