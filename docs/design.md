@@ -2088,7 +2088,7 @@ buộc vai thắt nơ 190.000–220.000đ, mã 14 trường cùng giá, field 14
   - Dây đeo: mặt ngoài và mặt trong.
   - Mã thiết kế cũ được đổi qua bảng `LEGACY`.
 - **F. Túi** (`tools/bag-assets.py`):
-  - Tab **"Túi"** có 5 dáng:
+  - Tab **"Túi"** có 5 dáng (từ 20/10 còn 3: tam giác + buộc vai tắt, xem "Vẽ chì cho có khối" bên dưới):
     - 4 dáng từ tranh túi của Gem: tote, quai nơ (size nhỏ / vừa), khoá kéo đeo vai, tam giác.
     - **Túi buộc vai** (mẫu Anna gửi 14/10, thay túi bán nguyệt vì dáng bán nguyệt trông già): thân
       2 đỉnh nhô, miệng khoét, mảnh hông/đáy, hai đỉnh buộc trên vai. **Kiểu buộc vai** là một
@@ -2106,8 +2106,14 @@ buộc vai thắt nơ 190.000–220.000đ, mã 14 trường cùng giá, field 14
     lớp bóng của ba món đó).
     - Đã thay: **khoá kéo, quai nơ, tote, laptop, laptop có quai**
       (`tools/bag-assets.py --pencil <thư mục tranh>`, tranh gốc không để trong repo).
-    - Chưa thay, Anna chưa muốn thêm: **tam giác** và **buộc vai**. Ba kiểu buộc vai nơ / xoắn /
-      viền ren đã có tranh nhưng chưa vào; dây thẳng chưa vẽ.
+    - **Tam giác** và **buộc vai** chưa vẽ lại → **tắt** (Anna 20/10: "bỏ túi tam giác với túi buộc
+      đi, mấy túi mà chưa gen bằng ChatGPT"). Tab "Túi" còn 3 dáng.
+      - `PRODUCTS[x].off = 1`: `groupOf` không đưa hai dáng này vào hàng chọn dáng. Ngoại lệ là thiết
+        kế đang mở chính là dáng đó (link chia sẻ, tủ sưu tầm, đơn cũ): vẫn mở, vẽ, tính giá được, có
+        cả kiểu buộc vai.
+      - Admin → Giá thiết kế ẩn thẻ hai dáng này; khi lưu thì giữ nguyên giá đã có của chúng.
+      - Định nghĩa, tranh, giá vẫn giữ để mở lại: bỏ `off` là xong (nhớ vẽ lại bằng chì trước).
+      - Đã có tranh chì ba kiểu buộc vai nơ / xoắn / viền ren, nhưng chưa vào; dây thẳng chưa vẽ.
     - Cách làm: tranh chính là lớp bóng. Nền giấy được đưa về trắng; vân vải lanh vẽ trong tranh
       giữ 35% (`WEAVE`), vì để nguyên thì vải satin, vải hoa cũng trông như vải lanh. Nét viền,
       đường may, nếp, độ phồng giữ nguyên. Mỗi phần là polygon trong khung 340 (`PENCIL`), cắt theo

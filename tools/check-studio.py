@@ -1273,7 +1273,10 @@ async def design(browser, db):
     check(on0 and picked == '3' and await pg.evaluate(nsel) == '',
           f'round coaster: a tap on the bare corner (quarter 0 runs on under it) lets go, picks nothing ({on0}, {picked})')
     before = await pg.evaluate(fill0)
-    await js_click(pg, '.pt-scrap:nth-child(2)')
+    # a scrap not already on quarter 0 (the basket is shuffled)
+    other = await pg.evaluate("""(f) => { const b = [...document.querySelectorAll('.pt-scrap')].find(b => !new RegExp('#f?' + b.dataset.scrap + '(p\\\\d+)?\\\\)').test(f));
+        return b ? '.pt-scrap[data-scrap="' + b.dataset.scrap + '"]' : '.pt-scrap'; }""", before)
+    await js_click(pg, other)
     await pg.mouse.click(*corner)
     await pg.wait_for_timeout(200)
     mid = await pg.evaluate(fill0)
@@ -1281,7 +1284,7 @@ async def design(browser, db):
     await pg.wait_for_timeout(200)
     after = await pg.evaluate(fill0)
     check(mid == before != after, f'round coaster: with a scrap in hand, a tap on the bare corner lays no fabric; on the quarter it does ({before} {mid} {after})')
-    await js_click(pg, '.pt-scrap:nth-child(2)')   # put it down
+    await js_click(pg, other)   # put it down
     await js_click(pg, '[data-layout="net"]')
     await pg.wait_for_timeout(300)
     cb = await pg.evaluate("(() => { const r = document.querySelector('.pt-canvas').getBoundingClientRect(); return [r.x, r.y, r.width, r.height]; })()")
@@ -3259,33 +3262,15 @@ async def tui(browser, db):
         await js_click(pg, '.pt-tab[data-product="tuitote"]')
         await pg.wait_for_timeout(500)
         shapes = await pg.evaluate("[...document.querySelectorAll('.pt-shapes [data-shape]')].map(b => b.textContent)")
-        check(shapes == ['Tote', 'Quai nơ', 'Khoá kéo', 'Tam giác', 'Buộc vai'], f'{name}: "Túi" offers five shapes ({shapes})')
+        # only the bags redrawn in pencil (Anna 20/10: tam giác, buộc vai off)
+        check(shapes == ['Tote', 'Quai nơ', 'Khoá kéo'], f'{name}: "Túi" offers the three redrawn shapes ({shapes})')
         drawn = []
-        for sid in ('tuitote', 'tuino', 'tuikhoa', 'tuitamgiac', 'tuibuoc'):
+        for sid in ('tuitote', 'tuino', 'tuikhoa'):
             await js_click(pg, f'.pt-shapes [data-shape="{sid}"]')
             await pg.wait_for_timeout(250)
             drawn.append(await pg.evaluate(f"!!document.querySelector('.pt-board image[href*=\"mon-{sid}\"][href$=\"-mask.webp\"]')"))
-        check(all(drawn), f'{name}: each shape draws its own bag ({drawn})')
-        # the tie bag: four ways to tie it on the shoulder, each drawn
-        ties = await pg.evaluate("[...document.querySelectorAll('[data-tie]')].map(b => b.textContent)")
-        check(len(ties) == 4 and ties[0] == 'Dây thẳng' and ties[3].startswith('Dây viền ren'), f'{name}: "Kiểu buộc vai": four ways, plain straps first ({ties})')
-        check(ties[1] == 'Thắt nơ +10–40k (tuỳ cỡ nơ)', f'{name}: the bow: +10–40k by its size ({ties[1]})')
-        pt0 = num(await pg.evaluate(price))
-        # the bow: a range, from + 10.000 to + 40.000
-        await js_click(pg, '[data-tie="1"]')
-        await pg.wait_for_timeout(250)
-        lo, hi = (num(x) for x in (await pg.evaluate(price)).split('–'))
-        lines = await pg.evaluate("document.querySelector('.pt-price-lines').textContent")
-        check(lo - pt0 == 10000 and hi - pt0 == 40000 and 'Thắt nơ (tuỳ cỡ nơ) +10.000–40.000đ' in lines,
-              f'{name}: "Thắt nơ": the price is a range, the breakdown says why ({lo}–{hi}; {lines})')
-        await js_click(pg, '[data-tie="2"]')
-        await pg.wait_for_timeout(250)
-        check(await pg.evaluate("!!document.querySelector('.pt-board image[href*=\"mon-tuibuoc-xoan-mask\"]')") and num(await pg.evaluate(price)) - pt0 == 30000,
-              f'{name}: "Dây xoắn (nhún bèo)" draws the ruffle, +30.000đ')
-        await js_click(pg, '[data-tie="3"]')
-        await pg.wait_for_timeout(250)
-        check(await pg.evaluate("!!document.querySelector('.pt-board image[href*=\"mon-tuibuoc-ren-top\"]') && window.GemPatch.slots(window.GemPatch.parse('2~tuibuoc~mot~~~~~~~~~~t3')) === 2"),
-              f'{name}: "Dây viền ren": the plain straps in the fabric, cream lace drawn along them')
+        check(all(drawn) and not await pg.evaluate("!!document.querySelector('[data-tie]')"),
+              f'{name}: each shape draws its own bag; no tie choices ({drawn})')
         await js_click(pg, '.pt-shapes [data-shape="tuitote"]')
         await js_click(pg, '.pt-layouts [data-layout="mot"]')
         await pg.wait_for_timeout(300)
@@ -3377,6 +3362,20 @@ async def tui(browser, db):
     check(not pg.errors, f'no script errors {pg.errors}')
     await pg.context.close()
 
+    # the tie bag is off the table, but a link to one made before still opens
+    # on it: drawn, its shape shown (on) beside the three, its ties to change
+    pg = await page(browser, db, 393, 852, "localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-studio-intro-touch','1')")
+    await pg.goto(f'{BASE}/studio.html')
+    await pg.wait_for_timeout(800)
+    await pg.goto(await pg.evaluate("s => window.GemPatch.url(s, 'Linh')", bow))
+    await pg.wait_for_timeout(3500)
+    got = await pg.evaluate("""(() => ({ shapes: [...document.querySelectorAll('.pt-shapes [data-shape]')].map(b => b.dataset.shape + (b.classList.contains('is-on') ? '*' : '')),
+        drawn: !!document.querySelector('.pt-board image[href*="mon-tuibuoc-no-mask"]'), ties: document.querySelectorAll('[data-tie]').length }))()""")
+    check(got['shapes'] == ['tuitote', 'tuino', 'tuikhoa', 'tuibuoc*'] and got['drawn'] and got['ties'] == 4,
+          f'an old tie-bag link still opens on it: drawn, its shape shown beside the three, its ties ({got})')
+    check(not pg.errors, f'no script errors {pg.errors}')
+    await pg.context.close()
+
     # the owner's numbers (settings) win over the starting ones
     db.pricing = {'fabric': 5000, 'products': {'tuitote': {'base': 200000, 'quilt': 90000}}}
     pg = await open_table(browser, db, 1440, 900)
@@ -3395,18 +3394,17 @@ async def tui(browser, db):
     await js_click(pg, '.ad-dp-open')
     await pg.wait_for_timeout(600)
     n = await pg.evaluate("document.querySelectorAll('.ad-dp').length")
-    check(n == 16, f'admin: one price card per designed piece ({n})')
-    bowin = await pg.evaluate("['t.tuibuoc.1', 'tm.tuibuoc.1', 'tm.tuibuoc.2'].map(n => document.querySelector('[name=\"' + n + '\"]').value)")
-    check(bowin == ['10000', '40000', ''], f'admin: the bow is "từ … đến …", the others one amount ({bowin})')
+    check(n == 14 and not await pg.evaluate("!!document.querySelector('.ad-dp[data-id=\"tuibuoc\"], .ad-dp[data-id=\"tuitamgiac\"]')"),
+          f'admin: one price card per piece on the table; the bags taken off are not shown ({n})')
     await pg.fill('[name="o.tuitote.quilt"]', '80000')
-    await pg.fill('[name="tm.tuibuoc.1"]', '50000')
     await js_click(pg, '.ad-dp-save')
     await pg.wait_for_timeout(800)
     saved = db.pricing_saved[-1] if db.pricing_saved else {}
     check(saved.get('key') == 'design_pricing' and saved['value']['products']['tuitote']['quilt'] == 80000
           and saved['value']['products']['goi']['layouts']['sao'] == 50000, 'admin saves the whole table, the change in it')
-    check(saved.get('value', {}).get('products', {}).get('tuibuoc', {}).get('ties') == [0, [10000, 50000], 30000, 20000],
-          f'admin: the bow saved as a range, the rest as amounts ({saved.get("value", {}).get("products", {}).get("tuibuoc", {}).get("ties")})')
+    prods = saved.get('value', {}).get('products', {})
+    check(prods.get('tuibuoc', {}).get('ties') == [0, [10000, 40000], 30000, 20000] and prods.get('tuitamgiac', {}).get('base') == 100000,
+          f'admin: the bags taken off keep their prices (old designs still priced) ({prods.get("tuibuoc", {}).get("ties")})')
     check(not pg.errors, f'admin: no script errors {pg.errors}')
     await pg.context.close()
     db.extra = [x for x in db.extra if x not in bags]

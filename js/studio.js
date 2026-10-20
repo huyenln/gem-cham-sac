@@ -4501,7 +4501,7 @@
   function designable(sku) {
     if (!P) return null;
     var id = null;
-    Object.keys(P.PRODUCTS).forEach(function (k) { if (P.PRODUCTS[k].sku === sku && !id) id = k; });
+    Object.keys(P.PRODUCTS).forEach(function (k) { if (P.PRODUCTS[k].sku === sku && !P.PRODUCTS[k].off && !id) id = k; });
     return id;
   }
 

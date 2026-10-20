@@ -94,14 +94,17 @@
                     short: { vi: 'Quai nơ', en: 'Bow' }, layouts: BAG_LAYOUTS, names: BAG_NAMES, def: 'mot', opts: 'qpzn' },
     tuikhoa:      { sku: 'tui-di-choi', group: 'tui', vi: 'Túi khoá kéo đeo vai', en: 'Zipped shoulder bag', shape: 'tuikhoa', grid: 3, span: 51,
                     short: { vi: 'Khoá kéo', en: 'Zipped' }, layouts: BAG_LAYOUTS, names: BAG_NAMES, def: 'mot', opts: 'qpn', zip: 1 },
+    // off: taken off the table (Anna 20/10: only the bags redrawn in pencil
+    // stay); kept so a design already made with one still opens, draws and
+    // is priced (a shared link, the collection, an order)
     tuitamgiac:   { sku: 'tui-di-choi', group: 'tui', vi: 'Túi tam giác', en: 'Triangle bag', shape: 'tuitamgiac', grid: 3, span: 61,
-                    short: { vi: 'Tam giác', en: 'Triangle' }, layouts: BAG_LAYOUTS, names: BAG_NAMES, def: 'mot', opts: 'qpzn' },
+                    short: { vi: 'Tam giác', en: 'Triangle' }, layouts: BAG_LAYOUTS, names: BAG_NAMES, def: 'mot', opts: 'qpzn', off: 1 },
     // the tie shoulder bag (a pattern Anna liked): two points tied on the
     // shoulder, four ways (ties): plain straps are in the price, styled
     // ones cost more
     tuibuoc:      { sku: 'tui-di-choi', group: 'tui', vi: 'Túi buộc vai', en: 'Tie shoulder bag', shape: 'tuibuoc', grid: 3, span: 53,
                     short: { vi: 'Buộc vai', en: 'Tie' }, layouts: BAG_LAYOUTS, names: BAG_NAMES, def: 'mot', opts: 'qpnt',
-                    ties: ['thuong', 'no', 'xoan', 'ren'] },
+                    ties: ['thuong', 'no', 'xoan', 'ren'], off: 1 },
     laptop:       { sku: 'tui-laptop',  group: 'laptop', vi: 'Túi laptop', en: 'Laptop sleeve', shape: 'laptop', grid: 3, span: 33,
                     short: { vi: 'Không quai', en: 'No strap' }, layouts: BAG_LAYOUTS, names: BAG_NAMES, def: 'doc', opts: 'qpn', zip: 1 },
     laptopq:      { sku: 'tui-laptop',  group: 'laptop', vi: 'Túi laptop có quai', en: 'Laptop sleeve with strap', shape: 'laptopq', grid: 3, span: 42,
@@ -117,7 +120,12 @@
   PRODUCTS.lotcoc.group = PRODUCTS.lotcocv.group = 'lotcoc';
   PRODUCTS.lotcoc.short = { vi: 'Tròn', en: 'Round' };
   PRODUCTS.lotcocv.short = { vi: 'Vuông', en: 'Square' };
-  function groupOf(product) { var p = PRODUCTS[product]; return p && p.group ? GROUPS[p.group] : [product]; }
+  // the shapes offered under a tab: not the ones taken off, unless it is the
+  // piece already being designed (an old design opened again)
+  function groupOf(product) {
+    var p = PRODUCTS[product];
+    return p && p.group ? GROUPS[p.group].filter(function (x) { return !PRODUCTS[x].off || x === product; }) : [product];
+  }
   function tabOf(product) { return groupOf(product)[0]; }
   function tabName(product, l) {
     var p = PRODUCTS[product];
