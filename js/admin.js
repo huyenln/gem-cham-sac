@@ -1304,7 +1304,8 @@
      The numbers a design made at Bàn thiết kế is priced by (settings
      "design_pricing"): js/patch.js shows the price, create_order charges
      it (design_price), both from this one row. */
-  var DP_OPTS = { quilt: 'Chần bông', pocket: 'Mỗi túi trong thêm', zip: 'Thêm khoá kéo', snap: 'Thêm nút bấm' };
+  var DP_OPTS = { quilt: 'Chần bông', pocket: 'Mỗi túi trong thêm', zip: 'Thêm khoá kéo', snap: 'Thêm nút bấm',
+    embroider: 'Thêu chỉ giữa dây' };
   function renderPricing() {
     var P = window.GemPatch, PR = P.PRICING;
     var num = function (name, v, label) {
@@ -1331,7 +1332,7 @@
           num('f.' + id, pr.fabric != null ? pr.fabric : null, 'Mỗi vải thêm (trống = mặc định)') + '</div>' +
         '<p class="ad-dp-h">Kiểu ghép — cộng thêm</p><div class="ad-dp-row">' + lay + '</div>' +
         (sizes ? '<p class="ad-dp-h">Cỡ lớn hơn — cộng thêm</p><div class="ad-dp-row">' + sizes + '</div>' : '') +
-        (opts ? '<p class="ad-dp-h">Tuỳ chọn túi</p><div class="ad-dp-row">' + opts + '</div>' : '') +
+        (opts ? '<p class="ad-dp-h">Tuỳ chọn</p><div class="ad-dp-row">' + opts + '</div>' : '') +
       '</fieldset>';
     }).join('');
     el.main.innerHTML =

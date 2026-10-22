@@ -400,6 +400,12 @@ Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
   tải theo chỗ đang nhìn; bàn thiết kế điện thoại một cột cố định (rổ ngay dưới món, bỏ rổ neo);
   vải thả lên ô hiện ngay; cổ áo Oxford cắt theo nét vẽ; nếp gấp Origami hiện trên vải tối.
   Chi tiết: `docs/design.md` → "Studio trên điện thoại thật (14/10/2026)".
+- 🧭 Bàn thiết kế 22/10 (Anna thử điện thoại): thẻ hướng dẫn 1-2-3 lần đầu + nút "?"; Màu riêng
+  là bảng trượt từ đáy (không đẩy rổ xa món); kéo vải tới mép thì bàn tự cuộn; dây đeo một dây,
+  ghép ngang / dọc + **thêu chỉ giữa dây** (Janome, `e<mẫu><chỉ>`, migration
+  `20261022b_day_deo_theu.sql` chạy **trước** khi merge); Bloom khoanh theo nét vẽ; túi quai nơ
+  cả quai một vải. **Làm tiếp: Origami nền + 6 cánh, bỏ "Ghép theo nét vẽ"** (Anna đã xác nhận).
+  Chi tiết: `docs/design.md` → "Bàn thiết kế — hướng dẫn, Màu riêng, dây đeo, Bloom, quai nơ".
 - Ngoài studio: chưa gắn Studio lên menu (chờ Anna); Gmail secrets cho mail báo đơn
   (các bước: `docs/design.md` → "Bật gửi mail thật").
 
