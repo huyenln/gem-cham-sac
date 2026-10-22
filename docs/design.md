@@ -2221,7 +2221,7 @@ buộc vai thắt nơ 190.000–220.000đ, mã 14 trường cùng giá, field 14
 - **Kiểm tra**: `python3 tools/check-studio.py tui` kiểm dáng, tuỳ chọn, giá, cỡ riêng, laptop,
   chất liệu, giỏ, `create_order` nhận mã chứ không nhận giá, settings, và editor giá trong admin.
 
-### Bàn thiết kế — hướng dẫn, Màu riêng, dây đeo, Bloom, quai nơ (22/10/2026)
+### Bàn thiết kế — hướng dẫn, Màu riêng, dây đeo, Bloom, quai nơ, Origami (22/10/2026)
 
 Anna thử trên điện thoại (22/10) và gửi ảnh lỗi.
 - **Hướng dẫn 1-2-3:** lần đầu mở bàn thiết kế hiện thẻ "Bàn thiết kế" có ba bước (Chọn món,
@@ -2266,6 +2266,22 @@ Anna thử trên điện thoại (22/10) và gửi ảnh lỗi.
   - Giờ cả quai từ nơ xuống tới góc miệng túi, ra hai bên hông hơi thấp hơn, là một vải
     (`PENCIL.tuino` trong `tools/bag-assets.py`).
   - Khung thân `box` bắt đầu từ y 142, nên các kiểu ghép thân chỉ chia phần thân.
+- **Túi Origami: nền + 6 cánh** (Anna 22/10: các cánh gấp được gắn riêng từng cánh, không ghép
+  vải kiểu thường; cánh phải tách màu khỏi nền túi; bỏ "Ghép theo nét vẽ").
+  - 6 cánh là hình thoi khoanh trên tranh (sau khi làm nổi các đường gấp): một đỉnh ở tâm
+    (192.5, 199), đỉnh ngoài ở góc lục giác, mép ngoài hơi phồng như trong tranh
+    (`ART.origami.petals`).
+  - Kiểu ghép:
+    - Một vải.
+    - Cánh khác nền `canh`: nền một vải, 6 cánh một vải.
+    - Cánh xen kẽ `xen`: cánh 1, 3, 5 một vải; cánh 2, 4, 6 một vải.
+    - Mỗi cánh một vải `moi`: nền + 6 cánh, tối đa 7 vải.
+    - Tự vẽ.
+  - Mặc định là `canh`. Mã cũ `hai` mở thành `canh` (vải 1 là nền, vải 2 là cánh); mã cũ `net`
+    mở thành một vải.
+  - Giá khởi điểm 5k / 10k / 15k; migration `20261022b` thêm vào bảng giá nếu chưa có.
+    Ghi chú đơn ghi "Nền túi: … · Cánh: …".
+  - Vải nền không còn lộ qua khoen móc chìa khoá (`ART.origami.body`).
 - Kiểm tra: `python3 tools/check-studio.py guidance`.
 
 ### Studio hiện cảnh mặc định thay cho bố cục đã lắp (sửa 13/10/2026)

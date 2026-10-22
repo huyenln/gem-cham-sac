@@ -3653,6 +3653,21 @@ async def guidance(browser, db):
     await pg.wait_for_timeout(300)
     got = [await at(105, 125), await at(236, 125), await at(170, 260)]
     check(got[0] == got[1] and got[0] not in (None, 0) and got[2] == 0, f'the bow bag: both straps in the handle\'s fabric, the body its own ({got})')
+    # 7. the origami: a base and six petals, each a piece of its own; no cut lines
+    await js_click(pg, '.pt-tab[data-product="origami"]')
+    await pg.wait_for_timeout(300)
+    lays = await pg.evaluate("[...document.querySelectorAll('.pt-layouts [data-layout]')].map(b => b.dataset.layout)")
+    check(lays == ['mot', 'canh', 'xen', 'moi', 'tuve'], f'the origami: one fabric, petals apart, alternating, each its own, drawn — no cut lines ({lays})')
+    petals = [(155, 145), (223, 141), (265, 196), (234, 259), (156, 262), (119, 204)]
+    for lay, want in (('moi', [1, 2, 3, 4, 5, 6]), ('xen', [1, 2, 1, 2, 1, 2]), ('canh', [1] * 6)):
+        await js_click(pg, f'.pt-layouts [data-layout="{lay}"]')
+        await pg.wait_for_timeout(300)
+        got = [await at(x, y) for x, y in petals] + [await at(185, 100)]
+        check(got == want + [0], f'origami "{lay}": the petals {want}, the base 0 ({got})')
+    names = await pg.evaluate("document.querySelector('.pt-onpiece').textContent")
+    check('Nền túi' in names and 'Cánh' in names, f'the fabrics on it named by part ({names[:80]})')
+    old = await pg.evaluate("[GemPatch.parse('2~origami~hai~~~~~~~~AB'), GemPatch.parse('2~origami~net~~~~~~~~A')].map(d => d && [d.layout, d.fab])")
+    check(old == [['canh', 'AB'], ['mot', 'A']], f'old origami codes: two sectors become base + petals, cut lines one fabric ({old})')
     check(not pg.errors, f'no script errors {pg.errors}')
     await pg.context.close()
 

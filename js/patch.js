@@ -63,8 +63,13 @@
                  layouts: ['vuong', 'cabin', 'chong', 'net', 'tuve'] },
     scrunchie: { sku: 'scrunchie', vi: 'Dây buộc tóc', en: 'Scrunchie',         shape: 'scrunchie', grid: 1, span: 13,
                  layouts: ['mot', 'hai', 'net', 'tuve'] },
+    // the pouch: its base (the hexagon, and the back) and six folded petals,
+    // each a piece of its own sewn on (Anna 22/10) — so no free cutting
+    // across them ("Ghép theo nét vẽ" is not offered)
     origami:   { sku: 'origami',   vi: 'Túi Origami',  en: 'Origami pouch',     shape: 'origami', grid: 1, span: 11,
-                 layouts: ['mot', 'hai', 'net', 'tuve'] },
+                 layouts: ['mot', 'canh', 'xen', 'moi', 'tuve'], def: 'canh',
+                 names: { mot: { vi: 'Một vải', en: 'One fabric' }, canh: { vi: 'Cánh khác nền', en: 'Petals apart from the base' },
+                          xen: { vi: 'Cánh xen kẽ', en: 'Alternating petals' }, moi: { vi: 'Mỗi cánh một vải', en: 'Each petal its own' } } },
     // the body takes the piecing; the collar and the strap are pieces of
     // their own, one fabric each
     oxford:    { sku: 'oxford',    vi: 'Túi áo Oxford', en: 'Oxford shirt bag', shape: 'shirt', grid: 2, span: 22,
@@ -141,7 +146,10 @@
   // old codes made with layouts these pieces no longer have
   // (the strap's "hai" showed it twice, outside and inside: its two fabrics
   // now piece the one side, across)
-  var LEGACY = { bloom: { mot: 'hoa3', hai: 'hoa3', net: 'hoa3' }, bookmark: { vuong: 'hai', net: 'mot' }, daydeo: { net: 'mot', hai: 'ngang' } };
+  // (the origami's "hai" was every other sector of the hexagon: its two
+  // fabrics become the base and the petals; its cut lines, one fabric)
+  var LEGACY = { bloom: { mot: 'hoa3', hai: 'hoa3', net: 'hoa3' }, bookmark: { vuong: 'hai', net: 'mot' }, daydeo: { net: 'mot', hai: 'ngang' },
+    origami: { hai: 'canh', net: 'mot' } };
   var PRODUCT_ORDER = ['goi', 'lotcoc', 'scrunchie', 'origami', 'oxford', 'bloom', 'bookmark', 'daydeo', 'tuitote', 'laptop'];
 
   // Stand-ins until Mai's mother's real piecing samples arrive.
@@ -326,13 +334,13 @@
   var BAG_FEES = { hai: 10000, doc: 20000, vuong: 30000, net: 40000, tuve: 30000 };
   var PRICING = {
     fabric: 5000,
-    gem: { mot: 1, hai: 2, doc: 2, ngang: 2, vuong: 3, cabin: 3, sao: 3, chong: 2, net: 3, tuve: 1, hoa1: 2, hoa2: 3, hoa3: 3 },
+    gem: { mot: 1, hai: 2, doc: 2, ngang: 2, canh: 2, xen: 3, moi: 7, vuong: 3, cabin: 3, sao: 3, chong: 2, net: 3, tuve: 1, hoa1: 2, hoa2: 3, hoa3: 3 },
     products: {
       goi:          { base: 150000, fabric: 10000, layouts: { cabin: 30000, sao: 50000, chong: 30000, net: 40000, tuve: 30000 }, sizes: [0, 20000, 40000] },
       lotcoc:       { base: 30000, layouts: { vuong: 5000, cabin: 10000, chong: 10000, net: 10000, tuve: 5000 } },
       lotcocv:      { base: 30000, layouts: { vuong: 5000, cabin: 10000, chong: 10000, net: 10000, tuve: 5000 } },
       scrunchie:    { base: 20000, layouts: { net: 5000, tuve: 5000 } },
-      origami:      { base: 70000, layouts: { hai: 5000, net: 10000, tuve: 10000 } },
+      origami:      { base: 70000, layouts: { canh: 5000, xen: 10000, moi: 15000, tuve: 10000 } },
       oxford:       { base: 130000, fabric: 10000, layouts: { hai: 10000, vuong: 20000, net: 30000, tuve: 20000 } },
       bloom:        { base: 25000, layouts: { hoa2: 10000, hoa3: 20000, tuve: 10000 } },
       bookmark:     { base: 22000, layouts: { tuve: 5000 } },
@@ -694,7 +702,7 @@
       if (fab) {
         if (f[1] === 'bloom') fab = was === 'hai' ? a + a + b + b : a + a + a + a;
         else if (f[1] === 'bookmark') fab = was === 'vuong' ? a + fab[fab.length - 1] : a;
-        else if (f[1] === 'daydeo' && was === 'hai') fab = a + b;
+        else if ((f[1] === 'daydeo' || f[1] === 'origami') && was === 'hai') fab = a + b;
         else fab = a;
       }
     }
@@ -817,6 +825,12 @@
     var vi = l === 'vi';
     if (!d || d.layout === 'tuve') return null;
     if (d.product === 'bookmark' && d.layout === 'hai') return [vi ? 'Mảnh vuông' : 'Square', vi ? 'Mảnh tam giác' : 'Flap'];
+    if (d.product === 'origami' && d.layout !== 'mot') {
+      var nen = vi ? 'Nền túi' : 'Base', canh = vi ? 'Cánh' : 'Petal';
+      if (d.layout === 'canh') return [nen, canh];
+      if (d.layout === 'xen') return [nen, canh + ' 1, 3, 5', canh + ' 2, 4, 6'];
+      return [nen].concat([1, 2, 3, 4, 5, 6].map(function (n) { return canh + ' ' + n; }));
+    }
     if (d.product === 'daydeo' && d.layout === 'ngang') return [vi ? 'Nửa trên' : 'Top half', vi ? 'Nửa dưới' : 'Bottom half'];
     if (d.product === 'daydeo' && d.layout === 'doc') return [vi ? 'Nửa trái' : 'Left half', vi ? 'Nửa phải' : 'Right half'];
     var parts = partsOf(d);
@@ -1440,7 +1454,18 @@
       { id: 'co', d: 'M157 92L183 92L184 93L202 93L203 94L220 95L225 97L228 100L227 101L228 105L242 120L242 124L244 127L244 129L242 130L243 134L237 151L234 155L234 159L227 175L226 180L221 187L220 191L213 193L195 181L182 168L179 164L179 162L173 158L169 153L173 152L185 140L193 134L205 120L205 118L209 113L208 112L180 112L125 112L124 113L128 120L134 124L145 137L148 138L151 142L160 149L159 153L157 155L157 158L152 165L149 166L145 171L145 173L135 183L123 192L118 190L115 187L109 173L100 157L100 154L94 144L94 141L90 131L90 124L92 121L95 120L95 117L97 114L104 108L105 105L108 102L108 99L112 96L120 94L156 93Z' },
       { id: 'quai', over: 1, poly: [[146, 113], [146, 8], [152, 1], [184, 1], [190, 8], [190, 113]] }
     ] },
-    origami: { n: 'origami', top: 1, c: [187, 201], sang: 1 },
+    // the six petals, traced off the painting: a rhombus each from the
+    // middle (192.5, 199) to a corner of the hexagon, the outer sides bowed
+    // a little as drawn; clockwise from the top left. body: where its fabric
+    // goes — not the key ring (the fabric showed through the ring's shine)
+    origami: { n: 'origami', top: 1, sang: 1, body: 'M0 80H92L100 60H340V340H0Z', petals: [
+        'M192.5 199L187 129Q151.1 99 116 79Q115.4 123.1 123.5 172Z',
+        'M192.5 199L264 157Q260.1 115.7 248 80Q216.8 99.6 187 129Z',
+        'M192.5 199L275 235Q306 217.3 328 195Q300.2 173.2 264 157Z',
+        'M192.5 199L197 284Q235.1 305.5 273 317Q278.6 278 275 235Z',
+        'M192.5 199L117.5 248Q111.8 284.8 115 317Q156.1 305.5 197 284Z',
+        'M192.5 199L123.5 172Q79.4 182.6 44 198Q76.3 225.2 117.5 248Z'
+    ] },
     // the cord (stems, knot) in one fabric, each flower in its own, traced
     // off the painting's own lines with its open mouth inside it (Anna 22/10:
     // the cord's fabric showed in the flowers). h: what to hide when the
@@ -1519,6 +1544,7 @@
     if (A.styles) return A.styles[tieOf(d)].parts;
     if (A.parts) return A.parts;
     if (A.buds) return A.buds.slice(0, d.layout === 'hoa1' ? 1 : d.layout === 'hoa2' ? 2 : 3);
+    if (A.petals && d.layout !== 'mot') return A.petals.map(function (pd, i) { return { id: 'c' + (i + 1), d: pd }; });
     return [];
   }
 
@@ -1561,19 +1587,11 @@
             'L' + wp[2][0].toFixed(1) + ' ' + wp[2][1].toFixed(1) + 'Z" fill="' + f(w % 2, bboxOf(wp)) + '"/>';
         }
       } else out += '<rect width="340" height="340" fill="' + f(0, FULL) + '"/>';
-    } else if (d.layout === 'mot' || A.buds) {
+    } else if (d.layout === 'mot' || A.buds || A.petals) {
       // one fabric over the whole piece (the charm: the cord's fabric, the
-      // flowers go on top)
-      out += '<rect width="340" height="340" fill="' + f(0, A.box ? [A.box[0], A.box[1], A.box[2] - A.box[0], A.box[3] - A.box[1]] : FULL) + '"/>';
-    } else if (d.layout === 'hai' && A.c) {
-      // every other petal: six sectors round the centre, one per petal
-      var cx = A.c[0], cy = A.c[1];
-      for (var k = 0; k < 6; k++) {
-        var b0 = (-120 + k * 60) * Math.PI / 180, b1 = (-60 + k * 60) * Math.PI / 180;
-        var ex = function (a) { return (cx + 400 * Math.cos(a)).toFixed(1) + ' ' + (cy + 400 * Math.sin(a)).toFixed(1); };
-        out += '<path d="M' + cx + ' ' + cy + 'L' + ex(b0) + 'L' + ex(b1) + 'Z" fill="' + f(k % 2, FULL) + '"/>';
-        out += '<path d="M' + cx + ' ' + cy + 'L' + ex(b0) + SEAM;
-      }
+      // flowers go on top; the origami: its base, the petals on top)
+      var bb0 = A.box ? [A.box[0], A.box[1], A.box[2] - A.box[0], A.box[3] - A.box[1]] : FULL;
+      out += A.body ? '<path d="' + A.body + '" fill="' + f(0, bb0) + '"/>' : '<rect width="340" height="340" fill="' + f(0, bb0) + '"/>';
     } else if (d.layout === 'hai' && A.bag) {
       // a bag: top and bottom of the body, the seam a little below halfway
       var cut = Math.round(A.box[1] + (A.box[3] - A.box[1]) * 0.56);
@@ -1619,11 +1637,14 @@
     // the pieces of their own (collar, strap, flowers): back to front, the
     // ones marked "over" last (their number stays their place in the list)
     var parts = partsOf(d), base = f.used() + 1, order = [];
+    // the origami's petals: one fabric for all ("canh"), two in turn ("xen"),
+    // or each its own ("moi")
+    var slotOf = function (j) { return base + (A.petals ? (d.layout === 'canh' ? 0 : d.layout === 'xen' ? j % 2 : j) : j); };
     for (var j = parts.length - 1; j >= 0; j--) if (!parts[j].over) order.push(j);
     parts.forEach(function (q, j) { if (q.over) order.push(j); });
     order.forEach(function (j) {
       var pd = parts[j].d || polyPath(parts[j].poly);
-      out += '<path d="' + pd + '" fill="' + f(base + j, parts[j].d ? bboxOfPath(pd) : bboxOf(parts[j].poly)) +
+      out += '<path d="' + pd + '" fill="' + f(slotOf(j), parts[j].d ? bboxOfPath(pd) : bboxOf(parts[j].poly)) +
         '" stroke="' + STITCH + '" stroke-width="1.6" stroke-dasharray="5 5" stroke-opacity="0.35" stroke-linejoin="round"/>';
     });
     out += '</g>';

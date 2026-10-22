@@ -404,8 +404,9 @@ Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
   là bảng trượt từ đáy (không đẩy rổ xa món); kéo vải tới mép thì bàn tự cuộn; dây đeo một dây,
   ghép ngang / dọc + **thêu chỉ giữa dây** (Janome, `e<mẫu><chỉ>`, migration
   `20261022b_day_deo_theu.sql` chạy **trước** khi merge); Bloom khoanh theo nét vẽ; túi quai nơ
-  cả quai một vải. **Làm tiếp: Origami nền + 6 cánh, bỏ "Ghép theo nét vẽ"** (Anna đã xác nhận).
-  Chi tiết: `docs/design.md` → "Bàn thiết kế — hướng dẫn, Màu riêng, dây đeo, Bloom, quai nơ".
+  cả quai một vải; Origami nền + 6 cánh (cánh khác nền / xen kẽ / mỗi cánh một vải), bỏ "Ghép
+  theo nét vẽ". Chi tiết: `docs/design.md` → "Bàn thiết kế — hướng dẫn, Màu riêng, dây đeo, Bloom,
+  quai nơ, Origami".
 - Ngoài studio: chưa gắn Studio lên menu (chờ Anna); Gmail secrets cho mail báo đơn
   (các bước: `docs/design.md` → "Bật gửi mail thật").
 

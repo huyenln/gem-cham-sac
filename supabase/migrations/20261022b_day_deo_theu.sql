@@ -1,6 +1,7 @@
--- Bàn thiết kế: dây đeo cổ tay (22/10/2026). Run BEFORE the JS that offers
--- it goes live (an order with the stitch would be refused by the old
--- design_price). Safe to run twice.
+-- Bàn thiết kế: dây đeo cổ tay, túi Origami (22/10/2026). Run BEFORE the JS
+-- that offers them goes live (an order with the stitch would be refused by
+-- the old design_price; the origami's new layouts would be charged nothing).
+-- Safe to run twice.
 --
 -- 1. The strap is one side pieced from two fabrics, across ("ngang") or along
 --    it ("doc"), no longer shown twice (outside / inside); an old "hai" code
@@ -9,10 +10,26 @@
 -- 2. A machine stitch down the strap's middle (Gem's Janome): field 13 gets
 --    "e<stitch><thread>", priced at products.daydeo.embroider (the owner sets
 --    it in admin → Sản phẩm → Giá thiết kế; 10.000đ to start).
+-- 3. The origami pouch: a base and six petals, each a piece of its own:
+--    "canh" (the petals in one fabric), "xen" (two, in turn), "moi" (each
+--    its own); "hai" / "net" are gone (old codes open as "canh" / "mot").
+--    Their prices start at 5.000 / 10.000 / 15.000đ (js/patch.js PRICING),
+--    so the page and the order agree until the owner changes them.
+-- Each number only where none is set yet: the owner's own stay.
 update public.settings
-set value = jsonb_set(jsonb_set(value,
-      '{products,daydeo,embroider}', coalesce(value #> '{products,daydeo,embroider}', '10000'::jsonb)),
-      '{gem,ngang}', coalesce(value #> '{gem,ngang}', '2'::jsonb))
+set value = value
+  || jsonb_build_object('gem', (value->'gem') || jsonb_build_object(
+       'ngang', coalesce(value #> '{gem,ngang}', '2'), 'canh', coalesce(value #> '{gem,canh}', '2'),
+       'xen', coalesce(value #> '{gem,xen}', '3'), 'moi', coalesce(value #> '{gem,moi}', '7')))
+  || jsonb_build_object('products', (value->'products')
+       || jsonb_build_object('daydeo', (value #> '{products,daydeo}')
+            || jsonb_build_object('embroider', coalesce(value #> '{products,daydeo,embroider}', '10000')))
+       || jsonb_build_object('origami', (value #> '{products,origami}')
+            || jsonb_build_object('layouts', jsonb_build_object(
+                 'canh', coalesce(value #> '{products,origami,layouts,canh}', '5000'),
+                 'xen', coalesce(value #> '{products,origami,layouts,xen}', '10000'),
+                 'moi', coalesce(value #> '{products,origami,layouts,moi}', '15000'),
+                 'tuve', coalesce(value #> '{products,origami,layouts,tuve}', '10000')))))
 where key = 'design_pricing';
 
 create or replace function public.design_price(p_spec text, p_sku text)
