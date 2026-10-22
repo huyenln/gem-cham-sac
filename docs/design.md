@@ -1935,6 +1935,17 @@ Gem đang có**, nhân sự tự thêm tấm mới trong admin.
     góc, lấy góc mà các đường kẻ thẳng hàng nhất). Đã xoay: #46 −45° (đổi tên "Kẻ ô nâu
     đen"), #13 −25° ("Caro lớn xanh đen"), #63 −3,8°. Vải chéo thật (twill #62, hạt trám
     #68) giữ nguyên.
+- **Đợt 3: 57 tấm "Phòng lớn, sau cửa treo đồ"** (22/10/2026, `20261022_kho_vai_sau_cua.sql`):
+  - Nguồn: 60 ảnh trong thư mục Drive cùng tên (tên ảnh gốc `IMG_20261021_<giờ>[_edit].jpg`,
+    trong script là dòng `C-<giờ>`). Ba tấm chụp hai lần đã bỏ: 145415 (= 145309),
+    145600 (= 145509), 152252 (= 152320). So với 66 tấm cũ không có tấm nào trùng chắc chắn;
+    "Đỏ huyết dụ" gần màu "Đỏ đô" nhưng vải trơn thì ảnh không phân biệt được, nên vẫn giữ.
+  - Thêm 57 dòng (id tiếp theo, sort_order 720–1280), chỗ để "Phòng lớn, sau cửa treo đồ".
+    Chạy được hai lần (tấm nào đã có ảnh thì bỏ qua). **Chạy sau khi merge**: ảnh phải lên
+    trước, không thì rổ vải hiện ô trống.
+  - Phòng này sáng hơn hai phòng cũ, nên ảnh không làm sáng thêm (`LIFT['C']`): lần đầu làm sáng
+    như A/B thì vàng rêu thành vàng chanh, cam đất thành cam san hô. Ba tấm trắng (camera chụp
+    thành xám nhạt) đưa về trắng bằng `WHITE`. Vàng / cam xếp vào "Nâu đất".
 - **Xử lý ảnh** (cùng một cách ở `tools/kv-swatches.py` và `GemImg.fabric` trong
   `js/img-tools.js`):
   - **Vải trơn** được vẽ lại cho phẳng hẳn: màu của chính tấm vải (trung vị, nên nếp gấp

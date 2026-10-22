@@ -186,6 +186,14 @@ def fabric_rows():
         for r in rows:
             if r['id'] == int(m[3]):
                 r['name_vi'], r['name_en'] = m[1], m[2]
+    # 20261022: the room "sau cửa treo đồ", next ids, photo and place in the rows
+    sau = (ROOT / 'supabase/migrations/20261022_kho_vai_sau_cua.sql').read_text(encoding='utf-8')
+    place = re.search(r"select id, '([^']+)' from added", sau)[1]
+    nid = max(r['id'] for r in rows)
+    for m in re.finditer(r"\('((?:[^']|'')*)', '((?:[^']|'')*)', '(\w+)', '(\w+)', '((?:[^']|'')*)', '([^']+)', '([^']+)', ([\d.]+), (\d+)\)", sau):
+        nid += 1
+        rows.append({'id': nid, 'name_vi': m[1], 'name_en': m[2], 'tone': m[3], 'kind': m[4], 'material': m[5], 'img': m[6],
+                     'photo': m[7], 'photo_k': float(m[8]), 'in_stock': True, 'is_visible': True, 'sort_order': int(m[9]), 'place': place})
     return rows
 
 
@@ -3085,13 +3093,15 @@ async def vai(browser, db):
         line = await pg.evaluate("(() => { const e = document.querySelector('.pt-onpiece'); return e && !e.hidden ? e.textContent : ''; })()")
         check(line.startswith('Vải trên món:') and '×' in line, f'{name}: "Vải trên món" names the fabrics ({line[:70]})')
         chips = await pg.evaluate("[...document.querySelectorAll('.pt-vtone')].map(b => b.textContent)")
-        check(len(chips) == 6 and chips[0].startswith('Tất cả 64'), f'{name}: colour chips, sold-out / hidden left out ({chips})')
-        # one colour: only blues, and "Lục rổ" walks through all of them
+        on = len(db.fabrics) - len(gone)
+        check(len(chips) == 6 and chips[0].startswith(f'Tất cả {on}'), f'{name}: colour chips, sold-out / hidden left out ({chips})')
+        # one colour: only blues, and "Lục rổ" walks through all of them, 8 at a time
         await js_click(pg, '[data-vtone="lam"]')
         seen = set(await pg.evaluate("[...document.querySelectorAll('.pt-scrap')].map(b => b.dataset.scrap)"))
-        await js_click(pg, '[data-pt="rummage"]')
-        seen |= set(await pg.evaluate("[...document.querySelectorAll('.pt-scrap')].map(b => b.dataset.scrap)"))
-        check(sorted(seen) == lam, f'{name}: "Xanh lam" + one rummage show all {len(lam)} blues ({len(seen)})')
+        for _ in range((len(lam) - 1) // 8):
+            await js_click(pg, '[data-pt="rummage"]')
+            seen |= set(await pg.evaluate("[...document.querySelectorAll('.pt-scrap')].map(b => b.dataset.scrap)"))
+        check(sorted(seen) == lam, f'{name}: "Xanh lam" + rummaging shows all {len(lam)} blues ({len(seen)})')
         await js_click(pg, '[data-vtone=""]')
         for _ in range(12):
             await js_click(pg, '[data-pt="rummage"]')
@@ -3179,13 +3189,15 @@ async def vai(browser, db):
         pg = await open_table(browser, db, w, h)
         await js_click(pg, '[data-pt="kho"]')
         await pg.wait_for_timeout(500)
+        on_sale = [f for f in db.fabrics if f['in_stock'] and f['is_visible']]
         n = await pg.evaluate("document.querySelectorAll('.kho-f').length")
-        check(n == 64, f'{name}: Kho vải shows every fabric in stock ({n})')
+        check(n == len(on_sale), f'{name}: Kho vải shows every fabric in stock ({n} of {len(on_sale)})')
         names = await pg.evaluate("[...document.querySelectorAll('.kho-f b')].map(b => b.textContent).slice(0, 3)")
         check(names[0] == 'Thô xanh rêu', f'{name}: each card has its name ({names})')
         await js_click(pg, '[data-ktone="hong"]')
         n2 = await pg.evaluate("document.querySelectorAll('.kho-f').length")
-        check(n2 == 22, f'{name}: the "Hồng – đỏ" chip: 22 fabrics ({n2})')
+        hong = len([f for f in on_sale if f['tone'] == 'hong'])
+        check(n2 == hong, f'{name}: the "Hồng – đỏ" chip: {hong} fabrics ({n2})')
         await js_click(pg, '[data-kho="clear"]')
         picks = await pg.evaluate("[...document.querySelectorAll('.kho-f')].slice(0, 9).map(b => b.dataset.khoF)")
         for k in picks:
@@ -3417,11 +3429,13 @@ async def kho(browser, db):
     pg = await admin_page(browser, db, 412, 900)
     await js_click(pg, '[data-tab="fabrics"]')
     await pg.wait_for_timeout(800)
+    n0, nid = len(db.fabrics), max(f['id'] for f in db.fabrics) + 1
     n = await pg.evaluate("document.querySelectorAll('.ad-fab').length")
-    check(n == 66, f'all 66 fabrics on cards ({n})')
+    check(n == n0, f'all {n0} fabrics on cards ({n})')
     check('Chỗ để: Phòng' in await pg.evaluate("document.querySelector('.ad-fab .ad-fab-place').textContent"), 'each card says where it is kept')
     await js_click(pg, '[data-ff="xanh"]')
-    check(await pg.evaluate("document.querySelectorAll('.ad-fab').length") == 5, 'the "Xanh lá" chip: five cards')
+    xanh = len([f for f in db.fabrics if f['tone'] == 'xanh'])
+    check(await pg.evaluate("document.querySelectorAll('.ad-fab').length") == xanh, f'the "Xanh lá" chip: {xanh} cards')
     await js_click(pg, '[data-ff="all"]')
     # Còn -> Hết
     await js_click(pg, '.ad-fab [data-fs="stock"]')
@@ -3478,23 +3492,23 @@ async def kho(browser, db):
           f'new fabric saved with its uploaded photo ({row.get("img", "")[-40:]})')
     f = db.files.get((row.get('img') or '').split('/gem-media/')[-1])
     check(f and decode(f[1]).size == (320, 320) and f[0] == 'image/webp', f'the photo is a 320px WebP ({decode(f[1]).size if f else None}, {len(f[1]) // 1024 if f else 0} KB)')
-    check(('place', {'fabric_id': 72, 'place': 'Kệ thử, tầng 2'}) in db.fab_log, 'its place goes to fabric_private')
-    check(await pg.evaluate("document.querySelectorAll('.ad-fab').length") == 67, 'back on the cards: 67 now')
+    check(('place', {'fabric_id': nid, 'place': 'Kệ thử, tầng 2'}) in db.fab_log, 'its place goes to fabric_private')
+    check(await pg.evaluate("document.querySelectorAll('.ad-fab').length") == n0 + 1, f'back on the cards: {n0 + 1} now')
     # edit: rename + move
-    await js_click(pg, '.ad-fab[data-id="72"] [data-fs="edit"]')
+    await js_click(pg, f'.ad-fab[data-id="{nid}"] [data-fs="edit"]')
     check(await pg.evaluate("document.querySelector('[name=\"name_vi\"]').value") == 'Lụa đỏ thử', 'the form opens filled in')
     await pg.fill('[name="name_vi"]', 'Lụa đỏ')
     places = len([x for x in db.fab_log if x[0] == 'place'])
     await js_click(pg, '.ad-fab-form [type="submit"]')
     await pg.wait_for_timeout(1000)
-    pat = [x for x in db.fab_log if x[0] == 'patch' and x[1] == 72]
+    pat = [x for x in db.fab_log if x[0] == 'patch' and x[1] == nid]
     check(pat and pat[-1][2].get('name_vi') == 'Lụa đỏ' and 'img' not in pat[-1][2], 'edit saves the name, keeps the photo')
     check(len([x for x in db.fab_log if x[0] == 'place']) == places, 'an unchanged place is not written again')
     # delete
-    await js_click(pg, '.ad-fab[data-id="72"] [data-fs="edit"]')
+    await js_click(pg, f'.ad-fab[data-id="{nid}"] [data-fs="edit"]')
     await js_click(pg, '.ad-fab-del')   # page() accepts the confirm
     await pg.wait_for_timeout(1000)
-    check(('delete', 72) in db.fab_log and await pg.evaluate("document.querySelectorAll('.ad-fab').length") == 66, 'Xoá removes it')
+    check(('delete', nid) in db.fab_log and await pg.evaluate("document.querySelectorAll('.ad-fab').length") == n0, 'Xoá removes it')
     check(not pg.errors, f'no script errors {pg.errors}')
     await pg.context.close()
 
