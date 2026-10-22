@@ -6,9 +6,11 @@
 #
 #   python3 tools/kv-swatches.py <folder of the photos>
 #
-# The photos ("Vải" on Drive, A-*/B-*.jpg = big room / small room) are not in
-# the repo. Each row: photo, crop box on its 1600px copy (None = centre
-# square), names, tone, kind, material, plain, warm.
+# The photos ("Vải" on Drive, A-*/B-*.jpg = big room / small room; C-* = the
+# folder "Phòng lớn - sau cửa treo đồ", 21/10/2026, still under the camera's
+# names IMG_20261021_<time>[_edit].jpg) are not in the repo. Each row: photo,
+# crop box on its 1600px copy (None = centre square), names, tone, kind,
+# material, plain, warm.
 #   plain cloth  drawn again flat: its own colour x its own weave (folds gone);
 #                satin / silk / velvet keep a soft sheen, corduroy / rib knit
 #                their ribs
@@ -16,7 +18,9 @@
 #                stays: redrawing it would no longer be the real cloth)
 # then the shop's lights corrected (less yellow-red, not for cream / beige),
 # brighter, a little fresher. The rows match supabase/migrations/20261014b_kho_vai_seed.sql
-# less the second photos of the same cloth (20261014d_kho_vai_gop.sql).
+# less the second photos of the same cloth (20261014d_kho_vai_gop.sql), then
+# 20261022_kho_vai_sau_cua.sql (C-*, the second photos already left out).
+import glob
 import os
 import re
 import sys
@@ -25,8 +29,10 @@ import unicodedata
 import numpy as np
 from PIL import Image, ImageFilter, ImageOps
 
-A = 'Phòng lớn, tủ trưng bày vàng'
-B = 'Phòng nhỏ, ngăn dưới cùng tủ vải to'
+# where each room's fabrics are kept (fabric_private.place), by the photo's
+# first letter
+PLACE = {'A': 'Phòng lớn, tủ trưng bày vàng', 'B': 'Phòng nhỏ, ngăn dưới cùng tủ vải to',
+         'C': 'Phòng lớn, sau cửa treo đồ'}
 C = None
 F = [
     # xanh lá
@@ -100,6 +106,73 @@ F = [
     ('B-174255', C, 'Hoa pastel nền đen', 'Pastel flowers on black', 'trung', 'hoa', 'Cotton', 0, 0),
     ('B-173932', C, 'Paisley nền đen', 'Paisley on black', 'trung', 'hoato', 'Voan', 0, 0),
     ('B-174441', (150, 280, 750, 880), 'Vân hươu đen trắng', 'Black-white giraffe', 'trung', 'hoato', 'Vải pha', 0, 0),
+
+    # Phòng lớn, sau cửa treo đồ (21/10/2026). Taken twice, left out:
+    # 145415 (= 145309), 145600 (= 145509), 152252 (= 152320).
+    # Lamé, shot organza: the shine and the second colour in the folds are the
+    # look, so they keep the photo (plain 0).
+    # xanh lá
+    ('C-152320', C, 'Voan xanh lục đậm', 'Deep teal-green chiffon', 'xanh', 'tron', 'Voan', 1, 0),
+    ('C-160024', C, 'Xanh xô thơm', 'Sage green crinkle', 'xanh', 'tron', 'Vải pha', 1, 0),
+    # xanh lam
+    ('C-145936', (260, 350, 1060, 1150), 'Nhung sen nền xanh than', 'Lotus on navy velvet', 'lam', 'hoato', 'Nhung', 0, 0),
+    ('C-151502', C, 'Họa tiết xanh lá nền than', 'Green shapes on navy', 'lam', 'hoato', 'Vải pha', 0, 0),
+    ('C-152432', C, 'Voan lưới xanh biển', 'Ocean blue tulle', 'lam', 'tron', 'Voan', 1, 0),
+    ('C-152634', C, 'Gấm hoa xanh tím', 'Blue-violet floral jacquard', 'lam', 'hoa', 'Gấm', 0, 0),
+    ('C-153340', C, 'Xếp ly xanh hoàng gia', 'Royal blue pintucks', 'lam', 'soc', 'Vải pha', 0, 0),
+    ('C-154031', C, 'Tím than', 'Indigo violet', 'lam', 'tron', 'Vải pha', 1, 0),
+    ('C-155244', C, 'Xanh hoàng gia', 'Royal blue', 'lam', 'tron', 'Vải pha', 1, 0),
+    # hồng – đỏ
+    ('C-145732', C, 'Ren lá hồng', 'Pink leaf lace', 'hong', 'ren', 'Ren', 0, 0),
+    ('C-145825', C, 'Ren hoa đỏ đô', 'Burgundy floral lace', 'hong', 'ren', 'Ren', 0, 0),
+    ('C-150303', C, 'Gấm lá tím mận', 'Plum leaf jacquard', 'hong', 'hoato', 'Gấm', 0, 0),
+    ('C-151420', C, 'Nhung tăm đỏ rượu', 'Wine corduroy', 'hong', 'soc', 'Nhung tăm', 1, 0),
+    ('C-151714', C, 'Hoa hồng nền tối', 'Pink blooms on dark', 'hong', 'hoato', 'Vải pha', 0, 0),
+    ('C-152155', C, 'Đỏ thẫm', 'Deep red', 'hong', 'tron', 'Vải pha', 1, 0),
+    ('C-152352', C, 'Voan tơ hồng', 'Pink organza', 'hong', 'tron', 'Voan', 1, 0),
+    ('C-153010', C, 'Tafta tím hồng', 'Magenta taffeta', 'hong', 'tron', 'Tafta', 1, 0),
+    ('C-153202', C, 'Đỏ gạch', 'Brick red', 'hong', 'tron', 'Vải pha', 1, 0),
+    ('C-153222', C, 'Voan hồng rực', 'Hot pink voile', 'hong', 'tron', 'Voan', 1, 0),
+    ('C-153259', C, 'Đỏ san hô', 'Coral red', 'hong', 'tron', 'Vải pha', 1, 0),
+    ('C-153718', C, 'Đỏ huyết dụ', 'Crimson', 'hong', 'tron', 'Vải pha', 1, 0),
+    ('C-153840', C, 'Tafta hồng tro', 'Ash-rose taffeta', 'hong', 'tron', 'Tafta', 1, 0),
+    ('C-154323', C, 'Đỏ son', 'Lipstick red', 'hong', 'tron', 'Vải pha', 1, 0),
+    ('C-154900', C, 'Đỏ cam', 'Orange-red', 'hong', 'tron', 'Vải pha', 1, 0),
+    ('C-155154', C, 'Tafta tím khói', 'Smoky lilac taffeta', 'hong', 'tron', 'Tafta', 1, 0),
+    ('C-160224', C, 'Đỏ tươi', 'Bright red', 'hong', 'tron', 'Vải pha', 1, 0),
+    ('C-160421', C, 'Hồng mâm xôi', 'Raspberry', 'hong', 'tron', 'Vải pha', 1, 0),
+    # nâu đất (vàng, cam cũng ở đây)
+    ('C-145207', C, 'Satin vàng nghệ', 'Turmeric satin', 'nau', 'tron', 'Satin', 1, 0),
+    ('C-145309', C, 'Kim tuyến vàng ô liu', 'Olive-gold lamé', 'nau', 'tron', 'Kim tuyến', 0, 0),
+    ('C-145346', C, 'Voan ánh đồng', 'Bronze shot organza', 'nau', 'tron', 'Voan', 0, 0),
+    ('C-145509', C, 'Hoa nhí nền kaki', 'Ditsy flowers on khaki', 'nau', 'hoa', 'Vải pha', 0, 0),
+    ('C-150812', C, 'Thun vàng mù tạt', 'Mustard knit', 'nau', 'tron', 'Thun', 1, 0),
+    ('C-151605', C, 'Gấm hoa văn nâu đen', 'Dark brown damask', 'nau', 'hoato', 'Gấm', 0, 0),
+    ('C-152838', C, 'Vàng đất', 'Ochre', 'nau', 'tron', 'Vải pha', 1, 0),
+    ('C-153515', C, 'Vàng rêu', 'Olive yellow', 'nau', 'tron', 'Vải pha', 1, 0),
+    ('C-154120', C, 'Nâu tím', 'Plum brown', 'nau', 'tron', 'Vải pha', 1, 0),
+    ('C-154235', C, 'Nâu than', 'Charcoal brown', 'nau', 'tron', 'Vải pha', 1, 0),
+    ('C-154437', C, 'Nâu bò', 'Tan', 'nau', 'tron', 'Vải pha', 1, 0),
+    ('C-154753', C, 'Vàng hoa cải', 'Mustard-flower yellow', 'nau', 'tron', 'Vải pha', 1, 0),
+    ('C-155356', C, 'Thun màu da', 'Nude knit', 'nau', 'tron', 'Thun', 1, 1),
+    ('C-155836', C, 'Tafta cam', 'Orange taffeta', 'nau', 'tron', 'Tafta', 1, 0),
+    ('C-155913', C, 'Vàng mơ', 'Apricot', 'nau', 'tron', 'Vải pha', 1, 0),
+    ('C-160140', C, 'Cam tươi', 'Bright orange', 'nau', 'tron', 'Vải pha', 1, 0),
+    ('C-160802', C, 'Be nâu', 'Camel', 'nau', 'tron', 'Vải pha', 1, 1),
+    ('C-160937', C, 'Cam đất', 'Terracotta', 'nau', 'tron', 'Vải pha', 1, 0),
+    ('C-161040', C, 'Vàng ô liu', 'Olive gold', 'nau', 'tron', 'Vải pha', 1, 0),
+    # trung tính
+    ('C-150120', C, 'Đũi xám', 'Grey slub linen', 'trung', 'tron', 'Đũi / linen', 1, 0),
+    ('C-150448', C, 'Ren hoa trắng', 'White floral lace', 'trung', 'ren', 'Ren', 0, 1),
+    ('C-150517', C, 'Xám nhạt', 'Light grey', 'trung', 'tron', 'Cotton', 1, 0),
+    ('C-151816', C, 'Nâu đen', 'Black-brown', 'trung', 'tron', 'Vải pha', 1, 0),
+    ('C-152538', (820, 330, 1260, 770), 'Ren thêu kem', 'Cream embroidered tulle', 'trung', 'ren', 'Ren', 0, 1),
+    ('C-153634', C, 'Trắng trơn', 'Plain white', 'trung', 'tron', 'Cotton', 1, 0),
+    ('C-155547', C, 'Trắng ngà', 'Off-white', 'trung', 'tron', 'Vải pha', 1, 0),
+    ('C-155613', (250, 400, 950, 1100), 'Paisley trắng nền xám', 'White paisley on grey', 'trung', 'hoato', 'Vải pha', 0, 0),
+    ('C-160311', C, 'Trắng sữa', 'Milk white', 'trung', 'tron', 'Lụa', 1, 0),
+    ('C-160600', C, 'Đen xương cá', 'Black herringbone', 'trung', 'tron', 'Vải pha', 1, 0),
+    ('C-160645', C, 'Xám rêu', 'Grey-green', 'trung', 'tron', 'Kaki', 1, 0),
 ]
 
 
@@ -110,25 +183,36 @@ def slug(s):
 
 
 W = np.array([0.299, 0.587, 0.114])
-CAST = {'A': np.array([0.965, 1.009, 1.028]), 'B': np.array([0.922, 1.025, 1.064])}
+# C: measured on the floor tiles round the cloth (a little warm, like A)
+CAST = {'A': np.array([0.965, 1.009, 1.028]), 'B': np.array([0.922, 1.025, 1.064]),
+        'C': np.array([0.97, 0.99, 1.045])}
 
 def blur(a, r):
     im = Image.fromarray(np.clip(a * 255, 0, 255).astype('uint8'))
     return np.asarray(im.filter(ImageFilter.GaussianBlur(r)), dtype=float) / 255
 
+# how much a dim photo is lifted (most, gamma), by room: A / B were taken
+# under the shop's dim yellow light; C came out well lit (some already
+# edited on the phone) and lifting it as much washed the colours out
+LIFT = {'A': (1.35, 0.94), 'B': (1.35, 0.94), 'C': (1.0, 1.0)}
+
 def bright(a, room, warm=False):
     if not warm:   # cream / beige: the room correction would turn them mint
         a = a * (1 + (CAST[room] - 1) * 0.6)
+    top, gamma = LIFT[room]
     hi = np.percentile(a @ W, 97)
-    a = np.clip(a * min(1.35, max(1.0, 0.9 / max(hi, 1e-3))), 0, 1) ** 0.94
+    a = np.clip(a * min(top, max(1.0, 0.9 / max(hi, 1e-3))), 0, 1) ** gamma
     L = a @ W
     return np.clip(L[..., None] + (a - L[..., None]) * 1.06, 0, 1)
 
 # fabrics whose light part came out tinted by the shop's light, and the
 # colour it really is (Anna 14/10/2026: "Caro xanh lá" is green and cream,
 # the photo's light squares came out mint): the light part (the brightest
-# fifth) is brought to that colour, the rest follows
-WHITE = {'A-185105': np.array([0.94, 0.92, 0.85])}
+# fifth) is brought to that colour, the rest follows. The white cloths of C:
+# the camera took them down to a light grey
+WHITE = {'A-185105': np.array([0.94, 0.92, 0.85]),
+         'C-153634': np.array([0.95, 0.95, 0.93]), 'C-155547': np.array([0.95, 0.94, 0.90]),
+         'C-160311': np.array([0.94, 0.94, 0.92])}
 
 def white(a, name):
     if name not in WHITE:
@@ -166,7 +250,10 @@ def rebuild(a, mat):
     return np.clip(col[None, None, :] * f[..., None], 0, 1)
 
 def photo(src, name):
-    im = ImageOps.exif_transpose(Image.open(os.path.join(src, name + '.jpg'))).convert('RGB')
+    p = os.path.join(src, name + '.jpg')
+    if not os.path.exists(p):   # C-<time>: the camera's IMG_20261021_<time>[_edit].jpg
+        p = glob.glob(os.path.join(src, 'IMG_*_' + name[2:] + '*.jpg'))[0]
+    im = ImageOps.exif_transpose(Image.open(p)).convert('RGB')
     if max(im.size) != 1600:   # crop boxes are on 1600px copies
         k = 1600 / max(im.size)
         im = im.resize((round(im.width * k), round(im.height * k)), Image.LANCZOS)
@@ -208,7 +295,8 @@ def make(src, row, new=True):
 # on the design table shows its own part of it. K: its side in swatch widths,
 # smaller where the photo runs out or something else shows round the cloth.
 K = {'A-185505': 1.0, 'A-190250': 1.15, 'A-190149': 1.0, 'A-184917': 1.0, 'A-185719': 1.0,
-     'A-185836': 1.2, 'B-174537': 1.15, 'B-174441': 1.1, 'B-174820': 1.2}
+     'A-185836': 1.2, 'B-174537': 1.15, 'B-174441': 1.1, 'B-174820': 1.2,
+     'C-145936': 1.1, 'C-152538': 1.2, 'C-155613': 1.15}
 
 
 def make_big(src, row):
@@ -303,7 +391,7 @@ def woven(spec, cm, size):
     return Image.fromarray((o * 255).astype('uint8'))
 
 G, Wc = (16, 116, 56), (232, 233, 214)
-K, Wh = (28, 31, 33), (224, 229, 226)
+BLK, Wh = (28, 31, 33), (224, 229, 226)   # not K: that is make_big's table
 NAVY, BLU, LBL = (38, 56, 140), (66, 92, 182), (96, 124, 212)
 BK, BR, CR, LG = (36, 38, 41), (128, 104, 86), (220, 218, 210), (168, 162, 156)
 VK, VW = (30, 28, 30), (214, 204, 204)
@@ -314,7 +402,7 @@ DRAWN = {
     # cream the square is hatched, mostly green (as on the cloth)
     'A-185105': {'x': [(1.0, G), (0.6, Wc)], 'y': [(1.0, G), (0.6, Wc)], 'twill': 0.09, 'hatch': 'dark'},
     # Sọc đen trắng: up-down stripes, 1.2 cm repeat, about even
-    'B-173947': {'x': [(0.6, K), (0.6, Wh)]},
+    'B-173947': {'x': [(0.6, BLK), (0.6, Wh)]},
     # Ô nhỏ xanh than: a small blue glen check, about 1 cm
     'A-190250': {'x': [(0.3, BLU), (0.08, NAVY), (0.08, LBL), (0.08, NAVY), (0.3, BLU), (0.16, LBL)],
                  'y': [(0.3, BLU), (0.08, NAVY), (0.08, LBL), (0.08, NAVY), (0.3, BLU), (0.16, LBL)], 'twill': 0.06},

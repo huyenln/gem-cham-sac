@@ -55,7 +55,7 @@ Static website cho cửa hàng **Gem Chạm Sắc** — pop-up store sustainabil
 ├── tools/design-assets.py    Chạy tay khi có tranh bàn thiết kế mới: cắt vải, khuôn mảnh, rổ, món → images/studio/vai/
 ├── tools/bag-assets.py       Chạy tay khi có tranh túi mới: dáng túi (tranh của Gem + dáng vẽ đứng thẳng), phần quai/lót/đáy → images/studio/vai/mon-*; `--pencil` cho tranh vẽ chì nền trong (ChatGPT, 10/2026)
 ├── tools/check-studio.py     Kiểm tra studio + trình lắp bằng Playwright (Supabase giả lập)
-├── tools/kv-swatches.py      Chạy tay khi làm lại ảnh 71 tấm vải nhập sẵn (ảnh gốc trên Drive) → images/studio/vai-that/
+├── tools/kv-swatches.py      Chạy tay khi làm lại ảnh các tấm vải nhập sẵn (ảnh gốc trên Drive) → images/studio/vai-that/
 ├── images/
 │   ├── logo/                 Logo Gem variants
 │   ├── mascot/               6 pose Udon (PNG transparent)
@@ -378,7 +378,8 @@ Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
   Chi tiết: `docs/design.md` → "Bàn thiết kế — chơi". Đợt 2: Mảnh hiếm (vải thật).
 - 👕 Đợt 2 đồ mặc (áo) — chỉ làm nếu khách dùng nút "Đeo thử"; cần vẽ lại khung.
 - 🧵 **Kho vải** (14/10/2026): rổ vải ở Bàn thiết kế = vải thật trong bảng `fabrics`
-  (71 tấm nhập sẵn, nhân sự thêm / Còn-Hết / chỗ để ở admin → Kho vải). Mã thiết kế: khoá
+  (66 tấm nhập sẵn + 57 tấm "Phòng lớn, sau cửa treo đồ" 22/10, `20261022_kho_vai_sau_cua.sql`
+  chạy sau khi merge; nhân sự thêm / Còn-Hết / chỗ để ở admin → Kho vải). Mã thiết kế: khoá
   `r<id>`. Kho vải cho khách (nút "Kho vải" ở rổ, hoặc Khu vực act `khovai`): chọn tối đa 8 tấm →
   "Ghép thử". Làm tiếp: (3) chỉnh họa tiết từng ô (khung = hình ô). Chi tiết: `docs/design.md` → "Kho vải".
 - 🛍️ Ảnh cắt nền sản phẩm: giờ làm trong admin → Sản phẩm → Sửa → "Ảnh cắt nền"
