@@ -2330,6 +2330,11 @@ Anna thử trên điện thoại (22/10) và gửi ảnh lỗi.
   - Tranh gốc vẽ dây đè lên dải sau cổ. Chỗ đó (x 145.5–190.5, y 91.5–113.5) được vẽ lại bằng
     hai bên của chính dải cổ, lấy đối xứng rồi trộn ở giữa: `collar_over_strap()` trong
     `tools/design-assets.py`. Hàm này tự chạy khi cắt lại tranh Oxford.
+- **Kiểu "Thân ô vuông": mảng dưới cổ áo cùng vải thân hai bên** (Anna 23/10). Phần giữa hai
+  vạt cổ (xuống tới đường nối hàng ô trên / dưới) là thân trước, nên nửa trái mang vải ô dưới
+  trái, nửa phải mang vải ô dưới phải, không phải vải hai ô vai. Đó là chính ô đó (chạm vào
+  là ô đó), nên không ghép vải khác vào được. `neck` trong `ART.shirt` (`js/patch.js`).
+  Kiểu "Hai nửa" vốn đã vậy; "Ghép theo nét vẽ" thì theo nét khách vẽ.
 - Kiểm tra: `onefab()` trong `tools/check-studio.py`.
 
 ### Phân loại rác cùng Tagom (23/10/2026)
@@ -2359,8 +2364,13 @@ tường là lối vào. Bỏ "nhặt rác ngoài phố có đếm giờ": nặn
   6 bao + ô **Mang tới Gem**. Sai: hiện bao đúng + lý do (`pl.w.<id>`) + nút "Xem poster".
   **Đĩa CD đúng ở cả hai chỗ:** Mang tới Gem hoặc Nhựa 6-7 (`also`). Xốp tấm phẳng → Gem.
 - **Udon:** lần sai đầu tiên của mỗi màn, Udon chạy vào kéo gấu quần (ống quần thò từ mép
-  trái, một tranh cho mọi nhân vật); các lần sau chỉ hiện gợi ý. Đúng thì Udon nhảy. Không
-  trừ điểm. Máy đặt giảm chuyển động: một khung, không chạy.
+  trái, một tranh cho mọi nhân vật), có lời thoại phía trên (`pl.ud_whole` / `pl.ud_wrong`,
+  Anna 23/10); các lần sau chỉ hiện gợi ý. Đúng thì Udon nhảy. Không trừ điểm. Máy đặt giảm
+  chuyển động: một khung, không chạy.
+- **Cách chơi** (Anna 23/10): mỗi màn, lần đầu vào thì hiện thẻ 3 bước có hình (giống thẻ
+  1-2-3 của Bàn thiết kế), nút "?" cạnh tên màn mở lại. Đã xem thì nhớ ở `localStorage`
+  `gem-pl` (`{chai: 1, sort: 1}`). Chữ: `pl.g1_*`, `pl.g2_*`.
+- **Xem poster giữa lượt:** nút "← Chơi tiếp" quay về lượt đang chơi, sang món kế tiếp.
 - **Màn cuối:** số món đúng, các món nhầm kèm lý do, và **Mang rác đi đâu?**:
   - Trạm Tagom: Số 105B1 (mặt sau), ngõ 3 Khuất Duy Tiến, Thanh Xuân Bắc (dãy nhà đối diện
     trường mầm non Thanh Xuân Bắc); T2–T6 14h–19h, T7–CN 9h–19h, nghỉ trưa 12h–14h; nút Chỉ

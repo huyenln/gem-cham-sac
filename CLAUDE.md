@@ -412,11 +412,11 @@ Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
   theo nét vẽ". Chi tiết: `docs/design.md` → "Bàn thiết kế — hướng dẫn, Màu riêng, dây đeo, Bloom,
   quai nơ, Origami". Một vải thì không tính phí kiểu ghép; ghép theo nét vẽ hơn 6
   đường thì Gem báo giá (23/10, migration `20261023_mot_vai_net_bao_gia.sql` chạy **trước** khi
-  merge); dây túi Oxford gắn sau cổ áo.
+  merge); dây túi Oxford gắn sau cổ áo; Oxford "Thân ô vuông": mảng dưới cổ áo cùng vải thân hai bên.
 - ♻️ Phân loại rác cùng Tagom (23/10): poster Tagom treo tường (Lắp studio → nhóm "Poster Tagom", tự
   thành Khu vực `phanloai`) → màn 1 xử lý một cái chai, màn 2 phân loại 10 món (6 bao + "Mang tới Gem"),
-  Udon kéo ống quần lần sai đầu, màn cuối chỉ Trạm Tagom + Gem (chỉ nhận xốp tấm phẳng nguyên, đĩa CD
-  nguyên). `js/phanloai.js` tải khi mở. Chi tiết: `docs/design.md` → "Phân loại rác cùng Tagom".
+  Udon kéo ống quần lần sai đầu (có lời thoại), thẻ "Cách chơi" lần đầu mỗi màn + nút "?", màn cuối chỉ
+  Trạm Tagom + Gem (chỉ nhận xốp tấm phẳng nguyên, đĩa CD nguyên). `js/phanloai.js` tải khi mở. Chi tiết: `docs/design.md` → "Phân loại rác cùng Tagom".
 - Ngoài studio: chưa gắn Studio lên menu (chờ Anna); Gmail secrets cho mail báo đơn
   (các bước: `docs/design.md` → "Bật gửi mail thật").
 

@@ -3767,6 +3767,19 @@ async def onefab(browser, db):
         host.remove();
         return r; })()""")
     check(top == ['1', '2', '0'], f'Oxford: the back of the collar over the strap, the strap above it, the body below ({top})')
+    # squares: under the collar is the front, the square below on each side
+    # (not the shoulder squares); the shoulders keep theirs
+    neck = await pg.evaluate("""(() => {
+        const host = document.createElement('div');
+        host.style.cssText = 'position:fixed;left:0;top:0;width:340px;height:340px;z-index:99999;background:#fff';
+        document.body.appendChild(host);
+        host.innerHTML = GemPatch.svg(GemPatch.parse('2~oxford~vuong~~~~~~~~ABCDEF'), { hit: true });
+        const s = host.querySelector('svg'); s.setAttribute('width', 340); s.setAttribute('height', 340);
+        const at = (x, y) => { const e = document.elementFromPoint(x, y); return e && e.getAttribute('data-i'); };
+        const r = [at(160, 130), at(180, 130), at(100, 250), at(250, 250), at(70, 140), at(270, 140)];
+        host.remove();
+        return r; })()""")
+    check(neck == ['2', '3', '2', '3', '0', '1'], f'Oxford squares: under the collar, the body square below on each side ({neck})')
     check(not pg.errors, f'no script errors {pg.errors}')
     await pg.context.close()
 
@@ -3785,7 +3798,9 @@ async def phanloai(browser, db):
         'udon': {'x': 5200, 'y': 560, 'w': 128, 'h': 140}, 'start': 700,
     }
     for name, w, h in (('desktop', 1440, 900), ('mobile', 390, 844)):
-        pg = await page(browser, db, w, h, GUIDE_OFF + "localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-studio-intro-touch','1');sessionStorage.setItem('gem-scene','in')")
+        # the same ten things every run (a seeded Math.random)
+        pg = await page(browser, db, w, h, GUIDE_OFF + "localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-studio-intro-touch','1');sessionStorage.setItem('gem-scene','in');"
+                        "(() => { let s = 7; Math.random = () => (s = (s * 16807) % 2147483647) / 2147483647; })()")
         loaded = []
         pg.on('request', lambda r: loaded.append(r.url) if '/js/phanloai.js' in r.url or '/images/studio/rac/' in r.url else None)
         await pg.goto(f'{BASE}/studio.html')
@@ -3804,14 +3819,29 @@ async def phanloai(browser, db):
         await pg.wait_for_timeout(200)
         n = await pg.evaluate("[document.querySelectorAll('.pl-poster').length, document.querySelectorAll('[data-pl-go=\"chai\"], [data-pl-go=\"sort\"]').length]")
         check(n == [6, 2], f'{name}: the hub: six posters, two levels ({n})')
-        # level 1: the whole bottle into a bag first: Udon tugs, a hint
+        # level 1: how to play, the first time; "?" brings it back
         await js_click(pg, '[data-pl-go="chai"]')
         await pg.wait_for_timeout(300)
+        g = await pg.evaluate("[!document.querySelector('.pl-guide').hidden, document.querySelectorAll('.pl-g-step').length, document.querySelector('.pl-g-h').textContent]")
+        check(g[0] and g[1] == 3 and 'Cách chơi' in g[2], f'{name}: level 1 opens on how to play, three steps ({g})')
+        if name == 'mobile':
+            await pg.screenshot(path=OUT / 'phanloai-guide-mobile.png')
+        await js_click(pg, '.pl-g-go')
+        await js_click(pg, '[data-pl-guide]')
+        again = await pg.evaluate("!document.querySelector('.pl-guide').hidden")
+        await js_click(pg, '.pl-g-x')
+        shut = await pg.evaluate("document.querySelector('.pl-guide').hidden")
+        check(again and shut, f'{name}: "?" shows it again, × closes it ({again}, {shut})')
+        # the whole bottle into a bag first: Udon tugs, says so over it, a hint
         await js_click(pg, '[data-pl-bottle]')
         await js_click(pg, '[data-pl-bin="nhua-1-de"]')
-        await pg.wait_for_timeout(200)
-        got = await pg.evaluate("[!document.querySelector('.pl-tug').hidden, document.querySelector('.pl-say').textContent]")
-        check(got[0] and 'Tháo nắp' in got[1], f'{name}: the bottle whole into a bag: Udon tugs, take it apart first ({got[1]})')
+        await pg.wait_for_timeout(1200)
+        got = await pg.evaluate("[!document.querySelector('.pl-tug').hidden, document.querySelector('.pl-say').textContent, document.querySelector('.pl-tug-say').textContent, (() => { const b = document.querySelector('.pl-tug-say').getBoundingClientRect(), i = [...document.querySelectorAll('.pl-tug img')].filter(e => e.offsetParent)[0].getBoundingClientRect(); return b.bottom <= i.top + 1 && b.top >= 0; })()]")
+        check(got[0] and 'Tháo nắp' in got[1] and 'Tháo nắp' in got[2] and got[3],
+              f'{name}: the bottle whole into a bag: Udon tugs, his line above him, take it apart first ({got})')
+        if name == 'mobile':
+            await pg.screenshot(path=OUT / 'phanloai-tug-mobile.png')
+        await pg.wait_for_timeout(2400)
         # take it apart: cap, label, squash
         await js_click(pg, '[data-pl-take="nap"]')
         await js_click(pg, '[data-pl-bin="nhua-245"]')
@@ -3831,23 +3861,39 @@ async def phanloai(browser, db):
         # level 2: ten things; a wrong one shows the right bag and Tagom's reason
         await js_click(pg, '.pl-done [data-pl-go="sort"]')
         await pg.wait_for_timeout(400)
+        g = await pg.evaluate("[!document.querySelector('.pl-guide').hidden, document.querySelectorAll('.pl-g-step').length, document.querySelectorAll('.pl-g-step img').length]")
+        check(g[0] and g[1] == 3 and g[2] >= 5, f'{name}: level 2 opens on its own how to play ({g})')
+        await js_click(pg, '.pl-g-go')
         items = await pg.evaluate("[document.querySelectorAll('[data-pl-bin]').length, document.querySelector('.pl-count').textContent]")
         check(items[0] == 7 and '1/10' in items[1], f'{name}: six bags and Gem\'s basket, ten things ({items})')
-        wrong_seen, tugs = 0, []
+        wrong_seen, tugs, looked = 0, [], False
         for i in range(10):
             it = await pg.evaluate("(() => { const id = document.querySelector('.pl-one [data-pl-item]').dataset.plItem; return [id, GemPhanLoai.ITEMS.filter(x => x.id === id)[0].bin]; })()")
             # the first two answered wrong, the rest right
             pick = it[1] if i >= 2 else ('nilon-mem' if it[1] != 'nilon-mem' else 'nilon-cung')
             await js_click(pg, f'[data-pl-bin="{pick}"]')
             await pg.wait_for_timeout(120)
-            st = await pg.evaluate("[document.querySelector('.pl-say').className, document.querySelector('.pl-say').textContent, !document.querySelector('.pl-tug').hidden]")
+            st = await pg.evaluate("[document.querySelector('.pl-say').className, document.querySelector('.pl-say').textContent, !document.querySelector('.pl-tug').hidden, document.querySelector('.pl-tug-say').textContent]")
             if i < 2:
                 wrong_seen += 'is-no' in st[0] and 'vào' in st[1]
-                tugs.append(st[2])
+                tugs.append(st[2] and 'Không phải bao này' in st[3])
                 if i == 0:
                     await pg.wait_for_timeout(2800)   # the tug runs its course
+            if i < 2 and it[1] != 'gem' and not looked:
+                # "Xem poster" mid-round, then back to the round on the next thing
+                looked = True
+                await js_click(pg, '[data-pl-see]')
+                await pg.wait_for_timeout(200)
+                back = await pg.evaluate("[document.querySelector('.pl').dataset.plView, document.querySelector('.pl-back').textContent]")
+                await js_click(pg, '.pl-back')
+                await pg.wait_for_timeout(200)
+                now = await pg.evaluate("[document.querySelector('.pl').dataset.plView, document.querySelector('.pl-count').textContent, document.querySelector('.pl-guide').hidden]")
+                check(back[0] == 'poster' and 'Chơi tiếp' in back[1] and now[0] == 'sort' and f'{i + 2}/10' in now[1] and now[2],
+                      f'{name}: a poster looked at mid-round, back to the round on the next thing, no guide again ({back}, {now})')
+                continue
             await js_click(pg, '[data-pl-go="next"]')
             await pg.wait_for_timeout(120)
+        check(looked, f'{name}: a poster was looked at mid-round')
         check(wrong_seen == 2, f'{name}: a wrong bag: where it goes and why ({wrong_seen})')
         check(tugs == [True, False], f'{name}: Udon tugs at the first mistake only ({tugs})')
         end = await pg.evaluate("[document.querySelector('.pl').dataset.plView, document.querySelector('h2').textContent, document.querySelectorAll('.pl-miss li').length]")
