@@ -1476,7 +1476,10 @@
     // collar (Anna 23/10, the real bags): drawn first, the whole collar in
     // its own fabric over it (the painting redrawn there, design-assets.py
     // collar_over_strap)
-    shirt: { n: 'oxford', box: [47, 1, 292, 339], parts: [
+    // neck: under the collar (between its flaps, down to the squares' seam)
+    // is the shirt's front, so it takes the fabric of the body below it on
+    // each side, never the squares across the shoulders (Anna 23/10)
+    shirt: { n: 'oxford', box: [47, 1, 292, 339], neck: [124, 112, 216, 170], parts: [
       { id: 'co', d: 'M157 92L183 92L184 93L202 93L203 94L220 95L225 97L228 100L227 101L228 105L242 120L242 124L244 127L244 129L242 130L243 134L237 151L234 155L234 159L227 175L226 180L221 187L220 191L213 193L195 181L182 168L179 164L179 162L173 158L169 153L173 152L185 140L193 134L205 120L205 118L209 113L208 112L180 112L125 112L124 113L128 120L134 124L145 137L148 138L151 142L160 149L159 153L157 155L157 158L152 165L149 166L145 171L145 173L135 183L123 192L118 190L115 187L109 173L100 157L100 154L94 144L94 141L90 131L90 124L92 121L95 120L95 117L97 114L104 108L105 105L108 102L108 99L112 96L120 94L156 93Z' },
       { id: 'quai', poly: [[146, 113], [146, 8], [152, 1], [184, 1], [190, 8], [190, 113]] }
     ] },
@@ -1645,13 +1648,27 @@
         '<path d="M170 0V340' + SEAM;
     } else {
       var bx = A.box || [0, 0, 340, 340], sx = (bx[2] - bx[0]) / 100, sy = (bx[3] - bx[1]) / 100;
-      var bend = onSeams(A, d.layout, p.grid);
+      var bend = onSeams(A, d.layout, p.grid), boxOf = [];
       patches(d.layout, p.grid).forEach(function (pt, n) {
         var i = d.layout === 'sao' || d.layout === 'chong' ? pt.i : n;
         var pts = (bend ? pt.pts.map(bend) : pt.pts).map(function (q) { return [bx[0] + q[0] * sx, bx[1] + q[1] * sy]; });
+        boxOf[i] = bboxOf(pts);
         out += '<path d="M' + pts.map(function (q) { return q[0].toFixed(1) + ' ' + q[1].toFixed(1); }).join('L') +
-          'Z" fill="' + f(i, bboxOf(pts)) + '" stroke="' + STITCH + '" stroke-width="1.8" stroke-dasharray="6 5" stroke-opacity="0.4" stroke-linejoin="round"/>';
+          'Z" fill="' + f(i, boxOf[i]) + '" stroke="' + STITCH + '" stroke-width="1.8" stroke-dasharray="6 5" stroke-opacity="0.4" stroke-linejoin="round"/>';
       });
+      // the shirt's neck: each half in the fabric of the square below it (the
+      // same patch, so the print runs on; a tap there is that square)
+      if (A.neck && d.layout === 'vuong') {
+        var g = p.grid, nk = A.neck, mid = bx[0] + 50 * sx;
+        var cellAt = function (x, y) {
+          return Math.min(g - 1, Math.floor((y - bx[1]) / sy / (100 / g))) * g + Math.min(g - 1, Math.floor((x - bx[0]) / sx / (100 / g)));
+        };
+        [[nk[0], mid], [mid, nk[2]]].forEach(function (xs) {
+          var i = cellAt((xs[0] + xs[1]) / 2, nk[3] + 1);
+          out += '<rect x="' + xs[0].toFixed(1) + '" y="' + nk[1] + '" width="' + (xs[1] - xs[0]).toFixed(1) + '" height="' + (nk[3] - nk[1]) +
+            '" fill="' + f(i, boxOf[i]) + '"/>';
+        });
+      }
     }
     // a quilted bag: diamonds stitched over the body, each a little puffed
     if (A.bag && d.ext && d.ext.q && d.layout !== 'tuve') out += quilting(A, pre);

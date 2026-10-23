@@ -98,6 +98,31 @@
     'pl.map':       { vi: `Chỉ đường`, en: `Directions` },
     'pl.close':     { vi: `Đóng`, en: `Close` },
     'pl.udon':      { vi: `Udon kéo ống quần bạn rồi kìa!`, en: `Udon is tugging at your trousers!` },
+    // Udon's line over the tug (the hint in full stays under the stage)
+    'pl.ud_whole':  { vi: `Gâu! Tháo nắp, bóc tem đã nào!`, en: `Woof! Cap and label off first!` },
+    'pl.ud_wrong':  { vi: `Gâu! Không phải bao này đâu!`, en: `Woof! Not that bag!` },
+    'pl.back_play': { vi: `← Chơi tiếp`, en: `← Back to the game` },
+    // how to play: a card the first time each level opens, "?" brings it back
+    'pl.help':      { vi: `Cách chơi`, en: `How to play` },
+    'pl.g_go':      { vi: `Bắt đầu`, en: `Start` },
+    'pl.g1_p':      { vi: `Một cái chai nhựa có ba phần, mỗi phần vào một bao khác nhau.`,
+                      en: `A plastic bottle is three parts, each for a different bag.` },
+    'pl.g1_1h':     { vi: `Tháo nắp, bóc tem`, en: `Cap off, label off` },
+    'pl.g1_1':      { vi: `Chạm vào nắp chai để tháo, chạm vào tem để bóc ra.`, en: `Tap the cap to unscrew it, the label to peel it off.` },
+    'pl.g1_2h':     { vi: `Bóp bẹp chai`, en: `Squash the bottle` },
+    'pl.g1_2':      { vi: `Chai trần rồi thì chạm vào chai để bóp bẹp cho gọn.`, en: `Once it is bare, tap the bottle to squash it flat.` },
+    'pl.g1_3h':     { vi: `Bỏ vào đúng bao`, en: `Into the right bag` },
+    'pl.g1_3':      { vi: `Kéo từng phần vào bao, hoặc chạm phần đó rồi chạm bao. Nhầm thì Udon nhắc.`,
+                      en: `Drag each part to its bag, or tap it, then the bag. Udon will tell you if it is wrong.` },
+    'pl.g2_p':      { vi: `10 món đồ nhựa, nilon quen thuộc, lần lượt từng món.`, en: `Ten everyday plastic and nylon things, one at a time.` },
+    'pl.g2_1h':     { vi: `Nhìn món đồ`, en: `Look at the thing` },
+    'pl.g2_1':      { vi: `Món đang chơi hiện ở giữa, phía trên là số món đã xong.`, en: `The thing to sort is in the middle, the count above it.` },
+    'pl.g2_2h':     { vi: `Chọn bao`, en: `Pick its bag` },
+    'pl.g2_2':      { vi: `Kéo món vào bao, hoặc chạm vào bao. Xốp tấm phẳng và đĩa CD nguyên thì bỏ vào giỏ "Mang tới Gem".`,
+                      en: `Drag it to a bag, or tap the bag. Flat foam sheets and whole CDs go in the "Bring to Gem" basket.` },
+    'pl.g2_3h':     { vi: `Sai cũng không sao`, en: `Wrong is fine` },
+    'pl.g2_3':      { vi: `Udon nhắc bao đúng và lý do, bấm "Xem poster" để xem lại. Không trừ điểm, bấm "Món tiếp" để chơi tiếp.`,
+                      en: `Udon tells you the right bag and why; "See the poster" to check. No points lost: "Next" to carry on.` },
     // the bags
     'pl.b.nilon-cung': { vi: `Nilon cứng`, en: `Hard nylon` },
     'pl.b.nilon-mem':  { vi: `Nilon mềm`, en: `Soft nylon` },
@@ -209,6 +234,7 @@
   }
 
   function hub() {
+    S.level = null;
     view('hub',
       tr('h2', 'pl.title', ' id="st-sheet-title"') + tr('p', 'pl.lead', ' class="st-lead"') +
       '<div class="pl-acts">' +
@@ -225,9 +251,10 @@
   }
 
   function poster(p, fromWall) {
-    S.posterFrom = fromWall ? 'wall' : 'hub';
+    var mid = S.level === 'sort' && S.items && !fromWall;
     view('poster',
-      '<button type="button" class="pt-tool pt-mini pl-back" data-pl-go="hub">' + esc(t('pl.back')) + '</button>' +
+      (mid ? '<button type="button" class="pt-tool pt-mini pl-back" data-pl-go="resume">' + esc(t('pl.back_play')) + '</button>'
+        : '<button type="button" class="pt-tool pt-mini pl-back" data-pl-go="hub">' + esc(t('pl.back')) + '</button>') +
       '<figure class="pl-big"><img src="' + T + 'to/' + p + '.webp" alt="' + esc(binName(BINS.filter(function (x) { return x.poster === p; })[0].id)) + '">' +
         tr('figcaption', 'pl.poster_by', ' class="pt-small"') + '</figure>' +
       '<div class="pl-acts"><button type="button" class="st-btn" data-pl-go="sort">' + esc(t('pl.play')) + '</button></div>');
@@ -250,7 +277,7 @@
     S.sel = null;
     S.tugged = false;
     view('chai',
-      tr('h2', 'pl.chai_h', ' id="st-sheet-title"') + tr('p', 'pl.chai_p', ' class="st-lead pl-lead"') +
+      head('pl.chai_h') + tr('p', 'pl.chai_p', ' class="st-lead pl-lead"') +
       '<div class="pl-stage pl-stage-chai">' +
         '<div class="pl-bottle" data-pl-bottle>' + img('chai', 'pl-bottle-img', t('pl.i.chai')) + img('chai', 'pl-bottle-cap', '') +
           '<button type="button" class="pl-hot pl-hot-nap" data-pl-take="nap" aria-label="' + esc(t('pl.i.nap')) + '"></button>' +
@@ -261,8 +288,13 @@
       '</div>' +
       '<p class="pl-say" aria-live="polite"></p>' +
       bins(['nhua-245', 'nilon-cung', 'nhua-1-de']) +
-      '<div class="pl-acts pl-done" hidden><button type="button" class="st-btn" data-pl-go="sort">' + esc(t('pl.next_lv')) + '</button></div>');
+      '<div class="pl-acts pl-done" hidden><button type="button" class="st-btn" data-pl-go="sort">' + esc(t('pl.next_lv')) + '</button></div>' +
+      guideHtml('chai', 'pl.chai_h', 'pl.g1_p', [
+        '<span class="pl-gi">' + img('chai', 'pl-gi-a', '') + img('nap', 'pl-gi-b', '') + '</span>',
+        '<span class="pl-gi">' + img('chai-tran', 'pl-gi-a', '') + img('chai-bep', 'pl-gi-c', '') + '</span>',
+        '<span class="pl-gi">' + img('bao', 'pl-gi-d', '') + '</span>']));
     renderChai();
+    guideFirst('chai');
   }
 
   function renderChai() {
@@ -291,7 +323,6 @@
 
   /* ---------- level 2: ten things ---------- */
   function sort() {
-    S.level = 'sort';
     // at least one from each bag, the rest at random; one of Gem's two now and then
     var pick = [], by = {};
     shuffle(ITEMS.slice()).forEach(function (it) { (by[it.bin] = by[it.bin] || []).push(it); });
@@ -301,18 +332,63 @@
     while (pick.length < ROUND) pick.push(rest.shift());
     S.items = shuffle(pick);
     S.i = 0; S.ok = 0; S.miss = []; S.tugged = false; S.answered = false;
+    sortView();
+    // the next ones in the background (each about 12 KB)
+    S.items.forEach(function (it) { var im = new Image(); im.src = R + it.id + '.webp'; });
+    renderSort();
+    guideFirst('sort');
+  }
+
+  // the round's screen (again after a look at a poster, on the next thing)
+  function sortView() {
+    S.level = 'sort';
     view('sort',
-      tr('h2', 'pl.sort_h', ' id="st-sheet-title"') + tr('p', 'pl.sort_p', ' class="st-lead pl-lead"') +
+      head('pl.sort_h') + tr('p', 'pl.sort_p', ' class="st-lead pl-lead"') +
       '<p class="pl-count pt-small" aria-live="polite"></p>' +
       '<div class="pl-stage pl-stage-sort"><div class="pl-one"></div>' + udon() + '</div>' +
       '<p class="pl-say" aria-live="polite"></p>' +
       '<div class="pl-acts pl-next-row" hidden>' +
         '<button type="button" class="pt-tool" data-pl-see hidden>' + esc(t('pl.see')) + '</button>' +
         '<button type="button" class="st-btn" data-pl-go="next">' + esc(t('pl.next')) + '</button></div>' +
-      bins(['nilon-cung', 'nilon-mem', 'nhua-1-de', 'nhua-1-kho', 'nhua-245', 'nhua-67', 'gem']));
-    // the next ones in the background (each about 12 KB)
-    S.items.forEach(function (it) { var im = new Image(); im.src = R + it.id + '.webp'; });
-    renderSort();
+      bins(['nilon-cung', 'nilon-mem', 'nhua-1-de', 'nhua-1-kho', 'nhua-245', 'nhua-67', 'gem']) +
+      guideHtml('sort', 'pl.sort_h', 'pl.g2_p', [
+        '<span class="pl-gi">' + S.items.slice(0, 3).map(function (it, k) { return img(it.id, 'pl-gi-' + k, ''); }).join('') + '</span>',
+        '<span class="pl-gi">' + img('bao', 'pl-gi-d', '') + img('gio', 'pl-gi-e', '') + '</span>',
+        '<span class="pl-gi">' + img('ud-ngoi-cho', 'pl-gi-d', '') + '</span>']));
+  }
+
+  /* ---------- how to play ---------- */
+  // the level's title with a "?" beside it
+  function head(k) {
+    return '<div class="pl-head">' + tr('h2', k, ' id="st-sheet-title"') +
+      '<button type="button" class="pt-tool pt-mini pl-help" data-pl-guide aria-label="' + esc(t('pl.help')) + '" title="' + esc(t('pl.help')) + '">?</button></div>';
+  }
+  function guideHtml(level, h, p, ills) {
+    var n = level === 'chai' ? 1 : 2;
+    return '<div class="pl-guide" role="dialog" aria-modal="true" aria-labelledby="pl-g-h" hidden><div class="pl-g-card">' +
+      '<button type="button" class="pt-own-x pl-g-x" data-pl-guide-go aria-label="' + esc(t('pl.close')) + '">×</button>' +
+      '<h3 class="pl-g-h" id="pl-g-h"><span data-i18n="pl.help">' + esc(t('pl.help')) + '</span> · <span data-i18n="' + h + '">' + esc(t(h)) + '</span></h3>' +
+      tr('p', p, ' class="pl-g-p"') +
+      '<ol class="pl-g-steps">' + ills.map(function (ill, k) {
+        return '<li class="pl-g-step">' + ill + '<span class="pl-g-txt"><b>' + (k + 1) + '. ' + tr('span', 'pl.g' + n + '_' + (k + 1) + 'h') + '</b>' +
+          tr('span', 'pl.g' + n + '_' + (k + 1)) + '</span></li>';
+      }).join('') + '</ol>' +
+      '<button type="button" class="st-btn pl-g-go" data-pl-guide-go>' + esc(t('pl.g_go')) + '</button>' +
+    '</div></div>';
+  }
+  // once per level, the first time (gem-pl in this browser)
+  function seen() { try { return JSON.parse(localStorage.getItem('gem-pl') || '{}') || {}; } catch (e) { return {}; } }
+  function guideFirst(level) { if (!seen()[level]) guideShow(true); }
+  function guideShow(on) {
+    var g = root.querySelector('.pl-guide');
+    if (!g) return;
+    g.hidden = !on;
+    if (on) { g.querySelector('.pl-g-go').focus({ preventScroll: true }); return; }
+    var o = seen();
+    o[S.level] = 1;
+    try { localStorage.setItem('gem-pl', JSON.stringify(o)); } catch (e) { /* private mode */ }
+    var help = root.querySelector('[data-pl-guide]');
+    if (help) help.focus({ preventScroll: true });
   }
 
   function renderSort() {
@@ -327,6 +403,7 @@
   }
 
   function end() {
+    S.level = 'end';
     var miss = S.miss;
     view('end',
       '<h2 id="st-sheet-title">' + esc(t('pl.end_h').replace('{ok}', S.ok).replace('{n}', S.items.length)) + '</h2>' +
@@ -378,7 +455,7 @@
       say(t('pl.right') + ' ' + why, 'ok');
     } else {
       S.miss.push(it);
-      tug();
+      tug('pl.ud_wrong');
       say(t('pl.wrong').replace('{bin}', binName(it.bin)) + ' ' + why, 'no');
       var b = BINS.filter(function (x) { return x.id === it.bin; })[0];
       var see = root.querySelector('[data-pl-see]');
@@ -394,14 +471,14 @@
   function dropChai(item, bin) {
     var P = S.parts;
     if (item === 'chai') {
-      if (P.nap === 'on' || P.tem === 'on') { tug(); say(t('pl.chai_whole'), 'no'); return; }
+      if (P.nap === 'on' || P.tem === 'on') { tug('pl.ud_whole'); say(t('pl.chai_whole'), 'no'); return; }
       say(t('pl.chai_flat'), 'no');
       return;
     }
     var want = { nap: 'nhua-245', tem: 'nilon-cung', 'chai-bep': 'nhua-1-de' }[item];
     if (!want) return;
     if (bin !== want) {
-      tug();
+      tug('pl.ud_wrong');
       say(t('pl.wrong').replace('{bin}', binName(want)) + ' ' + t(item === 'nap' ? 'pl.w.nap-chai' : item === 'tem' ? 'pl.w.vo-banh' : 'pl.w.chai-tran'), 'no');
       return;
     }
@@ -429,7 +506,7 @@
   /* ---------- Udon ---------- */
   function udon() {
     return '<div class="pl-udon" aria-hidden="true">' + img('ud-ngoi-cho', 'pl-ud-sit', '') + img('ud-nhay', 'pl-ud-hop', '') + '</div>' +
-      '<div class="pl-tug" aria-hidden="true" hidden>' + img('ud-chay-1', 'pl-run pl-run-1', '') + img('ud-chay-2', 'pl-run pl-run-2', '') +
+      '<div class="pl-tug" aria-hidden="true" hidden><p class="pl-tug-say"></p>' + img('ud-chay-1', 'pl-run pl-run-1', '') + img('ud-chay-2', 'pl-run pl-run-2', '') +
         img('ud-keo-1', 'pl-keo pl-keo-1', '') + img('ud-keo-2', 'pl-keo pl-keo-2', '') + '</div>';
   }
 
@@ -442,21 +519,22 @@
   }
 
   // the first mistake of a round: Udon runs in and tugs a trouser hem
-  function tug() {
+  function tug(line) {
     if (S.tugged) return;
     S.tugged = true;
     var box = root.querySelector('.pl-tug');
     if (!box) return;
+    box.querySelector('.pl-tug-say').textContent = t(line);
     box.hidden = false;
     box.setAttribute('aria-label', t('pl.udon'));
     box.className = 'pl-tug is-run';
     var n = 0;
     clearInterval(S.tugT);
-    if (reduce) { box.className = 'pl-tug is-keo f1'; S.tugT = setTimeout(function () { box.hidden = true; }, 1600); return; }
+    if (reduce) { box.className = 'pl-tug is-keo f1'; S.tugT = setTimeout(function () { box.hidden = true; }, 2400); return; }
     S.tugT = setInterval(function () {
       n++;
       if (n < 5) box.className = 'pl-tug is-run f' + (n % 2 + 1);
-      else if (n < 16) box.className = 'pl-tug is-keo f' + (n % 2 + 1);
+      else if (n < 20) box.className = 'pl-tug is-keo f' + (n % 2 + 1);
       else { clearInterval(S.tugT); box.classList.add('is-out'); setTimeout(function () { box.hidden = true; }, 300); }
     }, 140);
   }
@@ -471,8 +549,11 @@
       else if (go === 'sort') sort();
       else if (go === 'where') where();
       else if (go === 'next') { if (S.i + 1 < S.items.length) { S.i++; renderSort(); } else end(); }
+      else if (go === 'resume') { if (S.i + 1 < S.items.length) { S.i++; sortView(); renderSort(); } else end(); }
       return;
     }
+    if (e.target.closest('[data-pl-guide-go]')) { guideShow(false); return; }
+    if (e.target.closest('[data-pl-guide]')) { guideShow(true); return; }
     if ((el = e.target.closest('[data-pl-poster]'))) { poster(el.getAttribute('data-pl-poster')); return; }
     if ((el = e.target.closest('[data-pl-see]'))) { var p = el.getAttribute('data-pl-see'); if (p) poster(p); return; }
     if (S && S.dragged) { S.dragged = false; return; }   // a drag just ended: not a tap
