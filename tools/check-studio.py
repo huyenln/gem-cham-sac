@@ -3061,8 +3061,10 @@ async def taps(browser, db):
 
 
 async def open_table(browser, db, w, h, init=''):
+    # the table's welcome seen already (its own check opens it: intro())
     pg = await page(browser, db, w, h, "sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-studio-intro','1');"
-                    "localStorage.setItem('gem-studio-intro-touch','1');localStorage.removeItem('gem-designer');" + init)
+                    "localStorage.setItem('gem-studio-intro-touch','1');localStorage.removeItem('gem-designer');"
+                    "localStorage.setItem('gem-guide',JSON.stringify({seen:{ban:1}}));" + init)
     await pg.goto(f'{BASE}/studio.html')
     await pg.wait_for_timeout(1500)
     await pg.add_style_tag(content='.lang-hint{display:none!important}')
@@ -3408,6 +3410,9 @@ async def tui(browser, db):
     n = await pg.evaluate("document.querySelectorAll('.ad-dp').length")
     check(n == 14 and not await pg.evaluate("!!document.querySelector('.ad-dp[data-id=\"tuibuoc\"], .ad-dp[data-id=\"tuitamgiac\"]')"),
           f'admin: one price card per piece on the table; the bags taken off are not shown ({n})')
+    emb = await pg.evaluate("""['daydeo', 'tuitote', 'laptop'].map(k => { const i = document.querySelector('[name="o.' + k + '.embroider"]');
+        return i ? i.parentElement.textContent : null; })""")
+    check(emb == ['Thêu chỉ giữa dây', 'Thêu chỉ giữa quai', None], f'admin: the stitch priced on the strap and a handled bag, named by piece ({emb})')
     await pg.fill('[name="o.tuitote.quilt"]', '80000')
     await js_click(pg, '.ad-dp-save')
     await pg.wait_for_timeout(800)
@@ -3540,6 +3545,159 @@ async def kho(browser, db):
     db.orders = []; db.fabrics = []
 
 
+async def guidance(browser, db):
+    """Bàn thiết kế, 22/10: the welcome in three steps and "?", "Màu riêng" as a
+    drawer (the basket stays under the piece), the table scrolling under a
+    dragged scrap, the strap pieced across / along with a stitch down it
+    (and a bag's handle; picked, not drawn), the Bloom flowers and the bow
+    bag's handle traced off the drawings."""
+    print('guidance')
+    db.fabrics = fabric_rows()
+    # 1. the first time: the welcome, once
+    pg = await open_table(browser, db, 393, 852, "localStorage.removeItem('gem-guide');")
+    check(await pg.evaluate("!document.querySelector('.pt-intro').hidden"), 'the first visit opens the welcome')
+    steps = await pg.evaluate("[...document.querySelectorAll('.pt-in-step b')].map(b => b.textContent)")
+    check(steps == ['1. Chọn món', '2. Đắp vải', '3. May xong'], f'three steps ({steps})')
+    check(await pg.evaluate("document.querySelectorAll('.pt-in-step img').length") >= 3, 'each step has its picture')
+    await pg.click('.pt-in-go')
+    await pg.wait_for_timeout(200)
+    check(await pg.evaluate("document.querySelector('.pt-intro').hidden && JSON.parse(localStorage.getItem('gem-guide')).seen.ban === 1"),
+          '"Bắt đầu thiết kế" closes it, and it stays closed')
+    await pg.click('.pt-help')
+    await pg.wait_for_timeout(200)
+    more = await pg.evaluate("[document.querySelector('.pt-in-more').open, [...document.querySelectorAll('.pt-hb dt')].map(d => d.textContent)]")
+    check(more[0] and 'Lục rổ' in more[1] and 'Màu riêng' in more[1] and 'Kho vải' in more[1], f'"?" opens it again with what each button does ({more[1]})')
+    await pg.mouse.click(10, 10)   # the backdrop
+    await pg.wait_for_timeout(200)
+    check(await pg.evaluate("document.querySelector('.pt-intro').hidden"), 'a tap beside it closes it')
+    # 2. "Màu riêng": a drawer, the basket stays where it was
+    top = "document.querySelector('.pt-basket').getBoundingClientRect().top"
+    b0 = await pg.evaluate(top)
+    await pg.click('.pt-sec-acts [data-pt="own"]')
+    await pg.wait_for_timeout(300)
+    st = await pg.evaluate("(() => { const o = document.querySelector('.pt-own'); return [!o.hidden, getComputedStyle(o).position, o.querySelectorAll('.pt-own-steps li').length]; })()")
+    check(st == [True, 'fixed', 3], f'"Màu riêng" opens a drawer with three steps ({st})')
+    b1 = await pg.evaluate(top)
+    check(abs(b1 - b0) < 2, f'the basket does not move ({b0} -> {b1})')
+    await pg.click('.pt-own [data-own-pick] >> nth=0')
+    await pg.click('.pt-own-go')
+    await pg.wait_for_timeout(500)
+    tip = await pg.evaluate("(() => { const p = document.querySelector('.pt-basket-tip'); return [document.querySelector('.pt-own').hidden, p.hidden, p.textContent]; })()")
+    check(tip[0] and not tip[1] and 'nhuộm' in tip[2], f'"Nhuộm vào rổ": the drawer goes, a line says what next ({tip})')
+    await pg.click('.pt-scrap >> nth=0')
+    await pg.click('.pt-board [data-i="0"]')
+    await pg.wait_for_timeout(300)
+    check(await pg.evaluate("document.querySelector('.pt-basket-tip').hidden"), 'the line goes once a scrap is laid')
+    # 3. a scrap held at the top edge: the table scrolls up to the piece
+    await pg.evaluate("document.querySelector('.st-sheet').scrollTop = 300")   # the piece half out of view
+    await pg.wait_for_timeout(300)
+    s0 = await pg.evaluate("document.querySelector('.st-sheet').scrollTop")
+    sc = await pg.evaluate("(() => { const r = document.querySelector('.pt-scrap').getBoundingClientRect(); return [r.x + r.width / 2, r.y + r.height / 2]; })()")
+    await pg.mouse.move(sc[0], sc[1])
+    await pg.mouse.down()
+    await pg.mouse.move(sc[0], sc[1] - 30, steps=3)
+    await pg.mouse.move(sc[0], 12, steps=6)
+    await pg.wait_for_timeout(700)
+    s1 = await pg.evaluate("document.querySelector('.st-sheet').scrollTop")
+    await pg.mouse.up()
+    check(s1 < s0 - 40, f'a scrap held at the top edge scrolls the table ({s0} -> {s1})')
+    check(not pg.errors, f'no script errors {pg.errors}')
+    await pg.context.close()
+
+    pg = await open_table(browser, db, 1440, 900)
+    async def at(x, y):
+        # the patch on top at a point of the drawing (340 square)
+        return await pg.evaluate("""([x, y]) => {
+          const b = document.querySelector('.pt-board svg'); b.scrollIntoView({block: 'center'});
+          const r = b.getBoundingClientRect(), e = document.elementFromPoint(r.x + x / 340 * r.width, r.y + y / 340 * r.height);
+          const p = e && e.closest('[data-i]'); return p ? +p.dataset.i : null; }""", [x, y])
+    # 4. the strap: across / along, one strap
+    await js_click(pg, '.pt-tab[data-product="daydeo"]')
+    await pg.wait_for_timeout(300)
+    lays = await pg.evaluate("[...document.querySelectorAll('.pt-layouts [data-layout]')].map(b => b.dataset.layout)")
+    check(lays == ['mot', 'ngang', 'doc', 'tuve'], f'the strap: one fabric, across, along, drawn ({lays})')
+    await js_click(pg, '.pt-layouts [data-layout="ngang"]')
+    await pg.wait_for_timeout(300)
+    got = [await at(170, 60), await at(170, 200)]
+    check(got == [0, 1], f'"Ghép ngang": top half and bottom half ({got})')
+    await js_click(pg, '.pt-layouts [data-layout="doc"]')
+    await pg.wait_for_timeout(300)
+    got = [await at(152, 150), await at(188, 150)]
+    check(got == [0, 1], f'"Ghép dọc": left half and right half, each takes its own tap ({got})')
+    check(await pg.evaluate("document.querySelectorAll('.pt-board image[href*=\"mon-daydeo-mask\"]').length") == 1, 'one strap, not two')
+    # an old two-sided code: its two fabrics piece the one side, across
+    old = await pg.evaluate("(() => { const d = GemPatch.parse('2~daydeo~hai~~~~~~~~AB'); return d && [d.layout, d.fab]; })()")
+    check(old == ['ngang', 'AB'], f'an old "hai mặt" code opens as "ghép ngang", both fabrics kept ({old})')
+    # the stitch down the middle
+    await js_click(pg, '[data-emb]')
+    await pg.wait_for_timeout(300)
+    n0 = await pg.evaluate("[document.querySelectorAll('[data-stitch]').length, document.querySelectorAll('[data-thread]').length, document.querySelectorAll('[data-stitch] .pt-stitch path').length >= 9, document.querySelectorAll('.pt-board .pt-stitch').length]")
+    check(n0 == [9, 7, True, 0], f'"Thêu chỉ giữa dây": the nine stitches of the Janome (each its icon), seven threads, nothing drawn on the strap ({n0})')
+    await js_click(pg, '[data-stitch="5"]')
+    await js_click(pg, '[data-thread="2"]')
+    await pg.wait_for_timeout(300)
+    rt = await pg.evaluate("(() => { const d = GemPatch.parse('2~daydeo~doc~~~~~~~~AB~~e52'); return d && [d.ext.e, d.ext.ec, GemPatch.encode(d).split('~').pop()]; })()")
+    check(rt == [5, 2, 'e52'], f'the stitch travels in the design code ({rt})')
+    check(await pg.evaluate("GemPatch.parse('2~goi~mot~~~~~~~~A~~e52') === null"), 'a cushion takes no stitch')
+    lines = await pg.evaluate("document.querySelector('.pt-price-lines').textContent")
+    check('Thêu chỉ giữa dây' in lines, f'the stitch is in the price ({lines})')
+    order = await pg.evaluate("GemPatch.describe('2~daydeo~doc~~~~~~~~AB~~e52', 'vi')")
+    check('thêu chỉ giữa dây: hình thoi, chỉ đỏ gạch' in order, f'the order says which stitch, which thread ({order})')
+    # a bag's handle takes it too (not drawn); the sleeve without a handle does not
+    await js_click(pg, '.pt-tab[data-product="tuitote"]')
+    await js_click(pg, '.pt-shapes [data-shape="tuitote"]')
+    await pg.wait_for_timeout(300)
+    await js_click(pg, '[data-emb]')
+    await pg.wait_for_timeout(300)
+    bag = await pg.evaluate("""[document.querySelector('[data-emb]').textContent, document.querySelectorAll('[data-stitch]').length,
+        document.querySelectorAll('.pt-board .pt-stitch').length, document.querySelector('.pt-price-lines').textContent]""")
+    check(bag[0].startswith('Thêu chỉ giữa quai') and bag[1] == 9 and bag[2] == 0 and 'Thêu chỉ giữa quai' in bag[3],
+          f'the tote: "Thêu chỉ giữa quai", priced, not drawn ({bag[0]}, {bag[1]}, {bag[2]})')
+    hands = await pg.evaluate("['tuino', 'tuikhoa', 'laptopq', 'laptop'].map(k => !!GemPatch.parse('2~' + k + '~mot~~~~~~~~A~~e11'))")
+    check(hands == [True, True, True, False], f'every bag with a handle takes a stitch, the laptop sleeve without one does not ({hands})')
+    check(not pg.errors, f'no script errors {pg.errors}')
+    # 5. Bloom: each flower to its own lines (the cord no longer shows in them)
+    await js_click(pg, '.pt-tab[data-product="bloom"]')
+    await js_click(pg, '.pt-layouts [data-layout="hoa3"]')
+    await pg.wait_for_timeout(300)
+    got = [await at(165, 100), await at(170, 300), await at(200, 219), await at(140, 231)]
+    check(got == [0, 1, 2, 3], f'Bloom: the cord, the middle, right and left flowers each where drawn ({got})')
+    # one and two flowers: drawings of their own (no flower hidden over the stems)
+    for lay, img, pts, want in (('hoa1', 'mon-bloom1-', [(168, 150), (175, 300)], [0, 1]),
+                                ('hoa2', 'mon-bloom2-', [(143, 170), (168, 160), (140, 300), (215, 230)], [0, 0, 1, 2])):
+        await js_click(pg, f'.pt-layouts [data-layout="{lay}"]')
+        await pg.wait_for_timeout(300)
+        got = [await at(x, y) for x, y in pts]
+        n = await pg.evaluate(f"document.querySelectorAll('.pt-board image[href*=\"{img}\"]').length")
+        check(got == want and n >= 2, f'Bloom "{lay}": its own drawing ({n} layers), the cord and each flower where drawn ({got})')
+    names = await pg.evaluate("document.querySelector('.pt-onpiece').textContent")
+    check('Bông trái' in names and 'Bông phải' in names, f'two flowers named left and right ({names[:90]})')
+    # 6. the bow bag: its handle down to the opening, the body below
+    await js_click(pg, '.pt-tab[data-product="tuitote"]')
+    await js_click(pg, '.pt-shapes [data-shape="tuino"]')
+    await js_click(pg, '.pt-layouts [data-layout="mot"]')
+    await pg.wait_for_timeout(300)
+    got = [await at(105, 125), await at(236, 125), await at(170, 260)]
+    check(got[0] == got[1] and got[0] not in (None, 0) and got[2] == 0, f'the bow bag: both straps in the handle\'s fabric, the body its own ({got})')
+    # 7. the origami: a base and six petals, each a piece of its own; no cut lines
+    await js_click(pg, '.pt-tab[data-product="origami"]')
+    await pg.wait_for_timeout(300)
+    lays = await pg.evaluate("[...document.querySelectorAll('.pt-layouts [data-layout]')].map(b => b.dataset.layout)")
+    check(lays == ['mot', 'canh', 'xen', 'moi', 'tuve'], f'the origami: one fabric, petals apart, alternating, each its own, drawn — no cut lines ({lays})')
+    petals = [(155, 145), (223, 141), (265, 196), (234, 259), (156, 262), (119, 204)]
+    for lay, want in (('moi', [1, 2, 3, 4, 5, 6]), ('xen', [1, 2, 1, 2, 1, 2]), ('canh', [1] * 6)):
+        await js_click(pg, f'.pt-layouts [data-layout="{lay}"]')
+        await pg.wait_for_timeout(300)
+        got = [await at(x, y) for x, y in petals] + [await at(185, 100)]
+        check(got == want + [0], f'origami "{lay}": the petals {want}, the base 0 ({got})')
+    names = await pg.evaluate("document.querySelector('.pt-onpiece').textContent")
+    check('Nền túi' in names and 'Cánh' in names, f'the fabrics on it named by part ({names[:80]})')
+    old = await pg.evaluate("[GemPatch.parse('2~origami~hai~~~~~~~~AB'), GemPatch.parse('2~origami~net~~~~~~~~A')].map(d => d && [d.layout, d.fab])")
+    check(old == [['canh', 'AB'], ['mot', 'A']], f'old origami codes: two sectors become base + petals, cut lines one fabric ({old})')
+    check(not pg.errors, f'no script errors {pg.errors}')
+    await pg.context.close()
+
+
 async def main(which):
     if hasattr(sys.stdout, 'reconfigure'):
         sys.stdout.reconfigure(encoding='utf-8', errors='replace')   # a Windows console's code page has no Vietnamese
@@ -3550,7 +3708,7 @@ async def main(which):
         browser = await launch(p)
         for name, fn in (('street', street), ('wear', wear), ('shop', shop), ('spots', spots), ('editor', editor),
                          ('library', library), ('product', product), ('prodlib', prodlib), ('workshop', workshop), ('design', design), ('catalog', catalog), ('kinds', kinds),
-                         ('layers', layers), ('zones', zones), ('cart', cart), ('choices', choices), ('zither', zither), ('guide', guide), ('vai', vai), ('tui', tui), ('kho', kho), ('slow', slow), ('topbar', topbar), ('motion', motion),
+                         ('layers', layers), ('zones', zones), ('cart', cart), ('choices', choices), ('zither', zither), ('guide', guide), ('vai', vai), ('tui', tui), ('kho', kho), ('guidance', guidance), ('slow', slow), ('topbar', topbar), ('motion', motion),
                          ('phone', phone), ('taps', taps)):
             if which in (None, name):
                 await fn(browser, db)

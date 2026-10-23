@@ -27,7 +27,9 @@ Source names (as listed in the "Prompt vẽ cho Bàn thiết kế" prompt pack):
   the-khung.png       -> images/studio/vai/the-khung.webp (1080 x 1920)
 
 Everything is cut out of a white paper background by a flood fill from the
-edges (white inside an object stays). Needs Pillow + numpy.
+edges (white inside an object stays). White linen on white paper (FLAT: the
+Bloom with one / two flowers) is told from the paper by its texture. Needs
+Pillow + numpy (+ scipy for FLAT).
 """
 import sys
 from pathlib import Path
@@ -46,10 +48,24 @@ def save(im, path, q=82):
     print(f'  {path.relative_to(ROOT)}  {im.size[0]}x{im.size[1]}  {path.stat().st_size // 1024} KB')
 
 
-def background(rgb, tol=22):
+def flat_paper(rgb, with_sd=False):
+    """White linen drawn on white paper (the Bloom with one / two flowers,
+    ChatGPT 10/2026): near-white alone would eat the fabric. The paper is
+    flat (no texture), the linen never is: paper = near-white where the
+    7 px neighbourhood barely varies."""
+    from scipy import ndimage as ndi
+    a = np.asarray(rgb.convert('RGB')).astype(np.int16)
+    L = np.asarray(rgb.convert('L')).astype(np.float32)
+    m = ndi.uniform_filter(L, 7)
+    sd = np.sqrt(np.maximum(ndi.uniform_filter(L * L, 7) - m * m, 0))
+    paper = (a.min(axis=2) >= 248) & (sd < 3)
+    return (paper, sd) if with_sd else paper
+
+
+def background(rgb, tol=22, flat=False):
     """True where the pixel is paper connected to the image edge."""
     a = np.asarray(rgb.convert('RGB')).astype(np.int16)
-    near = (a.min(axis=2) > 255 - tol - 10) & ((a.max(axis=2) - a.min(axis=2)) < tol)
+    near = flat_paper(rgb) if flat else (a.min(axis=2) > 255 - tol - 10) & ((a.max(axis=2) - a.min(axis=2)) < tol)
     h, w = near.shape
     seen = np.zeros_like(near)
     stack = [(y, x) for x in range(w) for y in (0, h - 1) if near[y, x]] + \
@@ -65,12 +81,24 @@ def background(rgb, tol=22):
     return seen
 
 
-def holes(rgb, bg, tol=16, min_px=300):
+def holes(rgb, bg, tol=16, min_px=300, flat=False):
     """Paper showing through a hole (a basket handle, the middle of a
     scrunchie): near-white blobs the edge flood can't reach, if big enough
     not to be a highlight."""
     a = np.asarray(rgb.convert('RGB')).astype(np.int16)
-    near = (a.min(axis=2) > 255 - tol - 8) & ((a.max(axis=2) - a.min(axis=2)) < tol) & ~bg
+    if flat:
+        # on white linen a lit fold is near-white too; paper through a hole
+        # (the clasp's loop, the gap between two stems) is flatter still:
+        # a blob counts if it is big and on average all but still
+        from scipy import ndimage as ndi
+        near, sd = flat_paper(rgb, True)
+        lab, n = ndi.label(near & ~bg)
+        idx = np.arange(1, n + 1)
+        size, still = ndi.sum(np.ones_like(sd), lab, idx), ndi.mean(sd, lab, idx)
+        keep = np.zeros(n + 1, bool)
+        keep[1:] = (size >= 1000) & (still < 1.0)
+        return bg | keep[lab]
+    near = ((a.min(axis=2) > 255 - tol - 8) & ((a.max(axis=2) - a.min(axis=2)) < tol)) & ~bg
     h, w = near.shape
     seen = np.zeros_like(near)
     out = bg.copy()
@@ -93,12 +121,12 @@ def holes(rgb, bg, tol=16, min_px=300):
     return out
 
 
-def cut(src, tol=22, open_holes=False):
+def cut(src, tol=22, open_holes=False, flat=False):
     """RGBA with the paper removed and a soft edge, trimmed."""
     rgb = Image.open(src).convert('RGB')
-    bg = background(rgb, tol)
+    bg = background(rgb, tol, flat)
     if open_holes:
-        bg = holes(rgb, bg)
+        bg = holes(rgb, bg, flat=flat)
     alpha = Image.fromarray(np.where(bg, 0, 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(1.2))
     im = rgb.convert('RGBA')
     im.putalpha(alpha)
@@ -366,14 +394,22 @@ def scraps(src):
             k += 1
 
 
-def metal(rgba, box):
+def metal(rgba, box, flat=False):
     """Hardware (rings, clasps) inside box (fractions of the image): what
-    isn't linen there. It is drawn as painted, on top of the fabric."""
+    isn't linen there. It is drawn as painted, on top of the fabric. On
+    white linen (flat): the coloured parts (gold clasp, the beige wrap),
+    their glints and outlines taken in."""
     w, h = rgba.size
     x0, y0, x1, y1 = int(box[0] * w), int(box[1] * h), int(box[2] * w), int(box[3] * h)
     hsv = np.asarray(rgba.convert('RGB').convert('HSV')).astype(np.float32) / 255
     a = np.asarray(rgba.getchannel('A')) > 128
     sat, val = hsv[..., 1], hsv[..., 2]
+    if flat:
+        from scipy import ndimage as ndi
+        m = np.zeros(a.shape, bool)
+        m[y0:y1, x0:x1] = (a & (sat > 0.15))[y0:y1, x0:x1]
+        m = ndi.binary_fill_holes(ndi.binary_closing(m, iterations=4))
+        return ndi.binary_dilation(m, iterations=3) & a
     linen = (sat > 0.10) & (sat < 0.42) & (val > 0.62)
     m = np.zeros(a.shape, bool)
     m[y0:y1, x0:x1] = (a & ~linen)[y0:y1, x0:x1]
@@ -382,7 +418,8 @@ def metal(rgba, box):
 
 
 def piece(src, name, median=0, open_holes=False, hw=None):
-    im = cut(src, open_holes=open_holes)
+    flat = name in FLAT
+    im = cut(src, open_holes=open_holes, flat=flat)
     # square canvas, centred: the patches are laid out on the same square
     s = max(im.size)
     sq = Image.new('RGBA', (s, s), (0, 0, 0, 0))
@@ -394,7 +431,7 @@ def piece(src, name, median=0, open_holes=False, hw=None):
     sq = fit(sq, 900)
     fab_alpha = np.asarray(sq.getchannel('A')).copy()
     if hw:
-        m = metal(sq, hw)
+        m = metal(sq, hw, flat)
         top = sq.copy()
         top.putalpha(Image.fromarray(np.where(m, fab_alpha, 0).astype(np.uint8)))
         save(top, OUT / f'mon-{name}-top.webp')
@@ -419,8 +456,10 @@ PIECES = [
     ('goi', 15, False, None), ('lotcoc', 0, False, None), ('scrunchie', 0, True, None),
     ('lotcocv', 0, False, None), ('bookmark', 0, False, None), ('oxford', 0, True, None),
     ('origami', 0, True, (0, 0, 0.32, 0.28)), ('bloom', 0, True, (0, 0, 1, 0.17)),
-    ('daydeo', 0, True, (0, 0.69, 1, 1)),
+    ('daydeo', 0, True, (0, 0.69, 1, 1)), ('bloom1', 0, True, (0, 0, 1, 0.17)), ('bloom2', 0, True, (0, 0, 1, 0.17)),
 ]
+# white linen on white paper (flat_paper): the Bloom with one / two flowers
+FLAT = {'bloom1', 'bloom2'}
 
 
 def main(folder, only=None):

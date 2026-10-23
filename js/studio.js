@@ -307,6 +307,32 @@
     'studio.pt_own_h':     { vi: `Chọn màu vải bạn muốn`, en: `Pick the fabric colour you want` },
     'studio.pt_own_go':    { vi: `Nhuộm vào rổ`, en: `Dye the basket` },
     'studio.pt_own_note':  { vi: `Gem tìm vải vụn gần màu này nhất và nhắn ảnh cho bạn duyệt trước khi may.`, en: `Gem finds the scraps closest to this colour and sends you a photo to approve before sewing.` },
+    'studio.pt_own_s1':    { vi: `Chọn màu bạn muốn: chấm màu có sẵn, hoặc ô chọn màu bất kỳ.`, en: `Pick the colour you want: a ready-made dot, or any colour in the picker.` },
+    'studio.pt_own_s2':    { vi: `Bấm “Nhuộm vào rổ”: rổ đổi sang các mảnh vải màu đó.`, en: `Tap “Dye the basket”: the basket fills with scraps in that colour.` },
+    'studio.pt_own_s3':    { vi: `Kéo mảnh lên món như bình thường.`, en: `Drag them onto the piece as usual.` },
+    'studio.pt_own_close': { vi: `Đóng`, en: `Close` },
+    'studio.pt_own_done':  { vi: `Rổ đã nhuộm màu bạn chọn. Kéo một mảnh lên món nhé.`, en: `The basket is dyed in your colour. Drag a scrap onto the piece.` },
+    'studio.pt_help':      { vi: `Cách dùng bàn thiết kế`, en: `How the design table works` },
+    'studio.pt_in_p':      { vi: `Ghép vải vụn thành món của riêng bạn. Gem may theo đúng bản bạn ghép.`, en: `Piece scraps into something of your own. Gem sews it just as you pieced it.` },
+    'studio.pt_in_1h':     { vi: `Chọn món`, en: `Pick a piece` },
+    'studio.pt_in_1':      { vi: `Chọn món ở hàng trên cùng, rồi chọn kiểu ghép.`, en: `Pick a piece in the top row, then how it is pieced.` },
+    'studio.pt_in_2h':     { vi: `Đắp vải`, en: `Lay the fabric` },
+    'studio.pt_in_2':      { vi: `Kéo một mảnh từ rổ thả lên món. Hoặc chạm mảnh vải, rồi chạm chỗ muốn đắp.`, en: `Drag a scrap from the basket onto the piece. Or tap a scrap, then tap where it goes.` },
+    'studio.pt_in_3h':     { vi: `May xong`, en: `Sew it` },
+    'studio.pt_in_3':      { vi: `Bấm “May xong!” để đặt tên và lấy thẻ chia sẻ. Ưng rồi thì “Đặt Gem may”.`, en: `Tap “Sew it!” to name it and get a card to share. Happy with it? “Ask Gem to sew it”.` },
+    'studio.pt_in_more':   { vi: `Các nút khác là gì?`, en: `What do the other buttons do?` },
+    'studio.pt_in_go':     { vi: `Bắt đầu thiết kế`, en: `Start designing` },
+    'studio.pt_hb_rummage': { vi: `đổi sang 8 mảnh vải khác.`, en: `swaps in 8 other scraps.` },
+    'studio.pt_hb_own':    { vi: `chọn một màu để nhuộm cả rổ. Gem tìm vải thật gần màu nhất và nhắn ảnh cho bạn duyệt trước khi may.`, en: `pick a colour to dye the whole basket. Gem finds the real fabric closest to it and sends you a photo to approve before sewing.` },
+    'studio.pt_hb_kho':    { vi: `xem hết vải thật Gem đang có, chọn tối đa 8 tấm cho vào rổ.`, en: `see all the real fabric Gem has, and put up to 8 of them in the basket.` },
+    'studio.pt_hb_tones_t': { vi: `Hàng tông màu`, en: `Colour chips` },
+    'studio.pt_hb_tones':  { vi: `(Tất cả, Xanh lá…) rổ chỉ còn vải tông đó.`, en: `(All, Green…) the basket keeps only fabrics of that colour.` },
+    'studio.pt_hb_turn':   { vi: `chạm một ô trên món, rồi bấm để đổi hướng vải trong ô đó.`, en: `tap a patch on the piece, then tap this to turn its fabric.` },
+    'studio.pt_hb_layout': { vi: `món được chia thành các ô thế nào. “Xáo mảnh” đổi chỗ các mảnh, “Ngẫu nhiên” để Gem ghép giúp.`, en: `how the piece is split into patches. “Shuffle” swaps the scraps around, “Surprise me” lets Gem piece it for you.` },
+    'studio.pt_hb_moods':  { vi: `bộ màu và kiểu ghép gợi ý sẵn, chạm là đắp cả món.`, en: `ready colours and piecing: one tap dresses the whole piece.` },
+    'studio.pt_hb_opts':   { vi: `cỡ món; túi có thêm chần bông, túi trong, khoá kéo, nút bấm; dây đeo có thêu chỉ giữa dây.`, en: `the size; bags can be quilted and get pockets, a zip or a snap; the strap can get a stitch down the middle.` },
+    'studio.pt_hb_price_t': { vi: `Giá`, en: `Price` },
+    'studio.pt_hb_price':  { vi: `ở thanh dưới cùng, tự tính lại theo kiểu ghép, số vải và tuỳ chọn.`, en: `at the bottom, worked out again from the piecing, the number of fabrics and the options.` },
     'studio.pt_shape':     { vi: `Dáng`, en: `Shape` },
     'studio.pt_opts':      { vi: `Cỡ & tuỳ chọn`, en: `Size & options` },
     'studio.pt_size_own':  { vi: `Cỡ riêng`, en: `My own size` },
@@ -322,6 +348,8 @@
     'studio.pt_zip_in':    { vi: `Khoá kéo có sẵn`, en: `Zip included` },
     'studio.pt_snap':      { vi: `Thêm nút bấm`, en: `Add a snap` },
     'studio.pt_ties':      { vi: `Kiểu buộc vai`, en: `Shoulder tie` },
+    'studio.pt_emb_kind':  { vi: `Mẫu thêu`, en: `Stitch` },
+    'studio.pt_emb_thread': { vi: `Màu chỉ`, en: `Thread` },
     'studio.pt_mats':      { vi: `Chất liệu bạn thấy ổn`, en: `Fabrics you're happy with` },
     'studio.pt_mats_gem':  { vi: `Để Gem chọn`, en: `Let Gem choose` },
     'studio.pt_from':      { vi: `từ`, en: `from` },
@@ -2756,6 +2784,8 @@
       '<div class="pt">' +
         '<div class="pt-top">' +
           '<div class="pt-tabs" role="group" data-i18n-attr="aria-label:studio.pt_products" aria-label="' + esc(t('studio.pt_products')) + '"></div>' +
+          '<button type="button" class="pt-help" data-pt="help" data-i18n-attr="aria-label:studio.pt_help|title:studio.pt_help" aria-label="' +
+            esc(t('studio.pt_help')) + '" title="' + esc(t('studio.pt_help')) + '">?</button>' +
         '</div>' +
         '<div class="pt-left">' +
           '<div class="pt-shared" hidden></div>' +
@@ -2803,24 +2833,31 @@
                 '<button type="button" class="pt-tool pt-mini" data-pt="rummage" data-i18n="studio.pt_rummage">' + esc(t('studio.pt_rummage')) + '</button>' +
                 (P.hasReal() ? '<button type="button" class="pt-tool pt-mini pt-kho-b" data-pt="kho" data-i18n="studio.pt_kho">' + esc(t('studio.pt_kho')) + '</button>' : '') +
               '</span></div>' +
-            // own colour: the browser's colour picker + a few starting points
-            '<div class="pt-own" hidden>' +
-              tr('p', 'studio.pt_own_h', ' class="pt-own-h"') +
-              '<div class="pt-own-row">' +
-                '<input type="color" name="own" value="#' + ownColour() + '" data-i18n-attr="aria-label:studio.pt_own_h" aria-label="' + esc(t('studio.pt_own_h')) + '">' +
-                OWN_PICKS.map(function (h) {
-                  return '<button type="button" class="pt-own-dot" data-own-pick="' + h + '" style="background:#' + h + '" aria-label="#' + h + '"></button>';
-                }).join('') +
-              '</div>' +
-              '<button type="button" class="st-btn pt-own-go" data-own-go data-i18n="studio.pt_own_go">' + esc(t('studio.pt_own_go')) + '</button>' +
-              tr('p', 'studio.pt_own_note', ' class="pt-small"') +
-              // by colour, any print: which materials are fine (or Gem picks)
-              tr('p', 'studio.pt_mats', ' class="pt-own-h"') + '<div class="pt-own-mats pt-chips pt-tags"></div>' +
-            '</div>' +
+            '<p class="pt-small pt-basket-tip" aria-live="polite" hidden></p>' +
             '<div class="pt-vtones" role="group" hidden data-i18n-attr="aria-label:studio.pt_vt_label" aria-label="' + esc(t('studio.pt_vt_label')) + '"></div>' +
             '<div class="pt-basket"><div class="pt-scraps"></div>' +
               '<img class="pt-ro" src="' + P.VAI + 'ro-truoc.webp" alt="" draggable="false"></div>' +
           '</section>' +
+          // own colour: a drawer over the foot of the screen, so the piece
+          // and the basket stay where they are (Anna 22/10: opened in place
+          // it pushed the basket a screen away from the piece). The
+          // browser's colour picker + a few starting points.
+          '<div class="pt-own" role="dialog" aria-labelledby="pt-own-t" hidden>' +
+            '<div class="pt-own-top"><h3 class="pt-label" id="pt-own-t" data-i18n="studio.pt_own">' + esc(t('studio.pt_own')) + '</h3>' +
+              '<button type="button" class="pt-own-x" data-pt="own" data-i18n-attr="aria-label:studio.pt_own_close" aria-label="' + esc(t('studio.pt_own_close')) + '">×</button></div>' +
+            '<ol class="pt-own-steps">' + tr('li', 'studio.pt_own_s1') + tr('li', 'studio.pt_own_s2') + tr('li', 'studio.pt_own_s3') + '</ol>' +
+            tr('p', 'studio.pt_own_h', ' class="pt-own-h"') +
+            '<div class="pt-own-row">' +
+              '<input type="color" name="own" value="#' + ownColour() + '" data-i18n-attr="aria-label:studio.pt_own_h" aria-label="' + esc(t('studio.pt_own_h')) + '">' +
+              OWN_PICKS.map(function (h) {
+                return '<button type="button" class="pt-own-dot" data-own-pick="' + h + '" style="background:#' + h + '" aria-label="#' + h + '"></button>';
+              }).join('') +
+            '</div>' +
+            '<button type="button" class="st-btn pt-own-go" data-own-go data-i18n="studio.pt_own_go">' + esc(t('studio.pt_own_go')) + '</button>' +
+            tr('p', 'studio.pt_own_note', ' class="pt-small"') +
+            // by colour, any print: which materials are fine (or Gem picks)
+            tr('p', 'studio.pt_mats', ' class="pt-own-h"') + '<div class="pt-own-mats pt-chips pt-tags"></div>' +
+          '</div>' +
           '<div class="pt-shapes pt-chips" role="group" hidden></div>' +
           '<section class="pt-sec pt-sec-layout">' +
             '<div class="pt-sec-row">' + tr('h3', 'studio.pt_layout', ' class="pt-label"') +
@@ -2884,6 +2921,7 @@
           tr('p', 'studio.pt_note', ' class="pt-note"') +
           '</details>' +
         '</div>' +
+        introHtml() +
       '</div>',
       true
     );
@@ -2893,8 +2931,77 @@
     root.querySelector('[name="by"]').value = myName();
     bindCanvas(root.querySelector('.pt-canvas'));
     bindScrapDrag(root.querySelector('.pt-scraps'));
+    if (keep !== true) D.dyeTip = false;
     renderDesigner();
     teach(gvRef ? 'ref' : 'hi');
+    // the first time: what the table is for, in three steps
+    guideLoad();
+    if (keep !== true && !guide.off && !guide.seen.ban) introOpen(false);
+  }
+
+  // The design table's welcome (Anna 22/10: say what it does and how, in
+  // steps 1-2-3): once, the first time it opens ("Bỏ qua hướng dẫn" ends it
+  // with the other tips); "?" brings it back with what every button does.
+  // Pictures from the studio's own drawings.
+  function introHtml() {
+    var step = function (n, ill) {
+      return '<li class="pt-in-step">' + ill + '<span class="pt-in-txt"><b>' + n + '. ' + tr('span', 'studio.pt_in_' + n + 'h') + '</b>' +
+        tr('span', 'studio.pt_in_' + n) + '</span></li>';
+    };
+    var hb = function (name, key) { return tr('dt', name) + tr('dd', key); };
+    var goi = '<img src="' + P.VAI + 'mon-goi-bong.webp" alt="" draggable="false">';
+    return '<div class="pt-intro" role="dialog" aria-modal="true" aria-labelledby="pt-in-h" hidden>' +
+      '<div class="pt-in-card">' +
+        '<button type="button" class="pt-own-x pt-in-x" data-pt="intro-go" data-i18n-attr="aria-label:studio.pt_own_close" aria-label="' +
+          esc(t('studio.pt_own_close')) + '">×</button>' +
+        '<img class="pt-in-udon" src="images/studio/udon/ud-gv-4.webp" alt="" draggable="false">' +
+        tr('h3', 'studio.sewing_h', ' class="pt-in-h" id="pt-in-h"') +
+        tr('p', 'studio.pt_in_p', ' class="pt-in-p"') +
+        '<ol class="pt-in-steps">' +
+          step(1, '<span class="pt-ill pt-ill-1" aria-hidden="true"><span class="pt-ill-tabs"><i></i><i></i><i></i></span>' + goi + '</span>') +
+          step(2, '<span class="pt-ill pt-ill-2" aria-hidden="true">' + goi + '<span class="pt-ill-scrap"></span>' +
+            '<img class="pt-ill-ro" src="' + P.VAI + 'ro-truoc.webp" alt="" draggable="false"></span>') +
+          step(3, '<span class="pt-ill pt-ill-3" aria-hidden="true"><img src="images/studio/udon/ud-may.webp" alt="" draggable="false"></span>') +
+        '</ol>' +
+        '<details class="pt-in-more"><summary data-i18n="studio.pt_in_more">' + esc(t('studio.pt_in_more')) + '</summary><dl class="pt-hb">' +
+          hb('studio.pt_rummage', 'studio.pt_hb_rummage') + hb('studio.pt_own', 'studio.pt_hb_own') +
+          (P.hasReal() ? hb('studio.pt_kho', 'studio.pt_hb_kho') + hb('studio.pt_hb_tones_t', 'studio.pt_hb_tones') : '') +
+          hb('studio.pt_turn', 'studio.pt_hb_turn') + hb('studio.pt_layout', 'studio.pt_hb_layout') +
+          hb('studio.pt_moods', 'studio.pt_hb_moods') + hb('studio.pt_opts', 'studio.pt_hb_opts') +
+          hb('studio.pt_hb_price_t', 'studio.pt_hb_price') +
+        '</dl></details>' +
+        '<button type="button" class="st-btn pt-in-go" data-pt="intro-go" data-i18n="studio.pt_in_go">' + esc(t('studio.pt_in_go')) + '</button>' +
+      '</div></div>';
+  }
+  function introOpen(more) {
+    var el = sheetBody.querySelector('.pt-intro');
+    if (!el) return;
+    el.hidden = false;
+    el.querySelector('.pt-in-more').open = !!more;
+    el.querySelector('.pt-in-go').focus({ preventScroll: true });
+  }
+  function introClose() {
+    var el = sheetBody.querySelector('.pt-intro');
+    if (el) el.hidden = true;
+    guideLoad();
+    guide.seen.ban = 1;
+    guideSave();
+  }
+
+  // "Màu riêng": the drawer over the foot of the screen
+  function ownOpen(on) {
+    var box = sheetBody.querySelector('.pt-own'), b = sheetBody.querySelector('.pt-sec-acts [data-pt="own"]');
+    if (!box) return;
+    box.hidden = !on;
+    if (b) b.setAttribute('aria-expanded', String(on));
+    if (on) { D.dyeTip = false; renderBasketTip(); }
+  }
+  // after "Nhuộm vào rổ": a line over the basket until a scrap is laid
+  function renderBasketTip() {
+    var p = sheetBody.querySelector('.pt-basket-tip');
+    if (!p) return;
+    p.hidden = !D.dyeTip;
+    p.textContent = D.dyeTip ? t('studio.pt_own_done') : '';
   }
 
   /* ---------- Kho vải (the real fabrics, for customers) ----------
@@ -2993,7 +3100,7 @@
       else if (a === 'go' && D.pick.length) {
         // the picked fabrics become the basket and go onto the piece
         D.basket = D.pick.slice();
-        D.vtone = ''; D.held = null; D.d.moodId = '';
+        D.vtone = ''; D.held = null; D.d.moodId = ''; D.dyeTip = false;
         if (D.d.layout === 'net') P.refit(D.d, D.basket);
         else if (D.d.layout !== 'tuve') P.scatter(D.d, D.basket);
         P.syncTaste(D.d);
@@ -3190,6 +3297,7 @@
         '" title="' + esc(fabricLabel(id)) + '">' + scrapHtml(id, k) + '</button>';
     }).join('');
     renderVTones();
+    renderBasketTip();
   }
 
   // the colour chips over the basket (real fabrics only)
@@ -3254,6 +3362,7 @@
   }
 
   function putFabric(i, id) {
+    D.dyeTip = false;
     P.setPatch(D.d, i, id);
     P.syncTaste(D.d);
     D.last = null; D.turnMsg = '';   // dressing a patch does not pick it: no outline over the piece
@@ -3330,7 +3439,22 @@
   }
 
   // Drag a scrap onto a patch. A short press without moving stays a tap.
-  var scrapDragged = 0;
+  // Held near the top or the foot of the table (above the price bar), the
+  // table scrolls under it, so a piece out of view can still be reached.
+  var scrapDragged = 0, edge = { v: 0, raf: 0 };
+  function edgeScroll(y) {
+    var r = sheetEl.getBoundingClientRect(), foot = r.bottom, bar = sheetBody.querySelector('.pt-actions');
+    if (bar && bar.offsetParent) foot = Math.min(foot, bar.getBoundingClientRect().top);
+    var zone = 64;
+    edge.v = y < r.top + zone ? -Math.ceil((r.top + zone - y) / 4) : y > foot - zone ? Math.ceil((y - foot + zone) / 4) : 0;
+    if (edge.v && !edge.raf) edge.raf = requestAnimationFrame(edgeStep);
+  }
+  function edgeStep() {
+    edge.raf = 0;
+    if (!edge.v) return;
+    sheetEl.scrollTop += edge.v;
+    edge.raf = requestAnimationFrame(edgeStep);
+  }
   function bindScrapDrag(box) {
     var st = null;
     box.addEventListener('pointerdown', function (e) {
@@ -3350,11 +3474,13 @@
       }
       st.ghost.style.left = e.clientX + 'px';
       st.ghost.style.top = e.clientY + 'px';
+      edgeScroll(e.clientY);
       if (e.cancelable) e.preventDefault();
     }, { passive: false });
     var end = function (e) {
       if (!st || e.pointerId !== st.pid) return;
       var s0 = st; st = null;
+      edge.v = 0;
       if (!s0.ghost) return;
       s0.ghost.remove();
       scrapDragged = Date.now();
@@ -3730,6 +3856,22 @@
           : plus(f[0])));
       }).join(''));
     }
+    // the strap / a bag's handle: a machine stitch down its middle (Gem's
+    // Janome), which stitch and its thread; not drawn on the piece
+    if (o.indexOf('e') >= 0) {
+      bits.push(chip('data-emb', 1, !!e.e, P.embName(D.d.product, l) + plus(pr.embroider)));
+      if (e.e) {
+        bits.push('<span class="pt-label pt-ties-h">' + esc(t('studio.pt_emb_kind')) + '</span>' + P.STITCHES.map(function (st, i) {
+          var icon = '<svg class="pt-stitch-ico" viewBox="-2 -1 48 18" aria-hidden="true">' + P.stitchIcon(i + 1) + '</svg>';
+          return chip('data-stitch', i + 1, e.e === i + 1, st[l], icon);
+        }).join(''));
+        bits.push('<span class="pt-label pt-ties-h">' + esc(t('studio.pt_emb_thread')) + '</span>' +
+          '<span class="pt-threads" role="group">' + P.THREADS.map(function (th, i) {
+            return '<button type="button" class="pt-thread-dot' + (e.ec === i ? ' is-on' : '') + '" data-thread="' + i +
+              '" style="background:' + th.c + '" aria-pressed="' + (e.ec === i) + '" aria-label="' + esc(th[l]) + '" title="' + esc(th[l]) + '"></button>';
+          }).join('') + '</span>');
+      }
+    }
     var bag = root.querySelector('.pt-bagopts');
     bag.hidden = !bits.length;
     bag.innerHTML = bits.join('');
@@ -3980,6 +4122,7 @@
 
   function designerClick(e) {
     var el, teachAfter = null, shuffled = false;
+    if (e.target.classList && e.target.classList.contains('pt-intro')) { introClose(); return true; }
     // a patch tapped outside the piece's silhouette (it runs on under the
     // mask) is a tap beside the piece; a click from a script or the keyboard
     // has no point to test
@@ -4028,13 +4171,20 @@
       D.basket = ownBasket(hex);
       D.held = null;
       try { localStorage.setItem('gem-own-colour', hex); } catch (x) { /* private mode */ }
+      // the drawer goes, the dyed basket shakes in view, a line says what next
+      ownOpen(false);
+      D.dyeTip = true;
       renderBasket(); renderPreview();
       var scr = sheetBody.querySelector('.pt-scraps');
-      if (scr) { scr.classList.remove('is-rummage'); void scr.offsetWidth; scr.classList.add('is-rummage'); }
+      if (scr) {
+        scr.classList.remove('is-rummage'); void scr.offsetWidth; scr.classList.add('is-rummage');
+        sheetBody.querySelector('.pt-sec-basket').scrollIntoView({ block: 'nearest', behavior: reduceMotion ? 'auto' : 'smooth' });
+      }
       return true;
     }
     if ((el = e.target.closest('[data-vtone]'))) {
       D.vtone = el.getAttribute('data-vtone');
+      D.dyeTip = false;
       D.basket = fillBasket([]);
       D.held = null;
       renderBasket(); renderPreview();
@@ -4110,6 +4260,13 @@
     } else if ((el = e.target.closest('[data-bagopt]'))) {
       var bo = el.getAttribute('data-bagopt');
       D.d.ext[bo] = !D.d.ext[bo];
+    } else if ((el = e.target.closest('[data-emb]'))) {
+      // on: the first stitch, cream thread (or what was picked before)
+      D.d.ext.e = D.d.ext.e ? 0 : (D.embWas || 1);
+    } else if ((el = e.target.closest('[data-stitch]'))) {
+      D.d.ext.e = D.embWas = +el.getAttribute('data-stitch');
+    } else if ((el = e.target.closest('[data-thread]'))) {
+      D.d.ext.ec = +el.getAttribute('data-thread');
     } else if ((el = e.target.closest('[data-tie]'))) {
       // lace ribbon is not sewn from the basket: one fabric slot fewer
       D.d.ext.t = +el.getAttribute('data-tie');
@@ -4151,11 +4308,16 @@
         P.syncTaste(D.d);
         shuffled = true;
       } else if (act === 'own') {
-        var box = sheetBody.querySelector('.pt-own');
-        box.hidden = !box.hidden;
-        el.setAttribute('aria-expanded', String(!box.hidden));
+        ownOpen(sheetBody.querySelector('.pt-own').hidden);
+        return true;
+      } else if (act === 'help') {
+        introOpen(true);
+        return true;
+      } else if (act === 'intro-go') {
+        introClose();
         return true;
       } else if (act === 'rummage') {
+        D.dyeTip = false;
         D.basket = fillBasket([]);
         D.held = null;
         renderBasket();

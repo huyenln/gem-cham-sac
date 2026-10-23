@@ -1693,7 +1693,7 @@ Góp ý: bàn thiết kế giống tờ khảo sát, bản vẽ trông rẻ, chi
 - **Lót cốc tròn / vuông:** cùng sản phẩm (`sku lotcoc`), hai dáng `lotcoc` /
   `lotcocv`; nút "Dáng" chỉ hiện ở lót cốc. Ghi chú đơn ghi rõ "Lót cốc tròn" /
   "Lót cốc vuông".
-- **Màu riêng (color picker):** nút "Màu riêng" ở rổ → bảng chọn màu của máy + 8
+- **Màu riêng (color picker):** nút "Màu riêng" ở rổ → bảng trượt từ dưới lên (22/10) với chọn màu của máy + 8
   màu gợi ý → "Nhuộm vào rổ": rổ thành 9 kiểu vải của màu đó. Nhuộm ngay trong
   trình duyệt từ tranh vải xanh lam (`customSrc`): điểm xanh nhận sắc mới, độ đậm
   so với chính tranh đó; nền kem, ren trắng, lá xanh giữ nguyên. Mã thiết kế thêm
@@ -2096,7 +2096,7 @@ buộc vai thắt nơ 190.000–220.000đ, mã 14 trường cùng giá, field 14
   - Oxford: thân + cổ + quai.
   - Bloom: dây + 1, 2 hoặc 3 bông.
   - Bookmark: hai mảnh rời, vuông và tam giác.
-  - Dây đeo: mặt ngoài và mặt trong.
+  - Dây đeo: một dây, ghép ngang hoặc ghép dọc hai vải (22/10; trước là "mặt ngoài / mặt trong").
   - Mã thiết kế cũ được đổi qua bảng `LEGACY`.
 - **F. Túi** (`tools/bag-assets.py`):
   - Tab **"Túi"** có 5 dáng (từ 20/10 còn 3: tam giác + buộc vai tắt, xem "Vẽ chì cho có khối" bên dưới):
@@ -2220,6 +2220,88 @@ buộc vai thắt nơ 190.000–220.000đ, mã 14 trường cùng giá, field 14
     +20.000đ · Chần bông +70.000đ"). Giỏ hàng tính dòng thiết kế theo mã.
 - **Kiểm tra**: `python3 tools/check-studio.py tui` kiểm dáng, tuỳ chọn, giá, cỡ riêng, laptop,
   chất liệu, giỏ, `create_order` nhận mã chứ không nhận giá, settings, và editor giá trong admin.
+
+### Bàn thiết kế — hướng dẫn, Màu riêng, dây đeo, Bloom, quai nơ, Origami (22/10/2026)
+
+Anna thử trên điện thoại (22/10) và gửi ảnh lỗi.
+- **Hướng dẫn 1-2-3:** lần đầu mở bàn thiết kế hiện thẻ "Bàn thiết kế" có ba bước (Chọn món,
+  Đắp vải, May xong), mỗi bước một hình nhỏ lấy từ tranh có sẵn (gối, rổ + mảnh vải bay lên,
+  Udon đang may). Thẻ chỉ hiện một lần, đánh dấu `gem-guide.seen.ban`; "Bỏ qua hướng dẫn" ngoài
+  phố cũng tắt thẻ này. Nút "?" cạnh hàng món mở lại thẻ, kèm phần "Các nút khác là gì?" giải
+  thích Lục rổ, Màu riêng, Kho vải, hàng tông màu, Xoay vải, Kiểu ghép, Tâm trạng, Cỡ & tuỳ
+  chọn, Giá. Code: `introHtml` / `introOpen` trong `js/studio.js`.
+- **Màu riêng thành bảng trượt** từ đáy màn hình (`position: fixed`). Trước đây khung này mở
+  ngay giữa trang, đẩy rổ xuống xa món gần một màn hình, nên không kéo vải lên món được. Trong
+  bảng có ba bước: chọn màu → "Nhuộm vào rổ" → kéo mảnh lên món. Bấm nhuộm thì bảng đóng, rổ
+  rung nhẹ, trên rổ hiện dòng "Rổ đã nhuộm màu bạn chọn. Kéo một mảnh lên món nhé."; dòng này
+  tắt khi đắp mảnh đầu tiên.
+- **Kéo vải tới mép trên hoặc mép dưới** (mép dưới là phía trên thanh giá) thì bàn tự cuộn theo
+  (`edgeScroll`), nên món đang khuất vẫn kéo tới được.
+- **Dây đeo cổ tay:** Anna giải thích dây chỉ có một mặt lộ ra ngoài, và mặt đó ghép từ 2 vải.
+  - Bỏ kiểu hiện hai dây (mặt ngoài / mặt trong). Cách đó còn có lỗi: vùng chạm của dây phải
+    phủ lên dây trái, nên chỉ đổi được vải một bên.
+  - Kiểu mới: Một vải / Ghép ngang (nửa trên, nửa dưới, cắt ở y 120) / Ghép dọc (hai dải, đường
+    may ở x 170) / Tự vẽ.
+  - Mã cũ `hai` mở thành `ngang`, giữ cả hai vải (`LEGACY`).
+- **Thêu chỉ giữa dây / giữa quai** (máy Janome của Gem): tuỳ chọn `e`, mã field 13
+  `e<mẫu><màu chỉ>`.
+  - Có ở dây đeo và mọi túi có quai: tote, quai nơ, khoá kéo, laptop có quai (cả túi tam giác
+    đang tắt). Túi laptop không quai thì không. Tên hiện theo món (`embName`): "Thêu chỉ giữa dây"
+    / "Thêu chỉ giữa quai" (Anna 23/10).
+  - **Không vẽ lên hình** (Anna 23/10): dây vẽ có khối, đường thêu 2D đè lên trông "lợm khợm".
+    Khách chỉ chọn mẫu + màu chỉ; đơn ghi rõ, vd "thêu chỉ giữa quai: dây lá, chỉ kem". Khi Anna
+    nghĩ ra cách minh họa đẹp thì làm lại.
+  - 9 mẫu (`STITCHES`) lấy từ dải mẫu trên máy Janome (ảnh Anna chụp 23/10): zíc zắc, lông vũ,
+    sóng, dây lá, hình thoi, chữ X, vỏ sò, răng cưa, tường thành. Mã chỉ có 1 chữ số cho mẫu nên
+    tối đa 9. Icon trong ô chọn vẽ ngang như trên máy (`stitchIcon`, mẫu satin tô đặc). Máy còn
+    tổ ong, núi ΛΛΛ, chữ T, trăng khuyết, chuỗi hạt — muốn đổi thì sửa `STITCHES` + `stitchIcon`
+    (đơn cũ lưu số thứ tự, nên chỉ thêm vào cuối hoặc thay khi chưa có đơn dùng mẫu đó).
+  - 7 màu chỉ (`THREADS`).
+  - Giá `products.<món>.embroider`, tạm 10.000đ; owner sửa ở admin → Giá thiết kế, mục "Tuỳ chọn".
+  - `supabase/migrations/20261022b_day_deo_theu.sql` thêm giá thêu (dây + các túi có quai, chỉ
+    chỗ chưa có) và sửa `design_price` cho nhận token `e..`.
+    **Phải chạy trước khi JS lên web**, nếu không đơn có thêu bị từ chối.
+- **Bloom:** mỗi bông được khoanh theo đúng nét mực trong tranh, kể cả miệng hoa (mặt trong).
+  - Trước đây là đa giác khoảng 10 điểm: vải của dây lộ vào miệng hoa, và bông này lấn sang
+    bông kia.
+  - Cách làm (một lần, script trong scratchpad, không để trong repo):
+    1. Tách vùng giữa các nét mực của `mon-bloom-bong`.
+    2. Gán phần nét mực và phần tối trong lòng hoa cho bông gần nhất.
+    3. Cắt cuống ở đúng mép trên của từng bông (đo tay trên ảnh phóng to).
+  - `ART.bloom.buds[].d` là đường viền bông.
+  - **1 bông / 2 bông là tranh riêng** (Anna 23/10). Trước đó ẩn bông từ tranh 3 bông: sau bông
+    bị ẩn tranh không vẽ gì (đoạn cuống, dải dây bị bông che), nên cuống lởm chởm. Anna nhờ
+    ChatGPT vẽ lại từ ảnh 3 bông (cùng nét, cùng móc khoá): `mon-bloom1-*`, `mon-bloom2-*`
+    (`tools/design-assets.py`, tranh gốc không để trong repo). `ART.bloom.lays` chọn tranh + bông
+    theo kiểu (`artOf()`); 2 bông là "Bông trái" (trước) + "Bông phải", 1 bông là "Bông".
+  - Hai tranh này vải trắng trên giấy trắng: tách nền theo "giấy phẳng, vải có thớ"
+    (`flat_paper`, `FLAT`), lỗ thật (vòng móc, khe giữa hai cuống) là vùng giấy lớn và phẳng hơn
+    chỗ sáng của vải; móc khoá + đầu bọc lấy theo màu vàng (`metal(..., flat)`).
+  - Khoanh bông (script trong scratchpad): vùng giữa nét mực → hạt giống bông (dưới mép trên
+    của bông) + hạt giống dây (vùng trên các bông, đọc trên ảnh phóng to) → mỗi điểm về hạt gần
+    nhất → lấp lỗ.
+- **Túi quai nơ:** phần "Quai" trước chỉ gồm cái nơ, hai dải quai bên dưới ăn theo vải thân
+  (với kiểu sọc dọc thì mỗi dải một màu sọc).
+  - Giờ cả quai từ nơ xuống tới góc miệng túi, ra hai bên hông hơi thấp hơn, là một vải
+    (`PENCIL.tuino` trong `tools/bag-assets.py`).
+  - Khung thân `box` bắt đầu từ y 142, nên các kiểu ghép thân chỉ chia phần thân.
+- **Túi Origami: nền + 6 cánh** (Anna 22/10: các cánh gấp được gắn riêng từng cánh, không ghép
+  vải kiểu thường; cánh phải tách màu khỏi nền túi; bỏ "Ghép theo nét vẽ").
+  - 6 cánh là hình thoi khoanh trên tranh (sau khi làm nổi các đường gấp): một đỉnh ở tâm
+    (192.5, 199), đỉnh ngoài ở góc lục giác, mép ngoài hơi phồng như trong tranh
+    (`ART.origami.petals`).
+  - Kiểu ghép:
+    - Một vải.
+    - Cánh khác nền `canh`: nền một vải, 6 cánh một vải.
+    - Cánh xen kẽ `xen`: cánh 1, 3, 5 một vải; cánh 2, 4, 6 một vải.
+    - Mỗi cánh một vải `moi`: nền + 6 cánh, tối đa 7 vải.
+    - Tự vẽ.
+  - Mặc định là `canh`. Mã cũ `hai` mở thành `canh` (vải 1 là nền, vải 2 là cánh); mã cũ `net`
+    mở thành một vải.
+  - Giá khởi điểm 5k / 10k / 15k; migration `20261022b` thêm vào bảng giá nếu chưa có.
+    Ghi chú đơn ghi "Nền túi: … · Cánh: …".
+  - Vải nền không còn lộ qua khoen móc chìa khoá (`ART.origami.body`).
+- Kiểm tra: `python3 tools/check-studio.py guidance`.
 
 ### Studio hiện cảnh mặc định thay cho bố cục đã lắp (sửa 13/10/2026)
 
