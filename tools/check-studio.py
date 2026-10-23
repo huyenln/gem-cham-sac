@@ -1419,6 +1419,10 @@ async def kinds(browser, db):
     it = ((db.rows.get('draft') or {}).get('items') or [{}])[-1]
     check(it.get('kind') == 'zone' and it.get('zone', {}).get('act') == 'memo' and it.get('zone', {}).get('vi') == 'Bảng nhỏ',
           f'editor: a zone keeps its action + name in the layout ({it.get("zone")})')
+    await pg.check('[name="zn-notag"]')
+    await pg.wait_for_timeout(2600)
+    it = ((db.rows.get('draft') or {}).get('items') or [{}])[-1]
+    check(it.get('zone', {}).get('notag') is True, f'editor: "Ẩn nhãn" is kept in the layout ({it.get("zone")})')
     check(it.get('show') == {'from': '2026-01-01'}, f'editor: dates to show it ({it.get("show")})')
     # an upload with a big see-through margin comes back cut to the picture
     sz = await pg.evaluate("""async () => {
@@ -3784,6 +3788,84 @@ async def onefab(browser, db):
     await pg.context.close()
 
 
+async def taggroup(browser, db):
+    """23/10: pieces that do the same thing and stand together share one tag
+    (the name the owner gave one of them), over the lot: it opens the place as
+    a whole, each picture still opens itself (a tap names it, a second opens
+    it; one click with a mouse). "Ẩn nhãn" takes a piece's tag away. The tip
+    out on the street names the sorting corner too."""
+    print('taggroup')
+    db.rows.clear(); db.info.clear()
+    def poster(pid, x, y, **z):
+        return dict(src=f'images/studio/tagom/{pid}.webp', x=x, y=y, w=148, h=210, rot=0, flip=False, layer='back', frame=False,
+                    kind='zone', zone=dict(act='phanloai', **z))
+    db.rows['live'] = {
+        'v': 1, 'bg': {'src': 'images/studio/bg/strip-tron.webp', 'w': 5792, 'h': 1024}, 'items': [],
+        'udon': {'x': 5200, 'y': 560, 'w': 128, 'h': 140}, 'start': 700,
+        'outside': {'bg': {'src': 'images/studio/bg/ngoai.webp', 'w': 2686, 'h': 1024}, 'start': 700, 'items': [
+            poster('nilon-cung', 400, 300), poster('nilon-mem', 560, 300, vi='Góc Phân Loại'), poster('nhua-1-de', 720, 300),
+            poster('nhua-245', 400, 520), poster('nhua-67', 560, 520), poster('nhua-1-kho', 720, 520),
+            poster('nilon-cung', 2400, 420),   # far off: a tag of its own
+            dict(src='images/studio/vn/vn-36.webp', x=1150, y=820, w=312, h=200, rot=0, flip=False, layer='back', frame=False,
+                 kind='zone', zone={'act': 'dantranh', 'notag': True})]},
+    }
+    tags = "[...document.querySelectorAll('[data-thing-label]')].map(l => [l.textContent, parseFloat(l.style.left)])"
+    rect = "s => { const r = [...document.querySelectorAll('.st-thing')].filter(e => (e.getAttribute('src') || '').endsWith(s))[0].getBoundingClientRect(); return [r.x + r.width / 2, r.y + r.height / 2]; }"
+    view = "(() => { const p = document.querySelector('.pl'); return p ? [p.dataset.plView, (document.querySelector('.pl-big img') || {}).src || ''] : null; })()"
+    out = "localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-studio-intro-touch','1');sessionStorage.removeItem('gem-scene');"
+    # the door tip, first visit: what else is out here
+    pg = await page(browser, db, 1440, 900, out + "localStorage.removeItem('gem-guide')")
+    await pg.goto(f'{BASE}/studio.html')
+    await pg.wait_for_timeout(2500)
+    await pg.keyboard.press('ArrowRight')
+    await pg.wait_for_timeout(2200)
+    tip = await pg.evaluate("document.getElementById('st-tip').hidden ? null : document.getElementById('st-tip-text').textContent")
+    check(tip == 'Chạm vào cửa để vào studio. Ngoài này còn có đàn tranh để chơi và góc phân loại rác để bạn thử tài.',
+          f'street tip: the door, the đàn and the sorting corner ({tip})')
+    await pg.context.close()
+    # desktop: one tag over the six, one for the far one, none for the hidden
+    pg = await page(browser, db, 1440, 900, GUIDE_OFF + out)
+    await pg.goto(f'{BASE}/studio.html')
+    await pg.wait_for_timeout(2500)
+    got = await pg.evaluate(tags)
+    names = sorted(g[0] for g in got)
+    mid = [g[1] for g in got if g[0] == 'Góc Phân Loại']
+    check(names == ['Góc Phân Loại', 'Phân loại rác'] and mid and abs(mid[0] - 560 / 2686 * 100) < 1.5,
+          f'six posters together: one tag, the owner\'s name, over the middle; the far one its own; the hidden none ({got})')
+    await js_click(pg, '.st-zone-label')   # the shared one comes first in the page
+    await pg.wait_for_timeout(1200)
+    v = await pg.evaluate(view)
+    check(v and v[0] == 'hub', f'the shared tag opens the game on its six posters ({v})')
+    await js_click(pg, '.st-close')
+    await pg.wait_for_timeout(400)
+    await pg.mouse.click(*(await pg.evaluate(rect, 'tagom/nhua-245.webp')))
+    await pg.wait_for_timeout(1200)
+    v = await pg.evaluate(view)
+    check(v and v[0] == 'poster' and v[1].endswith('tagom/to/nhua-245.webp'), f'a click on one poster opens that poster ({v})')
+    await js_click(pg, '.st-close')
+    await pg.wait_for_timeout(400)
+    await pg.mouse.click(*(await pg.evaluate(rect, 'vn/vn-36.webp')))
+    await pg.wait_for_timeout(1200)
+    zt = await pg.evaluate("!!document.querySelector('.zt-wrap')")
+    check(zt, f'a piece with its tag hidden still opens with a click ({zt})')
+    check(not pg.errors, f'no script errors {pg.errors}')
+    await pg.context.close()
+    # a phone: a tap names the poster, a second opens it
+    pg = await page(browser, db, 390, 844, GUIDE_OFF + out)
+    await pg.goto(f'{BASE}/studio.html')
+    await pg.wait_for_timeout(2500)
+    await pg.touchscreen.tap(*(await pg.evaluate(rect, 'tagom/nhua-1-kho.webp')))
+    await pg.wait_for_timeout(1500)
+    one = await pg.evaluate("[(document.querySelector('.st-pick-label') || {}).textContent, !!document.querySelector('.pl')]")
+    await pg.touchscreen.tap(*(await pg.evaluate(rect, 'tagom/nhua-1-kho.webp')))
+    await pg.wait_for_timeout(1200)
+    v = await pg.evaluate(view)
+    check(one == ['Phân loại rác', False] and v and v[1].endswith('tagom/to/nhua-1-kho.webp'),
+          f'phone: a tap on a poster names it, a second opens it ({one}, {v})')
+    check(not pg.errors, f'no script errors {pg.errors}')
+    await pg.context.close()
+
+
 async def phanloai(browser, db):
     """23/10: "Phân loại rác" (js/phanloai.js, loaded on first use): a Tagom
     poster hung as a "Khu vực" opens on itself; level 1 takes a bottle apart
@@ -3800,7 +3882,9 @@ async def phanloai(browser, db):
     for name, w, h in (('desktop', 1440, 900), ('mobile', 390, 844)):
         # the same ten things every run (a seeded Math.random)
         pg = await page(browser, db, w, h, GUIDE_OFF + "localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-studio-intro-touch','1');sessionStorage.setItem('gem-scene','in');"
-                        "(() => { let s = 7; Math.random = () => (s = (s * 16807) % 2147483647) / 2147483647; })()")
+                        "(() => { let s = 7; Math.random = () => (s = (s * 16807) % 2147483647) / 2147483647; })();"
+                        "window.__src = 0; (() => { const A = window.AudioContext; if (!A) return; const b = A.prototype.createBufferSource;"
+                        " A.prototype.createBufferSource = function () { window.__src++; return b.apply(this, arguments); }; })()")
         loaded = []
         pg.on('request', lambda r: loaded.append(r.url) if '/js/phanloai.js' in r.url or '/images/studio/rac/' in r.url else None)
         await pg.goto(f'{BASE}/studio.html')
@@ -3819,9 +3903,24 @@ async def phanloai(browser, db):
         await pg.wait_for_timeout(200)
         n = await pg.evaluate("[document.querySelectorAll('.pl-poster').length, document.querySelectorAll('[data-pl-go=\"chai\"], [data-pl-go=\"sort\"]').length]")
         check(n == [6, 2], f'{name}: the hub: six posters, two levels ({n})')
-        # level 1: how to play, the first time; "?" brings it back
+        # level 1: how to play, the first time; "?" brings it back; the music comes in
         await js_click(pg, '[data-pl-go="chai"]')
         await pg.wait_for_timeout(300)
+        if name == 'desktop':
+            n0 = await pg.evaluate('window.__src')
+            await pg.wait_for_timeout(1500)
+            n1 = await pg.evaluate('window.__src')
+            await js_click(pg, '[data-pl-music]')
+            await pg.wait_for_timeout(600)
+            n2 = await pg.evaluate('window.__src')
+            await pg.wait_for_timeout(1500)
+            n3 = await pg.evaluate('window.__src')
+            sw = await pg.evaluate("[document.querySelector('[data-pl-music]').textContent, document.querySelector('[data-pl-music]').getAttribute('aria-pressed'), JSON.parse(localStorage.getItem('gem-pl')).nhac]")
+            check(n1 > n0 and n3 == n2 and sw == ['Nhạc: tắt', 'false', 0], f'music: plays with the level, "Nhạc" turns it off and is kept ({n0}, {n1}, {n2}, {n3}, {sw})')
+            await js_click(pg, '[data-pl-music]')
+            await pg.wait_for_timeout(1500)
+            n4 = await pg.evaluate('window.__src')
+            check(n4 > n3, f'music: on again ({n3} -> {n4})')
         g = await pg.evaluate("[!document.querySelector('.pl-guide').hidden, document.querySelectorAll('.pl-g-step').length, document.querySelector('.pl-g-h').textContent]")
         check(g[0] and g[1] == 3 and 'Cách chơi' in g[2], f'{name}: level 1 opens on how to play, three steps ({g})')
         if name == 'mobile':
@@ -3865,10 +3964,41 @@ async def phanloai(browser, db):
         check(g[0] and g[1] == 3 and g[2] >= 5, f'{name}: level 2 opens on its own how to play ({g})')
         await js_click(pg, '.pl-g-go')
         items = await pg.evaluate("[document.querySelectorAll('[data-pl-bin]').length, document.querySelector('.pl-count').textContent]")
-        check(items[0] == 7 and '1/10' in items[1], f'{name}: six bags and Gem\'s basket, ten things ({items})')
-        wrong_seen, tugs, looked = 0, [], False
+        check(items[0] == 6 and '1/10' in items[1], f'{name}: Tagom\'s six bags, ten things ({items})')
+        rules = await pg.evaluate("""(() => { const I = GemPhanLoai.ITEMS, B = GemPhanLoai.BINS.map(b => b.id);
+            return [B.indexOf('gem') < 0, I.filter(i => i.id === 'xop' || i.id === 'dia-cd').map(i => i.bin),
+                    I.filter(i => /^nilon/.test(i.bin) && i.code).length,
+                    I.filter(i => ['ban-chai', 'dia-cd', 'xop'].indexOf(i.id) >= 0 && i.code).length,
+                    I.filter(i => i.code && !({ 'nhua-1-de': [1], 'nhua-1-kho': [1], 'nhua-245': [2, 4, 5], 'nhua-67': [6, 7] })[i.bin].includes(i.code)).length]; })()""")
+        check(rules == [True, ['nhua-67', 'nhua-67'], 0, 0, 0],
+              f'{name}: no Gem basket (foam, CDs to 6-7); numbers only on hard plastics, as on Tagom\'s posters ({rules})')
+        wrong_seen, tugs, looked, marks, felt = 0, [], False, [], {}
         for i in range(10):
             it = await pg.evaluate("(() => { const id = document.querySelector('.pl-one [data-pl-item]').dataset.plItem; return [id, GemPhanLoai.ITEMS.filter(x => x.id === id)[0].bin]; })()")
+            if it[1].startswith('nilon') and it[1] not in felt and name == 'desktop':
+                # nylon, felt: a tap squeezes it, a grip pulls it
+                felt[it[1]] = True
+                await js_click(pg, '.pl-one [data-pl-item]')
+                await pg.wait_for_timeout(150)
+                word = await pg.evaluate("(document.querySelector('.pl-sfx b') || {}).textContent || ''")
+                await pg.wait_for_timeout(1200)
+                g = await pg.evaluate("(() => { const r = document.querySelector('.pl-one .pl-grip.is-r').getBoundingClientRect(); return [r.x + r.width / 2, r.y + r.height / 2]; })()")
+                await pg.mouse.move(*g)
+                await pg.mouse.down()
+                for k in range(1, 11):
+                    await pg.mouse.move(g[0] + 9 * k, g[1])
+                    await pg.wait_for_timeout(16)
+                pull = await pg.evaluate("[parseFloat((document.querySelector('.pl-stretch').style.transform.match(/scaleX\\(([\\d.]+)/) || [0, 1])[1]), (document.querySelector('.pl-sfx b') || {}).textContent || '']")
+                await pg.mouse.up()
+                await pg.wait_for_timeout(600)
+                back = await pg.evaluate("[document.querySelector('.pl-stretch').style.transform, document.querySelector('.pl-one [data-pl-item]') ? 1 : 0, document.querySelector('.pl-next-row').hidden]")
+                hard = it[1] == 'nilon-cung'
+                check(word == ('SỘT SOẠT!' if hard else '~ ~ ~') and (pull[0] <= 1.05 if hard else pull[0] > 1.3)
+                      and pull[1] == ('KHÔNG GIÃN!' if hard else 'GIÃÃN~') and back == ['', 1, True],
+                      f'{name}: {it[1]}: a tap squeezes it ({word}), a grip pulls it ({pull}), it springs back, not sorted by it ({back})')
+            marks.append(await pg.evaluate("""(() => { const one = document.querySelector('.pl-one'), id = one.querySelector('[data-pl-item]').dataset.plItem,
+                it = GemPhanLoai.ITEMS.filter(x => x.id === id)[0], m = one.querySelector('.pl-code'), f = one.querySelector('.pl-feel');
+                return (it.code ? !!m && m.textContent.startsWith(String(it.code)) : !m) && (/^nilon/.test(it.bin) ? !!f && one.querySelectorAll('.pl-grip').length === 2 : !f); })()"""))
             # the first two answered wrong, the rest right
             pick = it[1] if i >= 2 else ('nilon-mem' if it[1] != 'nilon-mem' else 'nilon-cung')
             await js_click(pg, f'[data-pl-bin="{pick}"]')
@@ -3894,6 +4024,9 @@ async def phanloai(browser, db):
             await js_click(pg, '[data-pl-go="next"]')
             await pg.wait_for_timeout(120)
         check(looked, f'{name}: a poster was looked at mid-round')
+        check(all(marks), f'{name}: each thing shows its number (hard plastics) or how it feels (nylon), nothing else ({marks})')
+        if name == 'desktop':
+            check(len(felt) == 2, f'{name}: both nylons were felt ({list(felt)})')
         check(wrong_seen == 2, f'{name}: a wrong bag: where it goes and why ({wrong_seen})')
         check(tugs == [True, False], f'{name}: Udon tugs at the first mistake only ({tugs})')
         end = await pg.evaluate("[document.querySelector('.pl').dataset.plView, document.querySelector('h2').textContent, document.querySelectorAll('.pl-miss li').length]")
@@ -3908,6 +4041,13 @@ async def phanloai(browser, db):
               f'{name}: directions and Tagom\'s page open in a new tab ({len(links)})')
         # what the whole game cost, each file once (this server sends no cache
         # headers, so a picture drawn again is fetched again here, not online)
+        if name == 'desktop':
+            await js_click(pg, '.st-close')
+            await pg.wait_for_timeout(600)
+            m0 = await pg.evaluate('window.__src')
+            await pg.wait_for_timeout(1500)
+            m1 = await pg.evaluate('window.__src')
+            check(m1 == m0, f'music: stops when the game is closed ({m0}, {m1})')
         weight = await pg.evaluate("Object.values(Object.fromEntries(performance.getEntriesByType('resource').filter(r => /\\/(rac|tagom)\\//.test(r.name) || /phanloai/.test(r.name)).map(r => [r.name.split('?')[0], r.encodedBodySize]))).reduce((a, b) => a + b, 0)")
         print(f'    {name}: the game played through, {round(weight / 1024)} KB')
         check(weight < 800 * 1024, f'{name}: the game played through stays light ({round(weight / 1024)} KB)')
@@ -3926,7 +4066,7 @@ async def main(which):
         browser = await launch(p)
         for name, fn in (('street', street), ('wear', wear), ('shop', shop), ('spots', spots), ('editor', editor),
                          ('library', library), ('product', product), ('prodlib', prodlib), ('workshop', workshop), ('design', design), ('catalog', catalog), ('kinds', kinds),
-                         ('layers', layers), ('zones', zones), ('cart', cart), ('choices', choices), ('zither', zither), ('guide', guide), ('vai', vai), ('tui', tui), ('kho', kho), ('guidance', guidance), ('onefab', onefab), ('phanloai', phanloai), ('slow', slow), ('topbar', topbar), ('motion', motion),
+                         ('layers', layers), ('zones', zones), ('cart', cart), ('choices', choices), ('zither', zither), ('guide', guide), ('vai', vai), ('tui', tui), ('kho', kho), ('guidance', guidance), ('onefab', onefab), ('taggroup', taggroup), ('phanloai', phanloai), ('slow', slow), ('topbar', topbar), ('motion', motion),
                          ('phone', phone), ('taps', taps)):
             if which in (None, name):
                 await fn(browser, db)

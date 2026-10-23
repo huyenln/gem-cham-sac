@@ -414,8 +414,12 @@ Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
   đường thì Gem báo giá (23/10, migration `20261023_mot_vai_net_bao_gia.sql` chạy **trước** khi
   merge); dây túi Oxford gắn sau cổ áo; Oxford "Thân ô vuông": mảng dưới cổ áo cùng vải thân hai bên.
 - ♻️ Phân loại rác cùng Tagom (23/10): poster Tagom treo tường (Lắp studio → nhóm "Poster Tagom", tự
-  thành Khu vực `phanloai`) → màn 1 xử lý một cái chai, màn 2 phân loại 10 món (6 bao + "Mang tới Gem"),
-  Udon kéo ống quần lần sai đầu (có lời thoại), thẻ "Cách chơi" lần đầu mỗi màn + nút "?", màn cuối chỉ
+  thành Khu vực `phanloai`) → màn 1 xử lý một cái chai, màn 2 phân loại 10 món vào 6 bao Tagom (hộp, cốc khó
+  nhận ra có kí hiệu số theo poster Tagom; nilon bóp thử ("SỘT SOẠT!" kiểu truyện tranh / "~ ~ ~") và kéo
+  thử bằng tay nắm; xốp, CD vào nhựa 6-7),
+  Udon kéo ống quần lần sai đầu (có lời thoại), thẻ "Cách chơi" lần đầu mỗi màn + nút "?", nhạc ngũ cung
+  tạo bằng code (nút "Nhạc: bật / tắt"), poster đặt sát nhau chung một nhãn (Khu vực nào cũng vậy; ô "Ẩn nhãn"
+  trong Lắp studio), gợi ý ngoài cửa nhắc góc phân loại rác, màn cuối chỉ
   Trạm Tagom + Gem (chỉ nhận xốp tấm phẳng nguyên, đĩa CD nguyên). `js/phanloai.js` tải khi mở. Chi tiết: `docs/design.md` → "Phân loại rác cùng Tagom".
 - Ngoài studio: chưa gắn Studio lên menu (chờ Anna); Gmail secrets cho mail báo đơn
   (các bước: `docs/design.md` → "Bật gửi mail thật").

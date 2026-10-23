@@ -11,7 +11,6 @@ Sources (ChatGPT, 10/2026, transparent background; prompts in docs/prompts.md
   sheet-chai           bottle (cap + label), cap, label, bare bottle,
                        flattened bottle; sack, flat foam sheet
   sheet-rac-1..3       the things to sort, in reading order (SHEETS)
-  (Gem's basket is the studio's own, images/studio/props/gio.webp, made small)
   tagom-<id>.jpg       Tagom's posters, used whole (Tagom said yes, 23/10)
 -> images/studio/rac/<name>.webp
    images/studio/tagom/<id>.webp     (small: hung on the studio wall)
@@ -44,7 +43,6 @@ SHEETS = {
 # screen, Udon and the bags ~110
 SIDE = {'ud-chay-1': 240, 'ud-chay-2': 240, 'ud-ngoi-cho': 240, 'ud-nhay': 240, 'bao': 200}
 ITEM = 300
-GIO = 160          # Gem's basket (images/studio/props/gio.webp), as a bag
 TUG = 720          # the tug pictures: their width
 POSTER_BIG, POSTER_SMALL = 1400, 420   # posters: their height
 
@@ -110,7 +108,6 @@ def main(src):
             continue
         for name, pic in zip(names, pieces(Image.open(f).convert('RGBA'), len(names))):
             save(fit(pic, SIDE.get(name, ITEM)), OUT / f'{name}.webp')
-    save(fit(Image.open(ROOT / 'images/studio/props/gio.webp').convert('RGBA'), GIO), OUT / 'gio.webp')
     for name in ('ud-keo-1', 'ud-keo-2'):
         f = find(name)
         if not f:
