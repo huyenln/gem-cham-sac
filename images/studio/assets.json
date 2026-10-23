@@ -1662,6 +1662,60 @@
    ]
   },
   {
+   "id": "tagom",
+   "label": "Poster Tagom (Phân loại rác)",
+   "items": [
+    {
+     "src": "images/studio/tagom/nhua-1-de.webp",
+     "w": 296,
+     "h": 420,
+     "h0": 240,
+     "y0": 330,
+     "zone": "phanloai"
+    },
+    {
+     "src": "images/studio/tagom/nhua-1-kho.webp",
+     "w": 297,
+     "h": 420,
+     "h0": 240,
+     "y0": 330,
+     "zone": "phanloai"
+    },
+    {
+     "src": "images/studio/tagom/nhua-245.webp",
+     "w": 295,
+     "h": 420,
+     "h0": 240,
+     "y0": 330,
+     "zone": "phanloai"
+    },
+    {
+     "src": "images/studio/tagom/nhua-67.webp",
+     "w": 296,
+     "h": 420,
+     "h0": 240,
+     "y0": 330,
+     "zone": "phanloai"
+    },
+    {
+     "src": "images/studio/tagom/nilon-cung.webp",
+     "w": 297,
+     "h": 420,
+     "h0": 240,
+     "y0": 330,
+     "zone": "phanloai"
+    },
+    {
+     "src": "images/studio/tagom/nilon-mem.webp",
+     "w": 300,
+     "h": 420,
+     "h0": 240,
+     "y0": 330,
+     "zone": "phanloai"
+    }
+   ]
+  },
+  {
    "id": "products",
    "label": "Ảnh sản phẩm",
    "items": [

@@ -573,3 +573,168 @@ vải, không nếp gấp, không bóng); thứ tự đúng danh sách (tờ 1 =
 **Khi một món bị lệch** (sai chi tiết, dính nhau, có chữ): nhờ vẽ lại riêng món đó —
 "Redraw only item 3, same style and size, alone on a white 1024 x 1024 canvas" — rồi đặt
 tên có hậu tố, ví dụ `sheet-cuc-sua-3.png`. Lúc tách tranh sẽ ghép vào.
+
+---
+
+## 🎨 Prompt vẽ — Phân loại rác (Studio 2D, 10/2026)
+
+Tranh cho `js/phanloai.js`. Cắt bằng `python3 tools/rac-assets.py <thư mục>` (xem
+`docs/design.md` → "Phân loại rác cùng Tagom"). Poster Tagom dùng nguyên, không vẽ.
+
+Làm tất cả trong **một** cuộc chat. Đính kèm 3 ảnh Udon tham chiếu:
+`images/studio/udon/ud-ngoi.webp`, `ud-vay.webp`, `ud-reo.webp`.
+
+**Phong cách chung** (dán đầu tiên):
+
+```
+For every image in this chat, use this exact style:
+- Vintage storybook watercolor illustration: soft layered washes, gentle paper
+  granulation, fine warm-brown ink outlines (never black), small white highlights.
+- Muted earthy palette: sage green #87965A, cream #F0E1D2, kraft brown #B89968, dusty
+  rose, warm honey wood, deep olive #3D4A2E for the darkest tones.
+- Cozy, handmade, slow-living mood. Not cartoon, not kawaii, not glossy 3D, not flat vector.
+- Soft light from the upper left. Match the attached reference pictures as closely as
+  possible: same line weight, same washes, same level of detail.
+- Every object stands alone on a plain pure white background (#FFFFFF): no paper texture,
+  no frame, no cast shadow, no floor line.
+- No text, letters, numbers, logos or watermarks anywhere.
+Reply "OK" and wait for my next message.
+```
+
+### 1. Udon 4 dáng — `sheet-ud-game.png`
+
+```
+Using the attached Udon references (ud-ngoi, ud-vay, ud-reo), draw the SAME dog, Udon, in
+4 new poses. Keep him exactly the same: an Australian-shepherd-style puppy with a
+blue-merle grey-and-black coat, a white blaze down the forehead and muzzle, tan dots above
+the eyes, tan cheeks, black floppy ears, white chest and white paws, a fluffy grey tail
+with a white tip, round dark eyes; the same proportions and the same watercolor and
+brown-ink style. No clothes, no objects.
+Landscape 1536 x 1024: 2 rows of 2, all the same size, at least 100 px of white space
+between them. All facing LEFT.
+ 1. trotting fast, side view: front-left and back-right legs forward, ears flying back,
+    tail up, a cheeky determined look
+ 2. the same trot with the opposite legs forward (the second frame of the same trot)
+ 3. sitting, head tilted, one ear up, looking up expectantly
+ 4. a happy little hop: all four paws off the ground, tail wagging, mouth open in a smile
+Plain pure white background, no ground, no shadows, no text.
+```
+
+### 2–3. Udon kéo ống quần — `ud-keo-1.png`, `ud-keo-2.png`
+
+Udon giằng co tinh nghịch, không gầm gừ, không nhe nanh. Chỉ vẽ một ống quần thò từ mép
+trái, nên một tranh dùng được cho mọi nhân vật.
+
+```
+Same style, same Udon. Square 1024 x 1024.
+A person's leg comes in from the LEFT edge of the picture: only one lower leg is visible,
+in loose cream linen trousers and a sage-green canvas shoe, cut off cleanly by the left
+edge of the image at knee height, as if the person is walking out of the picture to the
+left. The foot is lifted off the ground in surprise, with three short brown motion lines
+behind the heel.
+Udon, facing left, has the hem of that trouser leg in his teeth and pulls backwards like a
+puppy playing tug-of-war: body low, front paws braced, bottom up, tail wagging high, eyes
+squeezed shut with effort. Playful and cheeky, never angry: no snarling, no bared fangs,
+his teeth only on the fabric. The hem stretches a little towards him.
+Udon fills the right half of the picture; the trouser leg touches the left edge.
+Plain pure white background, no floor line, no shadows, no text.
+```
+
+```
+The same picture, a moment later: Udon has shaken his head to the other side (head tilted
+up, the hem pulled upwards) and the foot now kicks forward. Everything else the same:
+same size, same place, same framing, the leg still cut by the left edge.
+```
+
+### 4. Chai, bao, xốp — `sheet-chai.png`
+
+Xốp phải là **tấm phẳng nguyên** (Gem chỉ nhận loại đó). Chỉ vẽ một cái bao: trang tự gắn
+nhãn từng nhóm.
+
+```
+Same style. Landscape 1536 x 1024, at least 80 px of white space between objects and from
+the edges; no object touches another. Clear plastic always has a visible warm-brown ink
+outline and a faint blue-grey tint, so it never disappears against the white.
+Row 1 — one plastic water bottle, step by step, all at the same scale:
+ 1. a clear plastic water bottle (about 500 ml) standing upright, with a red screw cap and
+    a plain orange wrap-around label (no text, no logo: just the band with one thin cream
+    stripe)
+ 2. the red cap on its own, three-quarter view
+ 3. the orange label on its own, peeled off and curling into a loose open loop
+ 4. the bare clear bottle: no cap, no label
+ 5. the same bare bottle stepped on: crumpled flat, lying on its side
+Row 2:
+ 6. one sorting sack standing open, seen slightly from above: a woven cream sack with the
+    top rolled down, a small blank cloth tag tied to the rim
+ 7. one flat white foam sheet: a plain rectangle about as thick as a finger, whole and
+    smooth, perfectly flat on both faces, leaning upright. No holes, no cut-outs, no
+    moulded pockets or ridges, no broken corners, no crumbs.
+Plain pure white background, no shadows, no text or symbols anywhere.
+```
+
+### 5. Nhựa 1 dễ + Nhựa 1 khó — `sheet-rac-1.png`
+
+```
+Same style. Landscape 1536 x 1024: 9 separate everyday objects in 2 rows (5 on top,
+4 below), each drawn to fill about the same size box (not real-world scale), at least
+80 px of white space between them. Clear plastic always has a visible warm-brown ink
+outline and a faint blue-grey tint. No brand names, no logos, no text anywhere: any label
+is a plain colour band.
+Row 1:
+ 1. a tall clear 1.5-litre water bottle, no cap, no label
+ 2. a round clear plastic candy jar with a wide mouth, no lid, empty
+ 3. a small round clear cosmetic jar, no lid, empty
+ 4. a clear square-shouldered cooking-oil bottle, no cap, no label
+ 5. a clear plastic takeaway milk-tea cup, empty, no lid
+Row 2:
+ 6. a clear dome lid for a drinks cup, with a round hole on top
+ 7. a clear hinged plastic clamshell box for cakes, closed, empty
+ 8. a glossy black plastic meat tray, empty, seen slightly from above
+ 9. a small amber-brown plastic medicine bottle with a white cap
+Plain pure white background, no shadows, no text.
+```
+
+### 6. Nhựa 2-4-5 + Nhựa 6-7 khó — `sheet-rac-2.png`
+
+```
+Same style, same layout rules as the previous sheet, 10 objects in 2 rows of 5. No brand
+names, no logos, no text anywhere.
+Row 1:
+ 1. an opaque blue laundry-detergent jug with a handle and cap
+ 2. an opaque white milk jug with a handle
+ 3. a small pile of five colourful plastic bottle caps
+ 4. a translucent food-storage box with a snap-on lid
+ 5. a children's stacking-ring toy in faded colours
+Row 2:
+ 6. a small square white yogurt cup, empty, no lid
+ 7. a coloured plastic spork (sage green)
+ 8. a thin white disposable plastic plate
+ 9. a toothbrush with a pale blue handle
+ 10. a whole silver CD disc with rainbow reflections, the centre hole clear, no cracks,
+     no chips, no scratches
+Plain pure white background, no shadows, no text.
+```
+
+### 7. Nilon cứng + Nilon mềm — `sheet-rac-3.png`
+
+```
+Same style, same layout rules, 10 objects in 2 rows of 5. No brand names, no logos, no
+text anywhere: printed packaging is plain colour blocks only.
+Row 1 (stiff, crinkly packaging):
+ 1. an empty snack bag torn open at the top, crinkled, the shiny silver foil inside showing
+ 2. an empty biscuit wrapper, long and flattened, glossy, no foil
+ 3. a clear stiff resealable plastic bag, flat and empty
+ 4. an empty woven plastic rice sack, folded
+ 5. a non-woven fabric shopping bag in sage green
+Row 2 (soft, stretchy plastic):
+ 6. a thin crumpled market carrier bag with two loop handles, semi-transparent pink
+ 7. a roll of clear cling film, the loose end hanging
+ 8. a sheet of bubble wrap, slightly curled
+ 9. an inflated air-column cushion bag (clear plastic tubes side by side)
+ 10. a flat soft courier mailer bag in pale grey, empty, flap open
+Plain pure white background, no shadows, no text.
+```
+
+Kiểm tra trước khi cắt: đủ món, đúng thứ tự, không món nào dính nhau; đồ nhựa trong nhìn
+rõ trên nền trắng; không có chữ hay logo; xốp là tấm phẳng nguyên. Món mới thêm sau: vẽ
+tờ mới cùng phong cách, thêm vào `SHEETS` trong `tools/rac-assets.py`.

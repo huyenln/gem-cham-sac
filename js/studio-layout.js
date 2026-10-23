@@ -223,6 +223,7 @@ window.GemLayout = (function () {
     { id: 'memo',     vi: 'Bảng lời nhắn' },
     { id: 'dantranh', vi: 'Chơi đàn tranh' },
     { id: 'khovai',   vi: 'Kho vải (khách chọn vải thật)' },
+    { id: 'phanloai', vi: 'Phân loại rác (poster Tagom)' },
     { id: 'enter',    vi: 'Vào studio' },
     { id: 'link',     vi: 'Mở trang khác' },
     { id: 'none',     vi: 'Không làm gì (chỉ đi tới)' }

@@ -3710,9 +3710,16 @@ async def onefab(browser, db):
         .map(c => { const p = GemPatch.price(c); return [p.total, p.waived]; })""")
     want = [[30000, 5000], [40000, 0], [45000, 0], [35000, 0], [35000, 0], [160000, 20000], [190000, 0], [70000, 5000]]
     check(got == want, f'one fabric: no piecing fee; two, Gem picking, the drawn one and the Bloom\'s flowers as before ({got})')
-    await js_click(pg, '.pt-tab[data-product="lotcoc"]')
-    await pg.wait_for_timeout(600)
     card = "(() => { const r = document.querySelector('.pt'); return [r.querySelector('.gv-cap').textContent, r.querySelector('.gv-photo img').alt]; })()"
+    # the board still shows the last piece's own photo while Udon taps it for
+    # the coaster: that photo is not the coaster's, so it goes by its name
+    await js_click(pg, '.pt-tab[data-product="origami"]')
+    await pg.wait_for_timeout(900)
+    await js_click(pg, '.pt-tab[data-product="lotcoc"]')
+    await pg.wait_for_timeout(60)
+    mid = await pg.evaluate(card)
+    check(mid[1] != 'Lót Cốc' and mid[0] == mid[1], f'switching piece: the old photo goes by its own name at once, not "Đồ thật" ({mid})')
+    await pg.wait_for_timeout(700)
     own = await pg.evaluate(card)
     check(own[0] == 'Đồ thật' and own[1] == 'Lót Cốc', f'the coaster: its own real photo, "Đồ thật" ({own})')
     moods = await pg.evaluate("[...document.querySelectorAll('[data-mood]')].map(b => b.dataset.mood)")
@@ -3764,6 +3771,105 @@ async def onefab(browser, db):
     await pg.context.close()
 
 
+async def phanloai(browser, db):
+    """23/10: "Phân loại rác" (js/phanloai.js, loaded on first use): a Tagom
+    poster hung as a "Khu vực" opens on itself; level 1 takes a bottle apart
+    (cap, label, squashed bottle, each to its bag); level 2 sorts ten things,
+    Udon tugs at the first mistake only; the end says where to take it."""
+    print('phanloai')
+    db.rows.clear(); db.info.clear()
+    db.rows['live'] = {
+        'v': 1, 'bg': {'src': 'images/studio/bg/strip-tron.webp', 'w': 5792, 'h': 1024},
+        'items': [dict(src='images/studio/tagom/nilon-cung.webp', x=900, y=420, w=180, h=256, rot=0, flip=False,
+                       layer='back', frame=False, kind='zone', zone={'act': 'phanloai'})],
+        'udon': {'x': 5200, 'y': 560, 'w': 128, 'h': 140}, 'start': 700,
+    }
+    for name, w, h in (('desktop', 1440, 900), ('mobile', 390, 844)):
+        pg = await page(browser, db, w, h, GUIDE_OFF + "localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-studio-intro-touch','1');sessionStorage.setItem('gem-scene','in')")
+        loaded = []
+        pg.on('request', lambda r: loaded.append(r.url) if '/js/phanloai.js' in r.url or '/images/studio/rac/' in r.url else None)
+        await pg.goto(f'{BASE}/studio.html')
+        await pg.wait_for_timeout(2500)
+        check(not loaded, f'{name}: nothing of the game is loaded until it is opened ({len(loaded)})')
+        tag = await pg.evaluate("[...document.querySelectorAll('[data-thing-label]')].map(l => l.textContent)")
+        check('Phân loại rác' in tag, f'{name}: the poster on the wall is tagged "Phân loại rác" ({tag})')
+        await js_click(pg, '[data-thing-label]')
+        await pg.wait_for_timeout(1500)
+        got = await pg.evaluate("[document.querySelector('.pl') && document.querySelector('.pl').dataset.plView, (document.querySelector('.pl-big img') || {}).src || '']")
+        check(got[0] == 'poster' and got[1].endswith('images/studio/tagom/to/nilon-cung.webp'),
+              f'{name}: the poster tapped opens big, on its own ({got})')
+        check(any('/js/phanloai.js' in u for u in loaded), f'{name}: the game is loaded on opening')
+        # the hub: six posters, two levels
+        await js_click(pg, '.pl-back')
+        await pg.wait_for_timeout(200)
+        n = await pg.evaluate("[document.querySelectorAll('.pl-poster').length, document.querySelectorAll('[data-pl-go=\"chai\"], [data-pl-go=\"sort\"]').length]")
+        check(n == [6, 2], f'{name}: the hub: six posters, two levels ({n})')
+        # level 1: the whole bottle into a bag first: Udon tugs, a hint
+        await js_click(pg, '[data-pl-go="chai"]')
+        await pg.wait_for_timeout(300)
+        await js_click(pg, '[data-pl-bottle]')
+        await js_click(pg, '[data-pl-bin="nhua-1-de"]')
+        await pg.wait_for_timeout(200)
+        got = await pg.evaluate("[!document.querySelector('.pl-tug').hidden, document.querySelector('.pl-say').textContent]")
+        check(got[0] and 'Tháo nắp' in got[1], f'{name}: the bottle whole into a bag: Udon tugs, take it apart first ({got[1]})')
+        # take it apart: cap, label, squash
+        await js_click(pg, '[data-pl-take="nap"]')
+        await js_click(pg, '[data-pl-bin="nhua-245"]')
+        await js_click(pg, '[data-pl-take="tem"]')
+        await js_click(pg, '[data-pl-bin="nilon-cung"]')
+        await js_click(pg, '[data-pl-bottle]')
+        await pg.wait_for_timeout(500)
+        flat = await pg.evaluate("!!document.querySelector('[data-pl-item=\"chai-bep\"]')")
+        check(flat, f'{name}: tapped, the bare bottle is squashed flat')
+        # a drag this time: the flat bottle onto plastic 1
+        a = await center(pg, '[data-pl-item="chai-bep"]')
+        bx = await center(pg, '[data-pl-bin="nhua-1-de"]')
+        await drag(pg, a, bx)
+        await pg.wait_for_timeout(300)
+        done = await pg.evaluate("[!document.querySelector('.pl-done').hidden, document.querySelector('.pl-say').textContent]")
+        check(done[0] and 'ba loại' in done[1], f'{name}: cap, label, bottle each in its bag: level 1 done ({done[1][:50]})')
+        # level 2: ten things; a wrong one shows the right bag and Tagom's reason
+        await js_click(pg, '.pl-done [data-pl-go="sort"]')
+        await pg.wait_for_timeout(400)
+        items = await pg.evaluate("[document.querySelectorAll('[data-pl-bin]').length, document.querySelector('.pl-count').textContent]")
+        check(items[0] == 7 and '1/10' in items[1], f'{name}: six bags and Gem\'s basket, ten things ({items})')
+        wrong_seen, tugs = 0, []
+        for i in range(10):
+            it = await pg.evaluate("(() => { const id = document.querySelector('.pl-one [data-pl-item]').dataset.plItem; return [id, GemPhanLoai.ITEMS.filter(x => x.id === id)[0].bin]; })()")
+            # the first two answered wrong, the rest right
+            pick = it[1] if i >= 2 else ('nilon-mem' if it[1] != 'nilon-mem' else 'nilon-cung')
+            await js_click(pg, f'[data-pl-bin="{pick}"]')
+            await pg.wait_for_timeout(120)
+            st = await pg.evaluate("[document.querySelector('.pl-say').className, document.querySelector('.pl-say').textContent, !document.querySelector('.pl-tug').hidden]")
+            if i < 2:
+                wrong_seen += 'is-no' in st[0] and 'vào' in st[1]
+                tugs.append(st[2])
+                if i == 0:
+                    await pg.wait_for_timeout(2800)   # the tug runs its course
+            await js_click(pg, '[data-pl-go="next"]')
+            await pg.wait_for_timeout(120)
+        check(wrong_seen == 2, f'{name}: a wrong bag: where it goes and why ({wrong_seen})')
+        check(tugs == [True, False], f'{name}: Udon tugs at the first mistake only ({tugs})')
+        end = await pg.evaluate("[document.querySelector('.pl').dataset.plView, document.querySelector('h2').textContent, document.querySelectorAll('.pl-miss li').length]")
+        check(end == ['end', 'Bạn phân loại đúng 8/10 món', 2], f'{name}: the end: 8 of 10, the two missed listed ({end})')
+        await js_click(pg, '.pl [data-pl-go="where"]')
+        await pg.wait_for_timeout(200)
+        wh = await pg.evaluate("[...document.querySelectorAll('.pl-place')].map(s => s.textContent)")
+        links = await pg.evaluate("[...document.querySelectorAll('.pl-place a')].map(a => [a.href, a.target, a.rel])")
+        check(len(wh) == 2 and '105B1' in wh[0] and '14h' in wh[0] and 'xốp tấm phẳng' in wh[1] and 'CD' in wh[1],
+              f'{name}: where to take it: Tagom\'s station with its hours, what Gem takes ({[w[:40] for w in wh]})')
+        check(all(t_ == '_blank' and 'noopener' in r_ for _, t_, r_ in links) and any('facebook.com/tagom' in h_ for h_, _, _ in links),
+              f'{name}: directions and Tagom\'s page open in a new tab ({len(links)})')
+        # what the whole game cost, each file once (this server sends no cache
+        # headers, so a picture drawn again is fetched again here, not online)
+        weight = await pg.evaluate("Object.values(Object.fromEntries(performance.getEntriesByType('resource').filter(r => /\\/(rac|tagom)\\//.test(r.name) || /phanloai/.test(r.name)).map(r => [r.name.split('?')[0], r.encodedBodySize]))).reduce((a, b) => a + b, 0)")
+        print(f'    {name}: the game played through, {round(weight / 1024)} KB')
+        check(weight < 800 * 1024, f'{name}: the game played through stays light ({round(weight / 1024)} KB)')
+        await pg.screenshot(path=OUT / f'phanloai-{name}.png')
+        check(not pg.errors, f'{name}: no script errors {pg.errors}')
+        await pg.context.close()
+
+
 async def main(which):
     if hasattr(sys.stdout, 'reconfigure'):
         sys.stdout.reconfigure(encoding='utf-8', errors='replace')   # a Windows console's code page has no Vietnamese
@@ -3774,7 +3880,7 @@ async def main(which):
         browser = await launch(p)
         for name, fn in (('street', street), ('wear', wear), ('shop', shop), ('spots', spots), ('editor', editor),
                          ('library', library), ('product', product), ('prodlib', prodlib), ('workshop', workshop), ('design', design), ('catalog', catalog), ('kinds', kinds),
-                         ('layers', layers), ('zones', zones), ('cart', cart), ('choices', choices), ('zither', zither), ('guide', guide), ('vai', vai), ('tui', tui), ('kho', kho), ('guidance', guidance), ('onefab', onefab), ('slow', slow), ('topbar', topbar), ('motion', motion),
+                         ('layers', layers), ('zones', zones), ('cart', cart), ('choices', choices), ('zither', zither), ('guide', guide), ('vai', vai), ('tui', tui), ('kho', kho), ('guidance', guidance), ('onefab', onefab), ('phanloai', phanloai), ('slow', slow), ('topbar', topbar), ('motion', motion),
                          ('phone', phone), ('taps', taps)):
             if which in (None, name):
                 await fn(browser, db)
