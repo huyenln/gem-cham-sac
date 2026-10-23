@@ -9,8 +9,9 @@
      2. ten things picked at random from 31, each to one of Tagom's six bags.
         The boxes, cups, trays and jars that are hard to tell by eye carry
         their plastic number, as on Tagom's posters (and on the things
-        themselves); nylon, which Tagom sorts by feel (no numbers), says how
-        it feels.
+        themselves); nylon, which Tagom sorts by feel (no numbers), is felt:
+        tapped it is squeezed (hard nylon crinkles, a manga sound word, soft
+        makes none), its two grips pull it (soft stretches, hard won't).
    Udon tugs a trouser hem at the first mistake of a round; after that, a
    hint only. The end says where to take what was sorted: Tagom's station,
    and what Gem takes too (flat foam sheets, whole CDs: there, not a bag in
@@ -80,11 +81,15 @@
                       en: `Done! One bottle, three kinds: the cap to plastic 2-4-5, the label to hard nylon, the bottle to plastic 1.` },
     'pl.next_lv':   { vi: `Sang màn 2`, en: `On to level 2` },
     'pl.sort_h':    { vi: `Món này bỏ vào đâu?`, en: `Where does this go?` },
-    'pl.sort_p':    { vi: `Kéo món vào đúng bao, hoặc chạm vào bao. Hộp, cốc khó nhận ra có kí hiệu số; nilon có ghi cảm giác khi bóp, kéo.`,
-                      en: `Drag it to the right bag, or tap the bag. Boxes and cups hard to tell carry their number; nylon says how it feels.` },
+    'pl.sort_p':    { vi: `Kéo món vào đúng bao, hoặc chạm vào bao. Hộp, cốc khó nhận ra có kí hiệu số; nilon thì bóp, kéo thử.`,
+                      en: `Drag it to the right bag, or tap the bag. Boxes and cups hard to tell carry their number; nylon: squeeze it, stretch it.` },
     'pl.code':      { vi: `Kí hiệu nhựa số {n} ({r})`, en: `Plastic number {n} ({r})` },
-    'pl.feel_cung': { vi: `Bóp thử: sột soạt, không kéo dãn`, en: `Squeeze it: crinkly, won't stretch` },
-    'pl.feel_mem':  { vi: `Kéo thử: mềm, dãn ra được`, en: `Pull it: soft, it stretches` },
+    'pl.feel':      { vi: `Chạm để bóp thử · kéo mép để thử độ dãn`, en: `Tap to squeeze it · pull an edge to stretch it` },
+    // sound words, as in a comic
+    'pl.sfx_bop':   { vi: `SỘT SOẠT!`, en: `CRINKLE!` },
+    'pl.sfx_bop2':  { vi: `sột`, en: `crk` },
+    'pl.sfx_dan':   { vi: `DÃÃN~`, en: `STRETCH~` },
+    'pl.sfx_khong': { vi: `KHÔNG DÃN!`, en: `WON'T STRETCH!` },
     'pl.count':     { vi: `Món {i}/{n} · đúng {ok}`, en: `{i} of {n} · {ok} right` },
     'pl.right':     { vi: `Đúng rồi!`, en: `Right!` },
     'pl.which':     { vi: `{x}: bỏ vào bao nào?`, en: `{x}: which bag?` },
@@ -129,8 +134,8 @@
                       en: `Drag each part to its bag, or tap it, then the bag. Udon will tell you if it is wrong.` },
     'pl.g2_p':      { vi: `10 món đồ nhựa, nilon quen thuộc, lần lượt từng món.`, en: `Ten everyday plastic and nylon things, one at a time.` },
     'pl.g2_1h':     { vi: `Nhìn món đồ`, en: `Look at the thing` },
-    'pl.g2_1':      { vi: `Món đang chơi hiện ở giữa. Hộp, cốc, khay khó nhận ra có kí hiệu số như in ở đáy đồ thật; nilon ghi cảm giác khi bóp, kéo.`,
-                      en: `The thing to sort is in the middle. Boxes, cups and trays hard to tell carry their number, as under the real thing; nylon says how it feels.` },
+    'pl.g2_1':      { vi: `Món đang chơi hiện ở giữa. Hộp, cốc, khay khó nhận ra có kí hiệu số như in ở đáy đồ thật; nilon thì chạm để bóp thử, kéo mép để thử độ dãn.`,
+                      en: `The thing to sort is in the middle. Boxes, cups and trays hard to tell carry their number, as under the real thing; nylon: tap to squeeze it, pull an edge to stretch it.` },
     'pl.g2_2h':     { vi: `Chọn bao`, en: `Pick its bag` },
     'pl.g2_2':      { vi: `Kéo món vào bao, hoặc chạm vào bao. Số trên kí hiệu, nilon cứng hay mềm: so với tên bao.`,
                       en: `Drag it to a bag, or tap the bag. The number, or hard or soft nylon: match it to the bag's name.` },
@@ -417,11 +422,14 @@
   function renderSort() {
     var it = S.items[S.i];
     root.querySelector('.pl-count').textContent = t('pl.count').replace('{i}', S.i + 1).replace('{n}', S.items.length).replace('{ok}', S.ok);
-    var feel = /^nilon-/.test(it.bin) ? it.bin.slice(6) : '';
-    root.querySelector('.pl-one').innerHTML = '<button type="button" class="pl-item is-sel is-big" data-pl-item="' + it.id + '">' +
-      '<span class="pl-pic">' + img(it.id, '', t('pl.i.' + it.id)) + (it.code ? codeMark(it.code) : '') + '</span>' +
+    var film = /^nilon-/.test(it.bin) ? it.bin.slice(6) : '';
+    root.querySelector('.pl-one').innerHTML = '<button type="button" class="pl-item is-sel is-big" data-pl-item="' + it.id + '"' +
+        (film ? ' data-pl-film="' + film + '"' : '') + '>' +
+      '<span class="pl-pic">' + (film ? '<span class="pl-stretch">' + img(it.id, '', t('pl.i.' + it.id)) + '</span>' +
+          '<span class="pl-grip is-l" data-pl-grip="l" aria-hidden="true"></span><span class="pl-grip is-r" data-pl-grip="r" aria-hidden="true"></span>'
+        : img(it.id, '', t('pl.i.' + it.id))) + (it.code ? codeMark(it.code) : '') + '</span>' +
       '<span>' + esc(t('pl.i.' + it.id)) + '</span>' +
-      (feel ? '<small class="pl-feel">' + esc(t('pl.feel_' + feel)) + '</small>' : '') + '</button>';
+      (film ? '<small class="pl-feel">' + esc(t('pl.feel')) + '</small>' : '') + '</button>';
     S.sel = it.id;
     S.answered = false;
     root.querySelector('.pl-next-row').hidden = true;
@@ -694,6 +702,94 @@
     (ok ? [['G5', 0], ['C6', 0.11]] : [['E4', 0], ['C4', 0.16]]).forEach(function (n) { pluck(hz(n[0]), now + n[1], ok ? 1.4 : 1.1); });
   }
 
+  /* ---------- nylon, felt (Anna 23/10) ----------
+     Tagom tells the two nylons apart by hand: hard is crinkly and won't
+     stretch, soft stretches and makes no sound. So here a tap squeezes it
+     (hard: "SỘT SOẠT!" in big comic letters and a crinkle; soft: a quiet
+     "~ ~ ~", nothing to hear) and the grips on its edges pull it (soft
+     stretches after the finger and springs back; hard gives a little,
+     shakes: "KHÔNG DÃN!"). Letters and sound made here, no files. */
+  function sfx(card, text, kind) {
+    var stage = card.closest('.pl-stage');
+    if (!stage) return;
+    var w = document.createElement('span');   // our own words: textContent
+    w.className = 'pl-sfx is-' + kind;
+    w.setAttribute('aria-hidden', 'true');
+    var big = document.createElement('b');
+    big.textContent = text;
+    w.appendChild(big);
+    if (kind === 'bop') {
+      ['a', 'b'].forEach(function (k) {
+        var e = document.createElement('i');
+        e.className = 'pl-sfx-echo is-' + k;
+        e.textContent = t('pl.sfx_bop2');
+        w.appendChild(e);
+      });
+    }
+    stage.appendChild(w);
+    setTimeout(function () { w.remove(); }, 1100);
+  }
+  function squeeze(card) {
+    var hard = card.getAttribute('data-pl-film') === 'cung', pic = card.querySelector('.pl-stretch');
+    if (pic) { pic.classList.remove('is-squeeze'); void pic.offsetWidth; pic.classList.add('is-squeeze'); }
+    if (hard) { sfx(card, t('pl.sfx_bop'), 'bop'); crinkle(0.35); }
+    else sfx(card, '~ ~ ~', 'mem');
+  }
+  function stretch(e, grip) {
+    var card = grip.closest('[data-pl-film]'), pic = card && card.querySelector('.pl-stretch');
+    if (!pic || (S.level === 'sort' && S.answered) || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    e.preventDefault();
+    var hard = card.getAttribute('data-pl-film') === 'cung', right = grip.getAttribute('data-pl-grip') === 'r';
+    var w = pic.getBoundingClientRect().width || 1, x0 = e.clientX, id = e.pointerId, said = false, moved = false;
+    pic.style.transition = 'none';
+    pic.style.transformOrigin = right ? 'left center' : 'right center';
+    var move = function (ev) {
+      if (ev.pointerId !== id) return;
+      if (ev.cancelable) ev.preventDefault();
+      var pull = Math.max(0, right ? ev.clientX - x0 : x0 - ev.clientX);
+      if (pull > 4) moved = true;
+      // soft: after the finger, harder the further (up to 1.6); hard: a hair
+      var sc = hard ? 1 + Math.min(0.05, pull / w * 0.1) : 1 + 0.6 * (1 - Math.exp(-pull / (w * 0.7)));
+      pic.style.transform = 'scaleX(' + sc.toFixed(3) + ')';
+      if (!said && hard && pull > 24) {
+        said = true;
+        pic.classList.remove('is-shake'); void pic.offsetWidth; pic.classList.add('is-shake');
+        sfx(card, t('pl.sfx_khong'), 'khong');
+        crinkle(0.25);
+      } else if (!said && !hard && sc > 1.25) {
+        said = true;
+        sfx(card, t('pl.sfx_dan'), 'dan');
+      }
+    };
+    var up = function (ev) {
+      if (ev.pointerId !== id) return;
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', up);
+      document.removeEventListener('pointercancel', up);
+      pic.style.transition = '';   // springs back (CSS)
+      pic.style.transform = '';
+      if (moved) S.dragged = true;   // not a tap on the card as well
+    };
+    document.addEventListener('pointermove', move, { passive: false });
+    document.addEventListener('pointerup', up);
+    document.addEventListener('pointercancel', up);
+  }
+  // crackles: short bursts of noise, high and thin (only with the sound on)
+  function crinkle(len) {
+    if (!M.out) return;
+    var ctx = M.ctx, sr = ctx.sampleRate, n = Math.round(sr * len), b = ctx.createBuffer(1, n, sr), d = b.getChannelData(0), k;
+    for (k = 0; k < n; k++) {
+      var env = Math.pow(1 - k / n, 1.5);
+      d[k] = (Math.random() < 0.06 ? (Math.random() * 2 - 1) : (Math.random() * 2 - 1) * 0.12) * env;
+    }
+    var src = ctx.createBufferSource(), bp = ctx.createBiquadFilter(), g = ctx.createGain();
+    src.buffer = b;
+    bp.type = 'bandpass'; bp.frequency.value = 4200; bp.Q.value = 0.9;
+    g.gain.value = 3.2;
+    src.connect(bp); bp.connect(g); g.connect(M.out);
+    src.start(ctx.currentTime + 0.01);
+  }
+
   /* ---------- taps and drags ---------- */
   function onClick(e) {
     var el;
@@ -735,6 +831,7 @@
     if ((el = e.target.closest('[data-pl-item]'))) {
       S.sel = el.getAttribute('data-pl-item');
       if (S.level === 'chai') renderChai();
+      if (el.hasAttribute('data-pl-film') && !S.answered) squeeze(el);
       return;
     }
     if ((el = e.target.closest('[data-pl-bin]')) && S.sel) drop(S.sel, el.getAttribute('data-pl-bin'));
@@ -742,6 +839,8 @@
 
   // drag a thing (or the whole bottle) onto a bag
   function onDown(e) {
+    var grip = e.target.closest('[data-pl-grip]');
+    if (grip) { stretch(e, grip); return; }
     var src = e.target.closest('[data-pl-item], [data-pl-bottle]');
     if (!src || (e.pointerType === 'mouse' && e.button !== 0) || e.target.closest('[data-pl-take]')) return;
     var item = src.hasAttribute('data-pl-bottle') ? 'chai' : src.getAttribute('data-pl-item');

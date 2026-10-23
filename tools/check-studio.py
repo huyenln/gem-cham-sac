@@ -3972,12 +3972,33 @@ async def phanloai(browser, db):
                     I.filter(i => i.code && !({ 'nhua-1-de': [1], 'nhua-1-kho': [1], 'nhua-245': [2, 4, 5], 'nhua-67': [6, 7] })[i.bin].includes(i.code)).length]; })()""")
         check(rules == [True, ['nhua-67', 'nhua-67'], 0, 0, 0],
               f'{name}: no Gem basket (foam, CDs to 6-7); numbers only on hard plastics, as on Tagom\'s posters ({rules})')
-        wrong_seen, tugs, looked, marks = 0, [], False, []
+        wrong_seen, tugs, looked, marks, felt = 0, [], False, [], {}
         for i in range(10):
             it = await pg.evaluate("(() => { const id = document.querySelector('.pl-one [data-pl-item]').dataset.plItem; return [id, GemPhanLoai.ITEMS.filter(x => x.id === id)[0].bin]; })()")
+            if it[1].startswith('nilon') and it[1] not in felt and name == 'desktop':
+                # nylon, felt: a tap squeezes it, a grip pulls it
+                felt[it[1]] = True
+                await js_click(pg, '.pl-one [data-pl-item]')
+                await pg.wait_for_timeout(150)
+                word = await pg.evaluate("(document.querySelector('.pl-sfx b') || {}).textContent || ''")
+                await pg.wait_for_timeout(1200)
+                g = await pg.evaluate("(() => { const r = document.querySelector('.pl-one .pl-grip.is-r').getBoundingClientRect(); return [r.x + r.width / 2, r.y + r.height / 2]; })()")
+                await pg.mouse.move(*g)
+                await pg.mouse.down()
+                for k in range(1, 11):
+                    await pg.mouse.move(g[0] + 9 * k, g[1])
+                    await pg.wait_for_timeout(16)
+                pull = await pg.evaluate("[parseFloat((document.querySelector('.pl-stretch').style.transform.match(/scaleX\\(([\\d.]+)/) || [0, 1])[1]), (document.querySelector('.pl-sfx b') || {}).textContent || '']")
+                await pg.mouse.up()
+                await pg.wait_for_timeout(600)
+                back = await pg.evaluate("[document.querySelector('.pl-stretch').style.transform, document.querySelector('.pl-one [data-pl-item]') ? 1 : 0, document.querySelector('.pl-next-row').hidden]")
+                hard = it[1] == 'nilon-cung'
+                check(word == ('SỘT SOẠT!' if hard else '~ ~ ~') and (pull[0] <= 1.05 if hard else pull[0] > 1.3)
+                      and pull[1] == ('KHÔNG DÃN!' if hard else 'DÃÃN~') and back == ['', 1, True],
+                      f'{name}: {it[1]}: a tap squeezes it ({word}), a grip pulls it ({pull}), it springs back, not sorted by it ({back})')
             marks.append(await pg.evaluate("""(() => { const one = document.querySelector('.pl-one'), id = one.querySelector('[data-pl-item]').dataset.plItem,
                 it = GemPhanLoai.ITEMS.filter(x => x.id === id)[0], m = one.querySelector('.pl-code'), f = one.querySelector('.pl-feel');
-                return (it.code ? !!m && m.textContent.startsWith(String(it.code)) : !m) && (/^nilon/.test(it.bin) ? !!f : !f); })()"""))
+                return (it.code ? !!m && m.textContent.startsWith(String(it.code)) : !m) && (/^nilon/.test(it.bin) ? !!f && one.querySelectorAll('.pl-grip').length === 2 : !f); })()"""))
             # the first two answered wrong, the rest right
             pick = it[1] if i >= 2 else ('nilon-mem' if it[1] != 'nilon-mem' else 'nilon-cung')
             await js_click(pg, f'[data-pl-bin="{pick}"]')
@@ -4004,6 +4025,8 @@ async def phanloai(browser, db):
             await pg.wait_for_timeout(120)
         check(looked, f'{name}: a poster was looked at mid-round')
         check(all(marks), f'{name}: each thing shows its number (hard plastics) or how it feels (nylon), nothing else ({marks})')
+        if name == 'desktop':
+            check(len(felt) == 2, f'{name}: both nylons were felt ({list(felt)})')
         check(wrong_seen == 2, f'{name}: a wrong bag: where it goes and why ({wrong_seen})')
         check(tugs == [True, False], f'{name}: Udon tugs at the first mistake only ({tugs})')
         end = await pg.evaluate("[document.querySelector('.pl').dataset.plView, document.querySelector('h2').textContent, document.querySelectorAll('.pl-miss li').length]")

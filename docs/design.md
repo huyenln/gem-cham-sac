@@ -2386,9 +2386,16 @@ tường là lối vào. Bỏ "nhặt rác ngoài phố có đếm giờ": nặn
   sữa, nắp cầu, hộp bánh, khay đen, lọ thuốc = 1; can nước giặt, bình sữa = 2; hộp thực phẩm = 5;
   hũ sữa chua, đĩa nhựa = 6). Không hiện ở chai trong, nắp chai, đồ chơi, thìa, bàn chải, đĩa
   CD, xốp. Tam giác mũi tên + số + tên viết tắt vẽ bằng SVG ở góc hình (`codeMark()`, không file
-  ảnh). Nilon: dưới hình ghi cảm giác theo poster Tagom ("Bóp thử: sột soạt, không kéo dãn" /
-  "Kéo thử: mềm, dãn ra được"), không ghi số — túi thật hay in số 4 / 2, nếu hiện thì dễ bỏ nhầm
-  vào nhựa 2-4-5.
+  ảnh). Nilon không ghi số (túi thật hay in số 4 / 2, nếu hiện thì dễ bỏ nhầm vào nhựa 2-4-5).
+- **Nilon: bóp thử, kéo thử** (Anna 23/10; Tagom phân biệt hai loại nilon bằng tay):
+  - Chạm vào túi = bóp: hình bóp lại. Nilon cứng hiện chữ kiểu SFX truyện tranh **"SỘT SOẠT!"**
+    (chữ vàng viền mực, nghiêng, có tia toả quanh, hai chữ "sột" nhỏ) + tiếng sột soạt ngắn. Nilon
+    mềm chỉ hiện **"~ ~ ~"** nhạt, không có tiếng.
+  - Hai tay nắm ở hai mép hình: kéo sang ngang thì hình giãn theo ngón tay, buông ra bật về.
+    Nilon mềm giãn tới ~1,6 lần + "DÃÃN~"; nilon cứng chỉ nhích (≤ 1,05), rung + "KHÔNG DÃN!" +
+    tiếng sột soạt. Kéo chính hình (không phải tay nắm) vẫn là kéo vào bao.
+  - Chữ và tiếng tạo bằng code (`squeeze()`, `stretch()`, `sfx()`, `crinkle()` trong
+    `js/phanloai.js`), không file. "Nhạc: tắt" tắt cả tiếng sột soạt. Chữ: `pl.sfx_*`.
 - **Udon:** lần sai đầu tiên của mỗi màn, Udon chạy vào kéo gấu quần (ống quần thò từ mép
   trái, một tranh cho mọi nhân vật), có lời thoại phía trên (`pl.ud_whole` / `pl.ud_wrong`,
   Anna 23/10); các lần sau chỉ hiện gợi ý. Đúng thì Udon nhảy. Không trừ điểm. Máy đặt giảm
