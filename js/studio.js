@@ -384,6 +384,8 @@
     'studio.pt_letter':    { vi: `Tờ nhắn gửi Gem`, en: `A note to Gem` },
     'studio.pt_letter_p':  { vi: `Không bắt buộc: chất vải, lời nhắn, ảnh tham khảo`, en: `Optional: fabrics, a message, a reference photo` },
     'studio.pt_real_cap':  { vi: `Đồ thật`, en: `The real one` },
+    'studio.pt_onefab':    { vi: `Một vải nên không tính phí kiểu ghép`, en: `One fabric, so no piecing fee` },
+    'studio.pt_net_q':     { vi: `Nét vẽ phức tạp (hơn 6 đường): Gem xem có may được không rồi báo giá công khi nhắn lại.`, en: `A detailed drawing (more than 6 lines): Gem checks it can be sewn, then quotes the work when we reply.` },
     'studio.pt_mood_gem':  { vi: `Gem chọn giúp`, en: `Gem picks` },
     'studio.pt_net_on':    { vi: `Vẽ đường cắt lên món: nét khép kín, hoặc chạy từ mép này sang mép kia. Lấy một mảnh vải trong rổ rồi chạm vào từng mảnh để đắp.`, en: `Draw cut lines on the piece: a closed shape, or edge to edge. Take a scrap from the basket, then tap each piece to lay it on.` },
     'studio.pt_net_full':  { vi: `Nhiều mảnh quá, Gem gộp bớt mảnh nhỏ (tối đa {n} mảnh).`, en: `That's a lot of pieces — Gem merges the small ones (up to {n}).` },
@@ -3136,6 +3138,12 @@
     var info = window.GemBasket && window.GemBasket.info(sku);
     im.alt = info ? info.name : '';
     gvShow = sku;
+    // the caption says whose photo it is: this piece's own ("Đồ thật"), or
+    // another ready-made one by its name (Anna 23/10: a bag under "Đồ thật"
+    // on the coaster, once Udon's line about it had gone)
+    var cap = root.querySelector('.gv-cap'), own = sku === P.PRODUCTS[D.d.product].sku;
+    if (own) { cap.setAttribute('data-i18n', 'studio.pt_real_cap'); cap.textContent = t('studio.pt_real_cap'); }
+    else { cap.removeAttribute('data-i18n'); cap.textContent = info ? info.name : ''; }
     root.querySelector('.gv-say').textContent = line;
     // a ready-made piece (not the one being designed): offer its card
     if (sku !== P.PRODUCTS[D.d.product].sku && sku !== gvRef) {
@@ -3558,6 +3566,9 @@
       D.sewn = true;
       showDone();
       gvPose(2);
+      // sewn: back to this piece's own photo (Udon no longer talks about another)
+      var own = P.PRODUCTS[D.d.product].sku;
+      if (gvShow !== own) gvBoard(own, '');
       var say = sheetBody.querySelector('.gv-say');
       if (say) say.textContent = t('studio.pt_done_say');
     }, total + (reduce ? 0 : 400));
@@ -3907,7 +3918,8 @@
     root.querySelector('[data-pt="clear"]').disabled = !d.sketch.length;
     root.querySelector('.pt-draw-msg').textContent = d.layout === 'tuve' && !d.sketch.length
       ? t('studio.pt_draw_need')
-      : pointsUsed() >= P.MAX_POINTS ? t('studio.pt_draw_full') : '';
+      : pointsUsed() >= P.MAX_POINTS ? t('studio.pt_draw_full')
+      : d.layout === 'net' && d.sketch.length > P.NET_QUOTE ? t('studio.pt_net_q') : '';
 
     // the attached photo: shown from this browser's own copy; a design opened
     // from someone's link only says there is one (only Gem can see it)
@@ -3930,7 +3942,9 @@
     });
     root.querySelector('.pt-price-lines').textContent = !pr ? '' : [t('studio.pt_base') + ' ' + mny(pr.base)]
       .concat(pr.lines.map(function (x) { return P.priceLine(x, l) + ' +' + P.priceRange(x.a, x.b); }))
-      .concat(pr.quote ? [t('studio.pt_size_q')] : []).join(' · ');
+      .concat(pr.waived ? [t('studio.pt_onefab')] : [])
+      .concat(pr.netq ? [t('studio.pt_net_q')] : [])
+      .concat(pr.sizeq ? [t('studio.pt_size_q')] : []).join(' · ');
     // made to order: a ready-made one being sold out doesn't stop a design
     root.querySelectorAll('[data-pt="add"]').forEach(function (add) { add.disabled = !ok || !info; });
     var keep = root.querySelector('[data-pt="keep"]');

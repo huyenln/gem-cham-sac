@@ -1901,7 +1901,11 @@ input.pt-done-name:focus { border-bottom-style: solid; border-bottom-color: var(
   background: #fffdf8; box-shadow: 0 3px 8px rgba(61, 74, 46, 0.25); transform: rotate(4deg);
 }
 .gv-polaroid .gv-photo { position: static; display: block; aspect-ratio: 1; overflow: hidden; }
-.gv-cap { display: block; padding: 2px 0 4px; font-family: var(--font-hand); font-size: 13px; color: var(--ink-dark); text-align: center; line-height: 1.2; }
+/* "Đồ thật", or another piece's name: two lines at most */
+.gv-cap {
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+  padding: 2px 0 4px; font-family: var(--font-hand); font-size: 13px; color: var(--ink-dark); text-align: center; line-height: 1.2;
+}
 .gv-polaroid::before {   /* the pin */
   content: ''; position: absolute; top: -5px; left: 50%; width: 11px; height: 11px; margin-left: -5px; border-radius: 50%;
   background: #B5654A; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);

@@ -410,7 +410,9 @@ Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
   Bloom khoanh theo nét vẽ, 1 / 2 bông là tranh riêng (`mon-bloom1/2`, `ART.bloom.lays`); túi quai nơ
   cả quai một vải; Origami nền + 6 cánh (cánh khác nền / xen kẽ / mỗi cánh một vải), bỏ "Ghép
   theo nét vẽ". Chi tiết: `docs/design.md` → "Bàn thiết kế — hướng dẫn, Màu riêng, dây đeo, Bloom,
-  quai nơ, Origami".
+  quai nơ, Origami". Một vải thì không tính phí kiểu ghép; ghép theo nét vẽ hơn 6
+  đường thì Gem báo giá (23/10, migration `20261023_mot_vai_net_bao_gia.sql` chạy **trước** khi
+  merge); dây túi Oxford gắn sau cổ áo.
 - ♻️ Phân loại rác cùng Tagom (23/10): poster Tagom treo tường (Lắp studio → nhóm "Poster Tagom", tự
   thành Khu vực `phanloai`) → màn 1 xử lý một cái chai, màn 2 phân loại 10 món (6 bao + "Mang tới Gem"),
   Udon kéo ống quần lần sai đầu, màn cuối chỉ Trạm Tagom + Gem (chỉ nhận xốp tấm phẳng nguyên, đĩa CD

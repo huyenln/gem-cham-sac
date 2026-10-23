@@ -2303,6 +2303,35 @@ Anna thử trên điện thoại (22/10) và gửi ảnh lỗi.
   - Vải nền không còn lộ qua khoen móc chìa khoá (`ART.origami.body`).
 - Kiểm tra: `python3 tools/check-studio.py guidance`.
 
+### Bàn thiết kế — một vải không tính phí ghép, ảnh "Đồ thật", nét vẽ phức tạp, dây Oxford (23/10/2026)
+
+- **Một vải thì không tính phí kiểu ghép** (Anna 23/10).
+  - Mọi ô của món mang cùng một vải (field 11 chỉ có một chữ khác nhau) thì kiểu ghép không còn
+    là ghép, nên bỏ phí kiểu ghép. Dòng giá ghi "Một vải nên không tính phí kiểu ghép".
+  - Vẫn tính cho Tự vẽ (phí là phần vẽ) và Bloom 1–3 bông (phí là số bông). "Gem chọn" (field 11
+    trống) tính như cũ.
+  - `KEEP_FEE` + `price().waived` trong `js/patch.js`. `design_price` làm giống hệt:
+    `supabase/migrations/20261023_mot_vai_net_bao_gia.sql`, **chạy trước khi merge**, nếu
+    không thì trang báo giá thấp hơn đơn thật.
+- **Ảnh dưới món ghi đúng ảnh của ai.** Udon gợi ý món có sẵn cùng tông (đổi tâm trạng / tông /
+  họa tiết) hoặc khách chạm ảnh để xem món khác, nhưng chữ dưới ảnh vẫn ghi "Đồ thật". Khi câu
+  của Udon không còn thì trông như ảnh sai (túi denim dưới lót cốc).
+  - Giờ ảnh của chính món ghi "Đồ thật", ảnh món khác ghi tên món đó (tối đa 2 dòng).
+  - May xong thì ảnh quay về món đang thiết kế.
+- **Ghép theo nét vẽ hơn 6 đường thì Gem báo giá** (Anna 23/10: phức tạp quá thì Gem cần xem có
+  may được không, rồi mới báo giá công).
+  - Từ đường thứ 7 (`NET_QUOTE` trong `js/patch.js`), giá hiện "từ …", kèm dòng
+    "Nét vẽ phức tạp (hơn 6 đường): Gem xem có may được không rồi báo giá công…". Đơn ghi
+    "Báo giá sau", giống cỡ riêng.
+  - `design_price` đếm số nét ở field 8 và làm giống hệt, cùng migration ở trên.
+- **Túi áo Oxford: dây gắn phía sau cổ áo** (Anna 23/10, ảnh túi thật). Cổ áo hiện trọn vải của
+  nó; dây chỉ lộ phía trên mép cổ.
+  - Dây không còn `over`, nên được vẽ trước, cổ áo đè lên.
+  - Tranh gốc vẽ dây đè lên dải sau cổ. Chỗ đó (x 145.5–190.5, y 91.5–113.5) được vẽ lại bằng
+    hai bên của chính dải cổ, lấy đối xứng rồi trộn ở giữa: `collar_over_strap()` trong
+    `tools/design-assets.py`. Hàm này tự chạy khi cắt lại tranh Oxford.
+- Kiểm tra: `onefab()` trong `tools/check-studio.py`.
+
 ### Phân loại rác cùng Tagom (23/10/2026)
 
 Chọn trong bốn ý: bốc thẻ thông điệp, nhặt rác ngoài phố (Udon cắn), phân loại rác theo

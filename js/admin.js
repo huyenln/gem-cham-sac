@@ -1340,7 +1340,7 @@
       '<div class="ad-filters"><button type="button" class="ad-filter ad-dp-back">← Sản phẩm</button></div>' +
       '<p class="ad-hint">Giá một thiết kế = giá nền + kiểu ghép + mỗi vải thêm (từ vải thứ hai) + cỡ lớn hơn + tuỳ chọn. ' +
         'Khách tự điền cỡ riêng thì đơn ghi “báo giá sau”. Túi trong: 1 túi luôn miễn phí; khoá kéo của túi khoá kéo ' +
-        'và túi laptop có sẵn, không tính.' +
+        'và túi laptop có sẵn, không tính. Cả món dùng một vải thì không tính phí kiểu ghép (trừ Tự vẽ và số bông của Bloom).' +
         '<br>Đơn mới tính theo giá đang lưu; đơn cũ giữ giá lúc đặt.</p>' +
       '<form class="ad-dp-form">' +
         '<div class="ad-dp-row">' + num('fabric', PR.fabric, 'Mỗi vải thêm (mặc định)') + '</div>' + cards +
