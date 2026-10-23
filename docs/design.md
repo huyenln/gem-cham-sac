@@ -2268,13 +2268,18 @@ Anna thử trên điện thoại (22/10) và gửi ảnh lỗi.
     1. Tách vùng giữa các nét mực của `mon-bloom-bong`.
     2. Gán phần nét mực và phần tối trong lòng hoa cho bông gần nhất.
     3. Cắt cuống ở đúng mép trên của từng bông (đo tay trên ảnh phóng to).
-  - `ART.bloom.buds[].d` là đường viền bông; `.h` là vùng ẩn khi chọn 1 bông / 2 bông (bông
-    nở ra một chút, cộng cả cuống).
-  - **1 bông / 2 bông:** ẩn bông từ tranh 3 bông không thể đẹp: sau bông bị ẩn tranh không vẽ
-    gì (đoạn cuống, dải dây bị bông che), nên lộ mép theo hình bông cũ, cuống lởm chởm. Cách đúng
-    (Anna 23/10): tranh riêng cho 1 bông và 2 bông, Anna nhờ ChatGPT vẽ từ ảnh 3 bông (cùng nét,
-    cùng khung, cùng móc khoá). Khi có tranh: `piece()` từng tranh (`mon-bloom1`, `mon-bloom2`),
-    khoanh lại bông, `ART.bloom` chọn tranh theo kiểu, bỏ `.h`. Tới lúc đó vẫn dùng cách ẩn cũ.
+  - `ART.bloom.buds[].d` là đường viền bông.
+  - **1 bông / 2 bông là tranh riêng** (Anna 23/10). Trước đó ẩn bông từ tranh 3 bông: sau bông
+    bị ẩn tranh không vẽ gì (đoạn cuống, dải dây bị bông che), nên cuống lởm chởm. Anna nhờ
+    ChatGPT vẽ lại từ ảnh 3 bông (cùng nét, cùng móc khoá): `mon-bloom1-*`, `mon-bloom2-*`
+    (`tools/design-assets.py`, tranh gốc không để trong repo). `ART.bloom.lays` chọn tranh + bông
+    theo kiểu (`artOf()`); 2 bông là "Bông trái" (trước) + "Bông phải", 1 bông là "Bông".
+  - Hai tranh này vải trắng trên giấy trắng: tách nền theo "giấy phẳng, vải có thớ"
+    (`flat_paper`, `FLAT`), lỗ thật (vòng móc, khe giữa hai cuống) là vùng giấy lớn và phẳng hơn
+    chỗ sáng của vải; móc khoá + đầu bọc lấy theo màu vàng (`metal(..., flat)`).
+  - Khoanh bông (script trong scratchpad): vùng giữa nét mực → hạt giống bông (dưới mép trên
+    của bông) + hạt giống dây (vùng trên các bông, đọc trên ảnh phóng to) → mỗi điểm về hạt gần
+    nhất → lấp lỗ.
 - **Túi quai nơ:** phần "Quai" trước chỉ gồm cái nơ, hai dải quai bên dưới ăn theo vải thân
   (với kiểu sọc dọc thì mỗi dải một màu sọc).
   - Giờ cả quai từ nơ xuống tới góc miệng túi, ra hai bên hông hơi thấp hơn, là một vải

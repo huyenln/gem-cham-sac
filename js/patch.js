@@ -827,7 +827,8 @@
     co: { vi: 'Cổ áo', en: 'Collar' }, quai: { vi: 'Quai', en: 'Strap' },
     lot: { vi: 'Lót (chỗ lộ ra)', en: 'Lining (where it shows)' }, giua: { vi: 'Mảnh giữa', en: 'Middle panel' },
     day: { vi: 'Đáy', en: 'Bottom band' }, tui: { vi: 'Túi ngoài', en: 'Outer pocket' }, mieng: { vi: 'Viền miệng', en: 'Top band' },
-    b1: { vi: 'Bông giữa', en: 'Middle flower' }, b2: { vi: 'Bông phải', en: 'Right flower' }, b3: { vi: 'Bông trái', en: 'Left flower' }
+    b1: { vi: 'Bông giữa', en: 'Middle flower' }, b2: { vi: 'Bông phải', en: 'Right flower' }, b3: { vi: 'Bông trái', en: 'Left flower' },
+    bong: { vi: 'Bông', en: 'Flower' }
   };
   var MAIN_NAMES = { oxford: { vi: 'Thân túi', en: 'Body' }, bloom: { vi: 'Dây', en: 'Cord' } };
   // the bags: their body (the strap's stitch option makes it no bag)
@@ -1480,15 +1481,17 @@
     ] },
     // the cord (stems, knot) in one fabric, each flower in its own, traced
     // off the painting's own lines with its open mouth inside it (Anna 22/10:
-    // the cord's fabric showed in the flowers). h: what to hide when the
-    // flower is left out (it and its stem, a little wider for the ink)
+    // the cord's fabric showed in the flowers). One and two flowers are
+    // drawings of their own (Anna 23/10: hiding flowers of the three left
+    // the stems ragged, nothing is drawn behind a flower): lays
     bloom: { n: 'bloom', top: 1, buds: [
       { id: 'b1', d: 'M175 205L179 207L194 240L200 247L211 255L214 268L214 282L212 288L203 297L199 307L188 322L173 338L169 336L148 314L141 302L136 297L128 276L127 262L141 241L148 235L148 232L158 217L160 210L166 210Z' },
-      { id: 'b2', d: 'M189 162L216 169L243 183L249 188L254 202L256 232L252 254L250 259L247 259L226 255L211 250L208 252L196 242L177 203L179 170Z',
-        h: 'M181 133L186 133L217 166L243 179L252 187L254 191L257 198L259 210L259 237L256 253L254 259L250 263L237 260L226 259L211 254L208 256L200 250L191 240L184 223L174 205L175 171L186 160L186 158L170 135Z' },
-      { id: 'b3', d: 'M124 173L128 173L147 183L148 188L151 191L154 200L159 208L159 212L149 228L147 235L140 241L129 259L127 261L127 255L125 254L102 270L94 275L91 274L89 242L83 216L84 203L89 188L92 184L96 181L113 176L118 176Z',
-        h: 'M152 129L162 136L167 142L142 176L151 183L152 188L163 209L162 215L153 228L150 236L144 241L134 255L133 259L128 264L126 264L122 260L99 276L93 279L87 273L86 268L86 247L80 219L80 204L83 194L88 184L95 178L115 172Z' }
-    ] },
+      { id: 'b2', d: 'M189 162L216 169L243 183L249 188L254 202L256 232L252 254L250 259L247 259L226 255L211 250L208 252L196 242L177 203L179 170Z' },
+      { id: 'b3', d: 'M124 173L128 173L147 183L148 188L151 191L154 200L159 208L159 212L149 228L147 235L140 241L129 259L127 261L127 255L125 254L102 270L94 275L91 274L89 242L83 216L84 203L89 188L92 184L96 181L113 176L118 176Z' }
+    ], lays: {
+      hoa1: { n: 'bloom1', buds: [{ id: 'bong', d: 'M162 196L177 196L186 200L188 207L199 219L211 238L217 259L217 277L215 283L204 295L197 308L177 333L172 338L168 338L159 330L145 313L138 301L131 294L122 270L122 250L128 233L147 206L156 198Z' }] },
+      hoa2: { n: 'bloom2', buds: [{ id: 'b3', d: 'M135 201L149 201L157 205L160 214L163 217L174 241L180 250L186 273L186 280L183 289L174 297L170 307L149 333L144 338L140 338L126 324L106 296L97 273L97 254L103 235L111 223L118 217L121 211Z' }, { id: 'b2', d: 'M176 164L178 166L205 172L229 185L236 191L242 212L242 242L240 254L236 266L221 263L195 257L185 252L185 265L181 250L174 240L173 234L170 231L165 220L166 217L164 214L161 199L161 187L165 183L169 172Z' }] }
+    } },
     // the strap stands upright, its middle on x 170 (measured on the mask):
     // pieced across at y 120 (its middle), along it at x 170
     strap: { n: 'daydeo', top: 1, strap: { x: 170, y: 120 } },
@@ -1548,13 +1551,20 @@
   var FULL = [0, 0, 340, 340];
   function polyPath(pts) { return 'M' + pts.map(function (q) { return q[0] + ' ' + q[1]; }).join('L') + 'Z'; }
 
+  // The drawing for this design: a piece drawn again for some layouts (the
+  // Bloom with one / two flowers) takes that drawing and its own flowers
+  function artOf(d) {
+    var A = ART[PRODUCTS[d.product].shape] || {}, L = A.lays && A.lays[d.layout];
+    return L ? Object.assign({}, A, L) : A;
+  }
+
   // The parts on top of the main piecing, for this design: [{id, poly}]
   function partsOf(d) {
     if (d.layout === 'tuve') return [];
-    var A = ART[PRODUCTS[d.product].shape] || {};
+    var A = artOf(d);
     if (A.styles) return A.styles[tieOf(d)].parts;
     if (A.parts) return A.parts;
-    if (A.buds) return A.buds.slice(0, d.layout === 'hoa1' ? 1 : d.layout === 'hoa2' ? 2 : 3);
+    if (A.buds) return A.buds;
     if (A.petals && d.layout !== 'mot') return A.petals.map(function (pd, i) { return { id: 'c' + (i + 1), d: pd }; });
     return [];
   }
@@ -1562,21 +1572,12 @@
   // One painted piece: the fabric inside its silhouette, the painting's
   // shading over it. f(i, bbox) gives patch i's fill.
   function artBody(d, p, f, pre) {
-    var A = ART[p.shape], name = A.n, out = '';
+    var A = artOf(d), name = A.n, out = '';
     // a piece drawn several ways (the tie bag): that way's pictures
     var st = A.styles ? A.styles[tieOf(d)] : null;
     if (st) { name = A.n + '-' + tieOf(d); A = Object.assign({}, A, { top: st.top }); }
-    // flowers left out: hidden in the fabric and in the shading alike
-    var hide = A.buds ? A.buds.slice(d.layout === 'hoa1' ? 1 : d.layout === 'hoa2' ? 2 : 3) : [];
-    if (d.layout === 'tuve') hide = [];
     out += '<mask id="' + pre + 'mk" maskUnits="userSpaceOnUse" x="0" y="0" width="340" height="340">' +
       '<image href="' + VAI + 'mon-' + name + '-mask.webp" width="340" height="340"/></mask>';
-    if (hide.length) {
-      out += '<mask id="' + pre + 'hd" maskUnits="userSpaceOnUse" x="0" y="0" width="340" height="340"><rect width="340" height="340" fill="#fff"/>' +
-        hide.map(function (b) { return '<path d="' + b.h + '" fill="#000"/>'; }).join('') +
-        '<path d="' + A.buds[0].d + '" fill="#fff"/></mask>';
-      out += '<g mask="url(#' + pre + 'hd)">';
-    }
     out += '<g mask="url(#' + pre + 'mk)">';
     var box = [0, 0, 340];
     if (d.layout === 'net') {
@@ -1667,7 +1668,6 @@
     // screened over it lift them on any fabric (tools/design-assets.py light)
     if (A.sang) out += '<image href="' + VAI + 'mon-' + name + '-sang.webp" width="340" height="340" mask="url(#' + pre + 'mk)"' +
       ' style="mix-blend-mode:screen" opacity="' + SANG + '" pointer-events="none"/>';
-    if (hide.length) out += '</g>';
     if (A.top) out += '<image href="' + VAI + 'mon-' + name + '-top.webp" width="340" height="340" pointer-events="none"/>';
     if (A.bag && d.ext && d.ext.n && A.snap) out += snapDot(A.snap);
     return out;
@@ -1729,11 +1729,11 @@
       '<circle cx="' + (c[0] - 1.5) + '" cy="' + (c[1] - 1.5) + '" r="1.8" fill="#fff" fill-opacity="0.6"/></g>';
   }
 
-  // The piece's silhouette: its mask picture, and where it is drawn (the strap
-  // shown twice sits at -52 and +52). Taps outside it are beside the piece,
-  // even where a patch runs on under the mask (the round coaster's corners).
+  // The piece's silhouette: its mask picture, and where it is drawn. Taps
+  // outside it are beside the piece, even where a patch runs on under the
+  // mask (the round coaster's corners).
   function silhouette(d) {
-    var p = PRODUCTS[d.product], A = p && ART[p.shape];
+    var p = PRODUCTS[d.product], A = p && ART[p.shape] && artOf(d);
     if (!A) return null;
     var t = A.styles && A.styles[tieOf(d)] ? tieOf(d) : null;
     return { src: VAI + 'mon-' + (t ? A.n + '-' + t : A.n) + '-mask.webp', dx: [0] };

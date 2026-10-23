@@ -3662,6 +3662,16 @@ async def guidance(browser, db):
     await pg.wait_for_timeout(300)
     got = [await at(165, 100), await at(170, 300), await at(200, 219), await at(140, 231)]
     check(got == [0, 1, 2, 3], f'Bloom: the cord, the middle, right and left flowers each where drawn ({got})')
+    # one and two flowers: drawings of their own (no flower hidden over the stems)
+    for lay, img, pts, want in (('hoa1', 'mon-bloom1-', [(168, 150), (175, 300)], [0, 1]),
+                                ('hoa2', 'mon-bloom2-', [(143, 170), (168, 160), (140, 300), (215, 230)], [0, 0, 1, 2])):
+        await js_click(pg, f'.pt-layouts [data-layout="{lay}"]')
+        await pg.wait_for_timeout(300)
+        got = [await at(x, y) for x, y in pts]
+        n = await pg.evaluate(f"document.querySelectorAll('.pt-board image[href*=\"{img}\"]').length")
+        check(got == want and n >= 2, f'Bloom "{lay}": its own drawing ({n} layers), the cord and each flower where drawn ({got})')
+    names = await pg.evaluate("document.querySelector('.pt-onpiece').textContent")
+    check('Bông trái' in names and 'Bông phải' in names, f'two flowers named left and right ({names[:90]})')
     # 6. the bow bag: its handle down to the opening, the body below
     await js_click(pg, '.pt-tab[data-product="tuitote"]')
     await js_click(pg, '.pt-shapes [data-shape="tuino"]')

@@ -404,7 +404,7 @@ Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
   là bảng trượt từ đáy (không đẩy rổ xa món); kéo vải tới mép thì bàn tự cuộn; dây đeo một dây,
   ghép ngang / dọc + **thêu chỉ giữa dây / quai túi** (9 mẫu trên máy Janome, `e<mẫu><chỉ>`, chỉ
   chọn, không vẽ lên hình; migration `20261022b_day_deo_theu.sql` chạy **trước** khi merge);
-  Bloom khoanh theo nét vẽ (1 / 2 bông chờ tranh riêng Anna nhờ ChatGPT vẽ); túi quai nơ
+  Bloom khoanh theo nét vẽ, 1 / 2 bông là tranh riêng (`mon-bloom1/2`, `ART.bloom.lays`); túi quai nơ
   cả quai một vải; Origami nền + 6 cánh (cánh khác nền / xen kẽ / mỗi cánh một vải), bỏ "Ghép
   theo nét vẽ". Chi tiết: `docs/design.md` → "Bàn thiết kế — hướng dẫn, Màu riêng, dây đeo, Bloom,
   quai nơ, Origami".
