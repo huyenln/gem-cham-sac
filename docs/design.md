@@ -2243,13 +2243,23 @@ Anna thử trên điện thoại (22/10) và gửi ảnh lỗi.
   - Kiểu mới: Một vải / Ghép ngang (nửa trên, nửa dưới, cắt ở y 120) / Ghép dọc (hai dải, đường
     may ở x 170) / Tự vẽ.
   - Mã cũ `hai` mở thành `ngang`, giữ cả hai vải (`LEGACY`).
-- **Thêu chỉ giữa dây** (máy Janome của Gem): tuỳ chọn `e` của dây đeo, mã field 13
+- **Thêu chỉ giữa dây / giữa quai** (máy Janome của Gem): tuỳ chọn `e`, mã field 13
   `e<mẫu><màu chỉ>`.
-  - 6 mẫu thêu (`STITCHES`: ziczac, sóng, vỏ sò, dây lá, trái tim, chữ thập) và 7 màu chỉ
-    (`THREADS`), vẽ bằng `stitchPath` dọc giữa dây, dưới lớp bóng của tranh.
-  - Giá `products.daydeo.embroider`, tạm 10.000đ; owner sửa ở admin → Giá thiết kế, mục "Tuỳ chọn".
-  - Danh sách mẫu thêu là bản đoán: đổi theo các chế độ máy thật có.
-  - `supabase/migrations/20261022b_day_deo_theu.sql` sửa `design_price` cho nhận token `e..`.
+  - Có ở dây đeo và mọi túi có quai: tote, quai nơ, khoá kéo, laptop có quai (cả túi tam giác
+    đang tắt). Túi laptop không quai thì không. Tên hiện theo món (`embName`): "Thêu chỉ giữa dây"
+    / "Thêu chỉ giữa quai" (Anna 23/10).
+  - **Không vẽ lên hình** (Anna 23/10): dây vẽ có khối, đường thêu 2D đè lên trông "lợm khợm".
+    Khách chỉ chọn mẫu + màu chỉ; đơn ghi rõ, vd "thêu chỉ giữa quai: dây lá, chỉ kem". Khi Anna
+    nghĩ ra cách minh họa đẹp thì làm lại.
+  - 9 mẫu (`STITCHES`) lấy từ dải mẫu trên máy Janome (ảnh Anna chụp 23/10): zíc zắc, lông vũ,
+    sóng, dây lá, hình thoi, chữ X, vỏ sò, răng cưa, tường thành. Mã chỉ có 1 chữ số cho mẫu nên
+    tối đa 9. Icon trong ô chọn vẽ ngang như trên máy (`stitchIcon`, mẫu satin tô đặc). Máy còn
+    tổ ong, núi ΛΛΛ, chữ T, trăng khuyết, chuỗi hạt — muốn đổi thì sửa `STITCHES` + `stitchIcon`
+    (đơn cũ lưu số thứ tự, nên chỉ thêm vào cuối hoặc thay khi chưa có đơn dùng mẫu đó).
+  - 7 màu chỉ (`THREADS`).
+  - Giá `products.<món>.embroider`, tạm 10.000đ; owner sửa ở admin → Giá thiết kế, mục "Tuỳ chọn".
+  - `supabase/migrations/20261022b_day_deo_theu.sql` thêm giá thêu (dây + các túi có quai, chỉ
+    chỗ chưa có) và sửa `design_price` cho nhận token `e..`.
     **Phải chạy trước khi JS lên web**, nếu không đơn có thêu bị từ chối.
 - **Bloom:** mỗi bông được khoanh theo đúng nét mực trong tranh, kể cả miệng hoa (mặt trong).
   - Trước đây là đa giác khoảng 10 điểm: vải của dây lộ vào miệng hoa, và bông này lấn sang
@@ -2260,7 +2270,11 @@ Anna thử trên điện thoại (22/10) và gửi ảnh lỗi.
     3. Cắt cuống ở đúng mép trên của từng bông (đo tay trên ảnh phóng to).
   - `ART.bloom.buds[].d` là đường viền bông; `.h` là vùng ẩn khi chọn 1 bông / 2 bông (bông
     nở ra một chút, cộng cả cuống).
-  - Còn lại: ở kiểu 1 / 2 bông, chỗ cuống bị cắt trông hơi lởm chởm (cách ẩn cuống có từ trước).
+  - **1 bông / 2 bông:** ẩn bông từ tranh 3 bông không thể đẹp: sau bông bị ẩn tranh không vẽ
+    gì (đoạn cuống, dải dây bị bông che), nên lộ mép theo hình bông cũ, cuống lởm chởm. Cách đúng
+    (Anna 23/10): tranh riêng cho 1 bông và 2 bông, Anna nhờ ChatGPT vẽ từ ảnh 3 bông (cùng nét,
+    cùng khung, cùng móc khoá). Khi có tranh: `piece()` từng tranh (`mon-bloom1`, `mon-bloom2`),
+    khoanh lại bông, `ART.bloom` chọn tranh theo kiểu, bỏ `.h`. Tới lúc đó vẫn dùng cách ẩn cũ.
 - **Túi quai nơ:** phần "Quai" trước chỉ gồm cái nơ, hai dải quai bên dưới ăn theo vải thân
   (với kiểu sọc dọc thì mỗi dải một màu sọc).
   - Giờ cả quai từ nơ xuống tới góc miệng túi, ra hai bên hông hơi thấp hơn, là một vải

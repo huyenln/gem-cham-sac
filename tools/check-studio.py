@@ -3410,6 +3410,9 @@ async def tui(browser, db):
     n = await pg.evaluate("document.querySelectorAll('.ad-dp').length")
     check(n == 14 and not await pg.evaluate("!!document.querySelector('.ad-dp[data-id=\"tuibuoc\"], .ad-dp[data-id=\"tuitamgiac\"]')"),
           f'admin: one price card per piece on the table; the bags taken off are not shown ({n})')
+    emb = await pg.evaluate("""['daydeo', 'tuitote', 'laptop'].map(k => { const i = document.querySelector('[name="o.' + k + '.embroider"]');
+        return i ? i.parentElement.textContent : null; })""")
+    check(emb == ['Thêu chỉ giữa dây', 'Thêu chỉ giữa quai', None], f'admin: the stitch priced on the strap and a handled bag, named by piece ({emb})')
     await pg.fill('[name="o.tuitote.quilt"]', '80000')
     await js_click(pg, '.ad-dp-save')
     await pg.wait_for_timeout(800)
@@ -3545,8 +3548,9 @@ async def kho(browser, db):
 async def guidance(browser, db):
     """Bàn thiết kế, 22/10: the welcome in three steps and "?", "Màu riêng" as a
     drawer (the basket stays under the piece), the table scrolling under a
-    dragged scrap, the strap pieced across / along with a stitch down it,
-    the Bloom flowers and the bow bag's handle traced off the drawings."""
+    dragged scrap, the strap pieced across / along with a stitch down it
+    (and a bag's handle; picked, not drawn), the Bloom flowers and the bow
+    bag's handle traced off the drawings."""
     print('guidance')
     db.fabrics = fabric_rows()
     # 1. the first time: the welcome, once
@@ -3627,18 +3631,30 @@ async def guidance(browser, db):
     # the stitch down the middle
     await js_click(pg, '[data-emb]')
     await pg.wait_for_timeout(300)
-    n0 = await pg.evaluate("[document.querySelectorAll('[data-stitch]').length, document.querySelectorAll('[data-thread]').length, document.querySelectorAll('.pt-board .pt-stitch').length]")
-    check(n0[0] >= 5 and n0[1] >= 5 and n0[2] == 1, f'"Thêu chỉ giữa dây": stitches, threads, and the stitch on the strap ({n0})')
+    n0 = await pg.evaluate("[document.querySelectorAll('[data-stitch]').length, document.querySelectorAll('[data-thread]').length, document.querySelectorAll('[data-stitch] .pt-stitch path').length >= 9, document.querySelectorAll('.pt-board .pt-stitch').length]")
+    check(n0 == [9, 7, True, 0], f'"Thêu chỉ giữa dây": the nine stitches of the Janome (each its icon), seven threads, nothing drawn on the strap ({n0})')
     await js_click(pg, '[data-stitch="5"]')
     await js_click(pg, '[data-thread="2"]')
     await pg.wait_for_timeout(300)
     rt = await pg.evaluate("(() => { const d = GemPatch.parse('2~daydeo~doc~~~~~~~~AB~~e52'); return d && [d.ext.e, d.ext.ec, GemPatch.encode(d).split('~').pop()]; })()")
     check(rt == [5, 2, 'e52'], f'the stitch travels in the design code ({rt})')
-    check(await pg.evaluate("GemPatch.parse('2~goi~mot~~~~~~~~A~~e52') === null"), 'only the strap takes a stitch')
+    check(await pg.evaluate("GemPatch.parse('2~goi~mot~~~~~~~~A~~e52') === null"), 'a cushion takes no stitch')
     lines = await pg.evaluate("document.querySelector('.pt-price-lines').textContent")
     check('Thêu chỉ giữa dây' in lines, f'the stitch is in the price ({lines})')
-    col = await pg.evaluate("document.querySelector('.pt-board .pt-stitch path:last-child').getAttribute('stroke')")
-    check(col and col.lower() == '#b5523b', f'in the thread picked ({col})')
+    order = await pg.evaluate("GemPatch.describe('2~daydeo~doc~~~~~~~~AB~~e52', 'vi')")
+    check('thêu chỉ giữa dây: hình thoi, chỉ đỏ gạch' in order, f'the order says which stitch, which thread ({order})')
+    # a bag's handle takes it too (not drawn); the sleeve without a handle does not
+    await js_click(pg, '.pt-tab[data-product="tuitote"]')
+    await js_click(pg, '.pt-shapes [data-shape="tuitote"]')
+    await pg.wait_for_timeout(300)
+    await js_click(pg, '[data-emb]')
+    await pg.wait_for_timeout(300)
+    bag = await pg.evaluate("""[document.querySelector('[data-emb]').textContent, document.querySelectorAll('[data-stitch]').length,
+        document.querySelectorAll('.pt-board .pt-stitch').length, document.querySelector('.pt-price-lines').textContent]""")
+    check(bag[0].startswith('Thêu chỉ giữa quai') and bag[1] == 9 and bag[2] == 0 and 'Thêu chỉ giữa quai' in bag[3],
+          f'the tote: "Thêu chỉ giữa quai", priced, not drawn ({bag[0]}, {bag[1]}, {bag[2]})')
+    hands = await pg.evaluate("['tuino', 'tuikhoa', 'laptopq', 'laptop'].map(k => !!GemPatch.parse('2~' + k + '~mot~~~~~~~~A~~e11'))")
+    check(hands == [True, True, True, False], f'every bag with a handle takes a stitch, the laptop sleeve without one does not ({hands})')
     check(not pg.errors, f'no script errors {pg.errors}')
     # 5. Bloom: each flower to its own lines (the cord no longer shows in them)
     await js_click(pg, '.pt-tab[data-product="bloom"]')

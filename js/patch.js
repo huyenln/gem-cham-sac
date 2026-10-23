@@ -94,19 +94,20 @@
     // two shapes many makers sew); the laptop sleeve is a tab of its own,
     // with or without a shoulder strap. A designed bag is ordered as the
     // ready-made bag of its kind (sku). opts: what can be added — q quilting
-    // (chần bông), p inside pockets (one is free), z zip, n snap; zip: sewn
-    // in already, free (tools/bag-assets.py draws them)
+    // (chần bông), p inside pockets (one is free), z zip, n snap, e a stitch
+    // down the handle (Anna 23/10, not drawn); zip: sewn in already, free
+    // (tools/bag-assets.py draws them)
     tuitote:      { sku: 'tui-di-cho',  group: 'tui', vi: 'Túi tote', en: 'Tote bag', shape: 'tuitote', grid: 3, span: 69,
-                    short: { vi: 'Tote', en: 'Tote' }, layouts: BAG_LAYOUTS, names: BAG_NAMES, def: 'doc', opts: 'qpzn' },
+                    short: { vi: 'Tote', en: 'Tote' }, layouts: BAG_LAYOUTS, names: BAG_NAMES, def: 'doc', opts: 'qpzne' },
     tuino:        { sku: 'tui-di-choi', group: 'tui', vi: 'Túi quai nơ', en: 'Bow bag', shape: 'tuino', grid: 3, span: 63,
-                    short: { vi: 'Quai nơ', en: 'Bow' }, layouts: BAG_LAYOUTS, names: BAG_NAMES, def: 'mot', opts: 'qpzn' },
+                    short: { vi: 'Quai nơ', en: 'Bow' }, layouts: BAG_LAYOUTS, names: BAG_NAMES, def: 'mot', opts: 'qpzne' },
     tuikhoa:      { sku: 'tui-di-choi', group: 'tui', vi: 'Túi khoá kéo đeo vai', en: 'Zipped shoulder bag', shape: 'tuikhoa', grid: 3, span: 51,
-                    short: { vi: 'Khoá kéo', en: 'Zipped' }, layouts: BAG_LAYOUTS, names: BAG_NAMES, def: 'mot', opts: 'qpn', zip: 1 },
+                    short: { vi: 'Khoá kéo', en: 'Zipped' }, layouts: BAG_LAYOUTS, names: BAG_NAMES, def: 'mot', opts: 'qpne', zip: 1 },
     // off: taken off the table (Anna 20/10: only the bags redrawn in pencil
     // stay); kept so a design already made with one still opens, draws and
     // is priced (a shared link, the collection, an order)
     tuitamgiac:   { sku: 'tui-di-choi', group: 'tui', vi: 'Túi tam giác', en: 'Triangle bag', shape: 'tuitamgiac', grid: 3, span: 61,
-                    short: { vi: 'Tam giác', en: 'Triangle' }, layouts: BAG_LAYOUTS, names: BAG_NAMES, def: 'mot', opts: 'qpzn', off: 1 },
+                    short: { vi: 'Tam giác', en: 'Triangle' }, layouts: BAG_LAYOUTS, names: BAG_NAMES, def: 'mot', opts: 'qpzne', off: 1 },
     // the tie shoulder bag (a pattern Anna liked): two points tied on the
     // shoulder, four ways (ties): plain straps are in the price, styled
     // ones cost more
@@ -116,7 +117,7 @@
     laptop:       { sku: 'tui-laptop',  group: 'laptop', vi: 'Túi laptop', en: 'Laptop sleeve', shape: 'laptop', grid: 3, span: 33,
                     short: { vi: 'Không quai', en: 'No strap' }, layouts: BAG_LAYOUTS, names: BAG_NAMES, def: 'doc', opts: 'qpn', zip: 1 },
     laptopq:      { sku: 'tui-laptop',  group: 'laptop', vi: 'Túi laptop có quai', en: 'Laptop sleeve with strap', shape: 'laptopq', grid: 3, span: 42,
-                    short: { vi: 'Có quai đeo', en: 'With strap' }, layouts: BAG_LAYOUTS, names: BAG_NAMES, def: 'doc', opts: 'qpn', zip: 1 }
+                    short: { vi: 'Có quai đeo', en: 'With strap' }, layouts: BAG_LAYOUTS, names: BAG_NAMES, def: 'doc', opts: 'qpne', zip: 1 }
   };
   // pieces shown under one tab, a shape picked on it (the first is the tab)
   var GROUPS = {
@@ -245,19 +246,29 @@
      "s<i>" a bigger usual size, "c<W>x<H>" the customer's own size in cm,
      "q" quilted (chần bông), "p<n>" n more inside pockets (one is free),
      "z" a zip, "n" a snap, "e<stitch><thread>" a machine stitch down the
-     strap's middle (STITCHES 1-, THREADS 0-). Only what the piece offers
-     (PRODUCTS[x].opts). */
+     middle of the strap or the bag's handle (STITCHES 1-9, THREADS 0-).
+     Only what the piece offers (PRODUCTS[x].opts). */
   function blankExt() { return { s: 0, c: null, q: false, p: 0, z: false, n: false, t: 0, e: 0, ec: 0 }; }
-  // the decorative stitches of Gem's Janome, drawn by stitchPath(); thread
-  // colours to sew them in
+  // the decorative stitches on the pattern dial of Gem's Janome (Anna's
+  // photos, 23/10; one digit in the code, so nine at most), their icons by
+  // stitchIcon(); thread colours to sew them in. Only picked, not drawn on
+  // the piece: a flat line looked wrong on the shaded strap (Anna 23/10)
   var STITCHES = [
-    { id: 'zic',  vi: 'Ziczac',    en: 'Zigzag' },
-    { id: 'song', vi: 'Sóng',      en: 'Wave' },
-    { id: 'vo',   vi: 'Vỏ sò',     en: 'Scallop' },
-    { id: 'la',   vi: 'Dây lá',    en: 'Vine' },
-    { id: 'tim',  vi: 'Trái tim',  en: 'Hearts' },
-    { id: 'x',    vi: 'Chữ thập',  en: 'Cross stitch' }
+    { id: 'zic',   vi: 'Zíc zắc',    en: 'Zigzag' },
+    { id: 'long',  vi: 'Lông vũ',    en: 'Feather' },
+    { id: 'song',  vi: 'Sóng',       en: 'Wave' },
+    { id: 'la',    vi: 'Dây lá',     en: 'Vine' },
+    { id: 'thoi',  vi: 'Hình thoi',  en: 'Diamonds' },
+    { id: 'x',     vi: 'Chữ X',      en: 'Cross' },
+    { id: 'vo',    vi: 'Vỏ sò',      en: 'Scallop' },
+    { id: 'rang',  vi: 'Răng cưa',   en: 'Triangles' },
+    { id: 'thanh', vi: 'Tường thành', en: 'Battlement' }
   ];
+  // a strap, or the handle of a bag
+  function embName(product, l) {
+    var bag = (ART[PRODUCTS[product].shape] || {}).bag;
+    return bag ? (l === 'vi' ? 'Thêu chỉ giữa quai' : 'Stitch down the handle') : (l === 'vi' ? 'Thêu chỉ giữa dây' : 'Stitch down the middle');
+  }
   var THREADS = [
     { vi: 'Kem', en: 'Cream', c: '#F3E9D6' }, { vi: 'Trắng', en: 'White', c: '#FFFFFF' },
     { vi: 'Đỏ gạch', en: 'Brick red', c: '#B5523B' }, { vi: 'Vàng mù tạt', en: 'Mustard', c: '#D4A02A' },
@@ -344,17 +355,17 @@
       oxford:       { base: 130000, fabric: 10000, layouts: { hai: 10000, vuong: 20000, net: 30000, tuve: 20000 } },
       bloom:        { base: 25000, layouts: { hoa2: 10000, hoa3: 20000, tuve: 10000 } },
       bookmark:     { base: 22000, layouts: { tuve: 5000 } },
-      // embroider: the stitch down the middle (the owner sets it)
+      // embroider: the stitch down the strap / the handle (the owner sets it)
       daydeo:       { base: 35000, layouts: { tuve: 5000 }, embroider: 10000 },
-      tuitote:      { base: 160000, fabric: 10000, layouts: BAG_FEES, sizes: [0, 20000], quilt: 70000, pocket: 20000, zip: 30000, snap: 10000 },
-      tuino:        { base: 220000, fabric: 10000, layouts: BAG_FEES, sizes: [0, 30000], quilt: 60000, pocket: 20000, zip: 30000, snap: 10000 },
-      tuikhoa:      { base: 200000, fabric: 10000, layouts: BAG_FEES, quilt: 50000, pocket: 20000, snap: 10000 },
-      tuitamgiac:   { base: 100000, fabric: 10000, layouts: BAG_FEES, quilt: 60000, pocket: 20000, zip: 30000, snap: 10000 },
+      tuitote:      { base: 160000, fabric: 10000, layouts: BAG_FEES, sizes: [0, 20000], quilt: 70000, pocket: 20000, zip: 30000, snap: 10000, embroider: 10000 },
+      tuino:        { base: 220000, fabric: 10000, layouts: BAG_FEES, sizes: [0, 30000], quilt: 60000, pocket: 20000, zip: 30000, snap: 10000, embroider: 10000 },
+      tuikhoa:      { base: 200000, fabric: 10000, layouts: BAG_FEES, quilt: 50000, pocket: 20000, snap: 10000, embroider: 10000 },
+      tuitamgiac:   { base: 100000, fabric: 10000, layouts: BAG_FEES, quilt: 60000, pocket: 20000, zip: 30000, snap: 10000, embroider: 10000 },
       // ties: an amount, or [from, to] when Gem fixes it with the customer
       // (the bow: 10–40k by its size)
       tuibuoc:      { base: 180000, fabric: 10000, layouts: BAG_FEES, quilt: 60000, pocket: 20000, snap: 10000, ties: [0, [10000, 40000], 30000, 20000] },
       laptop:       { base: 260000, fabric: 10000, layouts: BAG_FEES, sizes: [0, 10000, 20000], quilt: 50000, pocket: 20000, snap: 10000 },
-      laptopq:      { base: 290000, fabric: 10000, layouts: BAG_FEES, sizes: [0, 10000, 20000], quilt: 50000, pocket: 20000, snap: 10000 }
+      laptopq:      { base: 290000, fabric: 10000, layouts: BAG_FEES, sizes: [0, 10000, 20000], quilt: 50000, pocket: 20000, snap: 10000, embroider: 10000 }
     }
   };
   // the owner's numbers (settings "design_pricing"): only whole, sane
@@ -434,18 +445,19 @@
     if (e.z) add('zip', pr.zip || 0);
     if (e.n) add('snap', pr.snap || 0);
     if (e.t) { var f = fee((pr.ties || [])[e.t]); add('tie', f[0], tieOf(d), f[1]); }
-    if (e.e) add('embroider', pr.embroider || 0);
+    if (e.e) add('embroider', pr.embroider || 0, d.product);
     return { base: pr.base, total: total, max: max, lines: lines, quote: !!e.c };
   }
   var PRICE_NAMES = {
     layout: { vi: 'Kiểu ghép', en: 'Piecing' }, fabric: { vi: 'Thêm {n} vải', en: '{n} more fabrics' },
     size: { vi: 'Cỡ lớn hơn', en: 'Bigger size' }, quilt: { vi: 'Chần bông', en: 'Quilted' },
     pocket: { vi: 'Thêm {n} túi trong', en: '{n} more inside pockets' }, zip: { vi: 'Khoá kéo', en: 'Zip' },
-    snap: { vi: 'Nút bấm', en: 'Snap' }, embroider: { vi: 'Thêu chỉ giữa dây', en: 'Stitch down the middle' }
+    snap: { vi: 'Nút bấm', en: 'Snap' }
   };
   function priceLine(x, l) {
     // a tie: its own name, and what a range depends on
     if (x.k === 'tie') return TIES[x.n][l] + (x.b > x.a ? ' (' + tieWhy(x.n, l) + ')' : '');
+    if (x.k === 'embroider') return embName(x.n, l);
     return PRICE_NAMES[x.k][l].replace('{n}', x.n);
   }
   // "10.000–40.000đ", or one amount
@@ -798,7 +810,7 @@
     if (p.zip) out.push(vi ? 'khoá kéo có sẵn' : 'zip included');
     if (e.z) out.push(vi ? 'thêm khoá kéo' : 'add a zip');
     if (e.n) out.push(vi ? 'thêm nút bấm' : 'add a snap');
-    if (e.e) out.push((vi ? 'thêu giữa dây: ' : 'stitched down the middle: ') + STITCHES[e.e - 1][l].toLowerCase() +
+    if (e.e) out.push(embName(d.product, l).toLowerCase() + ': ' + STITCHES[e.e - 1][l].toLowerCase() +
       (vi ? ', chỉ ' : ', ') + THREADS[e.ec][l].toLowerCase() + (vi ? '' : ' thread'));
     if (p.ties) {
       // a range (the bow): the order line says so, Gem settles it on the reply
@@ -1478,9 +1490,8 @@
         h: 'M152 129L162 136L167 142L142 176L151 183L152 188L163 209L162 215L153 228L150 236L144 241L134 255L133 259L128 264L126 264L122 260L99 276L93 279L87 273L86 268L86 247L80 219L80 204L83 194L88 184L95 178L115 172Z' }
     ] },
     // the strap stands upright, its middle on x 170 (measured on the mask):
-    // pieced across at y 120 (its middle), along it at x 170; the stitch
-    // runs down the middle from the fold to the tab (y 14-230)
-    strap: { n: 'daydeo', top: 1, strap: { x: 170, y: 120, y0: 14, y1: 230 } },
+    // pieced across at y 120 (its middle), along it at x 170
+    strap: { n: 'daydeo', top: 1, strap: { x: 170, y: 120 } },
     // the corner bookmark: a square back and a triangle flap that slips over
     // the corner of a page
     bookmark: { n: 'bookmark', diag: 1 },
@@ -1632,8 +1643,6 @@
     if (A.bag && d.ext && d.ext.q && d.layout !== 'tuve') out += quilting(A, pre);
     // a zip / a snap the customer added (drawn where the bag has a place)
     if (A.bag && d.ext && d.ext.z && A.zip) out += zipLine(A.zip);
-    // the strap's stitch, on the fabric (the shading still folds it)
-    if (A.strap && d.ext && d.ext.e) out += stitchPath(A.strap, d.ext.e, d.ext.ec);
     // the pieces of their own (collar, strap, flowers): back to front, the
     // ones marked "over" last (their number stays their place in the list)
     var parts = partsOf(d), base = f.used() + 1, order = [];
@@ -1682,39 +1691,38 @@
       '<path d="M' + a[0] + ' ' + a[1] + 'L' + b[0] + ' ' + b[1] + '" stroke="#CFC4A8" stroke-width="2.4" stroke-dasharray="1 1.4"/>' +
       '<rect x="' + (b[0] - 9) + '" y="' + (b[1] - 1) + '" width="5" height="13" rx="2" fill="#CFC4A8" stroke="#7A6E58" stroke-width="0.8"/></g>';
   }
-  // A decorative machine stitch down the strap's middle, one motif every
-  // few units: drawn twice, a faint dark line under the thread so a pale
-  // thread still shows on a pale fabric.
-  function stitchPath(st, k, c) {
-    var x = st.x, y = st.y0, y1 = st.y1, id = (STITCHES[k - 1] || STITCHES[0]).id, d = '', i = 0;
+  // A stitch's icon, sewn left to right as on the machine's pattern dial,
+  // in a 44 × 16 box: the satin ones (leaves, scallops, triangles) filled.
+  function stitchIcon(k) {
+    var id = (STITCHES[k - 1] || STITCHES[0]).id, d = '', fill = '', x;
     if (id === 'zic') {
-      d = 'M' + (x - 5) + ' ' + y;
-      for (y += 5; y <= y1; y += 5) d += 'L' + (x + ((i++ % 2) ? -5 : 5)) + ' ' + y;
+      d = 'M0 3';
+      for (x = 5.5; x <= 44; x += 5.5) d += 'L' + x + ' ' + ((x / 5.5) % 2 ? 13 : 3);
+    } else if (id === 'long') {
+      for (x = 1; x < 40; x += 8) d += 'M' + x + ' 2L' + (x + 6) + ' 8L' + x + ' 14';
+      d += 'M0 8H44';
     } else if (id === 'song') {
-      d = 'M' + x + ' ' + y;
-      for (; y + 10 <= y1; y += 10) d += 'Q' + (x + ((i++ % 2) ? -7 : 7)) + ' ' + (y + 5) + ' ' + x + ' ' + (y + 10);
-    } else if (id === 'vo') {
-      d = 'M' + (x - 4) + ' ' + y;
-      for (; y + 10 <= y1; y += 10) d += 'C' + (x + 7) + ' ' + (y + 1) + ' ' + (x + 7) + ' ' + (y + 9) + ' ' + (x - 4) + ' ' + (y + 10);
+      d = 'M0 8Q5.5 0 11 8T22 8T33 8T44 8';
     } else if (id === 'la') {
-      // a stem with a leaf every 12, left and right in turn
-      d = 'M' + x + ' ' + y + 'V' + y1;
-      for (y += 6; y + 8 <= y1; y += 12) {
-        var s = (i++ % 2) ? -1 : 1;
-        d += 'M' + x + ' ' + y + 'Q' + (x + 8 * s) + ' ' + (y - 1) + ' ' + (x + 7 * s) + ' ' + (y + 6) + 'Q' + (x + 2 * s) + ' ' + (y + 6) + ' ' + x + ' ' + y;
+      d = 'M0 9Q11 4 22 9T44 9';
+      for (x = 4; x < 40; x += 11) {
+        var up = (x - 4) / 11 % 2 ? 1 : -1;
+        fill += 'M' + x + ' ' + (9 - up) + 'Q' + (x + 2) + ' ' + (9 + 7 * up) + ' ' + (x + 7) + ' ' + (9 + 6 * up) + 'Q' + (x + 5) + ' ' + (9 + 2 * up) + ' ' + x + ' ' + (9 - up) + 'Z';
       }
-    } else if (id === 'tim') {
-      for (y += 4; y + 8 <= y1; y += 13) {
-        d += 'M' + x + ' ' + (y + 8) + 'C' + (x - 7) + ' ' + (y + 3) + ' ' + (x - 5) + ' ' + (y - 2) + ' ' + x + ' ' + (y + 1.5) +
-          'C' + (x + 5) + ' ' + (y - 2) + ' ' + (x + 7) + ' ' + (y + 3) + ' ' + x + ' ' + (y + 8);
-      }
+    } else if (id === 'thoi') {
+      for (x = 0; x < 44; x += 11) d += 'M' + x + ' 8L' + (x + 5.5) + ' 2L' + (x + 11) + ' 8L' + (x + 5.5) + ' 14Z';
+    } else if (id === 'x') {
+      for (x = 1; x < 40; x += 11) d += 'M' + x + ' 3L' + (x + 9) + ' 13M' + (x + 9) + ' 3L' + x + ' 13';
+    } else if (id === 'vo') {
+      for (x = 0; x < 44; x += 11) fill += 'M' + x + ' 12A5.5 5.5 0 0 1 ' + (x + 11) + ' 12Z';
+    } else if (id === 'rang') {
+      for (x = 0; x < 44; x += 11) fill += 'M' + x + ' 13L' + (x + 5.5) + ' 3L' + (x + 11) + ' 13Z';
     } else {
-      for (y += 4; y + 8 <= y1; y += 9) d += 'M' + (x - 4) + ' ' + y + 'L' + (x + 4) + ' ' + (y + 8) + 'M' + (x + 4) + ' ' + y + 'L' + (x - 4) + ' ' + (y + 8);
+      d = 'M0 12';
+      for (x = 0; x < 42; x += 14) d += 'V4H' + (x + 7) + 'V12H' + Math.min(44, x + 14);
     }
-    var col = (THREADS[c] || THREADS[0]).c;
-    return '<g class="pt-stitch" fill="none" stroke-linecap="round" stroke-linejoin="round" pointer-events="none">' +
-      '<path d="' + d + '" stroke="#3D4A2E" stroke-opacity="0.3" stroke-width="3"/>' +
-      '<path d="' + d + '" stroke="' + col + '" stroke-width="1.7"/></g>';
+    return '<g class="pt-stitch" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' +
+      (d ? '<path d="' + d + '" fill="none"/>' : '') + (fill ? '<path d="' + fill + '" fill="currentColor"/>' : '') + '</g>';
   }
   function snapDot(c) {
     return '<g pointer-events="none"><circle cx="' + c[0] + '" cy="' + c[1] + '" r="5.5" fill="' + METAL + '" stroke="#6F6A60" stroke-width="1"/>' +
@@ -2239,7 +2247,7 @@
     // pieces under one tab (Lót cốc tròn / vuông, the bags, the laptop sleeve)
     GROUPS: GROUPS, groupOf: groupOf, tabOf: tabOf, tabName: tabName,
     // size + options, price
-    SIZES: SIZES, TIES: TIES, tieWhy: tieWhy, STITCHES: STITCHES, THREADS: THREADS, stitchPath: stitchPath, sizesOf: sizesOf, sizeLabel: sizeLabel, blankExt: blankExt, fitExt: fitExt, MAX_POCKETS: MAX_POCKETS, CUSTOM_CM: CUSTOM_CM,
+    SIZES: SIZES, TIES: TIES, tieWhy: tieWhy, STITCHES: STITCHES, THREADS: THREADS, stitchIcon: stitchIcon, embName: embName, sizesOf: sizesOf, sizeLabel: sizeLabel, blankExt: blankExt, fitExt: fitExt, MAX_POCKETS: MAX_POCKETS, CUSTOM_CM: CUSTOM_CM,
     PRICING: PRICING, price: price, priceLine: priceLine, priceRange: priceRange, fee: fee, setPricing: setPricing, loadPricing: loadPricing,
     // real fabrics (Kho vải)
     setReal: setReal, loadReal: loadReal, hasReal: hasReal, isReal: isReal, realOf: realOf, moodKeys: moodKeys, warm: warm,

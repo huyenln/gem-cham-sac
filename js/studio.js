@@ -348,7 +348,6 @@
     'studio.pt_zip_in':    { vi: `Khoá kéo có sẵn`, en: `Zip included` },
     'studio.pt_snap':      { vi: `Thêm nút bấm`, en: `Add a snap` },
     'studio.pt_ties':      { vi: `Kiểu buộc vai`, en: `Shoulder tie` },
-    'studio.pt_emb':       { vi: `Thêu chỉ giữa dây`, en: `Stitch down the middle` },
     'studio.pt_emb_kind':  { vi: `Mẫu thêu`, en: `Stitch` },
     'studio.pt_emb_thread': { vi: `Màu chỉ`, en: `Thread` },
     'studio.pt_mats':      { vi: `Chất liệu bạn thấy ổn`, en: `Fabrics you're happy with` },
@@ -3857,14 +3856,13 @@
           : plus(f[0])));
       }).join(''));
     }
-    // the strap: a machine stitch down its middle (Gem's Janome), which
-    // stitch and its thread
+    // the strap / a bag's handle: a machine stitch down its middle (Gem's
+    // Janome), which stitch and its thread; not drawn on the piece
     if (o.indexOf('e') >= 0) {
-      bits.push(chip('data-emb', 1, !!e.e, t('studio.pt_emb') + plus(pr.embroider)));
+      bits.push(chip('data-emb', 1, !!e.e, P.embName(D.d.product, l) + plus(pr.embroider)));
       if (e.e) {
         bits.push('<span class="pt-label pt-ties-h">' + esc(t('studio.pt_emb_kind')) + '</span>' + P.STITCHES.map(function (st, i) {
-          var icon = '<svg class="pt-stitch-ico" viewBox="150 14 40 40" aria-hidden="true">' +
-            P.stitchPath({ x: 170, y0: 16, y1: 52 }, i + 1, 5) + '</svg>';
+          var icon = '<svg class="pt-stitch-ico" viewBox="-2 -1 48 18" aria-hidden="true">' + P.stitchIcon(i + 1) + '</svg>';
           return chip('data-stitch', i + 1, e.e === i + 1, st[l], icon);
         }).join(''));
         bits.push('<span class="pt-label pt-ties-h">' + esc(t('studio.pt_emb_thread')) + '</span>' +

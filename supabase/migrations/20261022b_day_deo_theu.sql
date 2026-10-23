@@ -7,9 +7,10 @@
 --    it ("doc"), no longer shown twice (outside / inside); an old "hai" code
 --    reads as "ngang" (js/patch.js LEGACY). No charge for either layout
 --    beyond the fabrics; Gem picking counts "ngang" as two fabrics.
--- 2. A machine stitch down the strap's middle (Gem's Janome): field 13 gets
---    "e<stitch><thread>", priced at products.daydeo.embroider (the owner sets
---    it in admin → Sản phẩm → Giá thiết kế; 10.000đ to start).
+-- 2. A machine stitch down the middle of the strap, or of a bag's handle
+--    (Gem's Janome; Anna 23/10: the bags too): field 13 gets
+--    "e<stitch><thread>", priced at products.<piece>.embroider (the owner
+--    sets it in admin → Sản phẩm → Giá thiết kế; 10.000đ to start).
 -- 3. The origami pouch: a base and six petals, each a piece of its own:
 --    "canh" (the petals in one fabric), "xen" (two, in turn), "moi" (each
 --    its own); "hai" / "net" are gone (old codes open as "canh" / "mot").
@@ -31,6 +32,18 @@ set value = value
                  'moi', coalesce(value #> '{products,origami,layouts,moi}', '15000'),
                  'tuve', coalesce(value #> '{products,origami,layouts,tuve}', '10000')))))
 where key = 'design_pricing';
+
+-- the bags with a handle (js/patch.js opts "e"), only where the bag is priced
+do $$
+declare k text;
+begin
+  foreach k in array array['tuitote', 'tuino', 'tuikhoa', 'tuitamgiac', 'laptopq'] loop
+    update public.settings
+    set value = jsonb_set(value, array['products', k, 'embroider'], '10000')
+    where key = 'design_pricing' and value #> array['products', k] is not null
+      and value #> array['products', k, 'embroider'] is null;
+  end loop;
+end $$;
 
 create or replace function public.design_price(p_spec text, p_sku text)
 returns jsonb
@@ -111,7 +124,7 @@ begin
           total := total + (tv #>> '{}')::int;
         end if;
       elsif tok ~ '^e[1-9][0-9]$' then
-        -- the strap's stitch down the middle (which stitch, which thread)
+        -- a stitch down the strap / the handle (which stitch, which thread)
         total := total + coalesce((cfg->>'embroider')::int, 0);
       else
         return null;

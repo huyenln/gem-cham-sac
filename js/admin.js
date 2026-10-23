@@ -1304,8 +1304,9 @@
      The numbers a design made at Bàn thiết kế is priced by (settings
      "design_pricing"): js/patch.js shows the price, create_order charges
      it (design_price), both from this one row. */
+  // embroider: "giữa dây" on the strap, "giữa quai" on a bag (GemPatch.embName)
   var DP_OPTS = { quilt: 'Chần bông', pocket: 'Mỗi túi trong thêm', zip: 'Thêm khoá kéo', snap: 'Thêm nút bấm',
-    embroider: 'Thêu chỉ giữa dây' };
+    embroider: 'Thêu chỉ' };
   function renderPricing() {
     var P = window.GemPatch, PR = P.PRICING;
     var num = function (name, v, label) {
@@ -1320,7 +1321,7 @@
         return num('s.' + id + '.' + (i + 1), (pr.sizes || [])[i + 1] || 0, P.sizeLabel(id, i + 1, 'vi'));
       }).join('');
       var opts = Object.keys(DP_OPTS).filter(function (k) { return k in pr; }).map(function (k) {
-        return num('o.' + id + '.' + k, pr[k], DP_OPTS[k]);
+        return num('o.' + id + '.' + k, pr[k], k === 'embroider' ? P.embName(id, 'vi') : DP_OPTS[k]);
       }).join('') + (pr.ties ? P.PRODUCTS[id].ties.map(function (k, i) {
         // "đến" filled in: a range (the bow, by its size), Gem settles it
         var f = P.fee(pr.ties[i]);

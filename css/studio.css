@@ -1841,7 +1841,8 @@ html:has(.studio-page) { overscroll-behavior: none; }   /* own rule: a Safari wi
 .pt-chip-fixed { cursor: default; border-style: dashed; color: var(--ink-soft); }
 .pt-ties-h { flex: 1 1 100%; margin-top: var(--space-1); }
 /* the strap's stitch: a small picture of each, the thread colours */
-.pt-stitch-ico { width: 22px; height: 22px; background: var(--sage-light); border-radius: 4px; }
+/* the stitch as on the machine's pattern dial (GemPatch.stitchIcon), in the chip's ink */
+.pt-stitch-ico { width: 40px; height: 15px; flex: none; }
 .pt-threads { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .pt-thread-dot { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--paper-white); box-shadow: 0 0 0 1.5px var(--sage-light); cursor: pointer; padding: 0; }
 .pt-thread-dot.is-on { box-shadow: 0 0 0 3px var(--sage-deep); }

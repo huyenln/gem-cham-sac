@@ -402,8 +402,9 @@ Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
   Chi tiết: `docs/design.md` → "Studio trên điện thoại thật (14/10/2026)".
 - 🧭 Bàn thiết kế 22/10 (Anna thử điện thoại): thẻ hướng dẫn 1-2-3 lần đầu + nút "?"; Màu riêng
   là bảng trượt từ đáy (không đẩy rổ xa món); kéo vải tới mép thì bàn tự cuộn; dây đeo một dây,
-  ghép ngang / dọc + **thêu chỉ giữa dây** (Janome, `e<mẫu><chỉ>`, migration
-  `20261022b_day_deo_theu.sql` chạy **trước** khi merge); Bloom khoanh theo nét vẽ; túi quai nơ
+  ghép ngang / dọc + **thêu chỉ giữa dây / quai túi** (9 mẫu trên máy Janome, `e<mẫu><chỉ>`, chỉ
+  chọn, không vẽ lên hình; migration `20261022b_day_deo_theu.sql` chạy **trước** khi merge);
+  Bloom khoanh theo nét vẽ (1 / 2 bông chờ tranh riêng Anna nhờ ChatGPT vẽ); túi quai nơ
   cả quai một vải; Origami nền + 6 cánh (cánh khác nền / xen kẽ / mỗi cánh một vải), bỏ "Ghép
   theo nét vẽ". Chi tiết: `docs/design.md` → "Bàn thiết kế — hướng dẫn, Màu riêng, dây đeo, Bloom,
   quai nơ, Origami".
