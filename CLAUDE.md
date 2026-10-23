@@ -46,6 +46,7 @@ Static website cho cửa hàng **Gem Chạm Sắc** — pop-up store sustainabil
 ├── js/studio.js              Studio 2D: mặt tiền + cảnh trong, nhân vật + phụ kiện đeo thử, điểm bấm, bàn thiết kế, bảng lời nhắn; mua qua window.GemBasket (món có lựa chọn / ký gửi: bảng chi tiết ảnh thật + ô chọn); đàn tranh Việt Nam 16 / 19 dây cho món "Khu vực" / Khung bấm → "Chơi đàn tranh" (Web Audio, không file âm thanh; vùng nhấn bên trái nhạn ra Fa / Si, dây Bắc / Nam / Đảo, tông, tên Đô Rê Mi / Hò Xự Xang, bàn phím máy tính); thanh dưới ngoài phố có nút cho các điểm ngoài phố; hướng dẫn lần đầu (vuốt / cửa / trong studio, localStorage gem-guide), nhãn mép màn hình, nút "?"; chuông cửa + lời chào khi vào
 ├── js/patch.js               Bàn thiết kế (v2): món + kiểu ghép + tông + họa tiết + chất vải + hình vẽ + ghi chú → mã thiết kế, vẽ SVG (dùng chung với giỏ, tủ)
 ├── js/collection.js         Tủ sưu tầm: thiết kế đã lưu + món đã mua (localStorage gem-tu, rpc claim_collection)
+├── js/phanloai.js           Trò "Phân loại rác" theo 6 poster Tagom (chai → 10 món → mang đi đâu); studio.js chỉ tải khi mở
 ├── js/studio-layout.js        Định dạng + kiểm tra bố cục studio (dùng chung studio.html / admin.html)
 ├── js/studio-editor.js        Tab "Lắp studio" trong admin (chỉ owner): kéo, đổi cỡ, xoay asset — cả trong studio lẫn ngoài cửa
 ├── supabase/functions/notify/ Edge Function báo mail cho nhân sự (đơn / workshop / lời nhắn) — xem docs/design.md
@@ -56,11 +57,13 @@ Static website cho cửa hàng **Gem Chạm Sắc** — pop-up store sustainabil
 ├── tools/bag-assets.py       Chạy tay khi có tranh túi mới: dáng túi (tranh của Gem + dáng vẽ đứng thẳng), phần quai/lót/đáy → images/studio/vai/mon-*; `--pencil` cho tranh vẽ chì nền trong (ChatGPT, 10/2026)
 ├── tools/check-studio.py     Kiểm tra studio + trình lắp bằng Playwright (Supabase giả lập)
 ├── tools/kv-swatches.py      Chạy tay khi làm lại ảnh các tấm vải nhập sẵn (ảnh gốc trên Drive) → images/studio/vai-that/
+├── tools/rac-assets.py       Chạy tay khi có tranh Phân loại rác mới (ChatGPT) / poster Tagom → images/studio/rac/, tagom/
 ├── images/
 │   ├── logo/                 Logo Gem variants
 │   ├── mascot/               6 pose Udon (PNG transparent)
 │   ├── products/             Product photos (full + thumb; -2/-3… cho ảnh thêm góc)
 │   ├── studio/vai-that/      Ảnh 320px các tấm vải thật nhập sẵn (Kho vải); tấm mới thêm trong admin nằm ở gem-media
+│   ├── studio/rac/, tagom/   Tranh trò Phân loại rác + 6 poster Tagom (dùng nguyên, Tagom cho phép 23/10/2026)
 │   ├── space/                Ảnh studio + sự kiện (WebP, từ Portfolio 2026)
 │   ├── workshop/             Ảnh workshop / Chạm Mùa (WebP)
 │   └── partners/             Logo đối tác (mo-hinh.html)
@@ -408,6 +411,10 @@ Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
   cả quai một vải; Origami nền + 6 cánh (cánh khác nền / xen kẽ / mỗi cánh một vải), bỏ "Ghép
   theo nét vẽ". Chi tiết: `docs/design.md` → "Bàn thiết kế — hướng dẫn, Màu riêng, dây đeo, Bloom,
   quai nơ, Origami".
+- ♻️ Phân loại rác cùng Tagom (23/10): poster Tagom treo tường (Lắp studio → nhóm "Poster Tagom", tự
+  thành Khu vực `phanloai`) → màn 1 xử lý một cái chai, màn 2 phân loại 10 món (6 bao + "Mang tới Gem"),
+  Udon kéo ống quần lần sai đầu, màn cuối chỉ Trạm Tagom + Gem (chỉ nhận xốp tấm phẳng nguyên, đĩa CD
+  nguyên). `js/phanloai.js` tải khi mở. Chi tiết: `docs/design.md` → "Phân loại rác cùng Tagom".
 - Ngoài studio: chưa gắn Studio lên menu (chờ Anna); Gmail secrets cho mail báo đơn
   (các bước: `docs/design.md` → "Bật gửi mail thật").
 

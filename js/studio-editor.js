@@ -1524,6 +1524,7 @@ window.GemStudioEditor = (function () {
     var it = { src: a.src, x: Math.round(cx), y: Math.round(a.y0 || L.FEET_Y - h / 2 - 40), w: w, h: Math.round(h),
       rot: 0, flip: false, layer: 'back', frame: !!a.frame };
     if (a.sku) it.sku = a.sku;
+    else if (a.zone) { it.kind = 'zone'; it.zone = { act: a.zone }; }   // Tagom's posters: the sorting game
     else if (infos[a.src] && (infos[a.src].kind === 'story' || infos[a.src].kind === 'talk')) it.kind = infos[a.src].kind;
     S().items.push(it);
     sel = { kind: 'item', i: S().items.length - 1 };

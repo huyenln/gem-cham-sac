@@ -2303,6 +2303,50 @@ Anna thử trên điện thoại (22/10) và gửi ảnh lỗi.
   - Vải nền không còn lộ qua khoen móc chìa khoá (`ART.origami.body`).
 - Kiểm tra: `python3 tools/check-studio.py guidance`.
 
+### Phân loại rác cùng Tagom (23/10/2026)
+
+Chọn trong bốn ý: bốc thẻ thông điệp, nhặt rác ngoài phố (Udon cắn), phân loại rác theo
+Tagom, poster treo tường + câu đố. Làm **phân loại theo 6 poster của Tagom**, poster treo
+tường là lối vào. Bỏ "nhặt rác ngoài phố có đếm giờ": nặng nhất (vòng lặp game, nhân vật
+đi nhặt, va chạm) mà ít ý nghĩa nhất.
+
+- **Poster Tagom dùng nguyên** (Tagom cho phép, Anna 23/10): Nilon cứng, Nilon mềm, Nhựa 1
+  dễ, Nhựa 1 khó, Nhựa 2-4-5, Nhựa 6-7 khó. `images/studio/tagom/<id>.webp` (cao 420, treo
+  tường) + `tagom/to/<id>.webp` (cao 1400, mở to). Không vẽ lại, không sửa chữ của Tagom;
+  dưới poster ghi "Poster của Tagom, Gem được Tagom cho phép dùng."
+- **Bật:** Lắp studio → nhóm **Poster Tagom (Phân loại rác)** → kéo poster lên tường. Poster
+  tự thành **Khu vực**, Khi bấm **Phân loại rác** (`phanloai` trong `ACTS`; khoá `zone` trong
+  `assets.json`) → Phát hành. Chạm poster = mở chính poster đó to + nút "Chơi phân loại".
+  Treo nhiều tấm thì thanh dưới / nhãn mép chỉ hiện một "Phân loại rác". Khung bấm đặt
+  "Phân loại rác" thì mở trang đầu (6 poster).
+- **Nhẹ:** `js/phanloai.js` (34 KB) chỉ tải lần đầu mở trò chơi (`phanloaiSheet` trong
+  `js/studio.js`, cùng `?v=` với `studio.js`); vào studio không tải gì của trò chơi. Mở từ
+  poster ≈ 135 KB (script + poster to); chơi hết cả hai màn ≈ 615 KB (phép kiểm đo, chặn
+  ở 800 KB). Hiệu ứng bằng CSS (mục `PHÂN LOẠI RÁC` trong `css/studio.css`), không thư viện.
+- **Màn 1 — Xử lý một cái chai:** chạm nắp (tháo) → bao Nhựa 2-4-5; chạm tem (bóc) → Nilon
+  cứng; chạm chai trần (bóp bẹp) → Nhựa 1 dễ. Kéo món vào bao, hoặc chạm món rồi chạm bao.
+  Bỏ cả chai khi chưa tháo → Udon kéo ống quần + "Khoan đã!…".
+- **Màn 2 — Phân loại 10 món:** 10 món ngẫu nhiên trong 31 (`ITEMS`, đều lấy từ poster),
+  6 bao + ô **Mang tới Gem**. Sai: hiện bao đúng + lý do (`pl.w.<id>`) + nút "Xem poster".
+  **Đĩa CD đúng ở cả hai chỗ:** Mang tới Gem hoặc Nhựa 6-7 (`also`). Xốp tấm phẳng → Gem.
+- **Udon:** lần sai đầu tiên của mỗi màn, Udon chạy vào kéo gấu quần (ống quần thò từ mép
+  trái, một tranh cho mọi nhân vật); các lần sau chỉ hiện gợi ý. Đúng thì Udon nhảy. Không
+  trừ điểm. Máy đặt giảm chuyển động: một khung, không chạy.
+- **Màn cuối:** số món đúng, các món nhầm kèm lý do, và **Mang rác đi đâu?**:
+  - Trạm Tagom: Số 105B1 (mặt sau), ngõ 3 Khuất Duy Tiến, Thanh Xuân Bắc (dãy nhà đối diện
+    trường mầm non Thanh Xuân Bắc); T2–T6 14h–19h, T7–CN 9h–19h, nghỉ trưa 12h–14h; nút Chỉ
+    đường + fanpage `facebook.com/tagom.tamer`. Đổi: `TAGOM_ADDR`, `pl.tagom_*` trong
+    `js/phanloai.js`.
+  - Gem: chỉ nhận **xốp tấm phẳng, nguyên tấm** (không lỗ khoét, không bẻ vụn) và **đĩa CD
+    nguyên tấm, không vỡ** (`pl.gem_what`). Địa chỉ / giờ lấy từ `footer.address`,
+    `visit.hours_value`; link Chỉ đường viết sẵn trong `js/phanloai.js`. Đổi địa chỉ Gem thì
+    sửa cả chỗ này.
+- **Tranh:** ChatGPT (prompt: `docs/prompts.md` → "Phân loại rác"), cắt bằng
+  `python3 tools/rac-assets.py <thư mục ảnh gốc>` → `images/studio/rac/` (Udon 240 px, món
+  300 px, kéo quần 720 px, giỏ Gem 160 px) + poster. Thêm món: vẽ thêm tờ, thêm vào `SHEETS`
+  + `ITEMS` + chữ `pl.i.<id>`, `pl.w.<id>`.
+- **Kiểm tra:** `python3 tools/check-studio.py phanloai`.
+
 ### Studio hiện cảnh mặc định thay cho bố cục đã lắp (sửa 13/10/2026)
 
 **Triệu chứng:** mở `studio.html` thấy mặt phố mặc định (monstera, bình tưới, ghế gỗ,

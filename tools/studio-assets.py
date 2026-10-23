@@ -781,11 +781,13 @@ GROUPS = [
     ('cua', 'Cửa & cửa sổ'), ('noi-that', 'Nội thất'), ('cay', 'Cây & hoa'), ('treo', 'Treo tường & trần'),
     ('de-ban', 'Đồ để bàn, kệ'), ('vai', 'Vải, gối & thảm'), ('may', 'Đồ may & len'),
     ('sp', 'Sản phẩm thật'), ('wear', 'Đồ mặc'), ('ui', 'Giấy & khung'), ('udon', 'Udon'),
+    ('tagom', 'Poster Tagom (Phân loại rác)'),
 ]
 FOLDER_GROUP = {
     'props': 'noi-that', 'cay': 'cay', 'cay2': 'cay', 'chuon': 'de-ban', 'deco': 'de-ban',
     'vn': 'de-ban', 'may': 'may', 'nha': 'de-ban', 'wear': 'wear', 'ui': 'ui', 'udon': 'udon',
     'sp': 'sp',   # cut-out real products: sp/<sku>.webp, linked to the product
+    'tagom': 'tagom',   # Tagom's posters (tools/rac-assets.py): placed as a "Khu vực" that opens the game
 }
 
 
@@ -845,6 +847,8 @@ def build_manifest():
                 item['h0'] = START_H[f.stem]
             if f.stem in START_Y:
                 item['y0'] = START_Y[f.stem]
+            if folder == 'tagom':
+                item['h0'], item['y0'], item['zone'] = 240, 330, 'phanloai'
             found[group].append(item)
     unknown = set(PICK) - {f.stem for d in FOLDER_GROUP for f in (OUT / d).glob('*.webp')}
     if unknown:

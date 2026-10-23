@@ -236,6 +236,9 @@
     'studio.hot_enter':    { vi: `Vào studio`, en: `Go in` },
     'studio.hot_dantranh': { vi: `Đàn tranh`, en: `Đàn tranh zither` },
     'studio.hot_khovai':   { vi: `Kho vải`, en: `Fabric store` },
+    'studio.hot_phanloai': { vi: `Phân loại rác`, en: `Sort the waste` },
+    'studio.pl_load':      { vi: `Đang mở trò chơi…`, en: `Opening the game…` },
+    'studio.pl_fail':      { vi: `Chưa mở được trò chơi. Bạn thử lại nhé.`, en: `The game didn't open. Please try again.` },
     'studio.welcome':      { vi: `Chào mừng bạn đến Gem Studio 2D!`, en: `Welcome to Gem Studio 2D!` },
     'studio.tip_swipe':    { vi: `Vuốt sang trái, phải để đi dạo.`, en: `Swipe left or right to walk around.` },
     'studio.tip_swipe_mouse': { vi: `Kéo chuột hoặc bấm phím ← → để đi dạo.`, en: `Drag, or press ← →, to walk around.` },
@@ -1044,7 +1047,7 @@
     'shop:pegboard': 'studio.hot_pegboard', 'shop:display': 'studio.hot_display', 'shop:cabinet': 'studio.hot_cabinet',
     'shop:all': 'studio.go_shelves', sewing: 'studio.hot_sewing', tu: 'studio.hot_tu', counter: 'studio.hot_counter',
     memo: 'studio.hot_memo', enter: 'studio.hot_enter', link: 'studio.tag_link', dantranh: 'studio.hot_dantranh',
-    khovai: 'studio.hot_khovai' };
+    khovai: 'studio.hot_khovai', phanloai: 'studio.hot_phanloai' };
   function actName(act) { return ACT_NAME[act] ? t(ACT_NAME[act]) : ''; }
   function zoneName(it) { return it.zone[lng()] || it.zone.vi || actName(it.zone.act); }
 
@@ -1180,7 +1183,7 @@
     if (!it) return;
     if (it.kind === 'story') storySheet(it, false);
     else if (it.kind === 'talk') talk(it);
-    else if (it.kind === 'zone') runAct(it.zone.act, it.zone.link, standIn(it));
+    else if (it.kind === 'zone') runAct(it.zone.act, it.zone.link, standIn(it), it);
     else if (it.kind === 'board') boardGo(it);
   }
 
@@ -5133,6 +5136,36 @@
     }, function () { reset(); msg.textContent = t('studio.memo_fail'); });
   }
 
+  /* ---------- Phân loại rác (js/phanloai.js) ----------
+     The game is a file of its own, fetched the first time it is opened, so
+     the studio does not carry it. A Tagom poster hung as a "Khu vực" opens
+     the game on that poster; anything else, on the six posters. */
+  var plState = 0;   // 0 not fetched, 1 fetching, 2 here
+  function phanloaiSheet(it) {
+    var m = /^images\/studio\/tagom\/([a-z0-9-]+)\.webp$/.exec((it && it.src) || '');
+    var go = function () {
+      window.GemPhanLoai.open({ openSheet: openSheet, body: function () { return sheetBody; } }, { poster: m ? m[1] : '' });
+    };
+    if (plState === 2) { go(); return; }
+    openSheet('<p class="st-lead pl-wait" id="st-sheet-title">' + esc(t('studio.pl_load')) + '</p>', true);
+    if (plState === 1) return;
+    plState = 1;
+    var me = document.querySelector('script[src*="js/studio.js"]'), q = me ? me.src.indexOf('?') : -1;
+    var s = document.createElement('script');
+    s.src = 'js/phanloai.js' + (q > 0 ? me.src.slice(q) : '');   // the same ?v= as this file
+    s.onload = function () {
+      plState = window.GemPhanLoai ? 2 : 0;
+      if (plState === 2 && !modal.hidden && sheetBody.querySelector('.pl-wait')) go();
+    };
+    s.onerror = function () {
+      plState = 0;
+      s.remove();
+      var w = sheetBody.querySelector('.pl-wait');
+      if (w) w.textContent = t('studio.pl_fail');
+    };
+    document.head.appendChild(s);
+  }
+
   var ACTIONS = {
     door: doorSheet,
     sofa: sofaSheet,
@@ -5147,7 +5180,8 @@
     tu: tuSheet,
     counter: counter,
     enter: enterStudio,
-    dantranh: zitherSheet
+    dantranh: zitherSheet,
+    phanloai: phanloaiSheet
   };
 
   // Open right away and let the character walk over behind the sheet.
@@ -5168,7 +5202,7 @@
 
   // Walk to x and do an action (ACTS in studio-layout.js). Shared by the
   // hotspot boxes and the pieces of kind "zone".
-  function runAct(act, link, x) {
+  function runAct(act, link, x, it) {
     if (act === 'link' && link) {
       walkTo(x, function () {
         if (/^https:/.test(link)) window.open(link, '_blank', 'noopener');
@@ -5180,6 +5214,7 @@
     if (act === 'none' || act === 'link') return;
     if (act.indexOf('shop:') === 0) shelfSheet(act.slice(5));
     else if (act === 'enter') enterStudio();
+    else if (act === 'phanloai') phanloaiSheet(it);
     else if (ACTIONS[act]) ACTIONS[act]();
   }
 
