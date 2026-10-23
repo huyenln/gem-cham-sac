@@ -416,6 +416,11 @@
     }, function () { return false; });
     return pricingP;
   }
+  var KEEP_FEE = { mot: 1, tuve: 1, hoa1: 1, hoa2: 1, hoa3: 1 };
+  // "Ghép theo nét vẽ" with more than this many lines: Gem first sees whether
+  // it can be sewn, then quotes the work (Anna 23/10); design_price the same
+  var NET_QUOTE = 6;
+  function netQuote(d) { return d.layout === 'net' && d.sketch.length > NET_QUOTE; }
   function fabricCount(d) {
     if (!d.fab) return PRICING.gem[d.layout] || 2;
     var seen = {}, n = 0;
@@ -436,8 +441,12 @@
       if (b == null) b = a;
       if (a || b) { lines.push({ k: k, a: a, b: b, n: n || 0 }); total += a; max += b; }
     };
-    add('layout', (pr.layouts || {})[d.layout] || 0);
-    var nf = fabricCount(d);
+    // one fabric over a pieced layout is no piecing at all: no fee for it
+    // (Anna 23/10). Kept for the drawn one (the fee is the drawing) and the
+    // Bloom's flowers (the fee is the flowers). design_price does the same
+    var nf = fabricCount(d), lay = (pr.layouts || {})[d.layout] || 0, waived = 0;
+    if (lay && d.fab && nf === 1 && !KEEP_FEE[d.layout]) { waived = lay; lay = 0; }
+    add('layout', lay);
     add('fabric', Math.max(0, nf - 1) * (pr.fabric != null ? pr.fabric : PRICING.fabric), nf - 1);
     if (e.s) add('size', (pr.sizes || [])[e.s] || 0);
     if (e.q) add('quilt', pr.quilt || 0);
@@ -446,7 +455,8 @@
     if (e.n) add('snap', pr.snap || 0);
     if (e.t) { var f = fee((pr.ties || [])[e.t]); add('tie', f[0], tieOf(d), f[1]); }
     if (e.e) add('embroider', pr.embroider || 0, d.product);
-    return { base: pr.base, total: total, max: max, lines: lines, quote: !!e.c };
+    var netq = netQuote(d);
+    return { base: pr.base, total: total, max: max, lines: lines, quote: !!e.c || netq, sizeq: !!e.c, netq: netq, waived: waived };
   }
   var PRICE_NAMES = {
     layout: { vi: 'Kiểu ghép', en: 'Piecing' }, fabric: { vi: 'Thêm {n} vải', en: '{n} more fabrics' },
@@ -787,6 +797,7 @@
     if (d.layout === 'net') {
       var nn = netRegions(d.sketch).n;
       bits.push(vi ? 'cắt ' + nn + ' mảnh theo nét vẽ (xem hình)' : nn + ' pieces cut along the drawn lines (see picture)');
+      if (netQuote(d)) bits.push(vi ? 'nét vẽ phức tạp: Gem xem có may được không rồi báo giá công' : 'a detailed drawing: Gem checks it can be sewn, then quotes the work');
     } else if (d.sketch.length) bits.push(vi ? 'có hình vẽ tay' : 'with a sketch');
     if (d.img) bits.push(vi ? 'có ảnh tham khảo' : 'with a reference photo');
     bits = bits.concat(extBits(d, l));
@@ -1461,11 +1472,13 @@
     // parts: pieces of their own on top of the body, one fabric each (340
     // square). The collar is traced off the painting's own lines (both flaps
     // and the back of the collar round the neck; Anna: "phần cắt đang không
-    // được clean" with the 12-point polygon). over: drawn after the others —
-    // the strap comes down in front of the back of the collar.
+    // được clean" with the 12-point polygon). The strap is sewn behind the
+    // collar (Anna 23/10, the real bags): drawn first, the whole collar in
+    // its own fabric over it (the painting redrawn there, design-assets.py
+    // collar_over_strap)
     shirt: { n: 'oxford', box: [47, 1, 292, 339], parts: [
       { id: 'co', d: 'M157 92L183 92L184 93L202 93L203 94L220 95L225 97L228 100L227 101L228 105L242 120L242 124L244 127L244 129L242 130L243 134L237 151L234 155L234 159L227 175L226 180L221 187L220 191L213 193L195 181L182 168L179 164L179 162L173 158L169 153L173 152L185 140L193 134L205 120L205 118L209 113L208 112L180 112L125 112L124 113L128 120L134 124L145 137L148 138L151 142L160 149L159 153L157 155L157 158L152 165L149 166L145 171L145 173L135 183L123 192L118 190L115 187L109 173L100 157L100 154L94 144L94 141L90 131L90 124L92 121L95 120L95 117L97 114L104 108L105 105L108 102L108 99L112 96L120 94L156 93Z' },
-      { id: 'quai', over: 1, poly: [[146, 113], [146, 8], [152, 1], [184, 1], [190, 8], [190, 113]] }
+      { id: 'quai', poly: [[146, 113], [146, 8], [152, 1], [184, 1], [190, 8], [190, 113]] }
     ] },
     // the six petals, traced off the painting: a rhombus each from the
     // middle (192.5, 199) to a corner of the hexagon, the outer sides bowed
@@ -2231,7 +2244,7 @@
     TONES: TONES, TONE_ORDER: TONE_ORDER, MAX_TONES: MAX_TONES,
     PRINTS: PRINTS, PRINT_ORDER: PRINT_ORDER, FABRICS: FABRICS, FABRIC_ORDER: FABRIC_ORDER,
     GEM: GEM, MAX_OTHER: MAX_OTHER, MAX_NOTE: MAX_NOTE,
-    INKS: INKS, ERASER: ERASER, WIDTHS: WIDTHS, GRID: GRID, settle: settle, smoothPath: smoothPath, MAX_POINTS: MAX_POINTS, MAX_STROKES: MAX_STROKES,
+    INKS: INKS, ERASER: ERASER, WIDTHS: WIDTHS, GRID: GRID, settle: settle, smoothPath: smoothPath, MAX_POINTS: MAX_POINTS, MAX_STROKES: MAX_STROKES, NET_QUOTE: NET_QUOTE,
     blank: blank, encode: encode, parse: parse, isComplete: isComplete, describe: describe,
     tones: tones, randomFill: randomFill, svg: svg, toneDot: toneDot, printDot: printDot,
     sketchPaths: sketchPaths,

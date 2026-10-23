@@ -2687,16 +2687,17 @@ async def phone(browser, db):
     check(st['under'] and st['photo'], f'a dropped fabric whose big photo is not in yet wears its swatch under it ({sid}: {st})')
     await ctx.close()
 
-    # the Oxford collar off the painting, the strap over it; origami's light layer
+    # the Oxford collar off the painting, the strap behind it (sewn on under
+    # the collar, 23/10: the collar shows whole); origami's light layer
     pg = await page(browser, db, 600, 400)
     await pg.goto(f'{BASE}/studio.html')
     await pg.wait_for_timeout(1200)
     got = await pg.evaluate("""(() => { const P = window.GemPatch;
       const ox = P.svg(P.blank('oxford')), ori = P.svg(P.blank('origami'));
       const co = ox.indexOf('d="M157 92'), quai = ox.indexOf('d="M146 113');
-      return { co: co > 0, strapOver: quai > co, light: /mon-origami-sang\\.webp[^>]*mix-blend-mode:screen/.test(ori),
+      return { co: co > 0, strapUnder: quai > 0 && quai < co, light: /mon-origami-sang\\.webp[^>]*mix-blend-mode:screen/.test(ori),
                noLightOx: !ox.includes('-sang.webp') }; })()""")
-    check(got['co'] and got['strapOver'], f'Oxford: the collar traced off the painting, the strap drawn over it ({got})')
+    check(got['co'] and got['strapUnder'], f'Oxford: the collar traced off the painting, the strap drawn behind it ({got})')
     check(got['light'] and got['noLightOx'], f'origami: the light layer over its folds (only where asked) ({got})')
     await pg.context.close()
 
@@ -3698,6 +3699,71 @@ async def guidance(browser, db):
     await pg.context.close()
 
 
+async def onefab(browser, db):
+    """23/10: one fabric over a pieced layout is no piecing (no layout fee,
+    same rule as design_price); the real-photo card says whose photo it is
+    (a ready-made bag under "Đồ thật" on the coaster read as a mistake)."""
+    print('onefab')
+    pg = await open_table(browser, db, 1440, 900)
+    got = await pg.evaluate("""['2~lotcoc~vuong~~~~~~~~AAAA', '2~lotcoc~vuong~~~~~~~~ABAB', '2~lotcoc~vuong~~~~~~', '2~lotcoc~tuve~~~~~~~~A',
+        '2~bloom~hoa2~~~~~~~~AAA', '2~tuitote~doc~~~~~~~~AA', '2~tuitote~doc~~~~~~~~AB', '2~origami~canh~~~~~~~~AA']
+        .map(c => { const p = GemPatch.price(c); return [p.total, p.waived]; })""")
+    want = [[30000, 5000], [40000, 0], [45000, 0], [35000, 0], [35000, 0], [160000, 20000], [190000, 0], [70000, 5000]]
+    check(got == want, f'one fabric: no piecing fee; two, Gem picking, the drawn one and the Bloom\'s flowers as before ({got})')
+    await js_click(pg, '.pt-tab[data-product="lotcoc"]')
+    await pg.wait_for_timeout(600)
+    card = "(() => { const r = document.querySelector('.pt'); return [r.querySelector('.gv-cap').textContent, r.querySelector('.gv-photo img').alt]; })()"
+    own = await pg.evaluate(card)
+    check(own[0] == 'Đồ thật' and own[1] == 'Lót Cốc', f'the coaster: its own real photo, "Đồ thật" ({own})')
+    moods = await pg.evaluate("[...document.querySelectorAll('[data-mood]')].map(b => b.dataset.mood)")
+    other = None
+    for m in moods:
+        await js_click(pg, f'[data-mood="{m}"]')
+        await pg.wait_for_timeout(1300)
+        c = await pg.evaluate(card)
+        if c[1] != 'Lót Cốc':
+            other = c
+            break
+    check(other is not None and other[0] == other[1] and other[0] != 'Đồ thật',
+          f'another ready-made piece shown: its name under it, not "Đồ thật" ({other})')
+    # one fabric on all four squares: the price says why there is no piecing fee
+    await js_click(pg, '.pt-layouts [data-layout="vuong"]')
+    await pg.wait_for_timeout(300)
+    await pg.evaluate("document.querySelector('.pt-board').scrollIntoView({block: 'start'})")
+    for i in range(4):
+        if not await pg.evaluate("!!document.querySelector('.pt-scrap.is-held')"):
+            await pg.click('.pt-scrap >> nth=0')
+        await pg.click(f'.pt-board [data-i="{i}"]')
+        await pg.wait_for_timeout(150)
+    # the picture each square is filled with (a real fabric's photo gets a
+    # pattern of its own per square: compare what they show)
+    fills = await pg.evaluate("""[0, 1, 2, 3].map(i => {
+        const id = document.querySelector('.pt-board [data-i="' + i + '"]').getAttribute('fill').replace(/^url\\(#|\\)$/g, '');
+        const im = document.getElementById(id) && document.getElementById(id).querySelector('image');
+        return im ? im.getAttribute('href') : id; })""")
+    lines = await pg.evaluate("document.querySelector('.pt-price-lines').textContent")
+    check(len(set(fills)) == 1 and 'Kiểu ghép' not in lines and 'Một vải nên không tính phí kiểu ghép' in lines,
+          f'four squares, one fabric: no piecing fee, and it says why ({lines})')
+    # a drawn cut with more than 6 lines: Gem looks, then quotes the work
+    q = await pg.evaluate("""[6, 7].map(n => { const c = '2~lotcoc~net~~~~~' + Array(n).fill('AAAzz').join('.') + '~';
+        const p = GemPatch.price(c); return [n, !!p && p.quote, !!p && p.netq, GemPatch.describe(c, 'vi').indexOf('báo giá công') >= 0]; })""")
+    check(q == [[6, False, False, False], [7, True, True, True]], f'"Ghép theo nét vẽ": six lines priced, seven quoted by Gem, the order says so ({q})')
+    # the Oxford bag: the strap is sewn behind the collar, the collar shows whole
+    top = await pg.evaluate("""(() => {
+        const host = document.createElement('div');
+        host.style.cssText = 'position:fixed;left:0;top:0;width:340px;height:340px;z-index:99999;background:#fff';
+        document.body.appendChild(host);
+        host.innerHTML = GemPatch.svg(GemPatch.parse('2~oxford~mot~~~~~~~~ABC'), { hit: true });
+        const s = host.querySelector('svg'); s.setAttribute('width', 340); s.setAttribute('height', 340);
+        const at = (x, y) => { const e = document.elementFromPoint(x, y); return e && e.getAttribute('data-i'); };
+        const r = [at(168, 104), at(168, 60), at(120, 250)];
+        host.remove();
+        return r; })()""")
+    check(top == ['1', '2', '0'], f'Oxford: the back of the collar over the strap, the strap above it, the body below ({top})')
+    check(not pg.errors, f'no script errors {pg.errors}')
+    await pg.context.close()
+
+
 async def main(which):
     if hasattr(sys.stdout, 'reconfigure'):
         sys.stdout.reconfigure(encoding='utf-8', errors='replace')   # a Windows console's code page has no Vietnamese
@@ -3708,7 +3774,7 @@ async def main(which):
         browser = await launch(p)
         for name, fn in (('street', street), ('wear', wear), ('shop', shop), ('spots', spots), ('editor', editor),
                          ('library', library), ('product', product), ('prodlib', prodlib), ('workshop', workshop), ('design', design), ('catalog', catalog), ('kinds', kinds),
-                         ('layers', layers), ('zones', zones), ('cart', cart), ('choices', choices), ('zither', zither), ('guide', guide), ('vai', vai), ('tui', tui), ('kho', kho), ('guidance', guidance), ('slow', slow), ('topbar', topbar), ('motion', motion),
+                         ('layers', layers), ('zones', zones), ('cart', cart), ('choices', choices), ('zither', zither), ('guide', guide), ('vai', vai), ('tui', tui), ('kho', kho), ('guidance', guidance), ('onefab', onefab), ('slow', slow), ('topbar', topbar), ('motion', motion),
                          ('phone', phone), ('taps', taps)):
             if which in (None, name):
                 await fn(browser, db)

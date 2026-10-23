@@ -407,7 +407,9 @@ Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
   Bloom khoanh theo nét vẽ, 1 / 2 bông là tranh riêng (`mon-bloom1/2`, `ART.bloom.lays`); túi quai nơ
   cả quai một vải; Origami nền + 6 cánh (cánh khác nền / xen kẽ / mỗi cánh một vải), bỏ "Ghép
   theo nét vẽ". Chi tiết: `docs/design.md` → "Bàn thiết kế — hướng dẫn, Màu riêng, dây đeo, Bloom,
-  quai nơ, Origami".
+  quai nơ, Origami". Một vải thì không tính phí kiểu ghép; ghép theo nét vẽ hơn 6
+  đường thì Gem báo giá (23/10, migration `20261023_mot_vai_net_bao_gia.sql` chạy **trước** khi
+  merge); dây túi Oxford gắn sau cổ áo.
 - Ngoài studio: chưa gắn Studio lên menu (chờ Anna); Gmail secrets cho mail báo đơn
   (các bước: `docs/design.md` → "Bật gửi mail thật").
 

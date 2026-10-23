@@ -337,6 +337,24 @@ def shading(im, pct=80):
     return out
 
 
+def collar_over_strap(path):
+    """The Oxford bag's strap is sewn behind the collar (Anna 23/10, the real
+    bags), but the painting drew it down over the back of the collar: there
+    (x 145.5-190.5, y 91.5-113.5 of 340) the collar's back band is drawn
+    again, mirrored from its own two sides and cross-faded in the middle, so
+    the whole collar shows in its fabric (js/patch.js draws the strap first)."""
+    im = Image.open(path).convert('RGBA')
+    a = np.asarray(im).astype(np.float32)
+    k = im.size[0] / 340
+    X0, X1, Y0, Y1 = int(145.5 * k), int(np.ceil(190.5 * k)), int(91.5 * k), int(np.ceil(113.5 * k))
+    out = a.copy()
+    mid0, mid1 = 156 * k, 180 * k
+    for x in range(X0, X1):
+        t = np.clip((x - mid0) / (mid1 - mid0), 0, 1)
+        out[Y0:Y1, x] = a[Y0:Y1, 2 * X0 - 1 - x] * (1 - t) + a[Y0:Y1, 2 * X1 - 1 - x] * t
+    save(Image.fromarray(out.astype(np.uint8)), path)
+
+
 def light(name, lo=0.8, span=0.17, blur=4):
     """mon-<name>-sang.webp from the piece's -bong: where the painting is
     lit (the faces of the folds), a light layer screened over the fabric.
@@ -442,6 +460,8 @@ def piece(src, name, median=0, open_holes=False, hw=None):
         shade = g.convert('RGBA')
     shade.putalpha(Image.fromarray(fab_alpha))
     save(shade, OUT / f'mon-{name}-bong.webp')
+    if name == 'oxford':
+        collar_over_strap(OUT / f'mon-{name}-bong.webp')
     mask = Image.fromarray(np.where(fab_alpha > 0, fab_alpha, 0).astype(np.uint8))
     save(mask.convert('RGB'), OUT / f'mon-{name}-mask.webp', q=70)
     # where the fabric is, in the page's 340-unit square (for patch layouts)
