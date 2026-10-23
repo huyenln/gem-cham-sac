@@ -3950,10 +3950,18 @@ async def phanloai(browser, db):
         await pg.wait_for_timeout(500)
         flat = await pg.evaluate("!!document.querySelector('[data-pl-item=\"chai-bep\"]')")
         check(flat, f'{name}: tapped, the bare bottle is squashed flat')
-        # a drag this time: the flat bottle onto plastic 1
+        # a drag this time: the flat bottle onto plastic 1; what follows the
+        # finger is seen, over the sheet (it was drawn under it, 23/10)
         a = await center(pg, '[data-pl-item="chai-bep"]')
         bx = await center(pg, '[data-pl-bin="nhua-1-de"]')
-        await drag(pg, a, bx)
+        await pg.mouse.move(*a)
+        await pg.mouse.down()
+        await pg.mouse.move(a[0] + 30, a[1] + 20, steps=3)
+        seen = await pg.evaluate("""(() => { const g = document.querySelector('.pl-ghost'), m = document.querySelector('.st-modal');
+            return !!g && +getComputedStyle(g).zIndex > +getComputedStyle(m).zIndex; })()""")
+        check(seen, f'{name}: the thing being dragged is drawn over the sheet ({seen})')
+        await pg.mouse.move(*bx, steps=10)
+        await pg.mouse.up()
         await pg.wait_for_timeout(300)
         done = await pg.evaluate("[!document.querySelector('.pl-done').hidden, document.querySelector('.pl-say').textContent]")
         check(done[0] and 'ba loại' in done[1], f'{name}: cap, label, bottle each in its bag: level 1 done ({done[1][:50]})')

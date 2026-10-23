@@ -2417,6 +2417,12 @@ tường là lối vào. Bỏ "nhặt rác ngoài phố có đếm giờ": nặn
   `python3 tools/rac-assets.py <thư mục ảnh gốc>` → `images/studio/rac/` (Udon 240 px, món
   300 px, kéo quần 720 px) + poster. Thêm món: vẽ thêm tờ, thêm vào `SHEETS`
   + `ITEMS` + chữ `pl.i.<id>`, `pl.w.<id>`.
+- **Kéo thả (sửa 23/10, Anna: "không kéo được bằng tay"):** hình món đang kéo (`.pl-ghost`) gắn
+  vào `body` nhưng z-index 99, nằm **dưới** bảng (`.st-modal` 800): kéo vẫn chạy nhưng không thấy
+  gì di chuyển, chỉ thấy món mờ đi. Giờ z-index 1000 (trên cả giỏ hàng 900). Kéo chuột không
+  bôi đen chữ (`user-select: none` ở sân chơi và hàng bao). Đã kiểm: Chromium máy tính (chuột) +
+  điện thoại (ngón tay thật qua CDP); WebKit (lõi Safari, WebKitGTK qua WebDriver + Xvfb) bằng
+  chuột thật: nhặt, thấy hình đi theo, thả đúng bao. Firefox: không cài được (mạng chặn).
 - **Kiểm tra:** `python3 tools/check-studio.py phanloai`.
 
 ### Studio hiện cảnh mặc định thay cho bố cục đã lắp (sửa 13/10/2026)
