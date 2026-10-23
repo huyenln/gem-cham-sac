@@ -3138,12 +3138,7 @@
     var info = window.GemBasket && window.GemBasket.info(sku);
     im.alt = info ? info.name : '';
     gvShow = sku;
-    // the caption says whose photo it is: this piece's own ("Đồ thật"), or
-    // another ready-made one by its name (Anna 23/10: a bag under "Đồ thật"
-    // on the coaster, once Udon's line about it had gone)
-    var cap = root.querySelector('.gv-cap'), own = sku === P.PRODUCTS[D.d.product].sku;
-    if (own) { cap.setAttribute('data-i18n', 'studio.pt_real_cap'); cap.textContent = t('studio.pt_real_cap'); }
-    else { cap.removeAttribute('data-i18n'); cap.textContent = info ? info.name : ''; }
+    gvCap();
     root.querySelector('.gv-say').textContent = line;
     // a ready-made piece (not the one being designed): offer its card
     if (sku !== P.PRODUCTS[D.d.product].sku && sku !== gvRef) {
@@ -3157,6 +3152,17 @@
     }
   }
 
+  // the caption says whose photo is on the board: this piece's own ("Đồ
+  // thật"), or another ready-made one by its name (Anna 23/10: a bag under
+  // "Đồ thật" on the coaster). Again as soon as the piece changes: the old
+  // photo stays up while Udon taps the board for the new one.
+  function gvCap() {
+    var root = sheetBody.querySelector('.pt'), cap = root && root.querySelector('.gv-cap');
+    if (!cap || !gvShow) return;
+    if (gvShow === P.PRODUCTS[D.d.product].sku) { cap.setAttribute('data-i18n', 'studio.pt_real_cap'); cap.textContent = t('studio.pt_real_cap'); }
+    else { cap.removeAttribute('data-i18n'); cap.textContent = nameOf(gvShow); }
+  }
+
   function nameOf(sku) {
     var i = window.GemBasket && window.GemBasket.info(sku);
     return i ? i.name : sku;
@@ -3168,6 +3174,7 @@
     var root = sheetBody.querySelector('.pt');
     if (!root) return;
     clearTimeout(gvTimer);
+    gvCap();
     var sku = P.PRODUCTS[D.d.product].sku;
     var talk = function (show, key, other) {
       gvPose(4);

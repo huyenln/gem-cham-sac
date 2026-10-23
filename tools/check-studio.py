@@ -3710,9 +3710,16 @@ async def onefab(browser, db):
         .map(c => { const p = GemPatch.price(c); return [p.total, p.waived]; })""")
     want = [[30000, 5000], [40000, 0], [45000, 0], [35000, 0], [35000, 0], [160000, 20000], [190000, 0], [70000, 5000]]
     check(got == want, f'one fabric: no piecing fee; two, Gem picking, the drawn one and the Bloom\'s flowers as before ({got})')
-    await js_click(pg, '.pt-tab[data-product="lotcoc"]')
-    await pg.wait_for_timeout(600)
     card = "(() => { const r = document.querySelector('.pt'); return [r.querySelector('.gv-cap').textContent, r.querySelector('.gv-photo img').alt]; })()"
+    # the board still shows the last piece's own photo while Udon taps it for
+    # the coaster: that photo is not the coaster's, so it goes by its name
+    await js_click(pg, '.pt-tab[data-product="origami"]')
+    await pg.wait_for_timeout(900)
+    await js_click(pg, '.pt-tab[data-product="lotcoc"]')
+    await pg.wait_for_timeout(60)
+    mid = await pg.evaluate(card)
+    check(mid[1] != 'Lót Cốc' and mid[0] == mid[1], f'switching piece: the old photo goes by its own name at once, not "Đồ thật" ({mid})')
+    await pg.wait_for_timeout(700)
     own = await pg.evaluate(card)
     check(own[0] == 'Đồ thật' and own[1] == 'Lót Cốc', f'the coaster: its own real photo, "Đồ thật" ({own})')
     moods = await pg.evaluate("[...document.querySelectorAll('[data-mood]')].map(b => b.dataset.mood)")
