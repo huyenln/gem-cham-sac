@@ -3898,11 +3898,11 @@ async def phanloai(browser, db):
         check(got[0] == 'poster' and got[1].endswith('images/studio/tagom/to/nilon-cung.webp'),
               f'{name}: the poster tapped opens big, on its own ({got})')
         check(any('/js/phanloai.js' in u for u in loaded), f'{name}: the game is loaded on opening')
-        # the hub: six posters, two levels
+        # the hub: six posters, five levels, only the first open to a new visitor
         await js_click(pg, '.pl-back')
         await pg.wait_for_timeout(200)
-        n = await pg.evaluate("[document.querySelectorAll('.pl-poster').length, document.querySelectorAll('[data-pl-go=\"chai\"], [data-pl-go=\"sort\"]').length]")
-        check(n == [6, 2], f'{name}: the hub: six posters, two levels ({n})')
+        n = await pg.evaluate("[document.querySelectorAll('.pl-poster').length, document.querySelectorAll('.pl-lv').length, [...document.querySelectorAll('.pl-lv')].filter(b => b.disabled).length, document.querySelector('.pl-lv[data-pl-go=\"ban\"]').textContent]")
+        check(n[:3] == [6, 5, 4] and 'Xong màn 3 để mở' in n[3], f'{name}: the hub: six posters, five levels, all but the first locked ({n})')
         # level 1: how to play, the first time; "?" brings it back; the music comes in
         await js_click(pg, '[data-pl-go="chai"]')
         await pg.wait_for_timeout(300)
@@ -4037,8 +4037,8 @@ async def phanloai(browser, db):
             check(len(felt) == 2, f'{name}: both nylons were felt ({list(felt)})')
         check(wrong_seen == 2, f'{name}: a wrong bag: where it goes and why ({wrong_seen})')
         check(tugs == [True, False], f'{name}: Udon tugs at the first mistake only ({tugs})')
-        end = await pg.evaluate("[document.querySelector('.pl').dataset.plView, document.querySelector('h2').textContent, document.querySelectorAll('.pl-miss li').length]")
-        check(end == ['end', 'Bạn phân loại đúng 8/10 món', 2], f'{name}: the end: 8 of 10, the two missed listed ({end})')
+        end = await pg.evaluate("[document.querySelector('.pl').dataset.plView, document.querySelector('h2').textContent, document.querySelectorAll('.pl-miss li').length, !!document.querySelector('.pl-acts [data-pl-go=\"nhanh\"]'), JSON.parse(localStorage.getItem('gem-pl')).lv]")
+        check(end == ['end', 'Bạn phân loại đúng 8/10 món', 2, True, 2], f'{name}: the end: 8 of 10, the two missed listed, level 3 open ({end})')
         await js_click(pg, '.pl [data-pl-go="where"]')
         await pg.wait_for_timeout(200)
         wh = await pg.evaluate("[...document.querySelectorAll('.pl-place')].map(s => s.textContent)")
@@ -4064,6 +4064,160 @@ async def phanloai(browser, db):
         await pg.context.close()
 
 
+async def phanloai_lv(browser, db):
+    """23/10: levels 3–5 of "Phân loại rác", each opened by the one before.
+    3: sixty seconds (nothing before "Bắt đầu!", a wrong bag −3 s and the
+    right one lights up, red in the last ten, a best kept); 4: the party
+    table (tags, tools, the cap and label as things of their own, −2 s for a
+    tool not needed, −5 s and Udon for a thing not ready, a drag onto a tool;
+    a clear table opens level 5); 5: more land as you go, more than ten on
+    the table and it is lost. The page's clock is Playwright's, run ahead."""
+    print('phanloai_lv')
+    db.rows.clear(); db.info.clear()
+    db.rows['live'] = {
+        'v': 1, 'bg': {'src': 'images/studio/bg/strip-tron.webp', 'w': 5792, 'h': 1024},
+        'items': [dict(src='images/studio/tagom/nhua-245.webp', x=900, y=420, w=180, h=256, rot=0, flip=False,
+                       layer='back', frame=False, kind='zone', zone={'act': 'phanloai'})],
+        'udon': {'x': 5200, 'y': 560, 'w': 128, 'h': 140}, 'start': 700,
+    }
+    state = "[document.querySelector('.pl').dataset.plView, +(document.querySelector('.pl-clock-s') || {}).textContent, (document.querySelector('.pl-count') || {}).textContent, (document.querySelector('.pl-say') || {}).textContent]"
+    for name, w, h in (('mobile', 390, 844), ('desktop', 1440, 900)):
+        pg = await page(browser, db, w, h, GUIDE_OFF + "localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-studio-intro-touch','1');sessionStorage.setItem('gem-scene','in');"
+                        "localStorage.setItem('gem-pl', JSON.stringify({lv: 2}));"
+                        "(() => { let s = 7; Math.random = () => (s = (s * 16807) % 2147483647) / 2147483647; })();")
+        await pg.clock.install()
+        await pg.goto(f'{BASE}/studio.html')
+        await pg.wait_for_timeout(2500)
+        await js_click(pg, '[data-thing-label]')
+        await pg.wait_for_timeout(1500)
+        # the poster's "Chơi phân loại": the first level not done yet
+        await js_click(pg, '.pl-acts [data-pl-go="up"]')
+        await pg.wait_for_timeout(300)
+        g = await pg.evaluate("[document.querySelector('.pl').dataset.plView, !document.querySelector('.pl-guide').hidden, document.querySelector('.pl-ready').hidden]")
+        check(g == ['nhanh', True, True], f'{name}: two levels done, the poster\'s button opens level 3, on how to play ({g})')
+        await js_click(pg, '.pl-g-go')
+        await pg.wait_for_timeout(100)
+        it = await pg.evaluate("(() => { const id = document.querySelector('.pl-one [data-pl-item]').dataset.plItem; return GemPhanLoai.ITEMS.filter(x => x.id === id)[0].bin; })()")
+        await js_click(pg, f'[data-pl-bin="{it}"]')
+        r = await pg.evaluate("[document.querySelector('.pl-ready').hidden, document.querySelector('.pl-ready b').textContent, document.querySelector('.pl-count').textContent]")
+        check(r == [False, '3', 'Đúng 0 · Sai 0'], f'{name}: 3, 2, 1 first: a bag does nothing yet ({r})')
+        await pg.wait_for_timeout(2700)
+        # a wrong bag: −3 s, the right bag lights up
+        s0 = await pg.evaluate(state)
+        it = await pg.evaluate("(() => { const id = document.querySelector('.pl-one [data-pl-item]').dataset.plItem; return GemPhanLoai.ITEMS.filter(x => x.id === id)[0].bin; })()")
+        await js_click(pg, '[data-pl-bin="%s"]' % ('nilon-mem' if it != 'nilon-mem' else 'nilon-cung'))
+        await pg.wait_for_timeout(100)
+        s1 = await pg.evaluate(state)
+        lit = await pg.evaluate(f"[document.querySelector('[data-pl-bin=\"{it}\"]').classList.contains('is-right'), (document.querySelector('.pl-minus') || {{}}).textContent]")
+        check(s0[1] == 60 and s0[1] - s1[1] >= 3 and lit == [True, '−3 giây'] and s1[2] == 'Đúng 0 · Sai 1',
+              f'{name}: a wrong bag: −3 s, the right bag lights up ({s0[1]} -> {s1[1]}, {lit}, {s1[2]})')
+        await pg.wait_for_timeout(1000)
+        for i in range(3):
+            it = await pg.evaluate("(() => { const id = document.querySelector('.pl-one [data-pl-item]').dataset.plItem; return GemPhanLoai.ITEMS.filter(x => x.id === id)[0].bin; })()")
+            await js_click(pg, f'[data-pl-bin="{it}"]')
+            await pg.wait_for_timeout(500)
+        # the last ten seconds: red; at nought, the end
+        for _ in range(70):
+            if (await pg.evaluate(state))[1] <= 9:
+                break
+            await pg.clock.run_for(1000)
+        low = await pg.evaluate("document.querySelector('.pl-clock').classList.contains('is-low')")
+        await pg.clock.run_for(11000)
+        await pg.wait_for_timeout(200)
+        end = await pg.evaluate("[document.querySelector('.pl').dataset.plView, document.querySelector('h2').textContent, document.querySelector('.pl-best').textContent, !!document.querySelector('.pl-acts [data-pl-go=\"ban\"]'), JSON.parse(localStorage.getItem('gem-pl'))]")
+        check(low and end[:4] == ['end', 'Hết giờ! Bạn phân loại đúng 3 món', 'Kỷ lục của bạn: 3 món', True] and end[4]['lv'] == 3 and end[4]['b3'] == 3,
+              f'{name}: red in the last ten seconds; time up: 3 right, the best kept, level 4 open ({low}, {end})')
+        # level 4: the party table
+        await js_click(pg, '.pl-acts [data-pl-go="ban"]')
+        await pg.wait_for_timeout(300)
+        await js_click(pg, '.pl-g-go')
+        await pg.clock.run_for(2700)
+        await pg.wait_for_timeout(100)
+        things = await pg.evaluate("[...document.querySelectorAll('.pl-thing')].map(b => [b.dataset.plItem, b.querySelector('.pl-tn').textContent, [...b.querySelectorAll('.pl-chips i')].map(i => i.textContent)])")
+        tagged = [x for x in things if x[2]]
+        bottle = [x for x in things if x[1] == 'Chai nước'][0]
+        check(len(things) == 8 and len(tagged) == 4 and bottle[2] == ['Còn nắp', 'Còn tem', 'Chưa bóp bẹp'],
+              f'{name}: level 4: eight things, four to get ready, the bottle three times ({[(x[1], x[2]) for x in things]})')
+        k = bottle[0]
+        await js_click(pg, f'.pl-thing[data-pl-item="{k}"]')
+        s0 = await pg.evaluate(state)
+        await js_click(pg, '[data-pl-tool="rua"]')
+        s1 = await pg.evaluate(state)
+        await js_click(pg, '[data-pl-tool="bep"]')
+        s2 = await pg.evaluate(state)
+        await js_click(pg, '[data-pl-bin="nhua-1-de"]')
+        await pg.wait_for_timeout(100)
+        s3 = await pg.evaluate(state)
+        tug = await pg.evaluate("[!document.querySelector('.pl-tug').hidden, document.querySelector('.pl-tug-say').textContent]")
+        check(s0[1] - s1[1] == 2 and 'không cần "Rửa sạch"' in s1[3] and 'Tháo nắp, bóc tem rồi mới bóp bẹp' in s2[3]
+              and s2[1] - s3[1] == 5 and 'Chai còn nắp' in s3[3] and tug[0] and 'Chưa sửa soạn' in tug[1] and 'nhầm 3' in s3[2],
+              f'{name}: a tool not needed −2 s, squash before the cap, into a bag not ready −5 s and Udon ({s0[1]}, {s1}, {s2[3]}, {s3}, {tug})')
+        await pg.clock.run_for(3000)
+        await js_click(pg, '[data-pl-tool="nap"]')
+        cap = await pg.evaluate("[...document.querySelectorAll('.pl-thing')].map(b => [b.querySelector('.pl-tn').textContent, b.classList.contains('is-sel')])")
+        check(['Nắp chai', True] in cap and len(cap) == 9, f'{name}: the cap off is a thing of its own on the table, picked ({cap})')
+        # a drag of the bottle onto "Bóc tem"
+        a = await center(pg, f'.pl-thing[data-pl-item="{k}"] img')
+        b = await center(pg, '[data-pl-tool="tem"]')
+        await pg.mouse.move(*a)
+        await pg.mouse.down()
+        await pg.mouse.move(a[0] + 20, a[1] + 20, steps=3)
+        await pg.mouse.move(*b, steps=10)
+        await pg.mouse.up()
+        await pg.wait_for_timeout(200)
+        left = await pg.evaluate(f"[[...document.querySelectorAll('.pl-thing[data-pl-item=\"{k}\"] .pl-chips i')].map(i => i.textContent), [...document.querySelectorAll('.pl-tn')].map(t => t.textContent).includes('Tem nhãn')]")
+        check(left == [['Chưa bóp bẹp'], True], f'{name}: the bottle dragged onto "Bóc tem": the label comes off ({left})')
+        if name == 'mobile':
+            await pg.screenshot(path=OUT / 'phanloai-ban-mobile.png')
+        # the rest done right
+        tools = {'Còn nắp': 'nap', 'Còn tem': 'tem', 'Chưa bóp bẹp': 'bep', 'Còn trà': 'rua', 'Còn hơi': 'xep', 'Chưa gấp': 'gap'}
+        for _ in range(40):
+            th = await pg.evaluate("""(() => { const b = document.querySelector('.pl-thing:not(.is-in)'); if (!b) return null;
+                const src = b.querySelector('img').getAttribute('src').split('/').pop().replace('.webp', '');
+                return [b.dataset.plItem, [...b.querySelectorAll('.pl-chips i')].map(i => i.textContent), src]; })()""")
+            if not th:
+                break
+            await js_click(pg, f'.pl-thing[data-pl-item="{th[0]}"]')
+            if th[1]:
+                await js_click(pg, f'[data-pl-tool="{tools[th[1][0]]}"]')
+                continue
+            to = {'chai-bep': 'nhua-1-de', 'nap': 'nhua-245', 'tem': 'nilon-cung'}.get(th[2]) or \
+                await pg.evaluate(f"GemPhanLoai.ITEMS.filter(i => i.id === '{th[2]}')[0].bin")
+            await js_click(pg, f'[data-pl-bin="{to}"]')
+            await pg.wait_for_timeout(350)
+        await pg.clock.run_for(800)
+        await pg.wait_for_timeout(200)
+        won = await pg.evaluate("[document.querySelector('h2').textContent, document.querySelectorAll('.pl-end-stars svg.is-on').length, document.querySelector('.pl-end-p').textContent, !!document.querySelector('.pl-acts [data-pl-go=\"tiec\"]'), JSON.parse(localStorage.getItem('gem-pl'))]")
+        check(won[0] == 'Bàn sạch bong!' and won[1] == 2 and 'nhầm 3 lần' in won[2] and won[3] and won[4]['lv'] == 4 and won[4]['b4']['s'] == 2,
+              f'{name}: the table clear: two stars for three slips, level 5 open ({won})')
+        # level 5: more land; more than ten and it is lost
+        await js_click(pg, '.pl-acts [data-pl-go="tiec"]')
+        await pg.wait_for_timeout(300)
+        await js_click(pg, '.pl-g-go')
+        await pg.clock.run_for(2700)
+        n0 = await pg.evaluate("document.querySelectorAll('.pl-thing').length")
+        await pg.clock.run_for(6200)
+        n1 = await pg.evaluate("[document.querySelectorAll('.pl-thing').length, document.querySelector('.pl-count').textContent]")
+        for _ in range(60):
+            if (await pg.evaluate(state))[0] != 'tiec':
+                break
+            await pg.clock.run_for(1000)
+        await pg.wait_for_timeout(100)
+        lost = await pg.evaluate("[document.querySelector('h2').textContent, JSON.parse(localStorage.getItem('gem-pl')).b5 || null]")
+        check(n0 == 6 and n1[0] == 7 and 'sắp tới 9' in n1[1] and lost == ['Bàn đầy mất rồi!', None],
+              f'{name}: level 5: six, then one more lands; left alone, the table overflows ({n0}, {n1}, {lost})')
+        await js_click(pg, '.pl-acts [data-pl-go="hub"]')
+        hub = await pg.evaluate("[...document.querySelectorAll('.pl-lv')].map(b => [b.disabled, b.querySelectorAll('.pl-stars svg.is-on').length, b.querySelector('.pl-lv-s') ? b.querySelector('.pl-lv-s').textContent : ''])")
+        check([x[0] for x in hub] == [False] * 5 and hub[2][2] == 'Kỷ lục: 3 món' and hub[3][1] == 2,
+              f'{name}: the hub: all open, the best of level 3, level 4\'s stars ({hub})')
+        if name == 'desktop':
+            await js_click(pg, '[data-pl-go="ban"]')
+            await pg.clock.run_for(2700)
+            await pg.screenshot(path=OUT / 'phanloai-ban-desktop.png')
+        check(not pg.errors, f'{name}: no script errors {pg.errors}')
+        await pg.context.close()
+
+
 async def main(which):
     if hasattr(sys.stdout, 'reconfigure'):
         sys.stdout.reconfigure(encoding='utf-8', errors='replace')   # a Windows console's code page has no Vietnamese
@@ -4074,7 +4228,7 @@ async def main(which):
         browser = await launch(p)
         for name, fn in (('street', street), ('wear', wear), ('shop', shop), ('spots', spots), ('editor', editor),
                          ('library', library), ('product', product), ('prodlib', prodlib), ('workshop', workshop), ('design', design), ('catalog', catalog), ('kinds', kinds),
-                         ('layers', layers), ('zones', zones), ('cart', cart), ('choices', choices), ('zither', zither), ('guide', guide), ('vai', vai), ('tui', tui), ('kho', kho), ('guidance', guidance), ('onefab', onefab), ('taggroup', taggroup), ('phanloai', phanloai), ('slow', slow), ('topbar', topbar), ('motion', motion),
+                         ('layers', layers), ('zones', zones), ('cart', cart), ('choices', choices), ('zither', zither), ('guide', guide), ('vai', vai), ('tui', tui), ('kho', kho), ('guidance', guidance), ('onefab', onefab), ('taggroup', taggroup), ('phanloai', phanloai), ('phanloai_lv', phanloai_lv), ('slow', slow), ('topbar', topbar), ('motion', motion),
                          ('phone', phone), ('taps', taps)):
             if which in (None, name):
                 await fn(browser, db)

@@ -738,3 +738,32 @@ Plain pure white background, no shadows, no text.
 Kiểm tra trước khi cắt: đủ món, đúng thứ tự, không món nào dính nhau; đồ nhựa trong nhìn
 rõ trên nền trắng; không có chữ hay logo; xốp là tấm phẳng nguyên. Món mới thêm sau: vẽ
 tờ mới cùng phong cách, thêm vào `SHEETS` trong `tools/rac-assets.py`.
+
+### 8. Màn 4–5 "Dọn bàn sau buổi tiệc" — `sheet-don-ban.png`
+
+Cùng cuộc chat với các prompt trên (giữ khối "Phong cách chung"). Bốn món **trước khi sơ chế**;
+sau khi sơ chế thì trò chơi dùng lại tranh đã có (ly trà sữa sạch, chai dầu trần, chai bóp bẹp…).
+
+```
+Same style. Landscape 1536 x 1024: 4 separate objects in 2 rows of 2, each drawn to fill
+about the same size box, at least 100 px of white space between them and from the edges.
+Clear plastic always has a visible warm-brown ink outline and a faint blue-grey tint.
+No brand names, no logos, no text anywhere.
+Row 1:
+ 1. the same clear plastic takeaway milk-tea cup as before, no lid, no straw, still a
+    third full of milky brown tea with a few dark tapioca pearls at the bottom, a little
+    tea dried on the inside wall
+ 2. the same air-column cushion bag as before (clear plastic tubes side by side), but
+    with all the air let out: flat, limp and slightly crumpled, the empty tubes creased
+Row 2:
+ 3. the same empty snack bag as before, now folded neatly into a small flat rectangle
+    (folded over three or four times), the shiny silver foil showing at the folds
+ 4. the same clear square-shouldered cooking-oil bottle as before, but with a red screw
+    cap on and a plain golden-yellow wrap-around label (no text, no logo: just the band
+    with one thin cream stripe), empty, a few drops of oil at the bottom
+Plain pure white background, no shadows, no text.
+```
+
+Kiểm tra: túi khí phải **xẹp hẳn** (không còn phồng), gói snack **gấp gọn** thành khối nhỏ, chai
+dầu có **nắp đỏ + tem vàng** (không chữ). Thứ tự: ly trà sữa còn trà, túi khí xẹp, snack gấp
+gọn, chai dầu còn nắp và tem (`SHEETS['sheet-don-ban']` trong `tools/rac-assets.py`).

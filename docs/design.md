@@ -2404,6 +2404,38 @@ tường là lối vào. Bỏ "nhặt rác ngoài phố có đếm giờ": nặn
   1-2-3 của Bàn thiết kế), nút "?" cạnh tên màn mở lại. Đã xem thì nhớ ở `localStorage`
   `gem-pl` (`{chai: 1, sort: 1}`). Chữ: `pl.g1_*`, `pl.g2_*`.
 - **Xem poster giữa lượt:** nút "← Chơi tiếp" quay về lượt đang chơi, sang món kế tiếp.
+- **Năm màn, mở lần lượt** (Anna 23/10: "chơi xong màn 1 thì đến màn 2, màn 3"; màn 3–5 từ ý
+  "kết hợp màn 1 và màn 2", bỏ ý băng chuyền). Trang đầu liệt kê 5 màn; màn chưa mở mờ, có ổ
+  khoá + "Xong màn N để mở". Tiến độ ở `gem-pl` (`lv` = màn cao nhất đã xong, `b3` = kỷ lục
+  màn 3, `b4` / `b5` = `{s: sao, t: giây còn}`). Nút "Chơi phân loại" dưới poster mở màn đầu
+  tiên chưa xong. Màn xong khi: 1 chai vào đủ 3 bao; 2 hết 10 món; 3 hết 60 giây; 4 dọn sạch bàn
+  (hết giờ mà còn món thì chưa mở màn 5). Bảng `LEVELS` trong `js/phanloai.js`.
+  - **Đồng hồ (màn 3–5):** thanh + số giây, Udon ngồi cuối thanh. Đếm 3-2-1 "Bắt đầu!" sau thẻ
+    Cách chơi; trước đó bấm bao không tính. Chỉ chạy khi đang thấy (thẻ Cách chơi / "?" mở
+    hoặc chuyển tab thì dừng). 10 giây cuối: thanh đỏ, số giây đập, tích tắc mỗi giây, nhạc
+    nhanh lên (`tempo()`: 84 → màn 3 100 / 126, màn 4 92 / 116, màn 5 100 / 126 nhịp / phút).
+    Trừ giờ thì "−N giây" bay lên cạnh đồng hồ.
+  - **Màn 3 · Thử thách 60 giây:** món ngẫu nhiên trong 31 món, liên tục; đúng → món mới ngay,
+    sai bao → −3 giây, bao đúng sáng lên, món mới sau ~1 giây. Không có Udon kéo quần. Kỷ lục
+    lưu trên máy; màn cuối liệt kê món nhầm kèm lý do.
+  - **Màn 4 · Dọn bàn sau buổi tiệc:** 8 món trên bàn (4 món cần sửa soạn + 4 món tiệc ngẫu
+    nhiên trong `PARTY`), 90 giây. Nhãn hồng dưới món nói món còn gì: chai nước (tranh màn 1) còn
+    nắp / còn tem / chưa bóp bẹp; ly trà sữa còn trà; túi khí còn hơi; gói snack chưa gấp
+    (`PREP`). 6 dụng cụ (biểu tượng SVG tự vẽ): Tháo nắp, Bóc tem, Bóp bẹp, Rửa sạch, Làm xẹp,
+    Gấp gọn — chọn món rồi chạm dụng cụ, hoặc kéo món lên dụng cụ. Nắp, tem tháo ra thành món
+    riêng trên bàn (nắp → 2-4-5, tem → nilon cứng). Dùng dụng cụ không cần, hoặc bóp bẹp khi còn
+    nắp / tem: −2 giây. Bỏ vào bao khi chưa sửa soạn xong, hoặc nhầm bao: −5 giây (lần đầu Udon
+    kéo quần). Sao: 3 sao nếu nhầm ≤ 1 lần và còn ≥ 40% thời gian; 2 sao nếu nhầm ≤ 3; còn lại 1.
+  - **Màn 5 · Tiệc chưa tàn:** như màn 4 nhưng 6 món có sẵn (2 món cần sửa soạn), 10 món đặt
+    thêm, món đầu sau 6 giây, càng về sau càng nhanh (6 → 4 giây); bàn trống thì món kế tới ngay.
+    Trên bàn quá 10 món (tính cả nắp, tem tháo ra) là thua; 120 giây.
+  - **Tranh tạm:** ly còn trà = tranh ly trà sữa + lớp trà tô bằng CSS (`.pl-tea`), túi khí xẹp =
+    tranh cũ ép dẹt, snack gấp = tranh cũ thu nhỏ nghiêng. Tranh thật (`docs/prompts.md` 8, Anna
+    gửi 23/10 trong chat, chưa có file) thay vào `thingPic()` khi có file.
+  - **Nhẹ:** `js/phanloai.js` giờ 88 KB (nén khi tải ≈ 26 KB); chơi hết màn 1–2 vẫn ≈ 730 KB (phép kiểm chặn 800 KB).
+  - Chữ: `pl.lv*`, `pl.fast_*`, `pl.ban_*`, `pl.tiec_*`, `pl.t.*` (dụng cụ), `pl.c.*` (nhãn),
+    `pl.h.*` (gợi ý), `pl.g3_*` → `pl.g5_*`. Kiểm tra: `python3 tools/check-studio.py phanloai_lv`
+    (đồng hồ của trang chạy nhanh bằng Playwright).
 - **Màn cuối:** số món đúng, các món nhầm kèm lý do, và **Mang rác đi đâu?**:
   - Trạm Tagom: Số 105B1 (mặt sau), ngõ 3 Khuất Duy Tiến, Thanh Xuân Bắc (dãy nhà đối diện
     trường mầm non Thanh Xuân Bắc); T2–T6 14h–19h, T7–CN 9h–19h, nghỉ trưa 12h–14h; nút Chỉ
@@ -2423,7 +2455,7 @@ tường là lối vào. Bỏ "nhặt rác ngoài phố có đếm giờ": nặn
   bôi đen chữ (`user-select: none` ở sân chơi và hàng bao). Đã kiểm: Chromium máy tính (chuột) +
   điện thoại (ngón tay thật qua CDP); WebKit (lõi Safari, WebKitGTK qua WebDriver + Xvfb) bằng
   chuột thật: nhặt, thấy hình đi theo, thả đúng bao. Firefox: không cài được (mạng chặn).
-- **Kiểm tra:** `python3 tools/check-studio.py phanloai`.
+- **Kiểm tra:** `python3 tools/check-studio.py phanloai` (màn 1–2) và `phanloai_lv` (màn 3–5).
 
 ### Studio hiện cảnh mặc định thay cho bố cục đã lắp (sửa 13/10/2026)
 

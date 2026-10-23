@@ -416,7 +416,9 @@ Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
 - ♻️ Phân loại rác cùng Tagom (23/10): poster Tagom treo tường (Lắp studio → nhóm "Poster Tagom", tự
   thành Khu vực `phanloai`) → màn 1 xử lý một cái chai, màn 2 phân loại 10 món vào 6 bao Tagom (hộp, cốc khó
   nhận ra có kí hiệu số theo poster Tagom; nilon bóp thử ("SỘT SOẠT!" kiểu truyện tranh / "~ ~ ~") và kéo
-  thử bằng tay nắm; xốp, CD vào nhựa 6-7),
+  thử bằng tay nắm; xốp, CD vào nhựa 6-7), màn 3 thử thách 60 giây, màn 4 dọn bàn sau tiệc (dụng cụ
+  tháo nắp / bóc tem / bóp bẹp / rửa / làm xẹp / gấp, 90 giây, sao), màn 5 tiệc chưa tàn (món đặt thêm, quá
+  10 món là thua); màn mở lần lượt (`gem-pl.lv`),
   Udon kéo ống quần lần sai đầu (có lời thoại), thẻ "Cách chơi" lần đầu mỗi màn + nút "?", nhạc ngũ cung
   tạo bằng code (nút "Nhạc: bật / tắt"), poster đặt sát nhau chung một nhãn (Khu vực nào cũng vậy; ô "Ẩn nhãn"
   trong Lắp studio), gợi ý ngoài cửa nhắc góc phân loại rác, màn cuối chỉ
