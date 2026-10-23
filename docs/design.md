@@ -2392,7 +2392,7 @@ tường là lối vào. Bỏ "nhặt rác ngoài phố có đếm giờ": nặn
     (chữ vàng viền mực, nghiêng, có tia toả quanh, hai chữ "sột" nhỏ) + tiếng sột soạt ngắn. Nilon
     mềm chỉ hiện **"~ ~ ~"** nhạt, không có tiếng.
   - Hai tay nắm ở hai mép hình: kéo sang ngang thì hình giãn theo ngón tay, buông ra bật về.
-    Nilon mềm giãn tới ~1,6 lần + "DÃÃN~"; nilon cứng chỉ nhích (≤ 1,05), rung + "KHÔNG DÃN!" +
+    Nilon mềm giãn tới ~1,6 lần + "GIÃÃN~"; nilon cứng chỉ nhích (≤ 1,05), rung + "KHÔNG GIÃN!" +
     tiếng sột soạt. Kéo chính hình (không phải tay nắm) vẫn là kéo vào bao.
   - Chữ và tiếng tạo bằng code (`squeeze()`, `stretch()`, `sfx()`, `crinkle()` trong
     `js/phanloai.js`), không file. "Nhạc: tắt" tắt cả tiếng sột soạt. Chữ: `pl.sfx_*`.

@@ -84,12 +84,12 @@
     'pl.sort_p':    { vi: `Kéo món vào đúng bao, hoặc chạm vào bao. Hộp, cốc khó nhận ra có kí hiệu số; nilon thì bóp, kéo thử.`,
                       en: `Drag it to the right bag, or tap the bag. Boxes and cups hard to tell carry their number; nylon: squeeze it, stretch it.` },
     'pl.code':      { vi: `Kí hiệu nhựa số {n} ({r})`, en: `Plastic number {n} ({r})` },
-    'pl.feel':      { vi: `Chạm để bóp thử · kéo mép để thử độ dãn`, en: `Tap to squeeze it · pull an edge to stretch it` },
+    'pl.feel':      { vi: `Chạm để bóp thử · kéo mép để thử độ giãn`, en: `Tap to squeeze it · pull an edge to stretch it` },
     // sound words, as in a comic
     'pl.sfx_bop':   { vi: `SỘT SOẠT!`, en: `CRINKLE!` },
     'pl.sfx_bop2':  { vi: `sột`, en: `crk` },
-    'pl.sfx_dan':   { vi: `DÃÃN~`, en: `STRETCH~` },
-    'pl.sfx_khong': { vi: `KHÔNG DÃN!`, en: `WON'T STRETCH!` },
+    'pl.sfx_dan':   { vi: `GIÃÃN~`, en: `STRETCH~` },
+    'pl.sfx_khong': { vi: `KHÔNG GIÃN!`, en: `WON'T STRETCH!` },
     'pl.count':     { vi: `Món {i}/{n} · đúng {ok}`, en: `{i} of {n} · {ok} right` },
     'pl.right':     { vi: `Đúng rồi!`, en: `Right!` },
     'pl.which':     { vi: `{x}: bỏ vào bao nào?`, en: `{x}: which bag?` },
@@ -134,7 +134,7 @@
                       en: `Drag each part to its bag, or tap it, then the bag. Udon will tell you if it is wrong.` },
     'pl.g2_p':      { vi: `10 món đồ nhựa, nilon quen thuộc, lần lượt từng món.`, en: `Ten everyday plastic and nylon things, one at a time.` },
     'pl.g2_1h':     { vi: `Nhìn món đồ`, en: `Look at the thing` },
-    'pl.g2_1':      { vi: `Món đang chơi hiện ở giữa. Hộp, cốc, khay khó nhận ra có kí hiệu số như in ở đáy đồ thật; nilon thì chạm để bóp thử, kéo mép để thử độ dãn.`,
+    'pl.g2_1':      { vi: `Món đang chơi hiện ở giữa. Hộp, cốc, khay khó nhận ra có kí hiệu số như in ở đáy đồ thật; nilon thì chạm để bóp thử, kéo mép để thử độ giãn.`,
                       en: `The thing to sort is in the middle. Boxes, cups and trays hard to tell carry their number, as under the real thing; nylon: tap to squeeze it, pull an edge to stretch it.` },
     'pl.g2_2h':     { vi: `Chọn bao`, en: `Pick its bag` },
     'pl.g2_2':      { vi: `Kéo món vào bao, hoặc chạm vào bao. Số trên kí hiệu, nilon cứng hay mềm: so với tên bao.`,
@@ -198,23 +198,23 @@
     'pl.i.goi-snack':    { vi: `Gói snack`, en: `A snack bag` },
     'pl.w.goi-snack':    { vi: `Nhiều lớp, có lớp nhôm, sột soạt khi bóp.`, en: `Many layers, a foil one, crinkly when squeezed.` },
     'pl.i.vo-banh':      { vi: `Vỏ bánh quy`, en: `A biscuit wrapper` },
-    'pl.w.vo-banh':      { vi: `Nhiều lớp, không kéo dãn được.`, en: `Many layers, not stretchy.` },
+    'pl.w.vo-banh':      { vi: `Nhiều lớp, không kéo giãn được.`, en: `Many layers, not stretchy.` },
     'pl.i.tui-zip':      { vi: `Túi zip trong`, en: `A clear zip bag` },
-    'pl.w.tui-zip':      { vi: `Cứng, sột soạt khi bóp, không kéo dãn: nilon cứng.`, en: `Stiff, crinkly, not stretchy: hard nylon.` },
+    'pl.w.tui-zip':      { vi: `Cứng, sột soạt khi bóp, không kéo giãn: nilon cứng.`, en: `Stiff, crinkly, not stretchy: hard nylon.` },
     'pl.i.bao-gao':      { vi: `Bao gạo dệt`, en: `A woven rice sack` },
     'pl.w.bao-gao':      { vi: `Bao dệt bằng sợi nhựa: nilon cứng.`, en: `Woven from plastic strips: hard nylon.` },
     'pl.i.tui-vai':      { vi: `Túi "vải" không dệt`, en: `A non-woven "fabric" bag` },
     'pl.w.tui-vai':      { vi: `Vải không dệt thật ra là nhựa: nilon cứng.`, en: `Non-woven "fabric" is plastic: hard nylon.` },
     'pl.i.tui-bong':     { vi: `Túi bóng đi chợ`, en: `A market carrier bag` },
-    'pl.w.tui-bong':     { vi: `Mềm, kéo dãn được, đơn lớp.`, en: `Soft, stretchy, one layer.` },
+    'pl.w.tui-bong':     { vi: `Mềm, kéo giãn được, đơn lớp.`, en: `Soft, stretchy, one layer.` },
     'pl.i.mang-boc':     { vi: `Màng bọc thực phẩm`, en: `Cling film` },
-    'pl.w.mang-boc':     { vi: `Mềm, kéo dãn được.`, en: `Soft and stretchy.` },
+    'pl.w.mang-boc':     { vi: `Mềm, kéo giãn được.`, en: `Soft and stretchy.` },
     'pl.i.xop-hoi':      { vi: `Màng xốp hơi`, en: `Bubble wrap` },
     'pl.w.xop-hoi':      { vi: `Nilon mềm: làm xẹp rồi mang đi.`, en: `Soft nylon: let the air out first.` },
     'pl.i.tui-khi':      { vi: `Túi khí chống sốc`, en: `An air-column cushion` },
     'pl.w.tui-khi':      { vi: `Làm xẹp các cột khí rồi bỏ vào nilon mềm.`, en: `Let the air out, then soft nylon.` },
     'pl.i.tui-goi-hang': { vi: `Túi gói hàng online`, en: `A courier mailer bag` },
-    'pl.w.tui-goi-hang': { vi: `Mềm, kéo dãn được: nilon mềm.`, en: `Soft and stretchy: soft nylon.` },
+    'pl.w.tui-goi-hang': { vi: `Mềm, kéo giãn được: nilon mềm.`, en: `Soft and stretchy: soft nylon.` },
     'pl.i.xop':          { vi: `Tấm xốp phẳng`, en: `A flat foam sheet` },
     'pl.w.xop':          { vi: `Xốp là nhựa PS (số 6): nhựa 6-7 khó. Tấm xốp phẳng, nguyên tấm thì Gem cũng nhận.`, en: `Foam is PS (6): plastic 6-7. Gem takes flat, whole sheets too.` }
   };
@@ -708,7 +708,7 @@
      (hard: "SỘT SOẠT!" in big comic letters and a crinkle; soft: a quiet
      "~ ~ ~", nothing to hear) and the grips on its edges pull it (soft
      stretches after the finger and springs back; hard gives a little,
-     shakes: "KHÔNG DÃN!"). Letters and sound made here, no files. */
+     shakes: "KHÔNG GIÃN!"). Letters and sound made here, no files. */
   function sfx(card, text, kind) {
     var stage = card.closest('.pl-stage');
     if (!stage) return;

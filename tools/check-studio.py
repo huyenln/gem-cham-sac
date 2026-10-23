@@ -3994,7 +3994,7 @@ async def phanloai(browser, db):
                 back = await pg.evaluate("[document.querySelector('.pl-stretch').style.transform, document.querySelector('.pl-one [data-pl-item]') ? 1 : 0, document.querySelector('.pl-next-row').hidden]")
                 hard = it[1] == 'nilon-cung'
                 check(word == ('SỘT SOẠT!' if hard else '~ ~ ~') and (pull[0] <= 1.05 if hard else pull[0] > 1.3)
-                      and pull[1] == ('KHÔNG DÃN!' if hard else 'DÃÃN~') and back == ['', 1, True],
+                      and pull[1] == ('KHÔNG GIÃN!' if hard else 'GIÃÃN~') and back == ['', 1, True],
                       f'{name}: {it[1]}: a tap squeezes it ({word}), a grip pulls it ({pull}), it springs back, not sorted by it ({back})')
             marks.append(await pg.evaluate("""(() => { const one = document.querySelector('.pl-one'), id = one.querySelector('[data-pl-item]').dataset.plItem,
                 it = GemPhanLoai.ITEMS.filter(x => x.id === id)[0], m = one.querySelector('.pl-code'), f = one.querySelector('.pl-feel');
