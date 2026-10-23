@@ -3964,10 +3964,20 @@ async def phanloai(browser, db):
         check(g[0] and g[1] == 3 and g[2] >= 5, f'{name}: level 2 opens on its own how to play ({g})')
         await js_click(pg, '.pl-g-go')
         items = await pg.evaluate("[document.querySelectorAll('[data-pl-bin]').length, document.querySelector('.pl-count').textContent]")
-        check(items[0] == 7 and '1/10' in items[1], f'{name}: six bags and Gem\'s basket, ten things ({items})')
-        wrong_seen, tugs, looked = 0, [], False
+        check(items[0] == 6 and '1/10' in items[1], f'{name}: Tagom\'s six bags, ten things ({items})')
+        rules = await pg.evaluate("""(() => { const I = GemPhanLoai.ITEMS, B = GemPhanLoai.BINS.map(b => b.id);
+            return [B.indexOf('gem') < 0, I.filter(i => i.id === 'xop' || i.id === 'dia-cd').map(i => i.bin),
+                    I.filter(i => /^nilon/.test(i.bin) && i.code).length,
+                    I.filter(i => ['ban-chai', 'dia-cd', 'xop'].indexOf(i.id) >= 0 && i.code).length,
+                    I.filter(i => i.code && !({ 'nhua-1-de': [1], 'nhua-1-kho': [1], 'nhua-245': [2, 4, 5], 'nhua-67': [6, 7] })[i.bin].includes(i.code)).length]; })()""")
+        check(rules == [True, ['nhua-67', 'nhua-67'], 0, 0, 0],
+              f'{name}: no Gem basket (foam, CDs to 6-7); numbers only on hard plastics, as on Tagom\'s posters ({rules})')
+        wrong_seen, tugs, looked, marks = 0, [], False, []
         for i in range(10):
             it = await pg.evaluate("(() => { const id = document.querySelector('.pl-one [data-pl-item]').dataset.plItem; return [id, GemPhanLoai.ITEMS.filter(x => x.id === id)[0].bin]; })()")
+            marks.append(await pg.evaluate("""(() => { const one = document.querySelector('.pl-one'), id = one.querySelector('[data-pl-item]').dataset.plItem,
+                it = GemPhanLoai.ITEMS.filter(x => x.id === id)[0], m = one.querySelector('.pl-code'), f = one.querySelector('.pl-feel');
+                return (it.code ? !!m && m.textContent.startsWith(String(it.code)) : !m) && (/^nilon/.test(it.bin) ? !!f : !f); })()"""))
             # the first two answered wrong, the rest right
             pick = it[1] if i >= 2 else ('nilon-mem' if it[1] != 'nilon-mem' else 'nilon-cung')
             await js_click(pg, f'[data-pl-bin="{pick}"]')
@@ -3993,6 +4003,7 @@ async def phanloai(browser, db):
             await js_click(pg, '[data-pl-go="next"]')
             await pg.wait_for_timeout(120)
         check(looked, f'{name}: a poster was looked at mid-round')
+        check(all(marks), f'{name}: each thing shows its number (hard plastics) or how it feels (nylon), nothing else ({marks})')
         check(wrong_seen == 2, f'{name}: a wrong bag: where it goes and why ({wrong_seen})')
         check(tugs == [True, False], f'{name}: Udon tugs at the first mistake only ({tugs})')
         end = await pg.evaluate("[document.querySelector('.pl').dataset.plView, document.querySelector('h2').textContent, document.querySelectorAll('.pl-miss li').length]")

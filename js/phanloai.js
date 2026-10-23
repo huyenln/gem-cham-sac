@@ -6,11 +6,15 @@
    studio itself stays light. Two levels:
      1. one bottle taken apart, Tagom's way: the cap to plastic 2-4-5, the
         label to hard nylon, the bottle squashed flat to plastic 1 (easy);
-     2. ten things picked at random from 31, each to one of Tagom's six bags
-        or to Gem's own basket (Gem takes flat foam sheets and whole CDs).
+     2. ten things picked at random from 31, each to one of Tagom's six bags.
+        The boxes, cups, trays and jars that are hard to tell by eye carry
+        their plastic number, as on Tagom's posters (and on the things
+        themselves); nylon, which Tagom sorts by feel (no numbers), says how
+        it feels.
    Udon tugs a trouser hem at the first mistake of a round; after that, a
-   hint only. The end says where to take what was sorted: Tagom's station
-   and Gem. Pictures: tools/rac-assets.py -> images/studio/rac, tagom.
+   hint only. The end says where to take what was sorted: Tagom's station,
+   and what Gem takes too (flat foam sheets, whole CDs: there, not a bag in
+   the game). Pictures: tools/rac-assets.py -> images/studio/rac, tagom.
    ========================================================================= */
 (function () {
   'use strict';
@@ -18,35 +22,39 @@
   var R = 'images/studio/rac/', T = 'images/studio/tagom/';
   var ROUND = 10;
 
-  // Tagom's six bags (yellow posters: nylon, pink: plastic) and Gem's basket
+  // Tagom's six bags (yellow posters: nylon, pink: plastic)
   var BINS = [
     { id: 'nilon-cung', poster: 'nilon-cung', tone: 'y' },
     { id: 'nilon-mem',  poster: 'nilon-mem',  tone: 'y' },
     { id: 'nhua-1-de',  poster: 'nhua-1-de',  tone: 'p' },
     { id: 'nhua-1-kho', poster: 'nhua-1-kho', tone: 'p' },
     { id: 'nhua-245',   poster: 'nhua-245',   tone: 'p' },
-    { id: 'nhua-67',    poster: 'nhua-67',    tone: 'p' },
-    { id: 'gem',        poster: null,         tone: 'g' }
+    { id: 'nhua-67',    poster: 'nhua-67',    tone: 'p' }
   ];
   var POSTERS = ['nilon-cung', 'nilon-mem', 'nhua-1-de', 'nhua-1-kho', 'nhua-245', 'nhua-67'];
 
-  // The things to sort, as on Tagom's posters. bin: where it goes; also:
-  // another right answer (a whole CD: Gem takes it, Tagom's list has it in 6-7)
+  // The things to sort, as on Tagom's posters. bin: where it goes; code: the
+  // plastic number shown on it, only where the thing is hard to tell by eye
+  // (Anna 23/10: boxes, cups, trays, jars; not a toothbrush, a CD, foam)
   var ITEMS = [
-    { id: 'chai-tran', bin: 'nhua-1-de' }, { id: 'chai-to', bin: 'nhua-1-de' }, { id: 'lo-keo', bin: 'nhua-1-de' },
-    { id: 'hu-kem', bin: 'nhua-1-de' }, { id: 'chai-dau', bin: 'nhua-1-de' },
-    { id: 'ly-tra-sua', bin: 'nhua-1-kho' }, { id: 'nap-cau', bin: 'nhua-1-kho' }, { id: 'hop-banh', bin: 'nhua-1-kho' },
-    { id: 'khay-den', bin: 'nhua-1-kho' }, { id: 'lo-thuoc', bin: 'nhua-1-kho' },
-    { id: 'can-giat', bin: 'nhua-245' }, { id: 'binh-sua', bin: 'nhua-245' }, { id: 'nap-chai', bin: 'nhua-245' },
-    { id: 'hop-com', bin: 'nhua-245' }, { id: 'do-choi', bin: 'nhua-245' },
-    { id: 'hop-sua-chua', bin: 'nhua-67' }, { id: 'thia', bin: 'nhua-67' }, { id: 'dia', bin: 'nhua-67' },
+    { id: 'chai-tran', bin: 'nhua-1-de' }, { id: 'chai-to', bin: 'nhua-1-de' }, { id: 'lo-keo', bin: 'nhua-1-de', code: 1 },
+    { id: 'hu-kem', bin: 'nhua-1-de', code: 1 }, { id: 'chai-dau', bin: 'nhua-1-de' },
+    { id: 'ly-tra-sua', bin: 'nhua-1-kho', code: 1 }, { id: 'nap-cau', bin: 'nhua-1-kho', code: 1 },
+    { id: 'hop-banh', bin: 'nhua-1-kho', code: 1 }, { id: 'khay-den', bin: 'nhua-1-kho', code: 1 },
+    { id: 'lo-thuoc', bin: 'nhua-1-kho', code: 1 },
+    { id: 'can-giat', bin: 'nhua-245', code: 2 }, { id: 'binh-sua', bin: 'nhua-245', code: 2 }, { id: 'nap-chai', bin: 'nhua-245' },
+    { id: 'hop-com', bin: 'nhua-245', code: 5 }, { id: 'do-choi', bin: 'nhua-245' },
+    { id: 'hop-sua-chua', bin: 'nhua-67', code: 6 }, { id: 'thia', bin: 'nhua-67' }, { id: 'dia', bin: 'nhua-67', code: 6 },
     { id: 'ban-chai', bin: 'nhua-67' },
     { id: 'goi-snack', bin: 'nilon-cung' }, { id: 'vo-banh', bin: 'nilon-cung' }, { id: 'tui-zip', bin: 'nilon-cung' },
     { id: 'bao-gao', bin: 'nilon-cung' }, { id: 'tui-vai', bin: 'nilon-cung' },
     { id: 'tui-bong', bin: 'nilon-mem' }, { id: 'mang-boc', bin: 'nilon-mem' }, { id: 'xop-hoi', bin: 'nilon-mem' },
     { id: 'tui-khi', bin: 'nilon-mem' }, { id: 'tui-goi-hang', bin: 'nilon-mem' },
-    { id: 'dia-cd', bin: 'gem', also: ['nhua-67'] }, { id: 'xop', bin: 'gem' }
+    { id: 'dia-cd', bin: 'nhua-67' }, { id: 'xop', bin: 'nhua-67' }
   ];
+  // the numbers, as on Tagom's posters
+  var RESIN = { 1: 'PET', 2: 'HDPE', 4: 'LDPE', 5: 'PP', 6: 'PS', 7: 'OTHER' };
+  var ARROWS = 'M23.3 9L33.2 25.5M27.9 23.3L33.2 25.5L33.7 19.8M29.9 31L10.1 31M14.7 27.6L10.1 31L14.7 34.4M6.8 25.5L16.7 9M17.2 14.7L16.7 9L11.4 11.2';
 
   // Tagom's station (Anna 23/10): the fanpage has the hours as they change
   var TAGOM_ADDR = 'Số 105B1 (mặt sau), ngõ 3 Khuất Duy Tiến, Thanh Xuân Bắc, Hà Nội';
@@ -72,7 +80,11 @@
                       en: `Done! One bottle, three kinds: the cap to plastic 2-4-5, the label to hard nylon, the bottle to plastic 1.` },
     'pl.next_lv':   { vi: `Sang màn 2`, en: `On to level 2` },
     'pl.sort_h':    { vi: `Món này bỏ vào đâu?`, en: `Where does this go?` },
-    'pl.sort_p':    { vi: `Kéo món vào đúng bao, hoặc chạm vào bao.`, en: `Drag it to the right bag, or tap the bag.` },
+    'pl.sort_p':    { vi: `Kéo món vào đúng bao, hoặc chạm vào bao. Hộp, cốc khó nhận ra có kí hiệu số; nilon có ghi cảm giác khi bóp, kéo.`,
+                      en: `Drag it to the right bag, or tap the bag. Boxes and cups hard to tell carry their number; nylon says how it feels.` },
+    'pl.code':      { vi: `Kí hiệu nhựa số {n} ({r})`, en: `Plastic number {n} ({r})` },
+    'pl.feel_cung': { vi: `Bóp thử: sột soạt, không kéo dãn`, en: `Squeeze it: crinkly, won't stretch` },
+    'pl.feel_mem':  { vi: `Kéo thử: mềm, dãn ra được`, en: `Pull it: soft, it stretches` },
     'pl.count':     { vi: `Món {i}/{n} · đúng {ok}`, en: `{i} of {n} · {ok} right` },
     'pl.right':     { vi: `Đúng rồi!`, en: `Right!` },
     'pl.which':     { vi: `{x}: bỏ vào bao nào?`, en: `{x}: which bag?` },
@@ -117,10 +129,11 @@
                       en: `Drag each part to its bag, or tap it, then the bag. Udon will tell you if it is wrong.` },
     'pl.g2_p':      { vi: `10 món đồ nhựa, nilon quen thuộc, lần lượt từng món.`, en: `Ten everyday plastic and nylon things, one at a time.` },
     'pl.g2_1h':     { vi: `Nhìn món đồ`, en: `Look at the thing` },
-    'pl.g2_1':      { vi: `Món đang chơi hiện ở giữa, phía trên là số món đã xong.`, en: `The thing to sort is in the middle, the count above it.` },
+    'pl.g2_1':      { vi: `Món đang chơi hiện ở giữa. Hộp, cốc, khay khó nhận ra có kí hiệu số như in ở đáy đồ thật; nilon ghi cảm giác khi bóp, kéo.`,
+                      en: `The thing to sort is in the middle. Boxes, cups and trays hard to tell carry their number, as under the real thing; nylon says how it feels.` },
     'pl.g2_2h':     { vi: `Chọn bao`, en: `Pick its bag` },
-    'pl.g2_2':      { vi: `Kéo món vào bao, hoặc chạm vào bao. Xốp tấm phẳng và đĩa CD nguyên thì bỏ vào giỏ "Mang tới Gem".`,
-                      en: `Drag it to a bag, or tap the bag. Flat foam sheets and whole CDs go in the "Bring to Gem" basket.` },
+    'pl.g2_2':      { vi: `Kéo món vào bao, hoặc chạm vào bao. Số trên kí hiệu, nilon cứng hay mềm: so với tên bao.`,
+                      en: `Drag it to a bag, or tap the bag. The number, or hard or soft nylon: match it to the bag's name.` },
     'pl.g2_3h':     { vi: `Sai cũng không sao`, en: `Wrong is fine` },
     'pl.g2_3':      { vi: `Udon nhắc bao đúng và lý do, bấm "Xem poster" để xem lại. Không trừ điểm, bấm "Món tiếp" để chơi tiếp.`,
                       en: `Udon tells you the right bag and why; "See the poster" to check. No points lost: "Next" to carry on.` },
@@ -131,7 +144,6 @@
     'pl.b.nhua-1-kho': { vi: `Nhựa 1 khó`, en: `Plastic 1, hard` },
     'pl.b.nhua-245':   { vi: `Nhựa 2·4·5`, en: `Plastic 2·4·5` },
     'pl.b.nhua-67':    { vi: `Nhựa 6·7 khó`, en: `Plastic 6·7, hard` },
-    'pl.b.gem':        { vi: `Mang tới Gem`, en: `Bring to Gem` },
     // the bottle's parts
     'pl.i.chai':      { vi: `Chai nước còn nắp, còn tem`, en: `A bottle, cap and label on` },
     'pl.i.nap':       { vi: `Nắp chai`, en: `The cap` },
@@ -151,11 +163,11 @@
     'pl.i.ly-tra-sua':   { vi: `Ly trà sữa nhựa trong`, en: `A clear milk-tea cup` },
     'pl.w.ly-tra-sua':   { vi: `Nhựa số 1 trong suốt nhưng không phải chai lọ, mỏng giòn: nhựa 1 khó.`, en: `Clear plastic 1 but not a bottle or jar, thin and brittle: plastic 1, hard.` },
     'pl.i.nap-cau':      { vi: `Nắp cầu ly nước`, en: `A dome cup lid` },
-    'pl.w.nap-cau':      { vi: `Nhựa trong mỏng giòn, không phải chai lọ.`, en: `Thin, brittle clear plastic, not a bottle or jar.` },
+    'pl.w.nap-cau':      { vi: `Kí hiệu số 1, trong suốt mỏng giòn, không phải chai lọ: nhựa 1 khó.`, en: `Marked 1, thin, brittle and clear, not a bottle or jar: plastic 1, hard.` },
     'pl.i.hop-banh':     { vi: `Hộp nhựa trong đựng bánh`, en: `A clear cake box` },
-    'pl.w.hop-banh':     { vi: `Hộp trong suốt mỏng giòn: nhựa 1 khó.`, en: `A thin, brittle clear box: plastic 1, hard.` },
+    'pl.w.hop-banh':     { vi: `Kí hiệu số 1, hộp trong suốt mỏng giòn: nhựa 1 khó.`, en: `Marked 1, a thin, brittle clear box: plastic 1, hard.` },
     'pl.i.khay-den':     { vi: `Khay nhựa đen đựng thịt`, en: `A black meat tray` },
-    'pl.w.khay-den':     { vi: `Nhựa số 1 có màu, bề mặt bóng.`, en: `Plastic 1, coloured and glossy.` },
+    'pl.w.khay-den':     { vi: `Nhựa số 1 có màu, bề mặt bóng: nhựa 1 khó.`, en: `Plastic 1, coloured and glossy: plastic 1, hard.` },
     'pl.i.lo-thuoc':     { vi: `Lọ thuốc nhựa nâu`, en: `A brown medicine bottle` },
     'pl.w.lo-thuoc':     { vi: `Nhựa số 1 có màu: vào nhựa 1 khó, dù là lọ.`, en: `Coloured plastic 1: hard, even though it's a bottle.` },
     'pl.i.can-giat':     { vi: `Can nước giặt`, en: `A detergent jug` },
@@ -171,13 +183,13 @@
     'pl.i.hop-sua-chua': { vi: `Hũ sữa chua`, en: `A yogurt cup` },
     'pl.w.hop-sua-chua': { vi: `Nhựa PS số 6: cứng, giòn.`, en: `PS plastic, 6: rigid and brittle.` },
     'pl.i.thia':         { vi: `Thìa nhựa màu`, en: `A coloured plastic spork` },
-    'pl.w.thia':         { vi: `Nhựa màu, cứng, không đàn hồi.`, en: `Coloured, rigid, not flexible.` },
+    'pl.w.thia':         { vi: `Nhựa màu, cứng, không đàn hồi: nhựa 6-7 khó.`, en: `Coloured, rigid, not flexible: plastic 6-7.` },
     'pl.i.dia':          { vi: `Đĩa nhựa dùng một lần`, en: `A disposable plate` },
     'pl.w.dia':          { vi: `Nhựa cứng số 6.`, en: `Rigid plastic, 6.` },
     'pl.i.ban-chai':     { vi: `Bàn chải đánh răng`, en: `A toothbrush` },
     'pl.w.ban-chai':     { vi: `Nhiều loại nhựa ghép lại: nhựa 6-7 khó.`, en: `Several plastics together: 6-7, hard.` },
     'pl.i.dia-cd':       { vi: `Đĩa CD cũ`, en: `An old CD` },
-    'pl.w.dia-cd':       { vi: `Gem nhận đĩa CD còn nguyên tấm. Theo Tagom, đĩa CD vào nhựa 6-7 khó.`, en: `Gem takes whole CDs. By Tagom's list, a CD is plastic 6-7.` },
+    'pl.w.dia-cd':       { vi: `Đĩa CD có trên poster nhựa 6-7 khó của Tagom. Đĩa còn nguyên tấm thì Gem cũng nhận.`, en: `CDs are on Tagom's plastic 6-7 poster. Gem takes whole ones too.` },
     'pl.i.goi-snack':    { vi: `Gói snack`, en: `A snack bag` },
     'pl.w.goi-snack':    { vi: `Nhiều lớp, có lớp nhôm, sột soạt khi bóp.`, en: `Many layers, a foil one, crinkly when squeezed.` },
     'pl.i.vo-banh':      { vi: `Vỏ bánh quy`, en: `A biscuit wrapper` },
@@ -199,7 +211,7 @@
     'pl.i.tui-goi-hang': { vi: `Túi gói hàng online`, en: `A courier mailer bag` },
     'pl.w.tui-goi-hang': { vi: `Mềm, kéo dãn được: nilon mềm.`, en: `Soft and stretchy: soft nylon.` },
     'pl.i.xop':          { vi: `Tấm xốp phẳng`, en: `A flat foam sheet` },
-    'pl.w.xop':          { vi: `Gem nhận xốp tấm phẳng, nguyên tấm, không lỗ khoét, không bẻ vụn.`, en: `Gem takes flat foam sheets: whole, no cut-outs, not broken up.` }
+    'pl.w.xop':          { vi: `Xốp là nhựa PS (số 6): nhựa 6-7 khó. Tấm xốp phẳng, nguyên tấm thì Gem cũng nhận.`, en: `Foam is PS (6): plastic 6-7. Gem takes flat, whole sheets too.` }
   };
 
   var api = null, root = null, S = null;
@@ -265,7 +277,7 @@
     return '<div class="pl-bins" role="group">' + ids.map(function (id) {
       var b = BINS.filter(function (x) { return x.id === id; })[0];
       return '<button type="button" class="pl-bin pl-' + b.tone + '" data-pl-bin="' + id + '">' +
-        img(id === 'gem' ? 'gio' : 'bao', '', '') +
+        img('bao', '', '') +
         '<span>' + esc(binName(id)) + '</span></button>';
     }).join('') + '</div>';
   }
@@ -328,7 +340,6 @@
     var pick = [], by = {};
     shuffle(ITEMS.slice()).forEach(function (it) { (by[it.bin] = by[it.bin] || []).push(it); });
     ['nilon-cung', 'nilon-mem', 'nhua-1-de', 'nhua-1-kho', 'nhua-245', 'nhua-67'].forEach(function (b) { pick.push(by[b].shift()); });
-    if (Math.random() < 0.6) pick.push(by.gem.shift());
     var rest = shuffle([].concat.apply([], Object.keys(by).map(function (k) { return by[k]; })));
     while (pick.length < ROUND) pick.push(rest.shift());
     S.items = shuffle(pick);
@@ -352,11 +363,19 @@
       '<div class="pl-acts pl-next-row" hidden>' +
         '<button type="button" class="pt-tool" data-pl-see hidden>' + esc(t('pl.see')) + '</button>' +
         '<button type="button" class="st-btn" data-pl-go="next">' + esc(t('pl.next')) + '</button></div>' +
-      bins(['nilon-cung', 'nilon-mem', 'nhua-1-de', 'nhua-1-kho', 'nhua-245', 'nhua-67', 'gem']) +
+      bins(['nilon-cung', 'nilon-mem', 'nhua-1-de', 'nhua-1-kho', 'nhua-245', 'nhua-67']) +
       guideHtml('sort', 'pl.sort_h', 'pl.g2_p', [
         '<span class="pl-gi">' + S.items.slice(0, 3).map(function (it, k) { return img(it.id, 'pl-gi-' + k, ''); }).join('') + '</span>',
-        '<span class="pl-gi">' + img('bao', 'pl-gi-d', '') + img('gio', 'pl-gi-e', '') + '</span>',
+        '<span class="pl-gi">' + img('bao', 'pl-gi-d', '') + '<span class="pl-gi-code">' + codeMark(6) + '</span></span>',
         '<span class="pl-gi">' + img('ud-ngoi-cho', 'pl-gi-d', '') + '</span>']));
+  }
+
+  // the plastic number, drawn as on the things themselves (no picture file)
+  function codeMark(n) {
+    return '<svg class="pl-code" viewBox="0 0 40 46" role="img" aria-label="' + esc(t('pl.code').replace('{n}', n).replace('{r}', RESIN[n])) + '">' +
+      '<path d="' + ARROWS + '" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '<text x="20" y="27" text-anchor="middle" font-size="14.5" font-weight="800">' + n + '</text>' +
+      '<text x="20" y="44" text-anchor="middle" font-size="8.5" font-weight="700">' + RESIN[n] + '</text></svg>';
   }
 
   /* ---------- how to play ---------- */
@@ -398,8 +417,11 @@
   function renderSort() {
     var it = S.items[S.i];
     root.querySelector('.pl-count').textContent = t('pl.count').replace('{i}', S.i + 1).replace('{n}', S.items.length).replace('{ok}', S.ok);
+    var feel = /^nilon-/.test(it.bin) ? it.bin.slice(6) : '';
     root.querySelector('.pl-one').innerHTML = '<button type="button" class="pl-item is-sel is-big" data-pl-item="' + it.id + '">' +
-      img(it.id, '', t('pl.i.' + it.id)) + '<span>' + esc(t('pl.i.' + it.id)) + '</span></button>';
+      '<span class="pl-pic">' + img(it.id, '', t('pl.i.' + it.id)) + (it.code ? codeMark(it.code) : '') + '</span>' +
+      '<span>' + esc(t('pl.i.' + it.id)) + '</span>' +
+      (feel ? '<small class="pl-feel">' + esc(t('pl.feel_' + feel)) + '</small>' : '') + '</button>';
     S.sel = it.id;
     S.answered = false;
     root.querySelector('.pl-next-row').hidden = true;
@@ -450,7 +472,7 @@
     var it = S.items[S.i];
     if (!it || item !== it.id) return;
     S.answered = true;
-    var ok = bin === it.bin || (it.also || []).indexOf(bin) >= 0;
+    var ok = bin === it.bin;
     var why = t('pl.w.' + it.id);
     if (ok) {
       S.ok++;

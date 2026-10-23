@@ -2377,8 +2377,18 @@ tường là lối vào. Bỏ "nhặt rác ngoài phố có đếm giờ": nặn
   cứng; chạm chai trần (bóp bẹp) → Nhựa 1 dễ. Kéo món vào bao, hoặc chạm món rồi chạm bao.
   Bỏ cả chai khi chưa tháo → Udon kéo ống quần + "Khoan đã!…".
 - **Màn 2 — Phân loại 10 món:** 10 món ngẫu nhiên trong 31 (`ITEMS`, đều lấy từ poster),
-  6 bao + ô **Mang tới Gem**. Sai: hiện bao đúng + lý do (`pl.w.<id>`) + nút "Xem poster".
-  **Đĩa CD đúng ở cả hai chỗ:** Mang tới Gem hoặc Nhựa 6-7 (`also`). Xốp tấm phẳng → Gem.
+  6 bao của Tagom (ít nhất một món mỗi bao). Sai: hiện bao đúng + lý do (`pl.w.<id>`) + nút
+  "Xem poster". Bỏ ô "Mang tới Gem" (Anna 23/10): **xốp vào nhựa 6-7 (PS số 6)**, đĩa CD vào
+  nhựa 6-7 (có trên poster Tagom); chuyện Gem nhận xốp tấm, đĩa CD chỉ là thông tin ở màn cuối.
+- **Kí hiệu nhựa** (Anna 23/10, đối chiếu poster Tagom: nhựa 1 dễ / khó = số 1 PET, 2-4-5 = HDPE
+  / LDPE / PP, 6-7 = PS / OTHER; nilon không có số, nhận biết bằng cảm giác): chỉ hiện ở món khó
+  nhận ra bằng mắt — hộp, cốc, khay, lọ, can (`code` trong `ITEMS`: lọ kẹo, hũ mỹ phẩm, ly trà
+  sữa, nắp cầu, hộp bánh, khay đen, lọ thuốc = 1; can nước giặt, bình sữa = 2; hộp thực phẩm = 5;
+  hũ sữa chua, đĩa nhựa = 6). Không hiện ở chai trong, nắp chai, đồ chơi, thìa, bàn chải, đĩa
+  CD, xốp. Tam giác mũi tên + số + tên viết tắt vẽ bằng SVG ở góc hình (`codeMark()`, không file
+  ảnh). Nilon: dưới hình ghi cảm giác theo poster Tagom ("Bóp thử: sột soạt, không kéo dãn" /
+  "Kéo thử: mềm, dãn ra được"), không ghi số — túi thật hay in số 4 / 2, nếu hiện thì dễ bỏ nhầm
+  vào nhựa 2-4-5.
 - **Udon:** lần sai đầu tiên của mỗi màn, Udon chạy vào kéo gấu quần (ống quần thò từ mép
   trái, một tranh cho mọi nhân vật), có lời thoại phía trên (`pl.ud_whole` / `pl.ud_wrong`,
   Anna 23/10); các lần sau chỉ hiện gợi ý. Đúng thì Udon nhảy. Không trừ điểm. Máy đặt giảm
@@ -2398,7 +2408,7 @@ tường là lối vào. Bỏ "nhặt rác ngoài phố có đếm giờ": nặn
     sửa cả chỗ này.
 - **Tranh:** ChatGPT (prompt: `docs/prompts.md` → "Phân loại rác"), cắt bằng
   `python3 tools/rac-assets.py <thư mục ảnh gốc>` → `images/studio/rac/` (Udon 240 px, món
-  300 px, kéo quần 720 px, giỏ Gem 160 px) + poster. Thêm món: vẽ thêm tờ, thêm vào `SHEETS`
+  300 px, kéo quần 720 px) + poster. Thêm món: vẽ thêm tờ, thêm vào `SHEETS`
   + `ITEMS` + chữ `pl.i.<id>`, `pl.w.<id>`.
 - **Kiểm tra:** `python3 tools/check-studio.py phanloai`.
 
