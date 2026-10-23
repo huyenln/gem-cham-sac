@@ -2246,9 +2246,11 @@ input.pt-done-name:focus { border-bottom-style: solid; border-bottom-color: var(
 
 /* Phân loại rác: how to play (a card the first time each level opens, "?"
    brings it back), Udon's line over the tug */
-.pl-head { display: flex; align-items: center; gap: var(--space-2); }
+.pl-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); padding-right: 44px; }   /* clear of the sheet's × */
 .pl-head h2 { margin: 0; }
 .pl-help { flex: none; min-width: 44px; min-height: 44px; padding: 0; border-radius: 50%; font-weight: 700; }
+.pl-music { flex: none; min-height: 44px; white-space: nowrap; }
+.pl-music[aria-pressed="false"] { color: var(--ink-soft); }
 .pl-guide { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; padding: var(--space-4); background: rgba(61, 74, 46, 0.4); }
 .pl-guide[hidden] { display: none; }
 .pl-g-card {

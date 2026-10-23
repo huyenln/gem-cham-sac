@@ -1037,8 +1037,11 @@ window.GemStudioEditor = (function () {
         (z.act === 'link' ? '<label>Trang <input name="zn-link" maxlength="300" placeholder="vd: workshop.html hoặc https://…" value="' + esc(z.link || '') + '"></label>' : '') +
         '<label>Tên hiện <input name="zn-vi" maxlength="40" value="' + esc(z.vi || '') + '"></label>' +
         '<label>Tên tiếng Anh <input name="zn-en" maxlength="40" value="' + esc(z.en || '') + '"></label>' +
+        '<label title="Món này không có nhãn riêng: khách chạm vào hình thì hiện tên, chạm lần nữa thì mở"><input type="checkbox" name="zn-notag"' +
+          (z.notag ? ' checked' : '') + '> Ẩn nhãn</label>' +
         '<span class="se-hint-s">Khách chạm món này: nhân vật đi tới giữa hình và mở chức năng. Dời món là khu vực đi theo. ' +
-          'Khung có sẵn cùng việc mà đang ẩn thì nút ở thanh dưới của studio (và giấy nhắn trên bảng) đi theo món này.</span>';
+          'Khung có sẵn cùng việc mà đang ẩn thì nút ở thanh dưới của studio (và giấy nhắn trên bảng) đi theo món này. ' +
+          'Nhiều món cùng việc đặt sát nhau (vd 6 poster Tagom) thì chung một nhãn, lấy tên của món có "Tên hiện".</span>';
     } else if (kind === 'board') {
       var feed = (it.board && it.board.feed) || 'workshop';
       h += '<label>Hiện <select name="bd-feed">' +
@@ -1455,7 +1458,10 @@ window.GemStudioEditor = (function () {
     if (e.target.name === 'se-rot') it.rot = Math.max(-180, Math.min(180, Math.round(+e.target.value || 0)));
     if (e.target.name === 'se-sku') { if (e.target.value) it.sku = e.target.value; else delete it.sku; renderPanel(); }
     if (nm === 'se-kind') { setKind(it, e.target.value); renderPanel(); }
-    if (/^zn-/.test(nm)) {
+    if (nm === 'zn-notag') {
+      it.zone = it.zone || { act: 'none' };
+      if (e.target.checked) it.zone.notag = true; else delete it.zone.notag;
+    } else if (/^zn-/.test(nm)) {
       it.zone = it.zone || { act: 'none' };
       it.zone[nm.slice(3)] = e.target.value.trim();
       if (nm === 'zn-act') renderPanel();

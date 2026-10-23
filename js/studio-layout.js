@@ -12,7 +12,7 @@
 //     items: [{ src, x, y, w, h, rot, flip, layer, frame, lock?, sku?,
 //               kind?, zone?, board?, show? }],
 //            kind: what a tap does (KINDS; none = decoration, a sku = product).
-//            zone = { act, link?, vi?, en? } for kind 'zone' (like a spot's
+//            zone = { act, link?, vi?, en?, notag? } for kind 'zone' (like a spot's
 //            settings; the character walks to the piece's x). board =
 //            { feed: 'workshop' | 'post' } for kind 'board'. show = { from?,
 //            to? } 'YYYY-MM-DD': the piece is only there on those days.
@@ -282,6 +282,7 @@ window.GemLayout = (function () {
       if (label(z.en)) c.en = label(z.en);
       if (linkOk(z.link)) c.link = z.link;
       c.act = ACT_IDS.indexOf(z.act) >= 0 && (z.act !== 'link' || c.link) ? z.act : 'none';
+      if (z.notag === true) c.notag = true;   // "Ẩn nhãn": no tag of its own (a tap names it, a second opens it)
       o.zone = c;
     }
     if (kind === 'board') o.board = { feed: it.board && FEEDS.indexOf(it.board.feed) >= 0 ? it.board.feed : 'workshop' };

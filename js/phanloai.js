@@ -103,6 +103,8 @@
     'pl.back_play': { vi: `← Chơi tiếp`, en: `← Back to the game` },
     // how to play: a card the first time each level opens, "?" brings it back
     'pl.help':      { vi: `Cách chơi`, en: `How to play` },
+    'pl.music_on':  { vi: `Nhạc: bật`, en: `Music: on` },
+    'pl.music_off': { vi: `Nhạc: tắt`, en: `Music: off` },
     'pl.g_go':      { vi: `Bắt đầu`, en: `Start` },
     'pl.g1_p':      { vi: `Một cái chai nhựa có ba phần, mỗi phần vào một bao khác nhau.`,
                       en: `A plastic bottle is three parts, each for a different bag.` },
@@ -293,6 +295,7 @@
         '<span class="pl-gi">' + img('bao', 'pl-gi-d', '') + '</span>']));
     renderChai();
     guideFirst('chai');
+    musicStart();
   }
 
   function renderChai() {
@@ -335,6 +338,7 @@
     S.items.forEach(function (it) { var im = new Image(); im.src = R + it.id + '.webp'; });
     renderSort();
     guideFirst('sort');
+    musicStart();
   }
 
   // the round's screen (again after a look at a poster, on the next thing)
@@ -358,8 +362,10 @@
   /* ---------- how to play ---------- */
   // the level's title with a "?" beside it
   function head(k) {
+    var on = musicOn();
     return '<div class="pl-head">' + tr('h2', k, ' id="st-sheet-title"') +
-      '<button type="button" class="pt-tool pt-mini pl-help" data-pl-guide aria-label="' + esc(t('pl.help')) + '" title="' + esc(t('pl.help')) + '">?</button></div>';
+      '<button type="button" class="pt-tool pt-mini pl-help" data-pl-guide aria-label="' + esc(t('pl.help')) + '" title="' + esc(t('pl.help')) + '">?</button>' +
+      '<button type="button" class="pt-tool pt-mini pl-music" data-pl-music aria-pressed="' + on + '">' + esc(t(on ? 'pl.music_on' : 'pl.music_off')) + '</button></div>';
   }
   function guideHtml(level, h, p, ills) {
     var n = level === 'chai' ? 1 : 2;
@@ -450,10 +456,12 @@
       S.ok++;
       into(bin);
       hop();
+      chime(true);
       say(t('pl.right') + ' ' + why, 'ok');
     } else {
       S.miss.push(it);
       tug('pl.ud_wrong');
+      chime(false);
       say(t('pl.wrong').replace('{bin}', binName(it.bin)) + ' ' + why, 'no');
       var b = BINS.filter(function (x) { return x.id === it.bin; })[0];
       var see = root.querySelector('[data-pl-see]');
@@ -469,7 +477,7 @@
   function dropChai(item, bin) {
     var P = S.parts;
     if (item === 'chai') {
-      if (P.nap === 'on' || P.tem === 'on') { tug('pl.ud_whole'); say(t('pl.chai_whole'), 'no'); return; }
+      if (P.nap === 'on' || P.tem === 'on') { tug('pl.ud_whole'); chime(false); say(t('pl.chai_whole'), 'no'); return; }
       say(t('pl.chai_flat'), 'no');
       return;
     }
@@ -477,12 +485,14 @@
     if (!want) return;
     if (bin !== want) {
       tug('pl.ud_wrong');
+      chime(false);
       say(t('pl.wrong').replace('{bin}', binName(want)) + ' ' + t(item === 'nap' ? 'pl.w.nap-chai' : item === 'tem' ? 'pl.w.vo-banh' : 'pl.w.chai-tran'), 'no');
       return;
     }
     if (item === 'chai-bep') P.chai = 'in'; else P[item] = 'in';
     S.sel = null;
     into(bin);
+    chime(true);
     say(t('pl.right'), 'ok');
     renderChai();
   }
@@ -537,6 +547,131 @@
     }, 140);
   }
 
+  /* ---------- music ----------
+     A slow tune of our own on a plucked string (the studio's đàn tranh
+     sound, made in the browser: no sound file to load), low under the game,
+     from the first level the visitor starts. A little chime for right and
+     wrong. "Nhạc: tắt" silences both (kept in gem-pl). It stops when the
+     sheet closes or the tab is hidden, and comes back with the tab. */
+  var BEAT = 60 / 84, VOL = 0.16;
+  // C pentatonic (Sol La Đô Rê Mi), two phrases of 8 bars: note, beats
+  var TUNE = ('E5 1 G5 .5 A5 .5 G5 1 E5 1  D5 1 E5 .5 D5 .5 C5 2  A4 1 C5 1 D5 1 E5 1  G5 1.5 E5 .5 D5 2 ' +
+              'E5 1 G5 .5 A5 .5 C6 1 A5 1  G5 1 A5 .5 G5 .5 E5 2  D5 1 E5 1 G5 1 E5 .5 D5 .5  C5 3 - 1 ' +
+              'A4 1 C5 .5 D5 .5 E5 1 G5 1  A5 1.5 G5 .5 E5 2  D5 1 E5 .5 G5 .5 E5 1 D5 1  C5 1 A4 1 G4 2 ' +
+              'A4 1 C5 1 D5 .5 E5 .5 G5 1  E5 1 D5 1 C5 1 D5 1  E5 1.5 G5 .5 D5 1 E5 .5 D5 .5  C5 4');
+  // the low strings: two a bar, on its first and third beat
+  var BASS = 'C3 G3  G2 D3  A2 E3  G2 D3  C3 G3  A2 E3  G2 D3  C3 G3  A2 E3  C3 G3  G2 D3  G2 D3  A2 E3  C3 G3  G2 D3  C3 G3';
+  var NOTES = (function () {
+    var ev = [], at = 0, m = TUNE.split(/\s+/), k;
+    for (k = 0; k < m.length; k += 2) {
+      if (m[k] !== '-') ev.push({ at: at, hz: hz(m[k]), v: 0.9 });
+      at += +m[k + 1];
+    }
+    BASS.split(/\s+/).forEach(function (n, j) { ev.push({ at: j * 2, hz: hz(n), v: 0.5 }); });
+    ev.sort(function (a, b) { return a.at - b.at; });
+    ev.len = at;   // beats in one time round
+    return ev;
+  })();
+  function hz(name) {
+    var m = /^([A-G])(\d)$/.exec(name), semi = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }[m[1]];
+    return 440 * Math.pow(2, (semi + 12 * (+m[2] + 1) - 69) / 12);
+  }
+  var M = { timer: 0, ctx: null, out: null, root: null, i: 0, base: 0, bufs: {}, rate: {}, away: false };
+
+  function musicOn() { return seen().nhac !== 0; }
+  function musicSet(on) {
+    var o = seen();
+    o.nhac = on ? 1 : 0;
+    try { localStorage.setItem('gem-pl', JSON.stringify(o)); } catch (e) { /* private mode */ }
+    root.querySelectorAll('[data-pl-music]').forEach(function (b) {
+      b.setAttribute('aria-pressed', String(on));
+      b.textContent = t(on ? 'pl.music_on' : 'pl.music_off');
+    });
+    if (on && S.level) musicStart(); else if (!on) musicStop();
+  }
+  function musicStart() {
+    if (M.timer && M.root !== root) musicStop();   // a game left open before this one
+    if (M.timer || !musicOn()) return;
+    var ctx = api && api.audio && api.audio();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') ctx.resume();
+    M.ctx = ctx; M.root = root;
+    var lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 4200;
+    M.out = ctx.createGain();
+    M.out.gain.setValueAtTime(0.0001, ctx.currentTime);
+    M.out.gain.exponentialRampToValueAtTime(VOL, ctx.currentTime + 1.5);   // comes in softly
+    M.out.connect(lp); lp.connect(ctx.destination);
+    M.i = 0; M.base = ctx.currentTime + 0.2;
+    M.timer = setInterval(musicTick, 120);
+    document.addEventListener('visibilitychange', musicAway);
+    musicTick();
+  }
+  // a little ahead each time round: the timer may be late, the notes not
+  function musicTick() {
+    if (!M.root || !M.root.isConnected) { musicStop(); return; }   // the sheet was closed
+    var ahead = M.ctx.currentTime + 0.4;
+    while (M.base + NOTES[M.i].at * BEAT < ahead) {
+      pluck(NOTES[M.i].hz, M.base + NOTES[M.i].at * BEAT, NOTES[M.i].v);
+      if (++M.i === NOTES.length) { M.i = 0; M.base += NOTES.len * BEAT; }
+    }
+  }
+  function musicStop() {
+    if (!M.timer) return;
+    clearInterval(M.timer);
+    M.timer = 0;
+    var out = M.out, now = M.ctx.currentTime;
+    out.gain.cancelScheduledValues(now);
+    out.gain.setValueAtTime(out.gain.value, now);
+    out.gain.linearRampToValueAtTime(0, now + 0.3);
+    setTimeout(function () { out.disconnect(); }, 400);
+    M.out = null;
+    if (!M.away) document.removeEventListener('visibilitychange', musicAway);
+  }
+  function musicAway() {
+    if (document.hidden && M.timer) { M.away = true; musicStop(); }
+    else if (!document.hidden && M.away) {
+      M.away = false;
+      document.removeEventListener('visibilitychange', musicAway);
+      if (M.root && M.root.isConnected && M.root === root) musicStart();
+    }
+  }
+  // the string: a burst of noise round a delay line one period long,
+  // softened each time round (as the studio's đàn, a little mellower)
+  function buf(f) {
+    var key = f.toFixed(2);
+    if (M.bufs[key]) return M.bufs[key];
+    var sr = M.ctx.sampleRate, soft = 0.3, N = Math.max(2, Math.floor(sr / f)), len = Math.round(sr * 1.8);
+    var b = M.ctx.createBuffer(1, len, sr), d = b.getChannelData(0), ring = new Float32Array(N), k;
+    for (k = 0; k < N; k++) ring[k] = Math.random() * 2 - 1;
+    var keep = Math.pow(0.01, 1 / (1.8 * f));
+    for (k = 0; k < len; k++) {
+      var a = ring[k % N], c = ring[(k + 1) % N];
+      d[k] = a * 0.7;
+      ring[k % N] = keep * ((1 - soft) * a + soft * c);
+    }
+    var tail = Math.round(sr * 0.06);
+    for (k = 0; k < tail; k++) d[len - 1 - k] *= k / tail;   // no click at the end
+    M.rate[key] = (N - soft) * f / sr;
+    return (M.bufs[key] = b);
+  }
+  function pluck(f, at, v) {
+    if (!M.out) return;
+    var s = M.ctx.createBufferSource(), g = M.ctx.createGain();
+    s.buffer = buf(f);
+    s.playbackRate.value = M.rate[f.toFixed(2)];
+    g.gain.value = v;
+    s.connect(g); g.connect(M.out);
+    s.start(at);
+  }
+  // right: two notes up; wrong: two soft low ones down
+  function chime(ok) {
+    if (!M.out) return;
+    var now = M.ctx.currentTime + 0.02;
+    (ok ? [['G5', 0], ['C6', 0.11]] : [['E4', 0], ['C4', 0.16]]).forEach(function (n) { pluck(hz(n[0]), now + n[1], ok ? 1.4 : 1.1); });
+  }
+
   /* ---------- taps and drags ---------- */
   function onClick(e) {
     var el;
@@ -551,6 +686,7 @@
       return;
     }
     if (e.target.closest('[data-pl-guide-go]')) { guideShow(false); return; }
+    if (e.target.closest('[data-pl-music]')) { musicSet(!musicOn()); return; }
     if (e.target.closest('[data-pl-guide]')) { guideShow(true); return; }
     if ((el = e.target.closest('[data-pl-poster]'))) { poster(el.getAttribute('data-pl-poster')); return; }
     if ((el = e.target.closest('[data-pl-see]'))) { var p = el.getAttribute('data-pl-see'); if (p) poster(p); return; }

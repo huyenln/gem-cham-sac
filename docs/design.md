@@ -1863,7 +1863,8 @@ luôn xem lại được. Code: mục `GUIDE` + `THE SHOP BELL` trong `js/studio
     "Kéo chuột hoặc bấm phím ← →"). Tắt khi khách đi lần đầu (vuốt, chạm sàn, ← →, nhãn mép,
     nút dưới).
   - `door` — 1,5 giây sau lần đi đầu: "Chạm vào cửa để vào studio. Ngoài này còn có đàn tranh
-    để chơi." (vế sau chỉ khi ngoài phố có chỗ "Chơi đàn tranh"). Tắt khi vào cửa / mở bảng.
+    để chơi và góc phân loại rác để bạn thử tài." (vế sau kể những gì ngoài phố đang có: chỗ
+    "Chơi đàn tranh", góc "Phân loại rác" — 23/10). Tắt khi vào cửa / mở bảng.
   - `inside` — trong studio, sau lời chào: "Chạm một món để xem tên, chạm lần nữa để mở."
     (máy tính: "Rê chuột…, bấm để mở"). Tắt khi mở bảng đầu tiên.
   - Ghi trong `localStorage['gem-guide']` = `{seen: {swipe, door, inside}, off}`, theo trình
@@ -2353,6 +2354,21 @@ tường là lối vào. Bỏ "nhặt rác ngoài phố có đếm giờ": nặn
   `assets.json`) → Phát hành. Chạm poster = mở chính poster đó to + nút "Chơi phân loại".
   Treo nhiều tấm thì thanh dưới / nhãn mép chỉ hiện một "Phân loại rác". Khung bấm đặt
   "Phân loại rác" thì mở trang đầu (6 poster).
+- **Nhãn chung** (Anna 23/10, "mỗi poster 1 cái button hơi loạn"): các Khu vực cùng "Khi bấm"
+  (và cùng link) đặt sát nhau (khoảng hở dưới 80 px của dải) chỉ có **một nhãn**, ở giữa phía trên
+  cả nhóm, mang "Tên hiện" của món có đặt tên (không thì tên chức năng). Nhãn chung mở chỗ đó
+  nói chung (trò chơi: trang đầu 6 poster). Từng hình vẫn mở riêng: chạm lần đầu hiện tên, chạm
+  lần nữa mở (chuột: một lần bấm), như sản phẩm. `groupTags()` / `groupBox()` trong `js/studio.js`.
+  Áp dụng cho mọi loại Khu vực, không riêng poster.
+- **Ẩn nhãn** (Lắp studio → món Khu vực → ô "Ẩn nhãn", `zone.notag`): món đó không có nhãn,
+  không tham gia nhãn chung; chạm hình lần đầu hiện tên, lần nữa mở.
+- **Nhạc** (Anna 23/10, chọn nhạc tạo bằng code, không tải file): một giai điệu ngũ cung tự viết
+  (Sol La Đô Rê Mi, 2 câu × 8 nhịp, 84 nhịp / phút, ~46 giây rồi lặp) gảy bằng tiếng dây tạo
+  trong trình duyệt (cùng cách với đàn tranh, mềm hơn), nhỏ dưới trò chơi; tiếng ngắn khi bỏ
+  đúng (2 nốt đi lên) / sai (2 nốt trầm xuống). Bắt đầu khi khách vào một màn (điện thoại chỉ cho
+  phát tiếng sau một lần chạm). Nút "Nhạc: bật / tắt" cạnh "?" tắt cả nhạc lẫn tiếng, nhớ ở
+  `gem-pl` (`nhac: 0`). Tắt khi đóng trò chơi hoặc chuyển tab, mở lại tab thì chơi tiếp. Đổi
+  giai điệu: `TUNE` / `BASS` trong `js/phanloai.js`.
 - **Nhẹ:** `js/phanloai.js` (34 KB) chỉ tải lần đầu mở trò chơi (`phanloaiSheet` trong
   `js/studio.js`, cùng `?v=` với `studio.js`); vào studio không tải gì của trò chơi. Mở từ
   poster ≈ 135 KB (script + poster to); chơi hết cả hai màn ≈ 615 KB (phép kiểm đo, chặn

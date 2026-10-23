@@ -243,7 +243,10 @@
     'studio.tip_swipe':    { vi: `Vuốt sang trái, phải để đi dạo.`, en: `Swipe left or right to walk around.` },
     'studio.tip_swipe_mouse': { vi: `Kéo chuột hoặc bấm phím ← → để đi dạo.`, en: `Drag, or press ← →, to walk around.` },
     'studio.tip_door':     { vi: `Chạm vào cửa để vào studio nhé.`, en: `Tap the door to come in.` },
-    'studio.tip_door_zt':  { vi: `Chạm vào cửa để vào studio. Ngoài này còn có đàn tranh để chơi.`, en: `Tap the door to come in. Out here there's also a đàn tranh to play.` },
+    'studio.tip_door_more': { vi: `Chạm vào cửa để vào studio. Ngoài này còn có {x}.`, en: `Tap the door to come in. Out here there's also {x}.` },
+    'studio.tip_x_zt':     { vi: `đàn tranh để chơi`, en: `a đàn tranh to play` },
+    'studio.tip_x_pl':     { vi: `góc phân loại rác để bạn thử tài`, en: `a waste-sorting corner to test yourself` },
+    'studio.tip_and':      { vi: ` và `, en: ` and ` },
     'studio.tip_inside':   { vi: `Chạm một món để xem tên, chạm lần nữa để mở.`, en: `Tap a thing to see its name, tap again to open it.` },
     'studio.tip_inside_mouse': { vi: `Rê chuột lên một món để xem tên, bấm để mở.`, en: `Point at a thing to see its name, click to open it.` },
     'studio.tip_close':    { vi: `Đóng gợi ý`, en: `Close the tip` },
@@ -823,6 +826,7 @@
       world.appendChild(el);
       if (it.kind && it.kind !== 'product') thing(el, it);
     });
+    groupTags(items);
   }
 
   /* ---------- pieces that do something (the owner's "Loại") ----------
@@ -976,8 +980,8 @@
   var SPOT_ACTS = { pegboard: ['shop:pegboard'], cabinet: ['shop:cabinet'],
     display: ['shop:display', 'shop:all', 'shop:pegboard', 'shop:cabinet'] };   // "Kệ hàng" in the nav: any shelf will do
 
-  function standIn(it) {
-    var b = picBox(it), W = LAYOUT ? LAYOUT.bg.w : SCENE.width;
+  function standIn(it, all) {
+    var b = all ? groupBox(it) : picBox(it), W = LAYOUT ? LAYOUT.bg.w : SCENE.width;
     return Math.max(120, Math.min(W - 120, (b.x0 + b.x1) / 2));
   }
 
@@ -1029,8 +1033,8 @@
     el.setAttribute('role', 'button');
     el.setAttribute('tabindex', '0');
     var name = it.kind === 'zone' ? zoneName(it) : '';
-    if (name) {
-      el.setAttribute('aria-label', name);
+    if (name) el.setAttribute('aria-label', name);
+    if (name && !it.zone.notag) {
       var lab = document.createElement('span');   // the owner's text: textContent only
       lab.className = 'st-hot-label st-zone-label';
       lab.setAttribute('data-thing-label', n);
@@ -1053,10 +1057,58 @@
   function actName(act) { return ACT_NAME[act] ? t(ACT_NAME[act]) : ''; }
   function zoneName(it) { return it.zone[lng()] || it.zone.vi || actName(it.zone.act); }
 
+  // Pieces that do the same thing and stand together (Tagom's six posters on
+  // one wall) share one tag over the lot (Anna 23/10: a tag on each was a
+  // jumble): the one the owner named, else the first. Each picture still
+  // opens itself (a tap names it, a second opens it, like a product); the
+  // shared tag opens the place as a whole. A piece whose tag the owner hid
+  // ("Ẩn nhãn") takes no part.
+  var TAG_GAP = 80;   // strip px between two pictures that still stand together
+  function groupTags(items) {
+    var by = {};
+    items.forEach(function (it) {
+      if (it.kind !== 'zone' || !it._tag) return;
+      var key = it.zone.act + ' ' + (it.zone.link || '');
+      (by[key] = by[key] || []).push(it);
+    });
+    Object.keys(by).forEach(function (key) {
+      var ps = by[key].sort(function (a, b) { return (a.x - a.w / 2) - (b.x - b.w / 2); });
+      var run = [], end = -Infinity;
+      var close = function () {
+        if (run.length < 2) return;
+        var lead = run.filter(function (m) { return m.zone.vi || m.zone.en; })[0] || run[0];
+        run.forEach(function (m) {
+          m._lead = lead;
+          if (m !== lead) { m._tag.remove(); m._tag = null; }
+        });
+        lead._group = run;
+        lead._tag.textContent = zoneName(lead);
+        tagAt(lead._tag, lead);
+      };
+      ps.forEach(function (it) {
+        var x0 = it.x - it.w / 2;
+        if (run.length && x0 > end + TAG_GAP) { close(); run = []; end = -Infinity; }
+        run.push(it);
+        end = Math.max(end, it.x + it.w / 2);
+      });
+      close();
+    });
+  }
+  // a piece's place: its picture, or the pictures of its group together
+  function groupBox(it) {
+    var g = it._lead && it._lead._group;
+    if (!g) return picBox(it);
+    return g.map(picBox).reduce(function (a, b) {
+      return { x0: Math.min(a.x0, b.x0), x1: Math.max(a.x1, b.x1), y0: Math.min(a.y0, b.y0), y1: Math.max(a.y1, b.y1) };
+    });
+  }
+  // A piece that opens without a tag of its own: grouped, or the owner hid it
+  function untagged(it) { return !!it && it.kind === 'zone' && (!!it._lead || !!it.zone.notag); }
+
   // The tag sits on top of the picture, not of the see-through sheet round it
   // (moved again once the picture has been read, retag).
   function tagAt(lab, it) {
-    var b = picBox(it);
+    var b = groupBox(it);
     lab.style.left = pct((b.x0 + b.x1) / 2, SCENE.width);
     lab.style.top = pct(Math.max(b.y0, 40), SCENE.height);
   }
@@ -1064,7 +1116,7 @@
     if (!world) return;
     world.querySelectorAll('[data-thing-label]').forEach(function (lab) {
       var it = THINGS[+lab.getAttribute('data-thing-label')];
-      if (it && it.src === src) tagAt(lab, it);
+      if (it && (it.src === src || (it._group && it._group.some(function (m) { return m.src === src; })))) tagAt(lab, it);
     });
     markHere();   // its picture's span is known now too
   }
@@ -1400,7 +1452,7 @@
       list.push({ id: h.id, act: c.act || (c.link ? 'link' : ''), link: c.link, name: spotName(h), x: standX(h) });
     });
     THINGS.forEach(function (it) {
-      if (it.kind === 'zone') list.push({ act: it.zone.act, link: it.zone.link, name: zoneName(it), x: standIn(it) });
+      if (it.kind === 'zone') list.push({ act: it.zone.act, link: it.zone.link, name: zoneName(it._lead || it), x: standIn(it, true) });
     });
     list = list.sort(function (a, b) { return a.x - b.x; }).filter(function (p) {
       var key = p.act + ' ' + (p.link || '');   // one button per thing to do: the one furthest left
@@ -1848,7 +1900,13 @@
 
   function tipWords(id) {
     if (id === 'swipe') return t(touchUI ? 'studio.tip_swipe' : 'studio.tip_swipe_mouse');
-    if (id === 'door') return t(scenePlaces().some(function (p) { return p.act === 'dantranh'; }) ? 'studio.tip_door_zt' : 'studio.tip_door');
+    if (id === 'door') {
+      // what else is out here: the đàn, the sorting corner (Anna 23/10)
+      var acts = scenePlaces().map(function (p) { return p.act; });
+      var more = [['dantranh', 'studio.tip_x_zt'], ['phanloai', 'studio.tip_x_pl']]
+        .filter(function (m) { return acts.indexOf(m[0]) >= 0; }).map(function (m) { return t(m[1]); });
+      return more.length ? t('studio.tip_door_more').replace('{x}', more.join(t('studio.tip_and'))) : t('studio.tip_door');
+    }
     if (id === 'inside') return t(touchUI ? 'studio.tip_inside' : 'studio.tip_inside_mouse');
     return '';
   }
@@ -1914,8 +1972,8 @@
       } else {
         it = THINGS[+el.getAttribute('data-thing')];
         if (!it || !it.zone) return;
-        act = it.zone.act; name = zoneName(it);
-        pl = { x: standIn(it), act: act, link: it.zone.link };
+        act = it.zone.act; name = zoneName(it._lead || it);
+        pl = { x: standIn(it, true), act: act, link: it.zone.link };
       }
       if (!name || !act || act === 'none' || /^k-/.test(act)) return;   // a box of the owner's that does nothing
       var key = act + ' ' + (pl.link || '');
@@ -5165,7 +5223,7 @@
   function phanloaiSheet(it) {
     var m = /^images\/studio\/tagom\/([a-z0-9-]+)\.webp$/.exec((it && it.src) || '');
     var go = function () {
-      window.GemPhanLoai.open({ openSheet: openSheet, body: function () { return sheetBody; } }, { poster: m ? m[1] : '' });
+      window.GemPhanLoai.open({ openSheet: openSheet, body: function () { return sheetBody; }, audio: audioCtx }, { poster: m ? m[1] : '' });
     };
     if (plState === 2) { go(); return; }
     openSheet('<p class="st-lead pl-wait" id="st-sheet-title">' + esc(t('studio.pl_load')) + '</p>', true);
@@ -5254,7 +5312,8 @@
     if (pc !== picked) unpick();
     if (at.udon) return;
     if (at.label) { openTag(at.label); return; }
-    var place = pc && pc.getAttribute('data-kind') === 'zone' ? pc : at.hot || null;
+    var own = pc && untagged(THINGS[+pc.getAttribute('data-thing')]);
+    var place = pc && pc.getAttribute('data-kind') === 'zone' && !own ? pc : at.hot || null;
     if (pc && !place) {
       if (pc.classList.contains('st-thing') && pc.getAttribute('data-kind') !== 'story') {
         pickTap(pc, function () { thingTap(pc); });
@@ -5293,6 +5352,7 @@
     if (it.kind === 'story') return t('studio.pick_story');
     if (it.kind === 'talk') return t('studio.pick_talk');
     if (it.kind === 'board') return t(it.board.feed === 'post' ? 'studio.pick_post' : 'studio.pick_workshop');
+    if (it.kind === 'zone') return zoneName(it);
     return '';
   }
 
@@ -5332,6 +5392,8 @@
   function openTag(lab) {
     var n = lab.getAttribute('data-thing-label');
     if (n != null) {
+      var lead = THINGS[+n];
+      if (lead && lead._group) { runAct(lead.zone.act, lead.zone.link, standIn(lead, true), null); return; }
       var el = world.querySelector('.st-thing[data-thing="' + n + '"]');
       if (el) thingTap(el);
       return;
@@ -5386,8 +5448,8 @@
     }
     var it = THINGS[+el.getAttribute('data-thing')];
     if (!it || it.kind !== 'zone') return null;
-    var p = picBox(it);
-    return { x0: p.x0, x1: p.x1, top: Math.max(p.y0, 40), act: it.zone.act, tag: it._tag || null, it: it };
+    var p = groupBox(it), lead = it._lead || it;
+    return { x0: p.x0, x1: p.x1, top: Math.max(p.y0, 40), act: it.zone.act, tag: lead._tag || null, it: lead };
   }
 
   function isHere(el, x) {
