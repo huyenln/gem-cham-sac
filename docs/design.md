@@ -2347,7 +2347,7 @@ tường là lối vào. Bỏ "nhặt rác ngoài phố có đếm giờ": nặn
 - **Poster Tagom dùng nguyên** (Tagom cho phép, Anna 23/10): Nilon cứng, Nilon mềm, Nhựa 1
   dễ, Nhựa 1 khó, Nhựa 2-4-5, Nhựa 6-7 khó. `images/studio/tagom/<id>.webp` (cao 420, treo
   tường) + `tagom/to/<id>.webp` (cao 1400, mở to). Không vẽ lại, không sửa chữ của Tagom;
-  dưới poster ghi "Poster của Tagom, Gem được Tagom cho phép dùng."
+  không ghi chú thích dưới poster (Anna 23/10).
 - **Bật:** Lắp studio → nhóm **Poster Tagom (Phân loại rác)** → kéo poster lên tường. Poster
   tự thành **Khu vực**, Khi bấm **Phân loại rác** (`phanloai` trong `ACTS`; khoá `zone` trong
   `assets.json`) → Phát hành. Chạm poster = mở chính poster đó to + nút "Chơi phân loại".

@@ -63,7 +63,6 @@
     'pl.posters':   { vi: `Poster của Tagom`, en: `Tagom's posters` },
     'pl.back':      { vi: `← Quay lại`, en: `← Back` },
     'pl.play':      { vi: `Chơi phân loại`, en: `Play` },
-    'pl.poster_by': { vi: `Poster của Tagom, Gem được Tagom cho phép dùng.`, en: `A poster by Tagom, shared with their permission.` },
     'pl.chai_h':    { vi: `Xử lý một cái chai`, en: `One bottle, three parts` },
     'pl.chai_p':    { vi: `Chạm nắp để tháo, chạm tem để bóc, chạm chai để bóp bẹp. Rồi kéo từng phần vào đúng bao (hoặc chạm phần đó, rồi chạm bao).`,
                       en: `Tap the cap to take it off, the label to peel it, the bottle to squash it. Then drag each part to its bag (or tap it, then the bag).` },
@@ -255,8 +254,7 @@
     view('poster',
       (mid ? '<button type="button" class="pt-tool pt-mini pl-back" data-pl-go="resume">' + esc(t('pl.back_play')) + '</button>'
         : '<button type="button" class="pt-tool pt-mini pl-back" data-pl-go="hub">' + esc(t('pl.back')) + '</button>') +
-      '<figure class="pl-big"><img src="' + T + 'to/' + p + '.webp" alt="' + esc(binName(BINS.filter(function (x) { return x.poster === p; })[0].id)) + '">' +
-        tr('figcaption', 'pl.poster_by', ' class="pt-small"') + '</figure>' +
+      '<figure class="pl-big"><img src="' + T + 'to/' + p + '.webp" alt="' + esc(binName(BINS.filter(function (x) { return x.poster === p; })[0].id)) + '"></figure>' +
       '<div class="pl-acts"><button type="button" class="st-btn" data-pl-go="sort">' + esc(t('pl.play')) + '</button></div>');
   }
 
