@@ -2303,6 +2303,23 @@ Anna thử trên điện thoại (22/10) và gửi ảnh lỗi.
   - Vải nền không còn lộ qua khoen móc chìa khoá (`ART.origami.body`).
 - Kiểm tra: `python3 tools/check-studio.py guidance`.
 
+### Bàn thiết kế — một vải không tính phí ghép, ảnh "Đồ thật" (23/10/2026)
+
+- **Một vải thì không tính phí kiểu ghép** (Anna 23/10).
+  - Mọi ô của món mang cùng một vải (field 11 chỉ có một chữ khác nhau) thì kiểu ghép không còn
+    là ghép, nên bỏ phí kiểu ghép. Dòng giá ghi "Một vải nên không tính phí kiểu ghép".
+  - Vẫn tính cho Tự vẽ (phí là phần vẽ) và Bloom 1–3 bông (phí là số bông). "Gem chọn" (field 11
+    trống) tính như cũ.
+  - `KEEP_FEE` + `price().waived` trong `js/patch.js`. `design_price` làm giống hệt:
+    `supabase/migrations/20261023_mot_vai_net_bao_gia.sql`, **chạy trước khi merge**, nếu
+    không thì trang báo giá thấp hơn đơn thật.
+- **Ảnh dưới món ghi đúng ảnh của ai.** Udon gợi ý món có sẵn cùng tông (đổi tâm trạng / tông /
+  họa tiết) hoặc khách chạm ảnh để xem món khác, nhưng chữ dưới ảnh vẫn ghi "Đồ thật". Khi câu
+  của Udon không còn thì trông như ảnh sai (túi denim dưới lót cốc).
+  - Giờ ảnh của chính món ghi "Đồ thật", ảnh món khác ghi tên món đó (tối đa 2 dòng).
+  - May xong thì ảnh quay về món đang thiết kế.
+  - Kiểm tra: `onefab()` trong `tools/check-studio.py`.
+
 ### Studio hiện cảnh mặc định thay cho bố cục đã lắp (sửa 13/10/2026)
 
 **Triệu chứng:** mở `studio.html` thấy mặt phố mặc định (monstera, bình tưới, ghế gỗ,

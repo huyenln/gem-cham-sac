@@ -416,6 +416,7 @@
     }, function () { return false; });
     return pricingP;
   }
+  var KEEP_FEE = { mot: 1, tuve: 1, hoa1: 1, hoa2: 1, hoa3: 1 };
   function fabricCount(d) {
     if (!d.fab) return PRICING.gem[d.layout] || 2;
     var seen = {}, n = 0;
@@ -436,8 +437,12 @@
       if (b == null) b = a;
       if (a || b) { lines.push({ k: k, a: a, b: b, n: n || 0 }); total += a; max += b; }
     };
-    add('layout', (pr.layouts || {})[d.layout] || 0);
-    var nf = fabricCount(d);
+    // one fabric over a pieced layout is no piecing at all: no fee for it
+    // (Anna 23/10). Kept for the drawn one (the fee is the drawing) and the
+    // Bloom's flowers (the fee is the flowers). design_price does the same
+    var nf = fabricCount(d), lay = (pr.layouts || {})[d.layout] || 0, waived = 0;
+    if (lay && d.fab && nf === 1 && !KEEP_FEE[d.layout]) { waived = lay; lay = 0; }
+    add('layout', lay);
     add('fabric', Math.max(0, nf - 1) * (pr.fabric != null ? pr.fabric : PRICING.fabric), nf - 1);
     if (e.s) add('size', (pr.sizes || [])[e.s] || 0);
     if (e.q) add('quilt', pr.quilt || 0);
@@ -446,7 +451,7 @@
     if (e.n) add('snap', pr.snap || 0);
     if (e.t) { var f = fee((pr.ties || [])[e.t]); add('tie', f[0], tieOf(d), f[1]); }
     if (e.e) add('embroider', pr.embroider || 0, d.product);
-    return { base: pr.base, total: total, max: max, lines: lines, quote: !!e.c };
+    return { base: pr.base, total: total, max: max, lines: lines, quote: !!e.c, waived: waived };
   }
   var PRICE_NAMES = {
     layout: { vi: 'Kiểu ghép', en: 'Piecing' }, fabric: { vi: 'Thêm {n} vải', en: '{n} more fabrics' },

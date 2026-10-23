@@ -3698,6 +3698,50 @@ async def guidance(browser, db):
     await pg.context.close()
 
 
+async def onefab(browser, db):
+    """23/10: one fabric over a pieced layout is no piecing (no layout fee,
+    same rule as design_price); the real-photo card says whose photo it is
+    (a ready-made bag under "Đồ thật" on the coaster read as a mistake)."""
+    print('onefab')
+    pg = await open_table(browser, db, 1440, 900)
+    got = await pg.evaluate("""['2~lotcoc~vuong~~~~~~~~AAAA', '2~lotcoc~vuong~~~~~~~~ABAB', '2~lotcoc~vuong~~~~~~', '2~lotcoc~tuve~~~~~~~~A',
+        '2~bloom~hoa2~~~~~~~~AAA', '2~tuitote~doc~~~~~~~~AA', '2~tuitote~doc~~~~~~~~AB', '2~origami~canh~~~~~~~~AA']
+        .map(c => { const p = GemPatch.price(c); return [p.total, p.waived]; })""")
+    want = [[30000, 5000], [40000, 0], [45000, 0], [35000, 0], [35000, 0], [160000, 20000], [190000, 0], [70000, 5000]]
+    check(got == want, f'one fabric: no piecing fee; two, Gem picking, the drawn one and the Bloom\'s flowers as before ({got})')
+    await js_click(pg, '.pt-tab[data-product="lotcoc"]')
+    await pg.wait_for_timeout(600)
+    card = "(() => { const r = document.querySelector('.pt'); return [r.querySelector('.gv-cap').textContent, r.querySelector('.gv-photo img').alt]; })()"
+    own = await pg.evaluate(card)
+    check(own[0] == 'Đồ thật' and own[1] == 'Lót Cốc', f'the coaster: its own real photo, "Đồ thật" ({own})')
+    moods = await pg.evaluate("[...document.querySelectorAll('[data-mood]')].map(b => b.dataset.mood)")
+    other = None
+    for m in moods:
+        await js_click(pg, f'[data-mood="{m}"]')
+        await pg.wait_for_timeout(1300)
+        c = await pg.evaluate(card)
+        if c[1] != 'Lót Cốc':
+            other = c
+            break
+    check(other is not None and other[0] == other[1] and other[0] != 'Đồ thật',
+          f'another ready-made piece shown: its name under it, not "Đồ thật" ({other})')
+    # one fabric on all four squares: the price says why there is no piecing fee
+    await js_click(pg, '.pt-layouts [data-layout="vuong"]')
+    await pg.wait_for_timeout(300)
+    await pg.evaluate("document.querySelector('.pt-board').scrollIntoView({block: 'start'})")
+    for i in range(4):
+        if not await pg.evaluate("!!document.querySelector('.pt-scrap.is-held')"):
+            await pg.click('.pt-scrap >> nth=0')
+        await pg.click(f'.pt-board [data-i="{i}"]')
+        await pg.wait_for_timeout(150)
+    fills = await pg.evaluate("[0, 1, 2, 3].map(i => document.querySelector('.pt-board [data-i=\"' + i + '\"]').getAttribute('fill').replace(/^url\\(#[^-]*-/, ''))")
+    lines = await pg.evaluate("document.querySelector('.pt-price-lines').textContent")
+    check(len(set(fills)) == 1 and 'Kiểu ghép' not in lines and 'Một vải nên không tính phí kiểu ghép' in lines,
+          f'four squares, one fabric: no piecing fee, and it says why ({lines})')
+    check(not pg.errors, f'no script errors {pg.errors}')
+    await pg.context.close()
+
+
 async def main(which):
     if hasattr(sys.stdout, 'reconfigure'):
         sys.stdout.reconfigure(encoding='utf-8', errors='replace')   # a Windows console's code page has no Vietnamese
@@ -3708,7 +3752,7 @@ async def main(which):
         browser = await launch(p)
         for name, fn in (('street', street), ('wear', wear), ('shop', shop), ('spots', spots), ('editor', editor),
                          ('library', library), ('product', product), ('prodlib', prodlib), ('workshop', workshop), ('design', design), ('catalog', catalog), ('kinds', kinds),
-                         ('layers', layers), ('zones', zones), ('cart', cart), ('choices', choices), ('zither', zither), ('guide', guide), ('vai', vai), ('tui', tui), ('kho', kho), ('guidance', guidance), ('slow', slow), ('topbar', topbar), ('motion', motion),
+                         ('layers', layers), ('zones', zones), ('cart', cart), ('choices', choices), ('zither', zither), ('guide', guide), ('vai', vai), ('tui', tui), ('kho', kho), ('guidance', guidance), ('onefab', onefab), ('slow', slow), ('topbar', topbar), ('motion', motion),
                          ('phone', phone), ('taps', taps)):
             if which in (None, name):
                 await fn(browser, db)
