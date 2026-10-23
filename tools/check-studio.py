@@ -2687,16 +2687,17 @@ async def phone(browser, db):
     check(st['under'] and st['photo'], f'a dropped fabric whose big photo is not in yet wears its swatch under it ({sid}: {st})')
     await ctx.close()
 
-    # the Oxford collar off the painting, the strap over it; origami's light layer
+    # the Oxford collar off the painting, the strap behind it (sewn on under
+    # the collar, 23/10: the collar shows whole); origami's light layer
     pg = await page(browser, db, 600, 400)
     await pg.goto(f'{BASE}/studio.html')
     await pg.wait_for_timeout(1200)
     got = await pg.evaluate("""(() => { const P = window.GemPatch;
       const ox = P.svg(P.blank('oxford')), ori = P.svg(P.blank('origami'));
       const co = ox.indexOf('d="M157 92'), quai = ox.indexOf('d="M146 113');
-      return { co: co > 0, strapOver: quai > co, light: /mon-origami-sang\\.webp[^>]*mix-blend-mode:screen/.test(ori),
+      return { co: co > 0, strapUnder: quai > 0 && quai < co, light: /mon-origami-sang\\.webp[^>]*mix-blend-mode:screen/.test(ori),
                noLightOx: !ox.includes('-sang.webp') }; })()""")
-    check(got['co'] and got['strapOver'], f'Oxford: the collar traced off the painting, the strap drawn over it ({got})')
+    check(got['co'] and got['strapUnder'], f'Oxford: the collar traced off the painting, the strap drawn behind it ({got})')
     check(got['light'] and got['noLightOx'], f'origami: the light layer over its folds (only where asked) ({got})')
     await pg.context.close()
 
@@ -3734,10 +3735,31 @@ async def onefab(browser, db):
             await pg.click('.pt-scrap >> nth=0')
         await pg.click(f'.pt-board [data-i="{i}"]')
         await pg.wait_for_timeout(150)
-    fills = await pg.evaluate("[0, 1, 2, 3].map(i => document.querySelector('.pt-board [data-i=\"' + i + '\"]').getAttribute('fill').replace(/^url\\(#[^-]*-/, ''))")
+    # the picture each square is filled with (a real fabric's photo gets a
+    # pattern of its own per square: compare what they show)
+    fills = await pg.evaluate("""[0, 1, 2, 3].map(i => {
+        const id = document.querySelector('.pt-board [data-i="' + i + '"]').getAttribute('fill').replace(/^url\\(#|\\)$/g, '');
+        const im = document.getElementById(id) && document.getElementById(id).querySelector('image');
+        return im ? im.getAttribute('href') : id; })""")
     lines = await pg.evaluate("document.querySelector('.pt-price-lines').textContent")
     check(len(set(fills)) == 1 and 'Kiểu ghép' not in lines and 'Một vải nên không tính phí kiểu ghép' in lines,
           f'four squares, one fabric: no piecing fee, and it says why ({lines})')
+    # a drawn cut with more than 6 lines: Gem looks, then quotes the work
+    q = await pg.evaluate("""[6, 7].map(n => { const c = '2~lotcoc~net~~~~~' + Array(n).fill('AAAzz').join('.') + '~';
+        const p = GemPatch.price(c); return [n, !!p && p.quote, !!p && p.netq, GemPatch.describe(c, 'vi').indexOf('báo giá công') >= 0]; })""")
+    check(q == [[6, False, False, False], [7, True, True, True]], f'"Ghép theo nét vẽ": six lines priced, seven quoted by Gem, the order says so ({q})')
+    # the Oxford bag: the strap is sewn behind the collar, the collar shows whole
+    top = await pg.evaluate("""(() => {
+        const host = document.createElement('div');
+        host.style.cssText = 'position:fixed;left:0;top:0;width:340px;height:340px;z-index:99999;background:#fff';
+        document.body.appendChild(host);
+        host.innerHTML = GemPatch.svg(GemPatch.parse('2~oxford~mot~~~~~~~~ABC'), { hit: true });
+        const s = host.querySelector('svg'); s.setAttribute('width', 340); s.setAttribute('height', 340);
+        const at = (x, y) => { const e = document.elementFromPoint(x, y); return e && e.getAttribute('data-i'); };
+        const r = [at(168, 104), at(168, 60), at(120, 250)];
+        host.remove();
+        return r; })()""")
+    check(top == ['1', '2', '0'], f'Oxford: the back of the collar over the strap, the strap above it, the body below ({top})')
     check(not pg.errors, f'no script errors {pg.errors}')
     await pg.context.close()
 
