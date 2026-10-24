@@ -5,11 +5,11 @@
    Loaded only when someone opens it (js/studio.js phanloaiSheet), so the
    studio itself stays light. Five levels, each opened by the one before
    (kept in this browser, gem-pl):
-     1. the tools, gently (no clock, a hint for a slip): one bottle taken
-        apart with them, Tagom's way (the cap to plastic 2-4-5, the label to
-        hard nylon, the bottle squashed flat to plastic 1), then a cup to
-        rinse, an air cushion to let down, a snack bag to fold (level 4
-        uses all six tools);
+     1. getting things ready, gently (no clock, a hint for a slip): one
+        bottle taken apart by hand, Tagom's way (the cap to plastic 2-4-5,
+        the label to hard nylon, the bottle squashed flat to plastic 1),
+        then the three tools: a cup to clean, an air cushion to let down, a
+        snack bag to clean of its crumbs, then fold (level 4 uses them all);
      2. ten things picked at random, each to one of Tagom's six bags, or to
         general waste (food scraps: Tagom takes none).
         The boxes, cups, trays and jars that are hard to tell by eye carry
@@ -19,7 +19,7 @@
         makes none), its two grips pull it (soft stretches, hard won't);
      3. sixty seconds, as many as you can: a wrong bag costs 3 seconds;
      4. the table after a party: eight things, some to get ready first (the
-        cap off, the label off, squashed, rinsed, the air out, folded), then
+        cap off, the label off, squashed, cleaned, the air out, folded), then
         each in its bag, in 90 seconds; a clear table opens level 5;
      5. the party goes on: six on the table, ten more landing faster and
         faster, each with its own time: too late and it goes in the bin,
@@ -82,10 +82,11 @@
   // a bag. A bottle is done by hand (Anna 24/10): a tap on the cap takes it
   // off, on the label peels it, on the bare bottle squashes it; the rest
   // with a tool
-  var PREP = { chai: ['nap', 'tem', 'bep'], 'chai-dau-nap': ['nap', 'tem', 'bep'], 'ly-tra-sua': ['rua'], 'tui-khi': ['xep'], 'goi-snack': ['gap'] };
+  var PREP = { chai: ['nap', 'tem', 'bep'], 'chai-dau-nap': ['nap', 'tem', 'bep'], 'ly-tra-sua': ['rua'], 'tui-khi': ['xep'], 'goi-snack': ['rua', 'gap'] };
   var TOOLS = ['rua', 'xep', 'gap'];
-  // levels 2 and 3 have no tools: the cushion comes with its air let out
-  var READY = { 'tui-khi': 'tui-khi-xep' };
+  // levels 2 and 3 have no tools: the cushion comes with its air let out,
+  // the snack bag cleaned and folded
+  var READY = { 'tui-khi': 'tui-khi-xep', 'goi-snack': 'goi-snack-gap' };
   // the bottles, and what comes off them: things of their own on the table
   var EXTRA = { chai: 'nhua-1-de', 'chai-dau-nap': 'nhua-1-de', nap: 'nhua-245', tem: 'nilon-cung' };
   // a bottle's pictures: cap and label on; bare (cap cut from the first)
@@ -93,6 +94,17 @@
   // the rest, before and after: [the step, its picture before, after]
   var STEP_PIC = { 'ly-tra-sua': ['rua', 'ly-tra-sua-day', 'ly-tra-sua'], 'tui-khi': ['xep', 'tui-khi', 'tui-khi-xep'],
                    'goi-snack': ['gap', 'goi-snack', 'goi-snack-gap'] };
+  // crumbs in the open snack bag, a few spilling out, until it is cleaned (drawn over its picture, 224 × 300)
+  var CRUMBS = '<svg class="pl-crumbs" viewBox="0 0 224 300" aria-hidden="true">' +
+    '<polygon points="76,26 77,31 74,36 68,36 64,33 61,26 69,23" fill="#C98F45"/><polygon points="86,17 91,15 97,20 95,26 87,28 82,21" fill="#8F5B24"/>' +
+    '<polygon points="117,34 113,42 103,40 98,37 105,31 112,31" fill="#E3B865"/><polygon points="118,27 119,24 126,18 133,22 134,24 126,29" fill="#A86F30"/>' +
+    '<polygon points="149,42 145,47 138,48 132,41 136,37 147,38" fill="#C98F45"/><polygon points="162,34 155,38 148,31 152,25 157,22 163,29" fill="#8F5B24"/>' +
+    '<polygon points="88,57 92,45 99,45 103,54 97,60" fill="#E3B865"/><polygon points="119,56 123,53 131,50 133,53 136,59 132,62 122,60" fill="#A86F30"/>' +
+    '<polygon points="82,54 72,56 66,50 74,44 86,48" fill="#C98F45"/><polygon points="143,55 147,51 154,54 157,59 153,63 144,62" fill="#8F5B24"/>' +
+    '<polygon points="117,70 108,71 104,65 109,61 114,61 119,63" fill="#E3B865"/><polygon points="56,67 64,70 63,80 53,79 50,71" fill="#A86F30"/>' +
+    '<polygon points="190,26 193,21 196,20 201,22 201,24 199,27 194,28" fill="#C98F45"/><polygon points="204,44 209,44 211,47 210,50 204,52 200,50 199,46" fill="#8F5B24"/>' +
+    '<polygon points="195,67 204,67 204,72 198,75 192,71" fill="#E3B865"/>' +
+    '</svg>';
   // what else a party leaves (ids in ITEMS)
   var PARTY = ['hop-banh', 'thia', 'dia', 'nap-cau', 'vo-banh', 'hop-sua-chua', 'chai-to', 'hop-com', 'tui-bong',
                'khay-den', 'lo-keo', 'mang-boc', 'tui-zip', 'nap-chai', 'chai-tran', 'xuong-ca', 'vo-trung', 'loi-tao'];
@@ -222,8 +234,8 @@
     'pl.g1_2':      { vi: `Kéo từng món vào bao, hoặc chạm món rồi chạm bao. Nhầm thì Udon nhắc, không trừ điểm.`,
                       en: `Drag each to its bag, or tap it, then the bag. Udon tells you if it's wrong; no points lost.` },
     'pl.g1_3h':     { vi: `Ba món nữa, ba dụng cụ`, en: `Three more, three tools` },
-    'pl.g1_3':      { vi: `Ly trà sữa còn trà: Rửa sạch. Túi khí: Làm xẹp, rồi kéo thử xem có giãn không. Gói snack: Gấp gọn. Màn 4 dùng lại ba dụng cụ này.`,
-                      en: `A cup with tea left: Rinse. An air cushion: Air out, then pull it to see if it stretches. A snack bag: Fold. Level 4 uses these three tools.` },
+    'pl.g1_3':      { vi: `Ly trà sữa còn trà: Làm sạch. Túi khí: Làm xẹp, rồi kéo thử xem có giãn không. Gói snack còn vụn bánh: Làm sạch rồi mới Gấp gọn. Màn 4 dùng lại ba dụng cụ này.`,
+                      en: `A cup with tea left: Clean. An air cushion: Air out, then pull it to see if it stretches. A snack bag with crumbs: Clean, then Fold. Level 4 uses these three tools.` },
     'pl.g2_p':      { vi: `10 món đồ nhựa, nilon quen thuộc, lần lượt từng món.`, en: `Ten everyday plastic and nylon things, one at a time.` },
     'pl.g2_1h':     { vi: `Nhìn món đồ`, en: `Look at the thing` },
     'pl.g2_1':      { vi: `Món đang chơi hiện ở giữa. Hộp, cốc, khay khó nhận ra có kí hiệu số như in ở đáy đồ thật; nilon thì chạm để bóp thử, kéo mép để thử độ giãn.`,
@@ -266,7 +278,7 @@
     'pl.thung_h':   { vi: `Thùng rác đầy ắp rồi!`, en: `The bin is overflowing!` },
     'pl.lost_h':    { vi: `Không kịp phân loại, thành rác chôn lấp:`, en: `Too late to sort, gone to landfill:` },
     'pl.tools':     { vi: `Dụng cụ`, en: `Tools` },
-    'pl.t.rua':     { vi: `Rửa sạch`, en: `Rinse` },
+    'pl.t.rua':     { vi: `Làm sạch`, en: `Clean` },
     'pl.t.xep':     { vi: `Làm xẹp`, en: `Air out` },
     'pl.t.gap':     { vi: `Gấp gọn`, en: `Fold` },
     // what a thing still has, on its tag
@@ -274,6 +286,7 @@
     'pl.c.tem':     { vi: `Còn tem`, en: `Label on` },
     'pl.c.bep':     { vi: `Chưa bóp bẹp`, en: `Not squashed` },
     'pl.c.rua':     { vi: `Còn trà`, en: `Tea left` },
+    'pl.c.rua.goi-snack': { vi: `Còn vụn bánh`, en: `Crumbs in` },
     'pl.c.xep':     { vi: `Còn hơi`, en: `Air in` },
     'pl.c.gap':     { vi: `Chưa gấp`, en: `Not folded` },
     // into a bag before it is ready: what to do first
@@ -287,7 +300,9 @@
     'pl.did_nap':   { vi: `Nắp tháo ra rồi: bỏ vào bao nào?`, en: `The cap's off: which bag?` },
     'pl.did_tem':   { vi: `Tem bóc ra rồi: bỏ vào bao nào?`, en: `The label's off: which bag?` },
     'pl.did_bep':   { vi: `Chai bẹp rồi: bỏ vào bao nào?`, en: `Squashed flat: which bag?` },
-    'pl.h.rua':     { vi: `Còn trà kìa: rửa sạch đã.`, en: `There's tea left: rinse it first.` },
+    'pl.h.rua':     { vi: `Còn trà kìa: làm sạch đã.`, en: `There's tea left: clean it first.` },
+    'pl.h.rua.goi-snack': { vi: `Còn vụn bánh kìa: làm sạch đã.`, en: `Crumbs inside: clean it first.` },
+    'pl.order_gap': { vi: `Làm sạch trước rồi mới gấp.`, en: `Clean it first, then fold.` },
     'pl.h.xep':     { vi: `Còn hơi kìa: làm xẹp đã.`, en: `Still full of air: let it out first.` },
     'pl.h.gap':     { vi: `Gấp gọn gói snack đã.`, en: `Fold the bag flat first.` },
     'pl.pick_first': { vi: `Chạm chọn một món trên bàn trước nha.`, en: `Tap a thing on the table first.` },
@@ -399,6 +414,7 @@
     'pl.w.xop-hoi':      { vi: `Nilon mềm: làm xẹp rồi mang đi.`, en: `Soft nylon: let the air out first.` },
     'pl.i.tui-khi':      { vi: `Túi khí chống sốc`, en: `An air-column cushion` },
     'pl.r.tui-khi':      { vi: `Túi khí chống sốc (đã làm xẹp)`, en: `An air-column cushion (air let out)` },
+    'pl.r.goi-snack':    { vi: `Gói snack (đã làm sạch, gấp gọn)`, en: `A snack bag (cleaned, folded)` },
     'pl.w.tui-khi':      { vi: `Làm xẹp các cột khí rồi bỏ vào nilon mềm.`, en: `Let the air out, then soft nylon.` },
     'pl.i.tui-goi-hang': { vi: `Túi gói hàng online`, en: `A courier mailer bag` },
     'pl.w.tui-goi-hang': { vi: `Mềm, kéo giãn được: nilon mềm.`, en: `Soft and stretchy: soft nylon.` },
@@ -432,6 +448,8 @@
 
   function lang() { return window.GemI18n && window.GemI18n.getLang() === 'en' ? 'en' : 'vi'; }
   function t(k) { var s = STR[k]; return s ? s[lang()] : k; }
+  // a thing's own words for a step, if it has them (the snack bag's crumbs, not the cup's tea)
+  function own(k, id) { return t(STR[k + '.' + id] ? k + '.' + id : k); }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   // a line of ours, re-translated when the language changes (i18n.js)
   function tr(tag, k, attrs) { return '<' + tag + ' data-i18n="' + k + '"' + (attrs || '') + '>' + esc(t(k)) + '</' + tag + '>'; }
@@ -902,14 +920,17 @@
       if (has(th, 'tem')) return '<span class="pl-chai' + (B.cls || '') + (has(th, 'nap') ? '' : ' is-nocap') + '">' + img(B.full, 'pl-chai-img', '') + '</span>';
       return '<span class="pl-chai' + (B.cls || '') + '">' + img(B.bare, 'pl-chai-img', '') + (has(th, 'nap') ? img(B.full, 'pl-chai-cap', '') : '') + '</span>';
     }
-    if (P) return img(has(th, P[0]) ? P[1] : P[2], '', '');
+    if (P) {
+      var pic = img(has(th, P[0]) ? P[1] : P[2], '', '');
+      return th.id === 'goi-snack' && has(th, 'rua') ? '<span class="pl-dirty">' + pic + CRUMBS + '</span>' : pic;
+    }
     return img(th.id, '', '');
   }
   function drawTable() {
     var box = root.querySelector('.pl-table');
     if (!box) return;
     box.innerHTML = S.table.map(function (th) {
-      var tags = th.need.map(function (n) { return t('pl.c.' + n); });
+      var tags = th.need.map(function (n) { return own('pl.c.' + n, th.id); });
       // level 1: the cushion and the snack bag, once ready, can be felt (pulled, squeezed)
       var film = S.cfg.intro && STEP_PIC[th.id] && !th.need.length && /^nilon-/.test(th.bin) ? th.bin.slice(6) : '';
       return '<button type="button" class="pl-thing' + (BOTTLE[th.id] ? ' is-bottle' : '') + (S.sel === th.k ? ' is-sel' : '') + (S.fresh === th.k ? ' is-new' : '') + '" data-pl-item="' + th.k + '"' +
@@ -969,6 +990,11 @@
       slip(th.k, 2, t('pl.no_need').replace('{t}', t('pl.t.' + tool)) + (intro ? ' ' + nextHint(th) : ''));
       return;
     }
+    if (tool === 'gap' && has(th, 'rua')) {   // a bag is folded clean, not with its crumbs in
+      if (intro) tug('pl.ud_tool');
+      slip(th.k, 2, t('pl.order_gap'));
+      return;
+    }
     doStep(th, tool);
   }
   // what to do next with it (level 1's hints)
@@ -999,7 +1025,7 @@
   }
 
   // one step done: a cap or label comes off as a thing of its own; a bottle
-  // squashed; a cup rinsed, a cushion let down, a bag folded
+  // squashed; a cup or a bag cleaned, a cushion let down, a bag folded
   function doStep(th, step) {
     var intro = S.cfg.intro, gen = GEN;
     th.need.splice(th.need.indexOf(step), 1);
@@ -1011,8 +1037,10 @@
       S.fresh = S.sel = part.k;
       say(t('pl.did_' + step));
     } else if (step === 'bep') say(t('pl.did_bep'));
-    else say((intro && /^nilon-/.test(th.bin) ? t('pl.intro_feel') : t('pl.did')).replace('{t}', t('pl.t.' + step)) +
-      (intro && !/^nilon-/.test(th.bin) ? ' ' + t('pl.which').replace('{x}', nm(th.id)) : ''), 'ok');
+    else if (!intro) say(t('pl.did').replace('{t}', t('pl.t.' + step)), 'ok');
+    else if (th.need.length) say(t('pl.did').replace('{t}', t('pl.t.' + step)) + ' ' + nextHint(th), 'ok');
+    else if (/^nilon-/.test(th.bin)) say(t('pl.intro_feel').replace('{t}', t('pl.t.' + step)), 'ok');
+    else say(t('pl.did').replace('{t}', t('pl.t.' + step)) + ' ' + t('pl.which').replace('{x}', nm(th.id)), 'ok');
     var el = root.querySelector('.pl-thing[data-pl-item="' + th.k + '"]');
     if (step === 'bep') {
       // squashed underfoot: the picture flattens, then the flat bottle
@@ -1032,7 +1060,7 @@
   function dropTable(k, bin) {
     var th = find(k), gen = GEN, cfg = S.cfg;
     if (!S.go || !th) return;
-    if (th.need.length) { tug('pl.ud_prep'); slip(k, 5, t('pl.h.' + th.need[0])); return; }
+    if (th.need.length) { tug('pl.ud_prep'); slip(k, 5, own('pl.h.' + th.need[0], th.id)); return; }
     if (bin !== th.bin) {
       if (!S.miss.some(function (m) { return m.id === th.id; })) S.miss.push({ id: th.id, bin: th.bin });
       tug('pl.ud_wrong');

@@ -2383,14 +2383,17 @@ tường là lối vào. Bỏ "nhặt rác ngoài phố có đếm giờ": nặn
   cần làm oke hơn"): chạm nắp (1/3 trên của hình) → nắp thành món riêng → Nhựa 2-4-5; chạm tem
   (giữa hình) → Nilon cứng; tháo cả hai rồi chạm chai → hình bẹp xuống ("BẸP!") → Nhựa 1 dễ.
   Bấm phím Enter trên chai = làm bước kế tiếp (`tapThing()`, `partAt()`). Phần 2–4, từng món, bằng
-  dụng cụ: ly trà sữa còn trà (Rửa sạch → Nhựa 1 khó), túi khí (Làm xẹp → Nilon mềm), gói snack
-  (Gấp gọn → Nilon cứng). Túi khí và gói snack sửa soạn xong thì có hai tay nắm để **kéo thử**
+  dụng cụ: ly trà sữa còn trà (Làm sạch → Nhựa 1 khó), túi khí (Làm xẹp → Nilon mềm), gói snack
+  còn vụn bánh (**Làm sạch rồi mới Gấp gọn** → Nilon cứng; Anna 24/10 — gấp trước là nhầm,
+  `pl.order_gap`; vụn bánh vẽ bằng SVG đè lên tranh, `CRUMBS`, mất khi làm sạch). Nút "Rửa sạch"
+  đổi tên **"Làm sạch"** (dùng chung cho ly và gói snack). Túi khí và gói snack sửa soạn xong thì có hai tay nắm để **kéo thử**
   (túi khí giãn, snack không giãn) và chạm để bóp — như nilon ở màn 2. Xong: Udon nhảy trên bàn,
   nút "Sang màn 2". Màn 1 chỉ có 6 bao Tagom.
 - **Màn 2 — Phân loại 10 món:** 10 món ngẫu nhiên trong 36 (`ITEMS`), 6 bao của Tagom + ô
   **Rác thường** (ít nhất một món mỗi ô). Sai: hiện bao đúng + lý do (`pl.w.<id>`) + nút
   "Xem poster" (ô Rác thường không có poster). Màn 2–3 không có dụng cụ nên túi khí hiện sẵn
-  dạng **đã làm xẹp** (`READY`: hình `tui-khi-xep`, tên `pl.r.tui-khi`); màn 4–5 vẫn phải Làm xẹp.
+  dạng **đã làm xẹp**, gói snack **đã làm sạch, gấp gọn** (`READY`: hình `tui-khi-xep` /
+  `goi-snack-gap`, tên `pl.r.<id>`); màn 4–5 vẫn phải sửa soạn.
 - **Rác thường + tranh いらすとや** (Anna 24/10, "dùng luôn của irasutoya, có chú thích"): ô thứ 7
   từ màn 2 (`ALL_BINS`, hình túi nilon trắng `tui-rac`, nhãn xám — không phải của Tagom). Món:
   xương cá, vỏ trứng, lõi táo (thức ăn thừa, Tagom không nhận) → Rác thường; chai có vòi bơm, xô
@@ -2440,10 +2443,10 @@ tường là lối vào. Bỏ "nhặt rác ngoài phố có đếm giờ": nặn
   - **Màn 4 · Dọn bàn sau buổi tiệc:** 8 món trên bàn (4 món cần sửa soạn + 4 món tiệc ngẫu
     nhiên trong `PARTY`, có cả đồ ăn thừa), 90 giây. Nhãn hồng dưới món nói món còn gì: chai nước
     hoặc chai dầu ăn (ngẫu nhiên) còn nắp / còn tem / chưa bóp bẹp; ly trà sữa còn trà; túi khí
-    còn hơi; gói snack chưa gấp
+    còn hơi; gói snack còn vụn bánh + chưa gấp (nhãn riêng từng món: `pl.c.<bước>.<id>`, `own()`)
     (`PREP`). Chai cao gấp đôi ô khác (`.is-bottle`, chiếm 2 hàng), chạm thẳng vào nắp / tem /
     thân chai như màn 1 (không trừ giờ khi chạm chỗ chưa làm được, chỉ chọn món). 3 dụng cụ, hình
-    trước → sau (SVG tự vẽ, `ICON`): Rửa sạch (ly còn trà → ly sạch có giọt nước), Làm xẹp (túi khí
+    trước → sau (SVG tự vẽ, `ICON`): Làm sạch (ly còn trà → ly sạch có giọt nước), Làm xẹp (túi khí
     phồng → dẹt), Gấp gọn (gói snack → gấp lại) — chọn món rồi chạm dụng cụ, hoặc kéo món lên dụng
     cụ. Nắp, tem tháo ra thành món riêng trên bàn (nắp → 2-4-5, tem → nilon cứng). Dùng dụng cụ không
     cần: −2 giây. Bỏ vào bao khi chưa sửa soạn xong, hoặc nhầm bao: −5 giây (lần đầu Udon
