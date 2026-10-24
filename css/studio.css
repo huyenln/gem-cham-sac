@@ -2385,7 +2385,7 @@ input.pt-done-name:focus { border-bottom-style: solid; border-bottom-color: var(
 /* the party table */
 .pl-stage-ban { display: block; min-height: 0; }
 .pl-table {
-  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; align-content: start; min-height: 240px; padding: 8px;
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-flow: dense; gap: 6px; align-content: start; min-height: 240px; padding: 8px;
   border-radius: 14px; background: #EAD8BD; box-shadow: inset 0 0 0 1.5px rgba(184, 153, 104, 0.55), inset 0 6px 14px rgba(184, 153, 104, 0.25);
 }
 .pl-table.is-over { animation: pl-shake 0.36s linear 2; box-shadow: inset 0 0 0 2px #C8644A; }
@@ -2405,21 +2405,27 @@ input.pt-done-name:focus { border-bottom-style: solid; border-bottom-color: var(
 .pl-tn { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; max-width: 100%; text-align: center; }
 .pl-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px; }
 .pl-chips i { padding: 1px 5px; border-radius: 6px; background: #F1BDB6; font-style: normal; font-size: 10px; white-space: nowrap; }
-/* a bottle on the table: the cap cut from the picture with it (water: its top 14%, cooking oil: 12%) */
+/* a bottle on the table: two rows tall, so its cap and label are big enough
+   to tap; the cap cut from the picture with it (water: its top 14%, cooking oil: 12%) */
+.pl-table .pl-thing.is-bottle { grid-row: span 2; justify-content: center; }
+.pl-table .pl-thing.is-bottle .pl-pic { height: 132px; }
+.pl-table .pl-thing.is-bottle img { height: 126px; max-width: 72px; }
+.pl-pic.is-squash { animation: pl-squash 0.24s ease-in forwards; transform-origin: center bottom; }
+@keyframes pl-squash { to { transform: scale(1.25, 0.35); } }
 .pl-chai { position: relative; display: inline-block; }
 .pl-chai .pl-chai-cap { position: absolute; left: 50%; top: 0; transform: translateX(-50%); clip-path: inset(0 0 86% 0); }
 .pl-chai.is-nocap .pl-chai-img { clip-path: inset(14% 0 0 0); }
 .pl-chai.is-dau .pl-chai-cap { clip-path: inset(0 0 88% 0); }
 .pl-chai.is-dau.is-nocap .pl-chai-img { clip-path: inset(12% 0 0 0); }
 
-/* the tools */
-.pl-tools { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; margin-top: var(--space-2); -webkit-user-select: none; user-select: none; }
+/* the tools: each drawn as before → after */
+.pl-tools { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: var(--space-2); -webkit-user-select: none; user-select: none; }
 .pl-tool {
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 52px; padding: 4px 2px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 56px; padding: 4px 2px;
   border: 1.5px solid var(--kraft); border-radius: 10px; background: var(--paper-white); cursor: pointer;
   font: inherit; font-size: 11px; line-height: 1.15; color: var(--ink-dark); text-align: center; -webkit-tap-highlight-color: transparent;
 }
-.pl-tool svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.pl-tool svg { width: 64px; height: 32px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 .pl-tool:active { transform: scale(0.96); }
 .pl-tool.is-over { border-color: var(--sage-deep); box-shadow: 0 0 0 3px rgba(135, 150, 90, 0.35); }
 .pl[data-pl-view="ban"] .pl-bin img, .pl[data-pl-view="tiec"] .pl-bin img { width: 42px; height: 42px; }
@@ -2433,7 +2439,8 @@ input.pt-done-name:focus { border-bottom-style: solid; border-bottom-color: var(
 .pl-gi .pl-gi-num.is-red { border-color: #C8644A; color: #9A4A36; }
 .pl-gi .pl-gi-chip { position: absolute; right: 0; bottom: 2px; padding: 1px 5px; border-radius: 6px; background: #F1BDB6; font-style: normal; font-size: 10px; white-space: nowrap; }
 .pl-gi-tools { display: flex; align-items: center; justify-content: center; gap: 4px; }
-.pl-gi-tools svg { width: 30px; height: 30px; fill: none; stroke: var(--ink-dark); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.pl-gi-tools { flex-direction: column; }
+.pl-gi-tools svg { width: 44px; height: 22px; fill: none; stroke: var(--ink-dark); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 
 @media (min-width: 768px) {
   .pl-levels { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
@@ -2441,10 +2448,13 @@ input.pt-done-name:focus { border-bottom-style: solid; border-bottom-color: var(
   .pl-thing img { height: 68px; max-width: 90px; }
   .pl-thing .pl-pic { height: 72px; }
   .pl-thing { font-size: 12px; }
-  .pl-tools { max-width: 640px; margin-left: auto; margin-right: auto; }
+  .pl-table .pl-thing.is-bottle .pl-pic { height: 156px; }
+  .pl-table .pl-thing.is-bottle img { height: 150px; max-width: 90px; }
+  .pl-tools { max-width: 480px; margin-left: auto; margin-right: auto; }
+  .pl-tool svg { width: 80px; height: 40px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .pl-clock.is-low .pl-clock-s, .pl-ready b, .pl-thing.is-new, .pl-thing.is-in, .pl-thing.is-shake, .pl-table.is-over, .pl-minus { animation: none; }
+  .pl-clock.is-low .pl-clock-s, .pl-ready b, .pl-thing.is-new, .pl-thing.is-in, .pl-thing.is-shake, .pl-table.is-over, .pl-minus, .pl-pic.is-squash { animation: none; }
 }
 
 /* Phân loại rác 24/10: level 1 on the table (big, a thing or three at a
@@ -2455,6 +2465,8 @@ input.pt-done-name:focus { border-bottom-style: solid; border-bottom-color: var(
 .pl[data-pl-view="chai"] .pl-thing { width: 104px; font-size: 12px; }
 .pl[data-pl-view="chai"] .pl-thing .pl-pic { height: 118px; }
 .pl[data-pl-view="chai"] .pl-thing img { height: 112px; max-width: 100px; }
+.pl[data-pl-view="chai"] .pl-thing.is-bottle .pl-pic { height: 200px; }
+.pl[data-pl-view="chai"] .pl-thing.is-bottle img { height: 192px; max-width: 100px; }
 .pl-life { position: absolute; left: 8px; right: 8px; bottom: 3px; height: 4px; border-radius: 2px; background: rgba(195, 195, 165, 0.55); overflow: hidden; }
 .pl-life i { display: block; height: 100%; background: var(--sage-deep); transform-origin: left center; transition: transform 0.1s linear; }
 .pl-thing { padding-bottom: 10px; }
@@ -2476,6 +2488,8 @@ input.pt-done-name:focus { border-bottom-style: solid; border-bottom-color: var(
   .pl[data-pl-view="chai"] .pl-thing { width: 132px; font-size: 13px; }
   .pl[data-pl-view="chai"] .pl-thing .pl-pic { height: 150px; }
   .pl[data-pl-view="chai"] .pl-thing img { height: 144px; max-width: 128px; }
+  .pl[data-pl-view="chai"] .pl-thing.is-bottle .pl-pic { height: 240px; }
+  .pl[data-pl-view="chai"] .pl-thing.is-bottle img { height: 232px; max-width: 128px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .pl-thing.is-gone { animation: none; opacity: 0; }

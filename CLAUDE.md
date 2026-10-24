@@ -414,8 +414,8 @@ Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
   đường thì Gem báo giá (23/10, migration `20261023_mot_vai_net_bao_gia.sql` chạy **trước** khi
   merge); dây túi Oxford gắn sau cổ áo; Oxford "Thân ô vuông": mảng dưới cổ áo cùng vải thân hai bên.
 - ♻️ Phân loại rác cùng GemxTagom (23/10, tên đổi 24/10): poster Tagom treo tường (Lắp studio → nhóm "Poster Tagom", tự
-  thành Khu vực `phanloai`) → màn 1 cái chai + 3 món bằng thanh dụng cụ (tháo nắp / bóc tem / bóp bẹp /
-  rửa / làm xẹp / gấp, không giờ), màn 2 phân loại 10 món vào 6 bao Tagom + ô Rác thường (hộp, cốc khó
+  thành Khu vực `phanloai`) → màn 1 cái chai (chạm thẳng vào nắp / tem / thân chai) + 3 món bằng 3 dụng cụ
+  (rửa / làm xẹp / gấp, hình trước → sau; túi khí, snack kéo thử giãn), không giờ; màn 2 phân loại 10 món vào 6 bao Tagom + ô Rác thường (hộp, cốc khó
   nhận ra có kí hiệu số theo poster Tagom; nilon bóp thử ("SỘT SOẠT!" kiểu truyện tranh / "~ ~ ~") và kéo
   thử bằng tay nắm; xốp, CD vào nhựa 6-7; đồ ăn thừa vào Rác thường), màn 3 thử thách 60 giây, màn 4 dọn
   bàn sau tiệc (90 giây, sao), màn 5 tiệc chưa tàn (món đặt thêm, mỗi món có giờ riêng, không kịp thì vào

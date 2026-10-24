@@ -79,9 +79,13 @@
   var ALL_BINS = BIN_IDS.concat('rac-thuong');
 
   // the table (levels 1, 4, 5): what a thing wants doing before it goes in
-  // a bag (a bottle: cap and label off before it is squashed)
+  // a bag. A bottle is done by hand (Anna 24/10): a tap on the cap takes it
+  // off, on the label peels it, on the bare bottle squashes it; the rest
+  // with a tool
   var PREP = { chai: ['nap', 'tem', 'bep'], 'chai-dau-nap': ['nap', 'tem', 'bep'], 'ly-tra-sua': ['rua'], 'tui-khi': ['xep'], 'goi-snack': ['gap'] };
-  var TOOLS = ['nap', 'tem', 'bep', 'rua', 'xep', 'gap'];
+  var TOOLS = ['rua', 'xep', 'gap'];
+  // levels 2 and 3 have no tools: the cushion comes with its air let out
+  var READY = { 'tui-khi': 'tui-khi-xep' };
   // the bottles, and what comes off them: things of their own on the table
   var EXTRA = { chai: 'nhua-1-de', 'chai-dau-nap': 'nhua-1-de', nap: 'nhua-245', tem: 'nilon-cung' };
   // a bottle's pictures: cap and label on; bare (cap cut from the first)
@@ -106,14 +110,20 @@
     tiec: { n: 5, h: 'pl.tiec_h', p: 'pl.tiec_p', g: 'pl.g5_p', ms: 150000, bpm: 100, fast: 126, start: 6, lead: 2, plain: 10,
             life: 26000, per: 8000, gap: [8000, 6000], apart: 5000, bin: 5, prep: ['chai', 'chai-dau-nap', 'ly-tra-sua', 'tui-khi', 'goi-snack', 'ly-tra-sua'] }
   };
-  // the tools, drawn here (24 x 24, a line in the ink colour)
+  // the tools, drawn here as before -> after (56 x 28, a line in the ink
+  // colour, a little colour where it tells: the tea, the water, the bag)
   var ICON = {
-    nap: '<path d="M9.5 21.5v-6h5v6"/><rect x="7" y="7" width="10" height="5" rx="1.2" transform="rotate(-14 12 9.5)"/><path d="M9.5 8.6l.6 2.4M12 8l.6 2.4M14.5 7.4l.6 2.4"/><path d="M19.5 7V2.5M17.7 4.2l1.8-1.8 1.8 1.8"/>',
-    tem: '<path d="M7 3h10M8 3v18h8V3"/><path d="M8 9h8v6h-3"/><path d="M13 15c0 1.6 1.2 2.6 3.4 2.4"/><path d="M13 15l3.4 2.4"/>',
-    bep: '<path d="M2.5 12h4M17.5 12h4"/><path d="M4.5 9l3 3-3 3M19.5 9l-3 3 3 3"/><rect x="10" y="5" width="4" height="14" rx="1.5"/>',
-    rua: '<path d="M12 3c3 4 6 7.5 6 11a6 6 0 0 1-12 0c0-3.5 3-7 6-11z"/><path d="M9 14.5a3 3 0 0 0 3 3"/>',
-    xep: '<path d="M4 9c3-2 9-2 12 0v6c-3 2-9 2-12 0z"/><path d="M8 8.5v7M12 8.5v7"/><path d="M18.5 10c1.5.7 1.5 3.3 0 4M21 8.5c2.2 1.6 2.2 5.4 0 7"/>',
-    gap: '<path d="M3 7l4.5 10L12 7l4.5 10L21 7"/>'
+    rua: '<path d="M5.1 13h11.8l-1.2 11H6.3z" fill="#B89968" stroke="none"/>' +
+         '<circle cx="8.6" cy="21" r="1.2" fill="#3D4A2E" stroke="none"/><circle cx="11" cy="22" r="1.2" fill="#3D4A2E" stroke="none"/><circle cx="13.4" cy="21" r="1.2" fill="#3D4A2E" stroke="none"/>' +
+         '<path d="M4 5h14l-2 19H6z"/><path d="M22 14.5h8M27 11.5l3 3-3 3"/>' +
+         '<path d="M35 5h14l-2 19H37z"/><path d="M42 10c1.6 2.1 2.4 3.4 2.4 4.5a2.4 2.4 0 0 1-4.8 0c0-1.1.8-2.4 2.4-4.5z" fill="#A9CBD6"/><path d="M52.5 3v5M50 5.5h5"/>',
+    xep: '<path d="M3 9c0-3 2-5 5-5h8c3 0 5 2 5 5v10c0 3-2 5-5 5H8c-3 0-5-2-5-5z" fill="#FBF6EE"/><path d="M9 5.5v17M15 5.5v17" stroke-width="1.2"/>' +
+         '<path d="M23 14.5h7M27 11.5l3 3-3 3"/>' +
+         '<rect x="34" y="16" width="18" height="5" rx="1.5" fill="#FBF6EE"/><path d="M40 16v5M46 16v5" stroke-width="1.2"/><path d="M37 12.5c1.4-1 2.8-1 4.2 0M45 11.5c1.4-1 2.8-1 4.2 0" stroke-width="1.2"/>',
+    gap: '<path d="M5 6l1.6-1.6L8.2 6l1.6-1.6L11.4 6 13 4.4 14.6 6l1.6-1.6L17.8 6v15l-1.6 1.6-1.6-1.6-1.6 1.6-1.6-1.6-1.6 1.6L8.2 21l-1.6 1.6L5 21z" fill="#E9A86B"/>' +
+         '<path d="M5.8 12.5h11.2" stroke="#F6DE7A" stroke-width="3"/>' +
+         '<path d="M22 14.5h7M26 11.5l3 3-3 3"/>' +
+         '<path d="M34 11h15v9H34z" fill="#E9A86B"/><path d="M34 15.5h15M49 11l-3.5 4.5" stroke-width="1.2"/>'
   };
 
   // the numbers, as on Tagom's posters
@@ -149,16 +159,17 @@
     'pl.back':      { vi: `← Quay lại`, en: `← Back` },
     'pl.play':      { vi: `Chơi phân loại`, en: `Play` },
     'pl.chai_h':    { vi: `Cái chai và các dụng cụ`, en: `A bottle and the tools` },
-    'pl.chai_p':    { vi: `Chọn món, chạm dụng cụ để sửa soạn, rồi kéo vào đúng bao (hoặc chạm bao).`,
-                      en: `Pick the thing, tap a tool to get it ready, then drag it to its bag (or tap the bag).` },
-    'pl.intro_start': { vi: `Cái chai còn nắp, còn tem: thử chạm "Tháo nắp" ở dưới.`, en: `The bottle still has its cap and label: try "Cap off" below.` },
+    'pl.chai_p':    { vi: `Chai: chạm vào nắp, tem, thân chai để sửa soạn. Món khác: chạm dụng cụ. Rồi kéo vào đúng bao (hoặc chạm bao).`,
+                      en: `The bottle: tap its cap, label, body to get it ready. Other things: tap a tool. Then drag it to its bag (or tap the bag).` },
+    'pl.intro_start': { vi: `Cái chai còn nắp, còn tem: chạm vào nắp chai để tháo ra.`, en: `The bottle still has its cap and label: tap the cap to take it off.` },
     'pl.chai_done': { vi: `Xong cái chai: nắp vào nhựa 2-4-5, tem vào nilon cứng, chai bẹp vào nhựa 1 dễ.`,
                       en: `The bottle's done: the cap to plastic 2-4-5, the label to hard nylon, the flat bottle to plastic 1.` },
     'pl.intro_more': { vi: `Thêm ba món nữa, mỗi món một dụng cụ (màn 4 sẽ cần đến).`, en: `Three more, a tool each (level 4 will need them).` },
     'pl.which_tool': { vi: `{x}: dùng dụng cụ nào?`, en: `{x}: which tool?` },
     'pl.try':       { vi: `Thử "{t}" xem.`, en: `Try "{t}".` },
     'pl.ready_now': { vi: `Món này sửa soạn xong rồi: kéo vào bao nha.`, en: `This one's ready: into its bag.` },
-    'pl.intro_done': { vi: `Xong màn 1! Sáu dụng cụ này sẽ gặp lại ở màn 4.`, en: `Level 1 done! You'll meet these six tools again in level 4.` },
+    'pl.intro_done': { vi: `Xong màn 1! Ba dụng cụ này sẽ gặp lại ở màn 4.`, en: `Level 1 done! You'll meet these three tools again in level 4.` },
+    'pl.intro_feel': { vi: `{t}: xong! Kéo thử hai mép xem có giãn không, rồi bỏ vào bao.`, en: `{t}: done! Pull its edges to see if it stretches, then into its bag.` },
     'pl.step':      { vi: `Phần {i}/{n}`, en: `Part {i} of {n}` },
     'pl.sort_h':    { vi: `Món này bỏ vào đâu?`, en: `Where does this go?` },
     'pl.sort_p':    { vi: `Kéo món vào đúng bao, hoặc chạm vào bao. Hộp, cốc khó nhận ra có kí hiệu số; nilon thì bóp, kéo thử.`,
@@ -204,15 +215,15 @@
     'pl.music_off': { vi: `Nhạc: tắt`, en: `Music: off` },
     'pl.g_go':      { vi: `Bắt đầu`, en: `Start` },
     'pl.g1_p':      { vi: `Trước khi vào bao, nhiều món cần sửa soạn một chút.`, en: `Before it goes in a bag, many things need a little getting ready.` },
-    'pl.g1_1h':     { vi: `Cái chai: tháo nắp, bóc tem, bóp bẹp`, en: `The bottle: cap off, label off, squash` },
-    'pl.g1_1':      { vi: `Chạm dụng cụ ở dưới (hoặc kéo chai lên dụng cụ). Nắp, tem tháo ra thành món riêng.`,
-                      en: `Tap a tool below (or drag the bottle onto it). The cap and label come off as things of their own.` },
+    'pl.g1_1h':     { vi: `Cái chai: chạm vào từng phần`, en: `The bottle: tap each part` },
+    'pl.g1_1':      { vi: `Chạm nắp để tháo, chạm tem để bóc, chai trần thì chạm để bóp bẹp. Nắp, tem tháo ra thành món riêng.`,
+                      en: `Tap the cap to take it off, the label to peel it, the bare bottle to squash it. The cap and label are things of their own.` },
     'pl.g1_2h':     { vi: `Bỏ vào đúng bao`, en: `Into the right bag` },
     'pl.g1_2':      { vi: `Kéo từng món vào bao, hoặc chạm món rồi chạm bao. Nhầm thì Udon nhắc, không trừ điểm.`,
                       en: `Drag each to its bag, or tap it, then the bag. Udon tells you if it's wrong; no points lost.` },
     'pl.g1_3h':     { vi: `Ba món nữa, ba dụng cụ`, en: `Three more, three tools` },
-    'pl.g1_3':      { vi: `Ly trà sữa còn trà: rửa sạch. Túi khí: làm xẹp. Gói snack: gấp gọn. Màn 4 dùng lại cả sáu dụng cụ.`,
-                      en: `A cup with tea left: rinse. An air cushion: let the air out. A snack bag: fold. Level 4 uses all six tools.` },
+    'pl.g1_3':      { vi: `Ly trà sữa còn trà: Rửa sạch. Túi khí: Làm xẹp, rồi kéo thử xem có giãn không. Gói snack: Gấp gọn. Màn 4 dùng lại ba dụng cụ này.`,
+                      en: `A cup with tea left: Rinse. An air cushion: Air out, then pull it to see if it stretches. A snack bag: Fold. Level 4 uses these three tools.` },
     'pl.g2_p':      { vi: `10 món đồ nhựa, nilon quen thuộc, lần lượt từng món.`, en: `Ten everyday plastic and nylon things, one at a time.` },
     'pl.g2_1h':     { vi: `Nhìn món đồ`, en: `Look at the thing` },
     'pl.g2_1':      { vi: `Món đang chơi hiện ở giữa. Hộp, cốc, khay khó nhận ra có kí hiệu số như in ở đáy đồ thật; nilon thì chạm để bóp thử, kéo mép để thử độ giãn.`,
@@ -244,7 +255,7 @@
     'pl.g3_3':      { vi: `Đồng hồ kêu tích tắc, nhạc nhanh hơn. Kỷ lục được lưu trên máy này.`, en: `The clock ticks, the music speeds up. Your best is kept on this device.` },
     // levels 4 and 5: the party table
     'pl.ban_h':     { vi: `Dọn bàn sau buổi tiệc`, en: `Clearing up after the party` },
-    'pl.ban_p':     { vi: `Chọn món, sửa soạn bằng dụng cụ, rồi bỏ vào đúng bao.`, en: `Pick a thing, get it ready with a tool, then into its bag.` },
+    'pl.ban_p':     { vi: `Chai thì chạm vào nắp, tem, thân chai; món khác dùng dụng cụ. Rồi bỏ vào đúng bao.`, en: `Bottles: tap the cap, label, body; other things: a tool. Then into its bag.` },
     'pl.tiec_h':    { vi: `Tiệc chưa tàn`, en: `The party goes on` },
     'pl.tiec_p':    { vi: `Mỗi món có giờ riêng: không kịp là vào thùng rác. Đừng để thùng đầy ắp!`,
                       en: `Each thing has its own time: too late and it goes in the bin. Don't let it overflow!` },
@@ -255,9 +266,6 @@
     'pl.thung_h':   { vi: `Thùng rác đầy ắp rồi!`, en: `The bin is overflowing!` },
     'pl.lost_h':    { vi: `Không kịp phân loại, thành rác chôn lấp:`, en: `Too late to sort, gone to landfill:` },
     'pl.tools':     { vi: `Dụng cụ`, en: `Tools` },
-    'pl.t.nap':     { vi: `Tháo nắp`, en: `Cap off` },
-    'pl.t.tem':     { vi: `Bóc tem`, en: `Label off` },
-    'pl.t.bep':     { vi: `Bóp bẹp`, en: `Squash` },
     'pl.t.rua':     { vi: `Rửa sạch`, en: `Rinse` },
     'pl.t.xep':     { vi: `Làm xẹp`, en: `Air out` },
     'pl.t.gap':     { vi: `Gấp gọn`, en: `Fold` },
@@ -269,15 +277,21 @@
     'pl.c.xep':     { vi: `Còn hơi`, en: `Air in` },
     'pl.c.gap':     { vi: `Chưa gấp`, en: `Not folded` },
     // into a bag before it is ready: what to do first
-    'pl.h.nap':     { vi: `Chai còn nắp: tháo nắp trước đã.`, en: `The cap is still on: take it off first.` },
-    'pl.h.tem':     { vi: `Chai còn tem: bóc tem trước đã.`, en: `The label is still on: peel it off first.` },
-    'pl.h.bep':     { vi: `Bóp bẹp chai cho gọn đã.`, en: `Squash the bottle first.` },
+    'pl.h.nap':     { vi: `Chai còn nắp: chạm vào nắp để tháo trước đã.`, en: `The cap is still on: tap it to take it off first.` },
+    'pl.h.tem':     { vi: `Chai còn tem: chạm vào tem để bóc trước đã.`, en: `The label is still on: tap it to peel it off first.` },
+    'pl.h.bep':     { vi: `Chạm vào chai để bóp bẹp cho gọn đã.`, en: `Tap the bottle to squash it first.` },
+    // a bottle, by hand: where to tap
+    'pl.tap.nap':   { vi: `Chạm vào nắp chai để tháo.`, en: `Tap the cap to take it off.` },
+    'pl.tap.tem':   { vi: `Chạm vào tem để bóc.`, en: `Tap the label to peel it off.` },
+    'pl.tap.bep':   { vi: `Chạm vào chai để bóp bẹp.`, en: `Tap the bottle to squash it.` },
+    'pl.did_nap':   { vi: `Nắp tháo ra rồi: bỏ vào bao nào?`, en: `The cap's off: which bag?` },
+    'pl.did_tem':   { vi: `Tem bóc ra rồi: bỏ vào bao nào?`, en: `The label's off: which bag?` },
+    'pl.did_bep':   { vi: `Chai bẹp rồi: bỏ vào bao nào?`, en: `Squashed flat: which bag?` },
     'pl.h.rua':     { vi: `Còn trà kìa: rửa sạch đã.`, en: `There's tea left: rinse it first.` },
     'pl.h.xep':     { vi: `Còn hơi kìa: làm xẹp đã.`, en: `Still full of air: let it out first.` },
     'pl.h.gap':     { vi: `Gấp gọn gói snack đã.`, en: `Fold the bag flat first.` },
     'pl.pick_first': { vi: `Chạm chọn một món trên bàn trước nha.`, en: `Tap a thing on the table first.` },
     'pl.no_need':   { vi: `Món này không cần "{t}".`, en: `This one doesn't need "{t}".` },
-    'pl.order':     { vi: `Tháo nắp, bóc tem rồi mới bóp bẹp.`, en: `Cap and label off before you squash it.` },
     'pl.did':       { vi: `{t}: xong!`, en: `{t}: done!` },
     'pl.ud_prep':   { vi: `Gâu! Chưa sửa soạn xong đâu!`, en: `Woof! It isn't ready yet!` },
     'pl.sfx_xi':    { vi: `XÌÌÌ~`, en: `PSSSH~` },
@@ -294,8 +308,8 @@
     'pl.g4_1':      { vi: `Chạm một món trên bàn. Nhãn nhỏ dưới món cho biết món đó còn gì: còn nắp, còn trà, còn hơi…`,
                       en: `Tap a thing on the table. The little tags say what is left: cap on, tea left, air in…` },
     'pl.g4_2h':     { vi: `Sửa soạn`, en: `Get it ready` },
-    'pl.g4_2':      { vi: `Chạm dụng cụ (hoặc kéo món lên dụng cụ). Nắp, tem tháo ra thành món riêng. Dùng khi không cần: trừ 2 giây.`,
-                      en: `Tap a tool (or drag the thing onto it). A cap or label taken off is a thing of its own. A tool not needed: −2 s.` },
+    'pl.g4_2':      { vi: `Chai: chạm vào nắp, tem, thân chai như màn 1. Ly, túi khí, gói snack: chạm dụng cụ (hoặc kéo món lên dụng cụ). Dùng dụng cụ khi không cần: trừ 2 giây.`,
+                      en: `A bottle: tap its cap, label, body, as in level 1. The cup, the cushion, the snack bag: tap a tool (or drag the thing onto it). A tool not needed: −2 s.` },
     'pl.g4_3h':     { vi: `Bỏ vào bao`, en: `Into its bag` },
     'pl.g4_3':      { vi: `Chưa sửa soạn xong hay nhầm bao: trừ 5 giây. Dọn sạch bàn trong 90 giây để mở màn 5.`,
                       en: `Not ready, or the wrong bag: −5 s. Clear the table in 90 seconds to open level 5.` },
@@ -384,6 +398,7 @@
     'pl.i.xop-hoi':      { vi: `Màng xốp hơi`, en: `Bubble wrap` },
     'pl.w.xop-hoi':      { vi: `Nilon mềm: làm xẹp rồi mang đi.`, en: `Soft nylon: let the air out first.` },
     'pl.i.tui-khi':      { vi: `Túi khí chống sốc`, en: `An air-column cushion` },
+    'pl.r.tui-khi':      { vi: `Túi khí chống sốc (đã làm xẹp)`, en: `An air-column cushion (air let out)` },
     'pl.w.tui-khi':      { vi: `Làm xẹp các cột khí rồi bỏ vào nilon mềm.`, en: `Let the air out, then soft nylon.` },
     'pl.i.tui-goi-hang': { vi: `Túi gói hàng online`, en: `A courier mailer bag` },
     'pl.w.tui-goi-hang': { vi: `Mềm, kéo giãn được: nilon mềm.`, en: `Soft and stretchy: soft nylon.` },
@@ -603,12 +618,14 @@
   // hard plastic, its grips if it is nylon
   function card(it) {
     var film = /^nilon-/.test(it.bin) ? it.bin.slice(6) : '';
+    // no tools here: the cushion comes ready (its air let out)
+    var pic = READY[it.id] || it.id, name = t(READY[it.id] ? 'pl.r.' + it.id : 'pl.i.' + it.id);
     return '<button type="button" class="pl-item is-sel is-big" data-pl-item="' + it.id + '"' +
         (film ? ' data-pl-film="' + film + '"' : '') + '>' +
-      '<span class="pl-pic">' + (film ? '<span class="pl-stretch">' + img(it.id, '', t('pl.i.' + it.id)) + '</span>' +
+      '<span class="pl-pic">' + (film ? '<span class="pl-stretch">' + img(pic, '', name) + '</span>' +
           '<span class="pl-grip is-l" data-pl-grip="l" aria-hidden="true"></span><span class="pl-grip is-r" data-pl-grip="r" aria-hidden="true"></span>'
-        : img(it.id, '', t('pl.i.' + it.id))) + (it.code ? codeMark(it.code) : '') + '</span>' +
-      '<span>' + esc(t('pl.i.' + it.id)) + '</span>' +
+        : img(pic, '', name)) + (it.code ? codeMark(it.code) : '') + '</span>' +
+      '<span>' + esc(name) + '</span>' +
       (film ? '<small class="pl-feel">' + esc(t('pl.feel')) + '</small>' : '') + '</button>';
   }
 
@@ -639,7 +656,7 @@
   }
   function listOf(list) {
     return '<ul class="pl-miss">' + list.map(function (it) {
-      return '<li>' + img(it.id === 'chai' || it.id === 'chai-dau-nap' ? 'chai-bep' : it.id, '', '') + '<span><b>' + esc(nm(it.id)) + '</b> → ' + esc(binName(it.bin)) +
+      return '<li>' + img(BOTTLE[it.id] ? 'chai-bep' : READY[it.id] || it.id, '', '') + '<span><b>' + esc(nm(it.id)) + '</b> → ' + esc(binName(it.bin)) +
         '<br><small>' + esc(t('pl.w.' + it.id)) + '</small></span></li>';
     }).join('') + '</ul>';
   }
@@ -840,8 +857,7 @@
       head(cfg.h) + tr('p', cfg.p, ' class="st-lead pl-lead"') + hud(intro ? 'intro' : five ? 'bin' : '') +
       '<div class="pl-stage pl-stage-ban"><div class="pl-table" role="group"></div>' + (intro ? '' : ready()) + '</div>' +
       '<div class="pl-tools" role="group" aria-label="' + esc(t('pl.tools')) + '">' + TOOLS.map(function (k) {
-        return '<button type="button" class="pl-tool" data-pl-tool="' + k + '"><svg viewBox="0 0 24 24" aria-hidden="true">' + ICON[k] + '</svg>' +
-          '<span>' + esc(t('pl.t.' + k)) + '</span></button>';
+        return '<button type="button" class="pl-tool" data-pl-tool="' + k + '">' + toolSvg(k) + '<span>' + esc(t('pl.t.' + k)) + '</span></button>';
       }).join('') + '</div>' +
       '<p class="pl-say" aria-live="polite"></p>' +
       (intro ? '<div class="pl-acts pl-done" hidden><button type="button" class="st-btn" data-pl-go="sort">' + esc(t('pl.go_lv').replace('{n}', 2)) + '</button></div>' : '') +
@@ -856,7 +872,7 @@
     if (intro) { S.go = true; say(t('pl.intro_start')); }
     else countIn(function () { S.go = true; clockStart(function () { tableEnd('time'); }); });
   }
-  function toolSvg(k) { return '<svg viewBox="0 0 24 24" aria-hidden="true">' + ICON[k] + '</svg>'; }
+  function toolSvg(k) { return '<svg viewBox="0 0 56 28" aria-hidden="true">' + ICON[k] + '</svg>'; }
   function guideIlls(level) {
     if (level === 'chai') return [
       '<span class="pl-gi">' + img('chai', 'pl-gi-a', '') + '</span>',
@@ -868,7 +884,7 @@
       '<span class="pl-gi">' + img('bao', 'pl-gi-d', '') + '</span>'];
     return [
       '<span class="pl-gi">' + img('ly-tra-sua-day', 'pl-gi-a', '') + '<i class="pl-gi-chip">' + esc(t('pl.c.rua')) + '</i></span>',
-      '<span class="pl-gi pl-gi-tools">' + toolSvg('rua') + toolSvg('nap') + '</span>',
+      '<span class="pl-gi pl-gi-tools">' + toolSvg('rua') + toolSvg('gap') + '</span>',
       '<span class="pl-gi">' + img('bao', 'pl-gi-d', '') + '</span>'];
   }
   function thing(x) { return { k: 'k' + (++S.uid), id: x.id, bin: x.bin, need: (PREP[x.id] || []).slice() }; }
@@ -894,9 +910,14 @@
     if (!box) return;
     box.innerHTML = S.table.map(function (th) {
       var tags = th.need.map(function (n) { return t('pl.c.' + n); });
-      return '<button type="button" class="pl-thing' + (S.sel === th.k ? ' is-sel' : '') + (S.fresh === th.k ? ' is-new' : '') + '" data-pl-item="' + th.k + '"' +
+      // level 1: the cushion and the snack bag, once ready, can be felt (pulled, squeezed)
+      var film = S.cfg.intro && STEP_PIC[th.id] && !th.need.length && /^nilon-/.test(th.bin) ? th.bin.slice(6) : '';
+      return '<button type="button" class="pl-thing' + (BOTTLE[th.id] ? ' is-bottle' : '') + (S.sel === th.k ? ' is-sel' : '') + (S.fresh === th.k ? ' is-new' : '') + '" data-pl-item="' + th.k + '"' +
+          (film ? ' data-pl-film="' + film + '"' : '') +
           ' aria-pressed="' + (S.sel === th.k) + '" aria-label="' + esc(nm(th.id) + (tags.length ? ': ' + tags.join(', ') : '')) + '">' +
-        '<span class="pl-pic">' + thingPic(th) + '</span>' +
+        '<span class="pl-pic">' + (film ? '<span class="pl-stretch">' + thingPic(th) + '</span>' +
+            '<span class="pl-grip is-l" data-pl-grip="l" aria-hidden="true"></span><span class="pl-grip is-r" data-pl-grip="r" aria-hidden="true"></span>'
+          : thingPic(th)) + '</span>' +
         '<span class="pl-tn">' + esc(nm(th.id)) + '</span>' +
         (tags.length ? '<span class="pl-chips">' + tags.map(function (x) { return '<i>' + esc(x) + '</i>'; }).join('') + '</span>' : '') +
         (th.due ? '<span class="pl-life" aria-hidden="true"><i></i></span>' : '') +
@@ -945,26 +966,67 @@
     if (!th) { say(t('pl.pick_first')); return; }
     if (!has(th, tool)) {
       if (intro) tug('pl.ud_tool');
-      slip(th.k, 2, t('pl.no_need').replace('{t}', t('pl.t.' + tool)) +
-        (intro ? ' ' + (th.need.length ? t('pl.try').replace('{t}', t('pl.t.' + th.need[0])) : t('pl.ready_now')) : ''));
+      slip(th.k, 2, t('pl.no_need').replace('{t}', t('pl.t.' + tool)) + (intro ? ' ' + nextHint(th) : ''));
       return;
     }
-    if (tool === 'bep' && (has(th, 'nap') || has(th, 'tem'))) { slip(th.k, 2, t('pl.order')); return; }
-    th.need.splice(th.need.indexOf(tool), 1);
+    doStep(th, tool);
+  }
+  // what to do next with it (level 1's hints)
+  function nextHint(th) {
+    var n = th.need[0];
+    return !n ? t('pl.ready_now') : BOTTLE[th.id] ? t('pl.tap.' + n) : t('pl.try').replace('{t}', t('pl.t.' + n));
+  }
+
+  // a bottle, by hand: where the tap fell on it (the cap at the top, the
+  // label in the middle, the bare bottle anywhere); a key: the next step
+  function tapThing(el, e) {
+    var k = el.getAttribute('data-pl-item'), th = find(k);
+    if (!th || !S.go) { pick(k); return; }
+    var part = BOTTLE[th.id] && th.need.length ? partAt(el, e, th) : null;
+    if (part) { doStep(th, part); return; }
+    pick(k);
+    if (el.hasAttribute('data-pl-film')) squeeze(el);
+    if (S.cfg.intro && BOTTLE[th.id] && th.need.length) say(t('pl.tap.' + th.need[0]));
+  }
+  function partAt(el, e, th) {
+    if (!e.detail) return th.need[0];
+    var r = el.querySelector('.pl-pic img').getBoundingClientRect(), y = (e.clientY - r.top) / r.height;
+    if (y < -0.1 || y > 1.1) return null;
+    if (has(th, 'nap') && y < 0.3) return 'nap';
+    if (has(th, 'tem') && y >= 0.3 && y < 0.78) return 'tem';
+    if (!has(th, 'nap') && !has(th, 'tem')) return 'bep';
+    return null;
+  }
+
+  // one step done: a cap or label comes off as a thing of its own; a bottle
+  // squashed; a cup rinsed, a cushion let down, a bag folded
+  function doStep(th, step) {
+    var intro = S.cfg.intro, gen = GEN;
+    th.need.splice(th.need.indexOf(step), 1);
     S.sel = th.k;
-    if (tool === 'nap' || tool === 'tem') {
-      var part = thing({ id: tool, bin: EXTRA[tool] });
+    if (step === 'nap' || step === 'tem') {
+      var part = thing({ id: step, bin: EXTRA[step] });
       if (th.due) setLife(part, S.clock.run);
       S.table.splice(S.table.indexOf(th) + 1, 0, part);
       S.fresh = S.sel = part.k;
-      say(t('pl.which').replace('{x}', nm(tool)));
-    } else say(t('pl.did').replace('{t}', t('pl.t.' + tool)) + (intro ? ' ' + t('pl.which').replace('{x}', nm(th.id)) : ''), 'ok');
-    drawTable();
+      say(t('pl.did_' + step));
+    } else if (step === 'bep') say(t('pl.did_bep'));
+    else say((intro && /^nilon-/.test(th.bin) ? t('pl.intro_feel') : t('pl.did')).replace('{t}', t('pl.t.' + step)) +
+      (intro && !/^nilon-/.test(th.bin) ? ' ' + t('pl.which').replace('{x}', nm(th.id)) : ''), 'ok');
     var el = root.querySelector('.pl-thing[data-pl-item="' + th.k + '"]');
-    if (tool === 'xep') { sfx(el, t('pl.sfx_xi'), 'xi'); hiss(); }
-    else if (tool === 'bep') { sfx(el, t('pl.sfx_bep'), 'bop'); crinkle(0.3); }
-    else if (tool === 'gap') crinkle(0.2);
-    else beep(tool === 'rua' ? 'A5' : 'E5');
+    if (step === 'bep') {
+      // squashed underfoot: the picture flattens, then the flat bottle
+      sfx(el, t('pl.sfx_bep'), 'bop');
+      crinkle(0.3);
+      if (el && !reduce) { el.querySelector('.pl-pic').classList.add('is-squash'); setTimeout(function () { if (gen === GEN) drawTable(); }, 240); }
+      else drawTable();
+      return;
+    }
+    drawTable();
+    el = root.querySelector('.pl-thing[data-pl-item="' + th.k + '"]');
+    if (step === 'xep') { sfx(el, t('pl.sfx_xi'), 'xi'); hiss(); }
+    else if (step === 'gap') crinkle(0.2);
+    else beep(step === 'rua' ? 'A5' : 'E5');
   }
 
   function dropTable(k, bin) {
@@ -1432,7 +1494,7 @@
       document.removeEventListener('pointercancel', up);
       pic.style.transition = '';   // springs back (CSS)
       pic.style.transform = '';
-      if (moved) S.dragged = true;   // not a tap on the card as well
+      if (moved) { S.dragged = true; setTimeout(function () { if (S) S.dragged = false; }, 0); }   // not a tap on the card as well
     };
     document.addEventListener('pointermove', move, { passive: false });
     document.addEventListener('pointerup', up);
@@ -1486,7 +1548,7 @@
     if ((el = e.target.closest('[data-pl-see]'))) { var p = el.getAttribute('data-pl-see'); if (p) poster(p); return; }
     if (S && S.dragged) { S.dragged = false; return; }   // a drag just ended: not a tap
     if ((el = e.target.closest('[data-pl-tool]'))) { useTool(S.sel, el.getAttribute('data-pl-tool')); return; }
-    if ((el = e.target.closest('.pl-thing'))) { pick(el.getAttribute('data-pl-item')); return; }
+    if ((el = e.target.closest('.pl-thing'))) { tapThing(el, e); return; }
     if ((el = e.target.closest('[data-pl-item]'))) {
       S.sel = el.getAttribute('data-pl-item');
       if (el.hasAttribute('data-pl-film') && !S.answered) squeeze(el);
