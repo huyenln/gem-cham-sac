@@ -2383,17 +2383,25 @@ tường là lối vào. Bỏ "nhặt rác ngoài phố có đếm giờ": nặn
   cần làm oke hơn"): chạm nắp (1/3 trên của hình) → nắp thành món riêng → Nhựa 2-4-5; chạm tem
   (giữa hình) → Nilon cứng; tháo cả hai rồi chạm chai → hình bẹp xuống ("BẸP!") → Nhựa 1 dễ.
   Bấm phím Enter trên chai = làm bước kế tiếp (`tapThing()`, `partAt()`). Phần 2–4, từng món, bằng
-  dụng cụ: ly trà sữa còn trà (Làm sạch → Nhựa 1 khó), túi khí (Làm xẹp → Nilon mềm), gói snack
+  dụng cụ: ly trà sữa còn trà (Làm sạch → Nhựa 1 khó), túi khí (Xả hơi → Nilon mềm), gói snack
   còn vụn bánh (**Làm sạch rồi mới Gấp gọn** → Nilon cứng; Anna 24/10 — gấp trước là nhầm,
   `pl.order_gap`; vụn bánh vẽ bằng SVG đè lên tranh, `CRUMBS`, mất khi làm sạch). Nút "Rửa sạch"
   đổi tên **"Làm sạch"** (dùng chung cho ly và gói snack). Túi khí và gói snack sửa soạn xong thì có hai tay nắm để **kéo thử**
   (túi khí giãn, snack không giãn) và chạm để bóp — như nilon ở màn 2. Xong: Udon nhảy trên bàn,
   nút "Sang màn 2". Màn 1 chỉ có 6 bao Tagom.
-- **Màn 2 — Phân loại 10 món:** 10 món ngẫu nhiên trong 36 (`ITEMS`), 6 bao của Tagom + ô
+- **Màn 2 — Phân loại 10 món:** 10 món ngẫu nhiên trong 34 (`ITEMS`), 6 bao của Tagom + ô
   **Rác thường** (ít nhất một món mỗi ô). Sai: hiện bao đúng + lý do (`pl.w.<id>`) + nút
-  "Xem poster" (ô Rác thường không có poster). Màn 2–3 không có dụng cụ nên túi khí hiện sẵn
-  dạng **đã làm xẹp**, gói snack **đã làm sạch, gấp gọn** (`READY`: hình `tui-khi-xep` /
-  `goi-snack-gap`, tên `pl.r.<id>`); màn 4–5 vẫn phải sửa soạn.
+  "Xem poster" (ô Rác thường không có poster). Màn 2–3 không có dụng cụ nên món cần sửa soạn hiện
+  sẵn dạng đã sửa soạn (`READY`, tên `pl.r.<id>`): chai trần **đã bóp bẹp** (`chai-bep`), túi khí
+  **đã xả hơi**, gói snack **đã làm sạch, gấp gọn**; màn 4–5 vẫn phải sửa soạn.
+- **Một luật cho cả 5 màn** (Anna 24/10, "các màn không thống nhất"): chai nhựa số 1 lúc nào cũng
+  bóp bẹp trước khi vào bao — chạm vào chai = bóp bẹp, chạm vào nilon = bóp thử (SỘT SOẠT / ~ ~ ~,
+  ở cả bàn màn 4–5). Chai 1,5 lít và chai dầu ăn trong bỏ khỏi màn 2–3 (bẹp rồi trông y hệt chai
+  nước); chai 1,5 lít vẫn có trên bàn tiệc. Chai trần trên bàn (`chai-tran`, `chai-to`) có nhãn
+  "Chưa bóp bẹp", chạm là bẹp. Dụng cụ "Làm xẹp" đổi tên **"Xả hơi"** (khỏi lẫn với bóp bẹp).
+- **Nút × của bảng** (24/10): phần đầu trò chơi (`.pl-head`, `position: relative`) nằm đè lên ×
+  nên chạm × không tắt được trên điện thoại. `.st-close { z-index: 5 }`; thẻ Cách chơi đóng khi
+  chạm ra ngoài thẻ (nền mờ của nó phủ lên ×).
 - **Rác thường + tranh いらすとや** (Anna 24/10, "dùng luôn của irasutoya, có chú thích"): ô thứ 7
   từ màn 2 (`ALL_BINS`, hình túi nilon trắng `tui-rac`, nhãn xám — không phải của Tagom). Món:
   xương cá, vỏ trứng, lõi táo (thức ăn thừa, Tagom không nhận) → Rác thường; chai có vòi bơm, xô
@@ -2437,7 +2445,7 @@ tường là lối vào. Bỏ "nhặt rác ngoài phố có đếm giờ": nặn
     hoặc chuyển tab thì dừng). 10 giây cuối: thanh đỏ, số giây đập, tích tắc mỗi giây, nhạc
     nhanh lên (`tempo()`: 84 → màn 3 100 / 126, màn 4 92 / 116, màn 5 100 / 126 nhịp / phút).
     Trừ giờ thì "−N giây" bay lên cạnh đồng hồ.
-  - **Màn 3 · Thử thách 60 giây:** món ngẫu nhiên trong 31 món, liên tục; đúng → món mới ngay,
+  - **Màn 3 · Thử thách 60 giây:** món ngẫu nhiên trong 34 món, liên tục; đúng → món mới ngay,
     sai bao → −3 giây, bao đúng sáng lên, món mới sau ~1 giây. Không có Udon kéo quần. Kỷ lục
     lưu trên máy; màn cuối liệt kê món nhầm kèm lý do.
   - **Màn 4 · Dọn bàn sau buổi tiệc:** 8 món trên bàn (4 món cần sửa soạn + 4 món tiệc ngẫu
@@ -2446,7 +2454,7 @@ tường là lối vào. Bỏ "nhặt rác ngoài phố có đếm giờ": nặn
     còn hơi; gói snack còn vụn bánh + chưa gấp (nhãn riêng từng món: `pl.c.<bước>.<id>`, `own()`)
     (`PREP`). Chai cao gấp đôi ô khác (`.is-bottle`, chiếm 2 hàng), chạm thẳng vào nắp / tem /
     thân chai như màn 1 (không trừ giờ khi chạm chỗ chưa làm được, chỉ chọn món). 3 dụng cụ, hình
-    trước → sau (SVG tự vẽ, `ICON`): Làm sạch (ly còn trà → ly sạch có giọt nước), Làm xẹp (túi khí
+    trước → sau (SVG tự vẽ, `ICON`): Làm sạch (ly còn trà → ly sạch có giọt nước), Xả hơi (túi khí
     phồng → dẹt), Gấp gọn (gói snack → gấp lại) — chọn món rồi chạm dụng cụ, hoặc kéo món lên dụng
     cụ. Nắp, tem tháo ra thành món riêng trên bàn (nắp → 2-4-5, tem → nilon cứng). Dùng dụng cụ không
     cần: −2 giây. Bỏ vào bao khi chưa sửa soạn xong, hoặc nhầm bao: −5 giây (lần đầu Udon
@@ -2454,7 +2462,7 @@ tường là lối vào. Bỏ "nhặt rác ngoài phố có đếm giờ": nặn
   - **Màn 5 · Tiệc chưa tàn:** như màn 4 nhưng 6 món có sẵn (2 món cần sửa soạn), 10 món đặt
     thêm, món đầu sau 8 giây, càng về sau càng nhanh (8 → 6 giây, `gap`); bàn trống thì món kế tới
     ngay; 150 giây. **Mỗi món có giờ riêng** (Anna 24/10, thay luật "quá 10 món trên bàn"): vạch dưới
-    món ngắn dần, 26 giây + 8 giây cho mỗi bước cần làm (`life`, `per` trong `TABLE.tiec`); 6 món đầu
+    món ngắn dần, 29 giây + 8 giây cho mỗi bước cần làm (`life`, `per` trong `TABLE.tiec`); 6 món đầu
     hết giờ so le 5 giây (`apart`, không rơi cùng lúc). Hết giờ thì món vào **thùng rác** cạnh Udon (thùng vẽ SVG đầy dần,
     `binDraw()`); đồ tái chế = rác chôn lấp, tính vào thùng; đồ ăn thừa thì vốn vào rác thường,
     không tính. 5 món trong thùng = **"Thùng rác đầy ắp rồi!"**: thua, hiện tranh thùng đầy
@@ -2462,8 +2470,10 @@ tường là lối vào. Bỏ "nhặt rác ngoài phố có đếm giờ": nặn
     thùng trống và nhầm ≤ 1; 2 sao nếu thùng ≤ 2 và nhầm ≤ 3; còn lại 1. **Độ khó** (Anna 24/10:
     "làm màn 5 dễ hơn chút", bản đầu 15 + 5 giây, món đến 6 → 4 giây, 120 giây: người chơi giả lập
     biết hết đáp án thua từ 1,5 giây mỗi lần chạm). Giờ: 2 giây mỗi lần chạm thắng cả 3 ván thử
-    (1–2 sao), 2,5 giây thua 2/3 ván. Người chơi giả lập: `scratchpad` của phiên 24/10 (chạm món
-    sắp hết giờ trước, rồi dụng cụ / bao); muốn dễ nữa thì tăng `life` / `per`, giãn `gap`.
+    (1–3 sao), 2,5 giây thua 2/3 ván. Khi gói snack thêm bước làm sạch và chai trần trên bàn phải
+    bóp bẹp (24/10), `life` 26 → 29 giây để giữ đúng mức đó. Người chơi giả lập: `scratchpad` của
+    phiên 24/10 (chạm món sắp hết giờ trước, rồi dụng cụ / bao; nắp, tem tháo ra thì bỏ bao ngay);
+    muốn dễ nữa thì tăng `life` / `per`, giãn `gap`.
   - **Tranh trước / sau** (ChatGPT, Anna 24/10, `sheet-don-ban`): ly còn trà `ly-tra-sua-day`, túi
     khí xẹp `tui-khi-xep`, snack gấp `goi-snack-gap`, chai dầu ăn nắp đỏ `chai-dau-nap` (tháo nắp
     trên hình: cắt 12% trên cùng, chai nước 14%). `BOTTLE`, `STEP_PIC`, `thingPic()`.
