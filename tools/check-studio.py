@@ -3930,7 +3930,11 @@ async def phanloai(browser, db):
         again = await pg.evaluate("!document.querySelector('.pl-guide').hidden")
         await js_click(pg, '.pl-g-x')
         shut = await pg.evaluate("document.querySelector('.pl-guide').hidden")
-        check(again and shut, f'{name}: "?" shows it again, × closes it ({again}, {shut})')
+        await js_click(pg, '[data-pl-guide]')
+        await pg.mouse.click(*(await center(pg, '.st-close')))   # the backdrop lies over the sheet's ×
+        await pg.wait_for_timeout(200)
+        beside = await pg.evaluate("[document.querySelector('.pl-guide').hidden, document.querySelector('.st-modal').hidden]")
+        check(again and shut and beside == [True, False], f'{name}: "?" shows it again, × closes it, so does a tap beside it ({again}, {shut}, {beside})')
         # level 1 is on the table (24/10): the bottle, picked; into a bag as it
         # is: Udon tugs, says so over it, a hint (no clock, nothing taken off)
         bottle = await pg.evaluate("[document.querySelectorAll('.pl-thing').length, document.querySelector('.pl-thing.is-sel .pl-tn').textContent, !document.querySelector('.pl-clock')]")
@@ -4050,7 +4054,7 @@ async def phanloai(browser, db):
         wrong_seen, tugs, looked, marks, felt, scraps, ready = 0, [], False, [], {}, [], []
         for i in range(10):
             it = await pg.evaluate("(() => { const id = document.querySelector('.pl-one [data-pl-item]').dataset.plItem; return [id, GemPhanLoai.ITEMS.filter(x => x.id === id)[0].bin]; })()")
-            if it[0] in ('tui-khi', 'goi-snack'):   # no tools here: these come ready
+            if it[0] in ('chai-tran', 'tui-khi', 'goi-snack'):   # no tools here: these come ready
                 ready.append(await pg.evaluate("[document.querySelector('.pl-one img').getAttribute('src').split('/').pop(), document.querySelector('.pl-one [data-pl-item] > span:not(.pl-pic)').textContent]"))
             if it[1].startswith('nilon') and it[1] not in felt and name == 'desktop':
                 # nylon, felt: a tap squeezes it, a grip pulls it
@@ -4103,8 +4107,8 @@ async def phanloai(browser, db):
             await js_click(pg, '[data-pl-go="next"]')
             await pg.wait_for_timeout(120)
         check(looked, f'{name}: a poster was looked at mid-round')
-        check(all(r[0] in ('tui-khi-xep.webp', 'goi-snack-gap.webp') and '(đã' in r[1] for r in ready),
-              f'{name}: the cushion, the snack bag come ready (let down; cleaned, folded) ({ready})')
+        check(all(r[0] in ('chai-bep.webp', 'tui-khi-xep.webp', 'goi-snack-gap.webp') and '(đã' in r[1] for r in ready),
+              f'{name}: the bottle, the cushion, the snack bag come ready (squashed; air out; cleaned, folded) ({ready})')
         check(scraps and all(scraps), f'{name}: food scraps come up, general waste takes them ({scraps})')
         check(all(marks), f'{name}: each thing shows its number (hard plastics) or how it feels (nylon), nothing else ({marks})')
         if name == 'desktop':
@@ -4125,9 +4129,13 @@ async def phanloai(browser, db):
         # headers, so a picture drawn again is fetched again here, not online;
         # nor does it gzip: the script counts ~90 KB here, ~26 KB online).
         # 900 KB since 24/10: level 1's three more things, before and after
+        # the sheet's × closes the game when tapped where it is drawn (the
+        # game's header lay over it and took the tap, 24/10)
+        x = await center(pg, '.st-close')
+        await pg.mouse.click(*x)
+        await pg.wait_for_timeout(600)
+        check(await pg.evaluate("document.querySelector('.st-modal').hidden"), f'{name}: a tap on the × closes the game')
         if name == 'desktop':
-            await js_click(pg, '.st-close')
-            await pg.wait_for_timeout(600)
             m0 = await pg.evaluate('window.__src')
             await pg.wait_for_timeout(1500)
             m1 = await pg.evaluate('window.__src')
@@ -4213,8 +4221,9 @@ async def phanloai_lv(browser, db):
         things = await pg.evaluate("[...document.querySelectorAll('.pl-thing')].map(b => [b.dataset.plItem, b.querySelector('.pl-tn').textContent, [...b.querySelectorAll('.pl-chips i')].map(i => i.textContent)])")
         tagged = [x for x in things if x[2]]
         bottle = [x for x in things if len(x[2]) == 3][0]   # the water bottle or the cooking-oil one
-        check(len(things) == 8 and len(tagged) == 4 and bottle[1] in ('Chai nước', 'Chai dầu ăn') and bottle[2] == ['Còn nắp', 'Còn tem', 'Chưa bóp bẹp'],
-              f'{name}: level 4: eight things, four to get ready, the bottle three times ({[(x[1], x[2]) for x in things]})')
+        check(len(things) == 8 and len(tagged) >= 4 and bottle[1] in ('Chai nước', 'Chai dầu ăn') and bottle[2] == ['Còn nắp', 'Còn tem', 'Chưa bóp bẹp']
+              and all(x[2] for x in things if x[1].startswith('Chai')),
+              f'{name}: level 4: eight things, four or more to get ready (every bottle), the bottle three times ({[(x[1], x[2]) for x in things]})')
         k = bottle[0]
         tall = await pg.evaluate(f"""(() => {{ const b = document.querySelector('.pl-thing[data-pl-item="{k}"]').getBoundingClientRect(),
             o = [...document.querySelectorAll('.pl-thing:not(.is-bottle)')][0].getBoundingClientRect(); return b.height > o.height * 1.6; }})()""")

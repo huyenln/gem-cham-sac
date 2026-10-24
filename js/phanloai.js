@@ -54,8 +54,8 @@
   // plastic number shown on it, only where the thing is hard to tell by eye
   // (Anna 23/10: boxes, cups, trays, jars; not a toothbrush, a CD, foam)
   var ITEMS = [
-    { id: 'chai-tran', bin: 'nhua-1-de' }, { id: 'chai-to', bin: 'nhua-1-de' }, { id: 'lo-keo', bin: 'nhua-1-de', code: 1 },
-    { id: 'hu-kem', bin: 'nhua-1-de', code: 1 }, { id: 'chai-dau', bin: 'nhua-1-de' },
+    { id: 'chai-tran', bin: 'nhua-1-de' }, { id: 'lo-keo', bin: 'nhua-1-de', code: 1 },
+    { id: 'hu-kem', bin: 'nhua-1-de', code: 1 },
     { id: 'ly-tra-sua', bin: 'nhua-1-kho', code: 1 }, { id: 'nap-cau', bin: 'nhua-1-kho', code: 1 },
     { id: 'hop-banh', bin: 'nhua-1-kho', code: 1 }, { id: 'khay-den', bin: 'nhua-1-kho', code: 1 },
     { id: 'lo-thuoc', bin: 'nhua-1-kho', code: 1 },
@@ -82,15 +82,19 @@
   // a bag. A bottle is done by hand (Anna 24/10): a tap on the cap takes it
   // off, on the label peels it, on the bare bottle squashes it; the rest
   // with a tool
-  var PREP = { chai: ['nap', 'tem', 'bep'], 'chai-dau-nap': ['nap', 'tem', 'bep'], 'ly-tra-sua': ['rua'], 'tui-khi': ['xep'], 'goi-snack': ['rua', 'gap'] };
+  var PREP = { chai: ['nap', 'tem', 'bep'], 'chai-dau-nap': ['nap', 'tem', 'bep'], 'chai-tran': ['bep'], 'chai-to': ['bep'],
+               'ly-tra-sua': ['rua'], 'tui-khi': ['xep'], 'goi-snack': ['rua', 'gap'] };
   var TOOLS = ['rua', 'xep', 'gap'];
-  // levels 2 and 3 have no tools: the cushion comes with its air let out,
-  // the snack bag cleaned and folded
-  var READY = { 'tui-khi': 'tui-khi-xep', 'goi-snack': 'goi-snack-gap' };
+  // levels 2 and 3 have no tools: what wants getting ready comes ready (a
+  // bottle squashed, the cushion with its air let out, the snack bag cleaned
+  // and folded), as it is when it goes in a bag at every level
+  var READY = { 'chai-tran': 'chai-bep', 'tui-khi': 'tui-khi-xep', 'goi-snack': 'goi-snack-gap' };
   // the bottles, and what comes off them: things of their own on the table
-  var EXTRA = { chai: 'nhua-1-de', 'chai-dau-nap': 'nhua-1-de', nap: 'nhua-245', tem: 'nilon-cung' };
-  // a bottle's pictures: cap and label on; bare (cap cut from the first)
-  var BOTTLE = { chai: { full: 'chai', bare: 'chai-tran' }, 'chai-dau-nap': { full: 'chai-dau-nap', bare: 'chai-dau', cls: ' is-dau' } };
+  var EXTRA = { chai: 'nhua-1-de', 'chai-dau-nap': 'nhua-1-de', 'chai-to': 'nhua-1-de', nap: 'nhua-245', tem: 'nilon-cung' };
+  // a bottle's pictures: cap and label on; bare (cap cut from the first).
+  // Bare ones on the party table only want squashing
+  var BOTTLE = { chai: { full: 'chai', bare: 'chai-tran' }, 'chai-dau-nap': { full: 'chai-dau-nap', bare: 'chai-dau', cls: ' is-dau' },
+                 'chai-tran': { full: 'chai-tran', bare: 'chai-tran' }, 'chai-to': { full: 'chai-to', bare: 'chai-to' } };
   // the rest, before and after: [the step, its picture before, after]
   var STEP_PIC = { 'ly-tra-sua': ['rua', 'ly-tra-sua-day', 'ly-tra-sua'], 'tui-khi': ['xep', 'tui-khi', 'tui-khi-xep'],
                    'goi-snack': ['gap', 'goi-snack', 'goi-snack-gap'] };
@@ -234,7 +238,7 @@
     'pl.g1_2':      { vi: `Kéo từng món vào bao, hoặc chạm món rồi chạm bao. Nhầm thì Udon nhắc, không trừ điểm.`,
                       en: `Drag each to its bag, or tap it, then the bag. Udon tells you if it's wrong; no points lost.` },
     'pl.g1_3h':     { vi: `Ba món nữa, ba dụng cụ`, en: `Three more, three tools` },
-    'pl.g1_3':      { vi: `Ly trà sữa còn trà: Làm sạch. Túi khí: Làm xẹp, rồi kéo thử xem có giãn không. Gói snack còn vụn bánh: Làm sạch rồi mới Gấp gọn. Màn 4 dùng lại ba dụng cụ này.`,
+    'pl.g1_3':      { vi: `Ly trà sữa còn trà: Làm sạch. Túi khí: Xả hơi, rồi kéo thử xem có giãn không. Gói snack còn vụn bánh: Làm sạch rồi mới Gấp gọn. Màn 4 dùng lại ba dụng cụ này.`,
                       en: `A cup with tea left: Clean. An air cushion: Air out, then pull it to see if it stretches. A snack bag with crumbs: Clean, then Fold. Level 4 uses these three tools.` },
     'pl.g2_p':      { vi: `10 món đồ nhựa, nilon quen thuộc, lần lượt từng món.`, en: `Ten everyday plastic and nylon things, one at a time.` },
     'pl.g2_1h':     { vi: `Nhìn món đồ`, en: `Look at the thing` },
@@ -279,7 +283,7 @@
     'pl.lost_h':    { vi: `Không kịp phân loại, thành rác chôn lấp:`, en: `Too late to sort, gone to landfill:` },
     'pl.tools':     { vi: `Dụng cụ`, en: `Tools` },
     'pl.t.rua':     { vi: `Làm sạch`, en: `Clean` },
-    'pl.t.xep':     { vi: `Làm xẹp`, en: `Air out` },
+    'pl.t.xep':     { vi: `Xả hơi`, en: `Air out` },
     'pl.t.gap':     { vi: `Gấp gọn`, en: `Fold` },
     // what a thing still has, on its tag
     'pl.c.nap':     { vi: `Còn nắp`, en: `Cap on` },
@@ -303,7 +307,7 @@
     'pl.h.rua':     { vi: `Còn trà kìa: làm sạch đã.`, en: `There's tea left: clean it first.` },
     'pl.h.rua.goi-snack': { vi: `Còn vụn bánh kìa: làm sạch đã.`, en: `Crumbs inside: clean it first.` },
     'pl.order_gap': { vi: `Làm sạch trước rồi mới gấp.`, en: `Clean it first, then fold.` },
-    'pl.h.xep':     { vi: `Còn hơi kìa: làm xẹp đã.`, en: `Still full of air: let it out first.` },
+    'pl.h.xep':     { vi: `Còn hơi kìa: xả hơi đã.`, en: `Still full of air: let it out first.` },
     'pl.h.gap':     { vi: `Gấp gọn gói snack đã.`, en: `Fold the bag flat first.` },
     'pl.pick_first': { vi: `Chạm chọn một món trên bàn trước nha.`, en: `Tap a thing on the table first.` },
     'pl.no_need':   { vi: `Món này không cần "{t}".`, en: `This one doesn't need "{t}".` },
@@ -364,8 +368,6 @@
     'pl.w.lo-keo':       { vi: `Lọ trong suốt có kí hiệu số 1.`, en: `A clear jar marked 1.` },
     'pl.i.hu-kem':       { vi: `Hũ mỹ phẩm trong`, en: `A clear cosmetics jar` },
     'pl.w.hu-kem':       { vi: `Hũ trong suốt có kí hiệu số 1.`, en: `A clear jar marked 1.` },
-    'pl.i.chai-dau':     { vi: `Chai dầu ăn trong`, en: `A clear cooking-oil bottle` },
-    'pl.w.chai-dau':     { vi: `Chai trong suốt có kí hiệu số 1.`, en: `A clear bottle marked 1.` },
     'pl.i.ly-tra-sua':   { vi: `Ly trà sữa nhựa trong`, en: `A clear milk-tea cup` },
     'pl.w.ly-tra-sua':   { vi: `Nhựa số 1 trong suốt nhưng không phải chai lọ, mỏng giòn: nhựa 1 khó.`, en: `Clear plastic 1 but not a bottle or jar, thin and brittle: plastic 1, hard.` },
     'pl.i.nap-cau':      { vi: `Nắp cầu ly nước`, en: `A dome cup lid` },
@@ -411,11 +413,12 @@
     'pl.i.mang-boc':     { vi: `Màng bọc thực phẩm`, en: `Cling film` },
     'pl.w.mang-boc':     { vi: `Mềm, kéo giãn được.`, en: `Soft and stretchy.` },
     'pl.i.xop-hoi':      { vi: `Màng xốp hơi`, en: `Bubble wrap` },
-    'pl.w.xop-hoi':      { vi: `Nilon mềm: làm xẹp rồi mang đi.`, en: `Soft nylon: let the air out first.` },
+    'pl.w.xop-hoi':      { vi: `Nilon mềm: xả hơi rồi mang đi.`, en: `Soft nylon: let the air out first.` },
     'pl.i.tui-khi':      { vi: `Túi khí chống sốc`, en: `An air-column cushion` },
-    'pl.r.tui-khi':      { vi: `Túi khí chống sốc (đã làm xẹp)`, en: `An air-column cushion (air let out)` },
+    'pl.r.chai-tran':    { vi: `Chai nước trong (đã tháo nắp, bóc tem, bóp bẹp)`, en: `A clear water bottle (cap and label off, squashed)` },
+    'pl.r.tui-khi':      { vi: `Túi khí chống sốc (đã xả hơi)`, en: `An air-column cushion (air let out)` },
     'pl.r.goi-snack':    { vi: `Gói snack (đã làm sạch, gấp gọn)`, en: `A snack bag (cleaned, folded)` },
-    'pl.w.tui-khi':      { vi: `Làm xẹp các cột khí rồi bỏ vào nilon mềm.`, en: `Let the air out, then soft nylon.` },
+    'pl.w.tui-khi':      { vi: `Xả hơi các cột khí rồi bỏ vào nilon mềm.`, en: `Let the air out, then soft nylon.` },
     'pl.i.tui-goi-hang': { vi: `Túi gói hàng online`, en: `A courier mailer bag` },
     'pl.w.tui-goi-hang': { vi: `Mềm, kéo giãn được: nilon mềm.`, en: `Soft and stretchy: soft nylon.` },
     'pl.i.xop':          { vi: `Tấm xốp phẳng`, en: `A flat foam sheet` },
@@ -931,14 +934,16 @@
     if (!box) return;
     box.innerHTML = S.table.map(function (th) {
       var tags = th.need.map(function (n) { return own('pl.c.' + n, th.id); });
-      // level 1: the cushion and the snack bag, once ready, can be felt (pulled, squeezed)
-      var film = S.cfg.intro && STEP_PIC[th.id] && !th.need.length && /^nilon-/.test(th.bin) ? th.bin.slice(6) : '';
+      // nylon is felt at every level: a tap squeezes it; in level 1 the
+      // cushion and the snack bag, once ready, can be pulled by their grips too
+      var film = /^nilon-/.test(th.bin) ? th.bin.slice(6) : '';
+      var grips = film && S.cfg.intro && STEP_PIC[th.id] && !th.need.length;
       return '<button type="button" class="pl-thing' + (BOTTLE[th.id] ? ' is-bottle' : '') + (S.sel === th.k ? ' is-sel' : '') + (S.fresh === th.k ? ' is-new' : '') + '" data-pl-item="' + th.k + '"' +
           (film ? ' data-pl-film="' + film + '"' : '') +
           ' aria-pressed="' + (S.sel === th.k) + '" aria-label="' + esc(nm(th.id) + (tags.length ? ': ' + tags.join(', ') : '')) + '">' +
-        '<span class="pl-pic">' + (film ? '<span class="pl-stretch">' + thingPic(th) + '</span>' +
-            '<span class="pl-grip is-l" data-pl-grip="l" aria-hidden="true"></span><span class="pl-grip is-r" data-pl-grip="r" aria-hidden="true"></span>'
-          : thingPic(th)) + '</span>' +
+        '<span class="pl-pic">' + (film ? '<span class="pl-stretch">' + thingPic(th) + '</span>' : thingPic(th)) +
+          (grips ? '<span class="pl-grip is-l" data-pl-grip="l" aria-hidden="true"></span><span class="pl-grip is-r" data-pl-grip="r" aria-hidden="true"></span>' : '') +
+        '</span>' +
         '<span class="pl-tn">' + esc(nm(th.id)) + '</span>' +
         (tags.length ? '<span class="pl-chips">' + tags.map(function (x) { return '<i>' + esc(x) + '</i>'; }).join('') + '</span>' : '') +
         (th.due ? '<span class="pl-life" aria-hidden="true"><i></i></span>' : '') +
@@ -1569,7 +1574,9 @@
       else openLevel(go);
       return;
     }
-    if (e.target.closest('[data-pl-guide-go]')) { guideShow(false); return; }
+    // how to play: its × or "Bắt đầu", or a tap beside the card (the dim
+    // backdrop lies over the sheet's ×)
+    if (e.target.closest('[data-pl-guide-go]') || e.target.classList.contains('pl-guide')) { guideShow(false); return; }
     if (e.target.closest('[data-pl-music]')) { musicSet(!musicOn()); return; }
     if (e.target.closest('[data-pl-guide]')) { guideShow(true); return; }
     if ((el = e.target.closest('[data-pl-poster]'))) { poster(el.getAttribute('data-pl-poster')); return; }

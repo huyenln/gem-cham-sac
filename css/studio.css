@@ -650,6 +650,9 @@ html:has(.studio-page) { overscroll-behavior: none; }   /* own rule: a Safari wi
 }
 
 .st-close:hover { background: var(--paper-cream); color: var(--ink-dark); }
+/* over what a sheet draws at its top (the sorting game's header sat over it
+   and took its taps, 24/10) */
+.st-close { z-index: 5; }
 
 .st-sheet h2 {
   margin: 0 var(--space-10) var(--space-2) 0;
