@@ -2378,14 +2378,19 @@ tường là lối vào. Bỏ "nhặt rác ngoài phố có đếm giờ": nặn
   ở 800 KB). Hiệu ứng bằng CSS (mục `PHÂN LOẠI RÁC` trong `css/studio.css`), không thư viện.
 - **Màn 1 — Cái chai và các dụng cụ** (Anna 24/10: "thêm phần nhỏ về các dụng cụ để liên kết
   với màn 4"): chạy trên cái bàn của màn 4 (`table('chai')`, `TABLE.chai.intro`), không đồng
-  hồ, không trừ: nhầm thì Udon kéo quần lần đầu + gợi ý dụng cụ đúng ("Thử "Tháo nắp" xem").
-  Phần 1: chai nước, chạm dụng cụ Tháo nắp (nắp thành món riêng → Nhựa 2-4-5), Bóc tem (→ Nilon
-  cứng), Bóp bẹp (→ Nhựa 1 dễ). Phần 2–4, từng món: ly trà sữa còn trà (Rửa sạch → Nhựa 1 khó),
-  túi khí (Làm xẹp → Nilon mềm), gói snack (Gấp gọn → Nilon cứng). Xong: Udon nhảy trên bàn,
+  hồ, không trừ: nhầm thì Udon kéo quần lần đầu + gợi ý việc đúng ("Chạm vào nắp chai để tháo").
+  Phần 1: chai nước (hình to), **chạm thẳng vào từng phần** (Anna 24/10: "bấm trực tiếp vào phần
+  cần làm oke hơn"): chạm nắp (1/3 trên của hình) → nắp thành món riêng → Nhựa 2-4-5; chạm tem
+  (giữa hình) → Nilon cứng; tháo cả hai rồi chạm chai → hình bẹp xuống ("BẸP!") → Nhựa 1 dễ.
+  Bấm phím Enter trên chai = làm bước kế tiếp (`tapThing()`, `partAt()`). Phần 2–4, từng món, bằng
+  dụng cụ: ly trà sữa còn trà (Rửa sạch → Nhựa 1 khó), túi khí (Làm xẹp → Nilon mềm), gói snack
+  (Gấp gọn → Nilon cứng). Túi khí và gói snack sửa soạn xong thì có hai tay nắm để **kéo thử**
+  (túi khí giãn, snack không giãn) và chạm để bóp — như nilon ở màn 2. Xong: Udon nhảy trên bàn,
   nút "Sang màn 2". Màn 1 chỉ có 6 bao Tagom.
 - **Màn 2 — Phân loại 10 món:** 10 món ngẫu nhiên trong 36 (`ITEMS`), 6 bao của Tagom + ô
   **Rác thường** (ít nhất một món mỗi ô). Sai: hiện bao đúng + lý do (`pl.w.<id>`) + nút
-  "Xem poster" (ô Rác thường không có poster).
+  "Xem poster" (ô Rác thường không có poster). Màn 2–3 không có dụng cụ nên túi khí hiện sẵn
+  dạng **đã làm xẹp** (`READY`: hình `tui-khi-xep`, tên `pl.r.tui-khi`); màn 4–5 vẫn phải Làm xẹp.
 - **Rác thường + tranh いらすとや** (Anna 24/10, "dùng luôn của irasutoya, có chú thích"): ô thứ 7
   từ màn 2 (`ALL_BINS`, hình túi nilon trắng `tui-rac`, nhãn xám — không phải của Tagom). Món:
   xương cá, vỏ trứng, lõi táo (thức ăn thừa, Tagom không nhận) → Rác thường; chai có vòi bơm, xô
@@ -2436,10 +2441,12 @@ tường là lối vào. Bỏ "nhặt rác ngoài phố có đếm giờ": nặn
     nhiên trong `PARTY`, có cả đồ ăn thừa), 90 giây. Nhãn hồng dưới món nói món còn gì: chai nước
     hoặc chai dầu ăn (ngẫu nhiên) còn nắp / còn tem / chưa bóp bẹp; ly trà sữa còn trà; túi khí
     còn hơi; gói snack chưa gấp
-    (`PREP`). 6 dụng cụ (biểu tượng SVG tự vẽ): Tháo nắp, Bóc tem, Bóp bẹp, Rửa sạch, Làm xẹp,
-    Gấp gọn — chọn món rồi chạm dụng cụ, hoặc kéo món lên dụng cụ. Nắp, tem tháo ra thành món
-    riêng trên bàn (nắp → 2-4-5, tem → nilon cứng). Dùng dụng cụ không cần, hoặc bóp bẹp khi còn
-    nắp / tem: −2 giây. Bỏ vào bao khi chưa sửa soạn xong, hoặc nhầm bao: −5 giây (lần đầu Udon
+    (`PREP`). Chai cao gấp đôi ô khác (`.is-bottle`, chiếm 2 hàng), chạm thẳng vào nắp / tem /
+    thân chai như màn 1 (không trừ giờ khi chạm chỗ chưa làm được, chỉ chọn món). 3 dụng cụ, hình
+    trước → sau (SVG tự vẽ, `ICON`): Rửa sạch (ly còn trà → ly sạch có giọt nước), Làm xẹp (túi khí
+    phồng → dẹt), Gấp gọn (gói snack → gấp lại) — chọn món rồi chạm dụng cụ, hoặc kéo món lên dụng
+    cụ. Nắp, tem tháo ra thành món riêng trên bàn (nắp → 2-4-5, tem → nilon cứng). Dùng dụng cụ không
+    cần: −2 giây. Bỏ vào bao khi chưa sửa soạn xong, hoặc nhầm bao: −5 giây (lần đầu Udon
     kéo quần). Sao: 3 sao nếu nhầm ≤ 1 lần và còn ≥ 40% thời gian; 2 sao nếu nhầm ≤ 3; còn lại 1.
   - **Màn 5 · Tiệc chưa tàn:** như màn 4 nhưng 6 món có sẵn (2 món cần sửa soạn), 10 món đặt
     thêm, món đầu sau 8 giây, càng về sau càng nhanh (8 → 6 giây, `gap`); bàn trống thì món kế tới
@@ -2461,7 +2468,7 @@ tường là lối vào. Bỏ "nhặt rác ngoài phố có đếm giờ": nặn
     thử (server không nén script, online nhẹ hơn ~65 KB); phép kiểm chặn 900 KB (từ 800, vì màn 1
     thêm 3 món có tranh trước / sau).
   - Chữ: `pl.lv*`, `pl.fast_*`, `pl.ban_*`, `pl.tiec_*`, `pl.t.*` (dụng cụ), `pl.c.*` (nhãn),
-    `pl.h.*` (gợi ý), `pl.g3_*` → `pl.g5_*`. Kiểm tra: `python3 tools/check-studio.py phanloai_lv`
+    `pl.h.*` (gợi ý), `pl.tap.*` / `pl.did_*` (chạm vào chai), `pl.g3_*` → `pl.g5_*`. Kiểm tra: `python3 tools/check-studio.py phanloai_lv`
     (đồng hồ của trang chạy nhanh bằng Playwright).
 - **Màn cuối:** số món đúng, các món nhầm kèm lý do, và **Mang rác đi đâu?**:
   - Trạm Tagom: Số 105B1 (mặt sau), ngõ 3 Khuất Duy Tiến, Thanh Xuân Bắc (dãy nhà đối diện

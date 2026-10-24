@@ -3938,30 +3938,37 @@ async def phanloai(browser, db):
         await js_click(pg, '[data-pl-bin="nhua-1-de"]')
         await pg.wait_for_timeout(1200)
         got = await pg.evaluate("[!document.querySelector('.pl-tug').hidden, document.querySelector('.pl-say').textContent, document.querySelector('.pl-tug-say').textContent, (() => { const b = document.querySelector('.pl-tug-say').getBoundingClientRect(), i = [...document.querySelectorAll('.pl-tug img')].filter(e => e.offsetParent)[0].getBoundingClientRect(); return b.bottom <= i.top + 1 && b.top >= 0; })()]")
-        check(got[0] and 'tháo nắp' in got[1] and 'giây' not in got[1] and 'Chưa sửa soạn' in got[2] and got[3],
+        check(got[0] and 'chạm vào nắp' in got[1] and 'giây' not in got[1] and 'Chưa sửa soạn' in got[2] and got[3],
               f'{name}: the bottle whole into a bag: Udon tugs, his line above him, take the cap off first, no time off ({got})')
         if name == 'mobile':
             await pg.screenshot(path=OUT / 'phanloai-tug-mobile.png')
         await pg.wait_for_timeout(2400)
-        # a tool it doesn't need: the one it does, as a hint
+        # a tool it doesn't need: what to tap on it, as a hint
+        tools = await pg.evaluate("[...document.querySelectorAll('[data-pl-tool]')].map(b => b.dataset.plTool)")
         await js_click(pg, '[data-pl-tool="rua"]')
         hint = await pg.evaluate("document.querySelector('.pl-say').textContent")
-        check('Thử "Tháo nắp"' in hint, f'{name}: a wrong tool: try "Tháo nắp" ({hint})')
-        # the tools: cap off (a thing of its own, picked) to 2-4-5; label off to hard nylon; squash
+        check(tools == ['rua', 'xep', 'gap'] and 'Chạm vào nắp' in hint, f'{name}: three tools; a wrong one: tap the cap ({tools}, {hint})')
+        # by hand (24/10): the cap at its top, the label in its middle, then the
+        # bare bottle anywhere; below the label with the cap on: nothing yet
         k = await pg.evaluate("document.querySelector('.pl-thing').dataset.plItem")
-        await js_click(pg, '[data-pl-tool="nap"]')
+        async def tap(f):
+            await pg.mouse.click(*(await pg.evaluate(f"""(() => {{ const r = document.querySelector('.pl-thing[data-pl-item="{k}"] .pl-pic img').getBoundingClientRect();
+                return [r.left + r.width / 2, r.top + r.height * {f}]; }})()""")))
+            await pg.wait_for_timeout(350)
+        await tap(0.9)
+        still = await pg.evaluate("[document.querySelectorAll('.pl-thing').length, document.querySelector('.pl-say').textContent]")
+        await tap(0.08)
         cap = await pg.evaluate("document.querySelector('.pl-thing.is-sel .pl-tn').textContent")
         await js_click(pg, '[data-pl-bin="nhua-245"]')
         await pg.wait_for_timeout(400)
-        await js_click(pg, f'.pl-thing[data-pl-item="{k}"]')
-        await js_click(pg, '[data-pl-tool="tem"]')
+        await tap(0.5)
+        label = await pg.evaluate("document.querySelector('.pl-thing.is-sel .pl-tn').textContent")
         await js_click(pg, '[data-pl-bin="nilon-cung"]')
         await pg.wait_for_timeout(400)
-        await js_click(pg, f'.pl-thing[data-pl-item="{k}"]')
-        await js_click(pg, '[data-pl-tool="bep"]')
-        await pg.wait_for_timeout(300)
-        flat = await pg.evaluate(f"document.querySelector('.pl-thing[data-pl-item=\"{k}\"] img').getAttribute('src').endsWith('chai-bep.webp')")
-        check(cap == 'Nắp chai' and flat, f'{name}: cap off with the tool (a thing of its own: {cap}), label off, squashed flat ({flat})')
+        await tap(0.5)
+        flat = await pg.evaluate(f"[document.querySelector('.pl-thing[data-pl-item=\"{k}\"] img').getAttribute('src').endsWith('chai-bep.webp'), document.querySelector('.pl-say').textContent]")
+        check(still[0] == 1 and 'Chạm vào nắp' in still[1] and cap == 'Nắp chai' and label == 'Tem nhãn' and flat[0] and 'bẹp' in flat[1],
+              f'{name}: by hand: the cap tapped off (a thing of its own: {cap}), the label ({label}), the bottle squashed ({still}, {flat})')
         # a drag this time: the flat bottle onto plastic 1; what follows the
         # finger is seen, over the sheet (it was drawn under it, 23/10)
         a = await center(pg, f'.pl-thing[data-pl-item="{k}"] img')
@@ -3978,11 +3985,34 @@ async def phanloai(browser, db):
         nxt = await pg.evaluate("[document.querySelector('.pl-say').textContent, [...document.querySelectorAll('.pl-thing')].map(b => [b.querySelector('img').getAttribute('src').split('/').pop(), [...b.querySelectorAll('.pl-chips i')].map(i => i.textContent).join()]), document.querySelector('.pl-count').textContent]")
         check('Xong cái chai' in nxt[0] and nxt[1] == [['ly-tra-sua-day.webp', 'Còn trà']] and nxt[2] == 'Phần 2/4',
               f'{name}: the bottle done, then a cup with tea left (its own picture), part 2 of 4 ({nxt})')
-        # three more, a tool each: rinse, air out, fold
+        # three more, a tool each: rinse, air out, fold; the cushion and the
+        # snack bag, once ready, felt: pulled (one gives, one won't), squeezed
         for tool, to, after in (('rua', 'nhua-1-kho', 'ly-tra-sua.webp'), ('xep', 'nilon-mem', 'tui-khi-xep.webp'), ('gap', 'nilon-cung', 'goi-snack-gap.webp')):
             await js_click(pg, f'[data-pl-tool="{tool}"]')
             pic = await pg.evaluate("document.querySelector('.pl-thing img').getAttribute('src').split('/').pop()")
             check(pic == after, f'{name}: "{tool}": the thing as it is after ({pic})')
+            if tool != 'rua':
+                hard = tool == 'gap'
+                said = await pg.evaluate("[document.querySelector('.pl-say').textContent, document.querySelectorAll('.pl-thing[data-pl-film] .pl-grip').length]")
+                await pg.wait_for_timeout(1100)
+                g = await center(pg, '.pl-thing .pl-grip.is-r')
+                await pg.mouse.move(*g)
+                await pg.mouse.down()
+                for i in range(1, 11):
+                    await pg.mouse.move(g[0] + 9 * i, g[1])
+                    await pg.wait_for_timeout(16)
+                pull = await pg.evaluate("[parseFloat((document.querySelector('.pl-thing .pl-stretch').style.transform.match(/scaleX\\(([\\d.]+)/) || [0, 1])[1]), (document.querySelector('.pl-sfx b') || {}).textContent || '']")
+                if name == 'mobile' and not hard:
+                    await pg.screenshot(path=OUT / 'phanloai-gian-mobile.png')
+                await pg.mouse.up()
+                await pg.wait_for_timeout(1100)
+                await js_click(pg, '.pl-thing')
+                await pg.wait_for_timeout(150)
+                word = await pg.evaluate("(document.querySelector('.pl-sfx b') || {}).textContent || ''")
+                check('Kéo thử' in said[0] and said[1] == 2 and (pull[0] <= 1.05 if hard else pull[0] > 1.3)
+                      and pull[1] == ('KHÔNG GIÃN!' if hard else 'GIÃÃN~') and word == ('SỘT SOẠT!' if hard else '~ ~ ~'),
+                      f'{name}: level 1, {after}: pull it ({said}, {pull}), squeeze it ({word})')
+                await pg.wait_for_timeout(1100)
             await js_click(pg, f'[data-pl-bin="{to}"]')
             await pg.wait_for_timeout(800)
         done = await pg.evaluate("[!document.querySelector('.pl-done').hidden, document.querySelector('.pl-say').textContent, JSON.parse(localStorage.getItem('gem-pl')).lv]")
@@ -4012,7 +4042,7 @@ async def phanloai(browser, db):
                 felt[it[1]] = True
                 await js_click(pg, '.pl-one [data-pl-item]')
                 await pg.wait_for_timeout(150)
-                word = await pg.evaluate("(document.querySelector('.pl-sfx b') || {}).textContent || ''")
+                word = await pg.evaluate("([...document.querySelectorAll('.pl-sfx b')].pop() || {}).textContent || ''")
                 await pg.wait_for_timeout(1200)
                 g = await pg.evaluate("(() => { const r = document.querySelector('.pl-one .pl-grip.is-r').getBoundingClientRect(); return [r.x + r.width / 2, r.y + r.height / 2]; })()")
                 await pg.mouse.move(*g)
@@ -4025,7 +4055,7 @@ async def phanloai(browser, db):
                 await pg.wait_for_timeout(600)
                 back = await pg.evaluate("[document.querySelector('.pl-stretch').style.transform, document.querySelector('.pl-one [data-pl-item]') ? 1 : 0, document.querySelector('.pl-next-row').hidden]")
                 hard = it[1] == 'nilon-cung'
-                check(word == ('SỘT SOẠT!' if hard else '~ ~ ~') and (pull[0] <= 1.05 if hard else pull[0] > 1.3)
+                check(word == ('SỘT SOẠT!' if hard else '~ ~ ~') and (pull[0] <= 1.05 if hard else pull[0] > 1.25)
                       and pull[1] == ('KHÔNG GIÃN!' if hard else 'GIÃÃN~') and back == ['', 1, True],
                       f'{name}: {it[1]}: a tap squeezes it ({word}), a grip pulls it ({pull}), it springs back, not sorted by it ({back})')
             marks.append(await pg.evaluate("""(() => { const one = document.querySelector('.pl-one'), id = one.querySelector('[data-pl-item]').dataset.plItem,
@@ -4097,8 +4127,9 @@ async def phanloai_lv(browser, db):
     """23/10: levels 3–5 of "Phân loại rác", each opened by the one before.
     3: sixty seconds (nothing before "Bắt đầu!", a wrong bag −3 s and the
     right one lights up, red in the last ten, a best kept); 4: the party
-    table (tags, tools, the cap and label as things of their own, −2 s for a
-    tool not needed, −5 s and Udon for a thing not ready, a drag onto a tool;
+    table (tags; the bottle two rows tall, its cap, label and squash by a tap
+    on it, the cap and label things of their own; three tools, −2 s for one
+    not needed, −5 s and Udon for a thing not ready, a drag onto a tool;
     a clear table opens level 5); 5: more land as you go, more than ten on
     the table and it is lost. The page's clock is Playwright's, run ahead."""
     print('phanloai_lv')
@@ -4168,38 +4199,47 @@ async def phanloai_lv(browser, db):
         check(len(things) == 8 and len(tagged) == 4 and bottle[1] in ('Chai nước', 'Chai dầu ăn') and bottle[2] == ['Còn nắp', 'Còn tem', 'Chưa bóp bẹp'],
               f'{name}: level 4: eight things, four to get ready, the bottle three times ({[(x[1], x[2]) for x in things]})')
         k = bottle[0]
-        await js_click(pg, f'.pl-thing[data-pl-item="{k}"]')
+        tall = await pg.evaluate(f"""(() => {{ const b = document.querySelector('.pl-thing[data-pl-item="{k}"]').getBoundingClientRect(),
+            o = [...document.querySelectorAll('.pl-thing:not(.is-bottle)')][0].getBoundingClientRect(); return b.height > o.height * 1.6; }})()""")
+        async def tap(f):   # a point on the bottle's picture, f of its height down
+            await pg.mouse.click(*(await pg.evaluate(f"""(() => {{ const r = document.querySelector('.pl-thing[data-pl-item="{k}"] .pl-pic img').getBoundingClientRect();
+                return [r.left + r.width / 2, r.top + r.height * {f}]; }})()""")))
+        await tap(0.9)   # below the label, the cap still on: picked, nothing done
         s0 = await pg.evaluate(state)
         await js_click(pg, '[data-pl-tool="rua"]')
         s1 = await pg.evaluate(state)
-        await js_click(pg, '[data-pl-tool="bep"]')
-        s2 = await pg.evaluate(state)
         await js_click(pg, '[data-pl-bin="nhua-1-de"]')
         await pg.wait_for_timeout(100)
         s3 = await pg.evaluate(state)
         tug = await pg.evaluate("[!document.querySelector('.pl-tug').hidden, document.querySelector('.pl-tug-say').textContent]")
-        check(s0[1] - s1[1] == 2 and 'không cần "Rửa sạch"' in s1[3] and 'Tháo nắp, bóc tem rồi mới bóp bẹp' in s2[3]
-              and s2[1] - s3[1] == 5 and 'Chai còn nắp' in s3[3] and tug[0] and 'Chưa sửa soạn' in tug[1] and 'nhầm 3' in s3[2],
-              f'{name}: a tool not needed −2 s, squash before the cap, into a bag not ready −5 s and Udon ({s0[1]}, {s1}, {s2[3]}, {s3}, {tug})')
+        check(tall and s0[1] - s1[1] == 2 and 'không cần "Rửa sạch"' in s1[3]
+              and s1[1] - s3[1] == 5 and 'Chai còn nắp' in s3[3] and tug[0] and 'Chưa sửa soạn' in tug[1] and 'nhầm 2' in s3[2],
+              f'{name}: the bottle two rows tall; a tool not needed −2 s, into a bag not ready −5 s and Udon ({tall}, {s0[1]}, {s1}, {s3}, {tug})')
         await pg.clock.run_for(3000)
-        await js_click(pg, '[data-pl-tool="nap"]')
+        await tap(0.08)
         cap = await pg.evaluate("[...document.querySelectorAll('.pl-thing')].map(b => [b.querySelector('.pl-tn').textContent, b.classList.contains('is-sel')])")
-        check(['Nắp chai', True] in cap and len(cap) == 9, f'{name}: the cap off is a thing of its own on the table, picked ({cap})')
-        # a drag of the bottle onto "Bóc tem"
-        a = await center(pg, f'.pl-thing[data-pl-item="{k}"] img')
-        b = await center(pg, '[data-pl-tool="tem"]')
+        check(['Nắp chai', True] in cap and len(cap) == 9, f'{name}: the cap tapped off is a thing of its own on the table, picked ({cap})')
+        await tap(0.5)
+        left = await pg.evaluate(f"[[...document.querySelectorAll('.pl-thing[data-pl-item=\"{k}\"] .pl-chips i')].map(i => i.textContent), [...document.querySelectorAll('.pl-tn')].map(t => t.textContent).includes('Tem nhãn')]")
+        check(left == [['Chưa bóp bẹp'], True], f'{name}: the label tapped off ({left})')
+        # a drag onto a tool: a thing that needs one (a cup, a cushion, a bag)
+        one = await pg.evaluate("""(() => { const T = {'Còn trà': 'rua', 'Còn hơi': 'xep', 'Chưa gấp': 'gap'};
+            const b = [...document.querySelectorAll('.pl-thing')].find(b => b.querySelector('.pl-chips i') && T[b.querySelector('.pl-chips i').textContent]);
+            return [b.dataset.plItem, T[b.querySelector('.pl-chips i').textContent]]; })()""")
+        a = await center(pg, f'.pl-thing[data-pl-item="{one[0]}"] img')
+        b = await center(pg, f'[data-pl-tool="{one[1]}"]')
         await pg.mouse.move(*a)
         await pg.mouse.down()
         await pg.mouse.move(a[0] + 20, a[1] + 20, steps=3)
         await pg.mouse.move(*b, steps=10)
         await pg.mouse.up()
         await pg.wait_for_timeout(200)
-        left = await pg.evaluate(f"[[...document.querySelectorAll('.pl-thing[data-pl-item=\"{k}\"] .pl-chips i')].map(i => i.textContent), [...document.querySelectorAll('.pl-tn')].map(t => t.textContent).includes('Tem nhãn')]")
-        check(left == [['Chưa bóp bẹp'], True], f'{name}: the bottle dragged onto "Bóc tem": the label comes off ({left})')
+        done1 = await pg.evaluate(f"document.querySelectorAll('.pl-thing[data-pl-item=\"{one[0]}\"] .pl-chips i').length")
+        check(done1 == 0, f'{name}: a thing dragged onto its tool ({one}): done ({done1})')
         if name == 'mobile':
             await pg.screenshot(path=OUT / 'phanloai-ban-mobile.png')
-        # the rest done right
-        tools = {'Còn nắp': 'nap', 'Còn tem': 'tem', 'Chưa bóp bẹp': 'bep', 'Còn trà': 'rua', 'Còn hơi': 'xep', 'Chưa gấp': 'gap'}
+        # the rest done right (the bottle's own steps: a tap on it)
+        tools = {'Còn nắp': None, 'Còn tem': None, 'Chưa bóp bẹp': None, 'Còn trà': 'rua', 'Còn hơi': 'xep', 'Chưa gấp': 'gap'}
         for _ in range(40):
             th = await pg.evaluate("""(() => { const b = document.querySelector('.pl-thing:not(.is-in)'); if (!b) return null;
                 const src = b.querySelector('img').getAttribute('src').split('/').pop().replace('.webp', '');
@@ -4208,7 +4248,9 @@ async def phanloai_lv(browser, db):
                 break
             await js_click(pg, f'.pl-thing[data-pl-item="{th[0]}"]')
             if th[1]:
-                await js_click(pg, f'[data-pl-tool="{tools[th[1][0]]}"]')
+                if tools[th[1][0]]:
+                    await js_click(pg, f'[data-pl-tool="{tools[th[1][0]]}"]')
+                await pg.wait_for_timeout(300)
                 continue
             to = {'chai-bep': 'nhua-1-de', 'nap': 'nhua-245', 'tem': 'nilon-cung', 'tui-khi-xep': 'nilon-mem', 'goi-snack-gap': 'nilon-cung'}.get(th[2]) or \
                 await pg.evaluate(f"GemPhanLoai.ITEMS.filter(i => i.id === '{th[2]}')[0].bin")
@@ -4217,8 +4259,8 @@ async def phanloai_lv(browser, db):
         await pg.clock.run_for(800)
         await pg.wait_for_timeout(200)
         won = await pg.evaluate("[document.querySelector('h2').textContent, document.querySelectorAll('.pl-end-stars svg.is-on').length, document.querySelector('.pl-end-p').textContent, !!document.querySelector('.pl-acts [data-pl-go=\"tiec\"]'), JSON.parse(localStorage.getItem('gem-pl'))]")
-        check(won[0] == 'Bàn sạch bong!' and won[1] == 2 and 'nhầm 3 lần' in won[2] and won[3] and won[4]['lv'] == 4 and won[4]['b4']['s'] == 2,
-              f'{name}: the table clear: two stars for three slips, level 5 open ({won})')
+        check(won[0] == 'Bàn sạch bong!' and won[1] == 2 and 'nhầm 2 lần' in won[2] and won[3] and won[4]['lv'] == 4 and won[4]['b4']['s'] == 2,
+              f'{name}: the table clear: two stars for two slips, level 5 open ({won})')
         # level 5: more land, each with its own time (the bar under it); too
         # late, into the bin (food scraps: no harm); five there and it overflows
         await js_click(pg, '.pl-acts [data-pl-go="tiec"]')
