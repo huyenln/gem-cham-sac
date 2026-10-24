@@ -46,7 +46,7 @@ Static website cho cửa hàng **Gem Chạm Sắc** — pop-up store sustainabil
 ├── js/studio.js              Studio 2D: mặt tiền + cảnh trong, nhân vật + phụ kiện đeo thử, điểm bấm, bàn thiết kế, bảng lời nhắn; mua qua window.GemBasket (món có lựa chọn / ký gửi: bảng chi tiết ảnh thật + ô chọn); đàn tranh Việt Nam 16 / 19 dây cho món "Khu vực" / Khung bấm → "Chơi đàn tranh" (Web Audio, không file âm thanh; vùng nhấn bên trái nhạn ra Fa / Si, dây Bắc / Nam / Đảo, tông, tên Đô Rê Mi / Hò Xự Xang, bàn phím máy tính); thanh dưới ngoài phố có nút cho các điểm ngoài phố; hướng dẫn lần đầu (vuốt / cửa / trong studio, localStorage gem-guide), nhãn mép màn hình, nút "?"; chuông cửa + lời chào khi vào
 ├── js/patch.js               Bàn thiết kế (v2): món + kiểu ghép + tông + họa tiết + chất vải + hình vẽ + ghi chú → mã thiết kế, vẽ SVG (dùng chung với giỏ, tủ)
 ├── js/collection.js         Tủ sưu tầm: thiết kế đã lưu + món đã mua (localStorage gem-tu, rpc claim_collection)
-├── js/phanloai.js           Trò "Phân loại rác" theo 6 poster Tagom (chai → 10 món → mang đi đâu); studio.js chỉ tải khi mở
+├── js/phanloai.js           Trò "Phân loại rác" theo 6 poster Tagom (5 màn mở lần lượt: dụng cụ → 10 món → 60 giây → dọn bàn tiệc → tiệc chưa tàn; mang đi đâu); studio.js chỉ tải khi mở
 ├── js/studio-layout.js        Định dạng + kiểm tra bố cục studio (dùng chung studio.html / admin.html)
 ├── js/studio-editor.js        Tab "Lắp studio" trong admin (chỉ owner): kéo, đổi cỡ, xoay asset — cả trong studio lẫn ngoài cửa
 ├── supabase/functions/notify/ Edge Function báo mail cho nhân sự (đơn / workshop / lời nhắn) — xem docs/design.md
@@ -63,7 +63,7 @@ Static website cho cửa hàng **Gem Chạm Sắc** — pop-up store sustainabil
 │   ├── mascot/               6 pose Udon (PNG transparent)
 │   ├── products/             Product photos (full + thumb; -2/-3… cho ảnh thêm góc)
 │   ├── studio/vai-that/      Ảnh 320px các tấm vải thật nhập sẵn (Kho vải); tấm mới thêm trong admin nằm ở gem-media
-│   ├── studio/rac/, tagom/   Tranh trò Phân loại rác + 6 poster Tagom (dùng nguyên, Tagom cho phép 23/10/2026)
+│   ├── studio/rac/, tagom/   Tranh trò Phân loại rác (ChatGPT + vài tranh いらすとや, có ghi nguồn) + 6 poster Tagom (dùng nguyên, Tagom cho phép 23/10/2026)
 │   ├── space/                Ảnh studio + sự kiện (WebP, từ Portfolio 2026)
 │   ├── workshop/             Ảnh workshop / Chạm Mùa (WebP)
 │   └── partners/             Logo đối tác (mo-hinh.html)
@@ -414,11 +414,13 @@ Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
   đường thì Gem báo giá (23/10, migration `20261023_mot_vai_net_bao_gia.sql` chạy **trước** khi
   merge); dây túi Oxford gắn sau cổ áo; Oxford "Thân ô vuông": mảng dưới cổ áo cùng vải thân hai bên.
 - ♻️ Phân loại rác cùng Tagom (23/10): poster Tagom treo tường (Lắp studio → nhóm "Poster Tagom", tự
-  thành Khu vực `phanloai`) → màn 1 xử lý một cái chai, màn 2 phân loại 10 món vào 6 bao Tagom (hộp, cốc khó
+  thành Khu vực `phanloai`) → màn 1 cái chai + 3 món bằng thanh dụng cụ (tháo nắp / bóc tem / bóp bẹp /
+  rửa / làm xẹp / gấp, không giờ), màn 2 phân loại 10 món vào 6 bao Tagom + ô Rác thường (hộp, cốc khó
   nhận ra có kí hiệu số theo poster Tagom; nilon bóp thử ("SỘT SOẠT!" kiểu truyện tranh / "~ ~ ~") và kéo
-  thử bằng tay nắm; xốp, CD vào nhựa 6-7), màn 3 thử thách 60 giây, màn 4 dọn bàn sau tiệc (dụng cụ
-  tháo nắp / bóc tem / bóp bẹp / rửa / làm xẹp / gấp, 90 giây, sao), màn 5 tiệc chưa tàn (món đặt thêm, quá
-  10 món là thua); màn mở lần lượt (`gem-pl.lv`),
+  thử bằng tay nắm; xốp, CD vào nhựa 6-7; đồ ăn thừa vào Rác thường), màn 3 thử thách 60 giây, màn 4 dọn
+  bàn sau tiệc (90 giây, sao), màn 5 tiệc chưa tàn (món đặt thêm, mỗi món có giờ riêng, không kịp thì vào
+  thùng rác, 5 món là thùng đầy ắp); màn mở lần lượt (`gem-pl.lv`); tranh đồ ăn thừa / chai bơm / xô / túi
+  rác là của いらすとや (ghi nguồn cuối trang đầu),
   Udon kéo ống quần lần sai đầu (có lời thoại), thẻ "Cách chơi" lần đầu mỗi màn + nút "?", nhạc ngũ cung
   tạo bằng code (nút "Nhạc: bật / tắt"), poster đặt sát nhau chung một nhãn (Khu vực nào cũng vậy; ô "Ẩn nhãn"
   trong Lắp studio), gợi ý ngoài cửa nhắc góc phân loại rác, màn cuối chỉ

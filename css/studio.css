@@ -2154,23 +2154,8 @@ input.pt-done-name:focus { border-bottom-style: solid; border-bottom-color: var(
 /* the poster whole on screen, its button below it in view (a desktop screen is short for it) */
 .pl-big img { display: block; margin: 0 auto; width: auto; max-width: 100%; max-height: 68vh; height: auto; border-radius: 10px; box-shadow: 0 2px 10px rgba(61, 74, 46, 0.18); }
 
-/* the stage: the bottle or the thing, Udon in the corner */
+/* the stage: the thing (or the table), Udon in the corner */
 .pl-stage { position: relative; min-height: 210px; display: flex; align-items: center; justify-content: center; gap: var(--space-3); }
-.pl-bottle { position: relative; height: 200px; cursor: pointer; touch-action: none; }
-.pl-bottle[hidden] { display: none; }
-.pl-bottle img { height: 100%; width: auto; display: block; pointer-events: none; }
-.pl-bottle img[hidden] { display: none; }
-.pl-bottle .pl-bottle-cap { position: absolute; left: 50%; top: 0; transform: translateX(-50%); clip-path: inset(0 0 86% 0); }
-.pl-bottle.is-nocap .pl-bottle-img { clip-path: inset(14% 0 0 0); }
-.pl-bottle.is-sel img { filter: drop-shadow(0 0 6px rgba(135, 150, 90, 0.9)); }
-.pl-bottle.is-squash { animation: pl-squash 0.26s ease-in forwards; }
-@keyframes pl-squash { to { transform: scaleY(0.35) translateY(40%); } }
-.pl-hot { position: absolute; left: -6px; right: -6px; border: 0; padding: 0; background: transparent; cursor: pointer; border-radius: 10px; }
-.pl-hot:focus-visible { outline: 2px solid var(--sage-deep); }
-.pl-hot-nap { top: -4px; height: 18%; }
-.pl-hot-tem { top: 34%; height: 30%; }
-.pl-hot[hidden] { display: none; }
-.pl-loose { display: flex; gap: var(--space-2); flex-wrap: wrap; justify-content: center; }
 .pl-item {
   display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px; max-width: 120px;
   border: 1.5px solid transparent; border-radius: 12px; background: transparent; cursor: grab; touch-action: none;
@@ -2213,6 +2198,7 @@ input.pt-done-name:focus { border-bottom-style: solid; border-bottom-color: var(
 .pl-bin span { padding: 2px 6px; border-radius: 6px; text-align: center; }
 .pl-y span { background: #F6DE7A; }
 .pl-p span { background: #F1BDB6; }
+.pl-g span { background: #E2DDD2; }   /* general waste: not one of Tagom's */
 .pl-bin.is-over { border-color: var(--sage-deep); box-shadow: 0 0 0 3px rgba(135, 150, 90, 0.35); }
 .pl-bin.is-take { animation: pl-take 0.4s ease-out; }
 @keyframes pl-take { 30% { transform: scale(1.08); } 60% { transform: scale(0.97); } }
@@ -2247,11 +2233,10 @@ input.pt-done-name:focus { border-bottom-style: solid; border-bottom-color: var(
   .pl-posters { grid-template-columns: repeat(6, 1fr); }
   .pl-bins { grid-template-columns: repeat(7, 1fr); }
   .pl-stage { min-height: 250px; }
-  .pl-bottle { height: 240px; }
   .pl-udon { width: 96px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .pl-item.is-in, .pl-bin.is-take, .pl-udon.is-hop .pl-ud-hop, .pl-tug.is-run, .pl-bottle.is-squash { animation: none; }
+  .pl-item.is-in, .pl-bin.is-take, .pl-udon.is-hop .pl-ud-hop, .pl-tug.is-run { animation: none; }
 }
 
 /* Phân loại rác: how to play (a card the first time each level opens, "?"
@@ -2420,19 +2405,12 @@ input.pt-done-name:focus { border-bottom-style: solid; border-bottom-color: var(
 .pl-tn { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; max-width: 100%; text-align: center; }
 .pl-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px; }
 .pl-chips i { padding: 1px 5px; border-radius: 6px; background: #F1BDB6; font-style: normal; font-size: 10px; white-space: nowrap; }
-/* the bottle on the table: the cap cut from the picture with it (as in level 1) */
+/* a bottle on the table: the cap cut from the picture with it (water: its top 14%, cooking oil: 12%) */
 .pl-chai { position: relative; display: inline-block; }
 .pl-chai .pl-chai-cap { position: absolute; left: 50%; top: 0; transform: translateX(-50%); clip-path: inset(0 0 86% 0); }
 .pl-chai.is-nocap .pl-chai-img { clip-path: inset(14% 0 0 0); }
-/* not drawn yet: tea in the cup, the air let out, the bag folded, on the pictures we have */
-.pl-tea { position: relative; display: inline-block; }
-.pl-tea::after {
-  content: ""; position: absolute; inset: 0; pointer-events: none;
-  background: radial-gradient(circle, #4A3324 40%, transparent 46%) left 8px bottom 6% / 9px 9px repeat-x, linear-gradient(transparent 52%, rgba(176, 124, 72, 0.72) 52%);
-  -webkit-mask: url("../images/studio/rac/ly-tra-sua.webp") center / contain no-repeat; mask: url("../images/studio/rac/ly-tra-sua.webp") center / contain no-repeat;
-}
-.pl-flat img { transform: scale(1.05, 0.58); filter: saturate(0.7); }
-.pl-fold img { transform: scale(0.72) rotate(-8deg); }
+.pl-chai.is-dau .pl-chai-cap { clip-path: inset(0 0 88% 0); }
+.pl-chai.is-dau.is-nocap .pl-chai-img { clip-path: inset(12% 0 0 0); }
 
 /* the tools */
 .pl-tools { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; margin-top: var(--space-2); -webkit-user-select: none; user-select: none; }
@@ -2454,8 +2432,6 @@ input.pt-done-name:focus { border-bottom-style: solid; border-bottom-color: var(
   font-family: var(--font-display); font-size: 24px; color: var(--sage-deep); }
 .pl-gi .pl-gi-num.is-red { border-color: #C8644A; color: #9A4A36; }
 .pl-gi .pl-gi-chip { position: absolute; right: 0; bottom: 2px; padding: 1px 5px; border-radius: 6px; background: #F1BDB6; font-style: normal; font-size: 10px; white-space: nowrap; }
-.pl-gi .pl-tea { position: absolute; left: 10px; top: 2px; }
-.pl-gi .pl-tea img { position: static; height: 62px; width: auto; }
 .pl-gi-tools { display: flex; align-items: center; justify-content: center; gap: 4px; }
 .pl-gi-tools svg { width: 30px; height: 30px; fill: none; stroke: var(--ink-dark); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 
@@ -2469,4 +2445,39 @@ input.pt-done-name:focus { border-bottom-style: solid; border-bottom-color: var(
 }
 @media (prefers-reduced-motion: reduce) {
   .pl-clock.is-low .pl-clock-s, .pl-ready b, .pl-thing.is-new, .pl-thing.is-in, .pl-thing.is-shake, .pl-table.is-over, .pl-minus { animation: none; }
+}
+
+/* Phân loại rác 24/10: level 1 on the table (big, a thing or three at a
+   time, no clock); level 5's bars (each thing's time) and its bin filling
+   up beside Udon; the overflowing bin at the end; いらすとや's credit */
+.pl-hud.is-intro { min-height: 48px; }
+.pl[data-pl-view="chai"] .pl-table { display: flex; flex-wrap: wrap; justify-content: center; align-content: center; gap: 8px; min-height: 196px; }
+.pl[data-pl-view="chai"] .pl-thing { width: 104px; font-size: 12px; }
+.pl[data-pl-view="chai"] .pl-thing .pl-pic { height: 118px; }
+.pl[data-pl-view="chai"] .pl-thing img { height: 112px; max-width: 100px; }
+.pl-life { position: absolute; left: 8px; right: 8px; bottom: 3px; height: 4px; border-radius: 2px; background: rgba(195, 195, 165, 0.55); overflow: hidden; }
+.pl-life i { display: block; height: 100%; background: var(--sage-deep); transform-origin: left center; transition: transform 0.1s linear; }
+.pl-thing { padding-bottom: 10px; }
+.pl-thing.is-late { border-color: #C8644A; }
+.pl-thing.is-late .pl-life i { background: #C8644A; }
+.pl-thing.is-gone { animation: pl-gone 0.35s ease-in forwards; }
+@keyframes pl-gone { to { transform: translateY(24px) scale(0.5); opacity: 0; filter: grayscale(1); } }
+.pl-hud.is-bin { padding-right: 104px; }
+.pl-meter { position: absolute; right: 62px; bottom: 4px; width: 36px; height: 42px; color: var(--ink-dark); }
+.pl-meter-fill { fill: var(--kraft); }
+.pl-meter.is-high .pl-meter-fill { fill: #C8644A; }
+.pl-end-thung { width: min(280px, 72vw); margin: 0 auto; }
+.pl-end-thung img { display: block; width: 100%; height: auto; }
+.pl-table-udon { width: 120px; height: auto; animation: pl-hop 0.6s ease-out 2; }
+.pl-g img { filter: drop-shadow(0 1px 2px rgba(61, 74, 46, 0.35)); }   /* the white bag on a white tile */
+.pl-credit { margin: var(--space-4) 0 0; color: var(--ink-soft); font-size: var(--text-xs); }
+.pl-credit a { color: inherit; }
+@media (min-width: 768px) {
+  .pl[data-pl-view="chai"] .pl-thing { width: 132px; font-size: 13px; }
+  .pl[data-pl-view="chai"] .pl-thing .pl-pic { height: 150px; }
+  .pl[data-pl-view="chai"] .pl-thing img { height: 144px; max-width: 128px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pl-thing.is-gone { animation: none; opacity: 0; }
+  .pl-table-udon { animation: none; }
 }
