@@ -2340,6 +2340,9 @@ Anna thử trên điện thoại (22/10) và gửi ảnh lỗi.
 
 ### Phân loại rác cùng GemxTagom (23/10/2026; tên đổi 24/10, Anna)
 
+Trang đầu ghi rõ: trò chơi do Gem Chạm Sắc phát triển, dựa trên cách phân loại của Tagom (`pl.lead`,
+Anna 24/10).
+
 Chọn trong bốn ý: bốc thẻ thông điệp, nhặt rác ngoài phố (Udon cắn), phân loại rác theo
 Tagom, poster treo tường + câu đố. Làm **phân loại theo 6 poster của Tagom**, poster treo
 tường là lối vào. Bỏ "nhặt rác ngoài phố có đếm giờ": nặng nhất (vòng lặp game, nhân vật
