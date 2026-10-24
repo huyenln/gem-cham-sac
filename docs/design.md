@@ -2338,7 +2338,7 @@ Anna thử trên điện thoại (22/10) và gửi ảnh lỗi.
   Kiểu "Hai nửa" vốn đã vậy; "Ghép theo nét vẽ" thì theo nét khách vẽ.
 - Kiểm tra: `onefab()` trong `tools/check-studio.py`.
 
-### Phân loại rác cùng Tagom (23/10/2026)
+### Phân loại rác cùng GemxTagom (23/10/2026; tên đổi 24/10, Anna)
 
 Chọn trong bốn ý: bốc thẻ thông điệp, nhặt rác ngoài phố (Udon cắn), phân loại rác theo
 Tagom, poster treo tường + câu đố. Làm **phân loại theo 6 poster của Tagom**, poster treo

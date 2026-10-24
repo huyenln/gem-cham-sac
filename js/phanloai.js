@@ -126,7 +126,7 @@
   var maps = function (q) { return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q); };
 
   var STR = {
-    'pl.title':     { vi: `Phân loại rác cùng Tagom`, en: `Sorting waste with Tagom` },
+    'pl.title':     { vi: `Phân loại rác cùng GemxTagom`, en: `Sorting waste with GemxTagom` },
     'pl.lead':      { vi: `Theo cách phân loại của Tagom, nhóm thu gom rác tái chế ở Hà Nội. Chạm một poster để xem kĩ, hoặc chơi thử.`,
                       en: `The way Tagom sorts it, a recycling collection group in Hanoi. Tap a poster to look closer, or have a go.` },
     // the levels: each opens the next
