@@ -2439,16 +2439,18 @@ tường là lối vào. Bỏ "nhặt rác ngoài phố có đếm giờ": nặn
     nắp / tem: −2 giây. Bỏ vào bao khi chưa sửa soạn xong, hoặc nhầm bao: −5 giây (lần đầu Udon
     kéo quần). Sao: 3 sao nếu nhầm ≤ 1 lần và còn ≥ 40% thời gian; 2 sao nếu nhầm ≤ 3; còn lại 1.
   - **Màn 5 · Tiệc chưa tàn:** như màn 4 nhưng 6 món có sẵn (2 món cần sửa soạn), 10 món đặt
-    thêm, món đầu sau 6 giây, càng về sau càng nhanh (6 → 4 giây); bàn trống thì món kế tới ngay;
-    120 giây. **Mỗi món có giờ riêng** (Anna 24/10, thay luật "quá 10 món trên bàn"): vạch dưới
-    món ngắn dần, 15 giây + 5 giây cho mỗi bước cần làm (`TABLE.tiec.life`); 6 món đầu hết giờ so le
-    3 giây (không rơi cùng lúc). Hết giờ thì món vào **thùng rác** cạnh Udon (thùng vẽ SVG đầy dần,
+    thêm, món đầu sau 8 giây, càng về sau càng nhanh (8 → 6 giây, `gap`); bàn trống thì món kế tới
+    ngay; 150 giây. **Mỗi món có giờ riêng** (Anna 24/10, thay luật "quá 10 món trên bàn"): vạch dưới
+    món ngắn dần, 26 giây + 8 giây cho mỗi bước cần làm (`life`, `per` trong `TABLE.tiec`); 6 món đầu
+    hết giờ so le 5 giây (`apart`, không rơi cùng lúc). Hết giờ thì món vào **thùng rác** cạnh Udon (thùng vẽ SVG đầy dần,
     `binDraw()`); đồ tái chế = rác chôn lấp, tính vào thùng; đồ ăn thừa thì vốn vào rác thường,
     không tính. 5 món trong thùng = **"Thùng rác đầy ắp rồi!"**: thua, hiện tranh thùng đầy
     (`thung-day`) + danh sách món thành rác chôn lấp và đáng lẽ vào bao nào. Sao màn 5: 3 sao nếu
-    thùng trống và nhầm ≤ 1; 2 sao nếu thùng ≤ 2 và nhầm ≤ 3; còn lại 1. Thử bằng người chơi giả
-    lập biết hết đáp án: 0,6–1,2 giây mỗi lần chạm thì thắng, từ 1,5 giây thì thua — khó thật,
-    chỉnh ở `life` / `bin` nếu khách thấy quá khó.
+    thùng trống và nhầm ≤ 1; 2 sao nếu thùng ≤ 2 và nhầm ≤ 3; còn lại 1. **Độ khó** (Anna 24/10:
+    "làm màn 5 dễ hơn chút", bản đầu 15 + 5 giây, món đến 6 → 4 giây, 120 giây: người chơi giả lập
+    biết hết đáp án thua từ 1,5 giây mỗi lần chạm). Giờ: 2 giây mỗi lần chạm thắng cả 3 ván thử
+    (1–2 sao), 2,5 giây thua 2/3 ván. Người chơi giả lập: `scratchpad` của phiên 24/10 (chạm món
+    sắp hết giờ trước, rồi dụng cụ / bao); muốn dễ nữa thì tăng `life` / `per`, giãn `gap`.
   - **Tranh trước / sau** (ChatGPT, Anna 24/10, `sheet-don-ban`): ly còn trà `ly-tra-sua-day`, túi
     khí xẹp `tui-khi-xep`, snack gấp `goi-snack-gap`, chai dầu ăn nắp đỏ `chai-dau-nap` (tháo nắp
     trên hình: cắt 12% trên cùng, chai nước 14%). `BOTTLE`, `STEP_PIC`, `thingPic()`.

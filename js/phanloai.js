@@ -94,15 +94,17 @@
                'khay-den', 'lo-keo', 'mang-boc', 'tui-zip', 'nap-chai', 'chai-tran', 'xuong-ca', 'vo-trung', 'loi-tao'];
   // h, p, g: the title, the line under it, the how-to card's; ms: the time
   // (none: level 1); bpm: the music, and in the last ten seconds; lead: how
-  // many that need work are on the table at the start; life: level 5, how
-  // long a thing waits (5 s more for each step it needs); bin: things gone
-  // in the bin before it overflows
+  // many that need work are on the table at the start. Level 5: life, how
+  // long a thing waits, and per, more for each step it needs; gap, the
+  // wait for the next to land (the first, the last); apart: the first six
+  // run out that far apart; bin: things gone in the bin before it overflows
+  // (easier 24/10: a player who knows every answer lost from 1.5 s a tap)
   var TABLE = {
     chai: { n: 1, intro: 1, h: 'pl.chai_h', p: 'pl.chai_p', g: 'pl.g1_p', queue: ['ly-tra-sua', 'tui-khi', 'goi-snack'] },
     ban:  { n: 4, h: 'pl.ban_h', p: 'pl.ban_p', g: 'pl.g4_p', ms: 90000, bpm: 92, fast: 116, start: 8, lead: 4, plain: 4,
             prep: ['chai', 'ly-tra-sua', 'tui-khi', 'goi-snack'], swap: 1 },
-    tiec: { n: 5, h: 'pl.tiec_h', p: 'pl.tiec_p', g: 'pl.g5_p', ms: 120000, bpm: 100, fast: 126, start: 6, lead: 2, plain: 10,
-            life: 15000, bin: 5, prep: ['chai', 'chai-dau-nap', 'ly-tra-sua', 'tui-khi', 'goi-snack', 'ly-tra-sua'] }
+    tiec: { n: 5, h: 'pl.tiec_h', p: 'pl.tiec_p', g: 'pl.g5_p', ms: 150000, bpm: 100, fast: 126, start: 6, lead: 2, plain: 10,
+            life: 26000, per: 8000, gap: [8000, 6000], apart: 5000, bin: 5, prep: ['chai', 'chai-dau-nap', 'ly-tra-sua', 'tui-khi', 'goi-snack', 'ly-tra-sua'] }
   };
   // the tools, drawn here (24 x 24, a line in the ink colour)
   var ICON = {
@@ -304,7 +306,7 @@
     'pl.g5_2':      { vi: `Vạch dưới mỗi món ngắn dần. Hết vạch mà chưa phân loại thì món đó vào thùng rác. 5 món là thùng đầy ắp: thua.`,
                       en: `The bar under each thing runs down. When it runs out, the thing goes in the bin. Five and the bin overflows: the round is lost.` },
     'pl.g5_3h':     { vi: `Như màn 4`, en: `As in level 4` },
-    'pl.g5_3':      { vi: `Sửa soạn rồi bỏ vào đúng bao, trong 120 giây.`, en: `Get each one ready, then into its bag, in 120 seconds.` },
+    'pl.g5_3':      { vi: `Sửa soạn rồi bỏ vào đúng bao, trong 150 giây.`, en: `Get each one ready, then into its bag, in 150 seconds.` },
     // the bags
     'pl.b.nilon-cung': { vi: `Nilon cứng`, en: `Hard nylon` },
     'pl.b.nilon-mem':  { vi: `Nilon mềm`, en: `Soft nylon` },
@@ -830,9 +832,9 @@
       S.queue = shuffle(prep.concat(plain)).map(thing);
     }
     S.landed = 0;
-    S.nextAt = 6000;
+    S.nextAt = five ? cfg.gap[0] : 0;
     S.onRun = five ? tiecRun : null;
-    if (five) S.table.forEach(function (th, i) { setLife(th, 3000 * i); });   // as if they came 3 s apart: not all gone at once
+    if (five) S.table.forEach(function (th, i) { setLife(th, cfg.apart * i); });   // as if they came apart: not all gone at once
     view(level,
       head(cfg.h) + tr('p', cfg.p, ' class="st-lead pl-lead"') + hud(intro ? 'intro' : five ? 'bin' : '') +
       '<div class="pl-stage pl-stage-ban"><div class="pl-table" role="group"></div>' + (intro ? '' : ready()) + '</div>' +
@@ -872,7 +874,7 @@
   function find(k) { return S.table.filter(function (th) { return th.k === k; })[0]; }
   function has(th, step) { return th.need.indexOf(step) >= 0; }
   // level 5: how long it may wait (longer for each step it needs)
-  function setLife(th, run) { th.life = S.cfg.life + 5000 * th.need.length; th.due = run + th.life; }
+  function setLife(th, run) { th.life = S.cfg.life + S.cfg.per * th.need.length; th.due = run + th.life; }
 
   // a thing as it is now: a bottle from its two pictures (the cap cut from
   // the one with it), the rest before or after their step
@@ -1020,14 +1022,15 @@
     if (!CLOCK) return;
     lifeDraw(run);
   }
-  // the next thing lands, each a little sooner (6 s down to 4 s)
+  // the next thing lands, each a little sooner (7 s down to 5 s)
   function landing(run) {
     if (!S.queue.length || run < S.nextAt) return;
     var th = S.queue.shift();
     setLife(th, run);
     S.table.push(th);
     S.landed++;
-    S.nextAt = run + 6000 - 2000 * Math.min(1, S.landed / (S.landed + S.queue.length));
+    var g = S.cfg.gap;
+    S.nextAt = run + g[0] - (g[0] - g[1]) * Math.min(1, S.landed / (S.landed + S.queue.length));
     S.fresh = th.k;
     beep('G3');
     drawTable();

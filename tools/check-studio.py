@@ -4226,7 +4226,7 @@ async def phanloai_lv(browser, db):
         await js_click(pg, '.pl-g-go')
         await pg.clock.run_for(2700)
         n0 = await pg.evaluate("[document.querySelectorAll('.pl-thing').length, document.querySelectorAll('.pl-thing .pl-life i').length]")
-        await pg.clock.run_for(6200)
+        await pg.clock.run_for(8200)   # the first lands after 8 s
         n1 = await pg.evaluate("[document.querySelectorAll('.pl-thing').length, document.querySelector('.pl-count').textContent]")
         first = None
         for _ in range(90):
