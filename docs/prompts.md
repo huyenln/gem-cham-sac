@@ -579,7 +579,7 @@ tên có hậu tố, ví dụ `sheet-cuc-sua-3.png`. Lúc tách tranh sẽ ghép
 ## 🎨 Prompt vẽ — Phân loại rác (Studio 2D, 10/2026)
 
 Tranh cho `js/phanloai.js`. Cắt bằng `python3 tools/rac-assets.py <thư mục>` (xem
-`docs/design.md` → "Phân loại rác cùng Tagom"). Poster Tagom dùng nguyên, không vẽ.
+`docs/design.md` → "Phân loại rác cùng GemxTagom"). Poster Tagom dùng nguyên, không vẽ.
 
 Làm tất cả trong **một** cuộc chat. Đính kèm 3 ảnh Udon tham chiếu:
 `images/studio/udon/ud-ngoi.webp`, `ud-vay.webp`, `ud-reo.webp`.
