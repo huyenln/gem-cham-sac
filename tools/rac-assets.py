@@ -11,6 +11,10 @@ Sources (ChatGPT, 10/2026, transparent background; prompts in docs/prompts.md
   sheet-chai           bottle (cap + label), cap, label, bare bottle,
                        flattened bottle; sack, flat foam sheet
   sheet-rac-1..3       the things to sort, in reading order (SHEETS)
+  sheet-don-ban        the party table's things before / after (levels 1, 4, 5)
+  irasutoya-an-thua, irasutoya-nhua, tui-rac
+                       いらすとや pictures (transparent PNG, credited in the game)
+  thung-day            the overflowing bin (level 5 lost)
   tagom-<id>.jpg       Tagom's posters, used whole (Tagom said yes, 23/10)
 -> images/studio/rac/<name>.webp
    images/studio/tagom/<id>.webp     (small: hung on the studio wall)
@@ -38,7 +42,26 @@ SHEETS = {
                     'hop-sua-chua', 'thia', 'dia', 'ban-chai', 'dia-cd'],
     'sheet-rac-3': ['goi-snack', 'vo-banh', 'tui-zip', 'bao-gao', 'tui-vai',
                     'tui-bong', 'mang-boc', 'xop-hoi', 'tui-khi', 'tui-goi-hang'],
+    # the party table (ChatGPT, 23/10): the "before" or "after" of a thing that wants work
+    'sheet-don-ban': ['ly-tra-sua-day', 'tui-khi-xep', 'goi-snack-gap', 'chai-dau-nap'],
+    # いらすとや (irasutoya.com, Anna 24/10: used as they are, credited in the game)
+    'irasutoya-an-thua': ['xuong-ca', 'vo-trung', 'loi-tao'],
+    'irasutoya-nhua': ['chai-bom', 'xo'],
 }
+# how far apart a picture's own parts may lie (px on the sheet): the egg and
+# the apple core sit closer than that
+GAP = {'irasutoya-an-thua': 14}
+# the hanger on irasutoya-nhua touches the bucket: left out by its green
+# (not on Tagom's posters, Anna 24/10)
+def no_green(a):
+    r, g, b = (a[..., i].astype(int) for i in range(3))
+    a = a.copy()
+    a[..., 3] = np.where((g > r + 25) & (g > b + 25), 0, a[..., 3])
+    return a
+CLEAN = {'irasutoya-nhua': no_green}
+# one picture each: the overflowing bin (ChatGPT, the end of level 5), the
+# general-waste bag (irasutoya, the "Rác thường" tile)
+SINGLE = {'thung-day': 640, 'tui-rac': 200}
 # longest side, px: things are shown at most ~150 css px on a 2x phone
 # screen, Udon and the bags ~110
 SIDE = {'ud-chay-1': 240, 'ud-chay-2': 240, 'ud-ngoi-cho': 240, 'ud-nhay': 240, 'bao': 200}
@@ -59,13 +82,13 @@ def fit(im, side):
     return im
 
 
-def pieces(im, n):
+def pieces(im, n, gap=18):
     """The n pictures on a sheet, in reading order. Parts drawn apart (a pile
     of caps, motion lines) are grouped by what lies close together; each one
     is cut out alone (a neighbour's edge inside its box is left out)."""
     a = np.asarray(im)
     solid = a[..., 3] > 40
-    near = ndi.binary_dilation(solid, iterations=18)
+    near = ndi.binary_dilation(solid, iterations=gap)
     lab, k = ndi.label(near)
     sizes = ndi.sum(solid, lab, range(1, k + 1))
     keep = [i + 1 for i in range(k) if sizes[i] > 4000]
@@ -106,8 +129,16 @@ def main(src):
         f = find(sheet)
         if not f:
             continue
-        for name, pic in zip(names, pieces(Image.open(f).convert('RGBA'), len(names))):
+        a = np.asarray(Image.open(f).convert('RGBA'))
+        if sheet in CLEAN:
+            a = CLEAN[sheet](a)
+        for name, pic in zip(names, pieces(Image.fromarray(a), len(names), GAP.get(sheet, 18))):
             save(fit(pic, SIDE.get(name, ITEM)), OUT / f'{name}.webp')
+    for name, side in SINGLE.items():
+        f = find(name)
+        if f:
+            im = Image.open(f).convert('RGBA')
+            save(fit(im.crop(im.getbbox()), side), OUT / f'{name}.webp')
     for name in ('ud-keo-1', 'ud-keo-2'):
         f = find(name)
         if not f:

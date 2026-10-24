@@ -2154,23 +2154,8 @@ input.pt-done-name:focus { border-bottom-style: solid; border-bottom-color: var(
 /* the poster whole on screen, its button below it in view (a desktop screen is short for it) */
 .pl-big img { display: block; margin: 0 auto; width: auto; max-width: 100%; max-height: 68vh; height: auto; border-radius: 10px; box-shadow: 0 2px 10px rgba(61, 74, 46, 0.18); }
 
-/* the stage: the bottle or the thing, Udon in the corner */
+/* the stage: the thing (or the table), Udon in the corner */
 .pl-stage { position: relative; min-height: 210px; display: flex; align-items: center; justify-content: center; gap: var(--space-3); }
-.pl-bottle { position: relative; height: 200px; cursor: pointer; touch-action: none; }
-.pl-bottle[hidden] { display: none; }
-.pl-bottle img { height: 100%; width: auto; display: block; pointer-events: none; }
-.pl-bottle img[hidden] { display: none; }
-.pl-bottle .pl-bottle-cap { position: absolute; left: 50%; top: 0; transform: translateX(-50%); clip-path: inset(0 0 86% 0); }
-.pl-bottle.is-nocap .pl-bottle-img { clip-path: inset(14% 0 0 0); }
-.pl-bottle.is-sel img { filter: drop-shadow(0 0 6px rgba(135, 150, 90, 0.9)); }
-.pl-bottle.is-squash { animation: pl-squash 0.26s ease-in forwards; }
-@keyframes pl-squash { to { transform: scaleY(0.35) translateY(40%); } }
-.pl-hot { position: absolute; left: -6px; right: -6px; border: 0; padding: 0; background: transparent; cursor: pointer; border-radius: 10px; }
-.pl-hot:focus-visible { outline: 2px solid var(--sage-deep); }
-.pl-hot-nap { top: -4px; height: 18%; }
-.pl-hot-tem { top: 34%; height: 30%; }
-.pl-hot[hidden] { display: none; }
-.pl-loose { display: flex; gap: var(--space-2); flex-wrap: wrap; justify-content: center; }
 .pl-item {
   display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px; max-width: 120px;
   border: 1.5px solid transparent; border-radius: 12px; background: transparent; cursor: grab; touch-action: none;
@@ -2192,7 +2177,10 @@ input.pt-done-name:focus { border-bottom-style: solid; border-bottom-color: var(
 .pl-item.is-in { animation: pl-in 0.45s ease-in forwards; }
 @keyframes pl-in { to { transform: translateY(60px) scale(0.3); opacity: 0; } }
 .pl-item.is-no img { filter: grayscale(0.6); }
-.pl-ghost { position: fixed; z-index: 99; pointer-events: none; filter: drop-shadow(0 6px 10px rgba(61, 74, 46, 0.3)); }
+/* a mouse drag doesn't select the words round it (the addresses at the end stay selectable) */
+.pl-stage, .pl-bins { -webkit-user-select: none; user-select: none; }
+/* over the sheet (800) and the basket (900): it follows the finger, it must be seen */
+.pl-ghost { position: fixed; z-index: 1000; pointer-events: none; filter: drop-shadow(0 6px 10px rgba(61, 74, 46, 0.3)); }
 
 .pl-count { text-align: center; margin: 0; }
 .pl-say { min-height: 2.6em; margin: var(--space-2) 0; text-align: center; font-size: var(--text-sm); }
@@ -2210,6 +2198,7 @@ input.pt-done-name:focus { border-bottom-style: solid; border-bottom-color: var(
 .pl-bin span { padding: 2px 6px; border-radius: 6px; text-align: center; }
 .pl-y span { background: #F6DE7A; }
 .pl-p span { background: #F1BDB6; }
+.pl-g span { background: #E2DDD2; }   /* general waste: not one of Tagom's */
 .pl-bin.is-over { border-color: var(--sage-deep); box-shadow: 0 0 0 3px rgba(135, 150, 90, 0.35); }
 .pl-bin.is-take { animation: pl-take 0.4s ease-out; }
 @keyframes pl-take { 30% { transform: scale(1.08); } 60% { transform: scale(0.97); } }
@@ -2244,11 +2233,10 @@ input.pt-done-name:focus { border-bottom-style: solid; border-bottom-color: var(
   .pl-posters { grid-template-columns: repeat(6, 1fr); }
   .pl-bins { grid-template-columns: repeat(7, 1fr); }
   .pl-stage { min-height: 250px; }
-  .pl-bottle { height: 240px; }
   .pl-udon { width: 96px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .pl-item.is-in, .pl-bin.is-take, .pl-udon.is-hop .pl-ud-hop, .pl-tug.is-run, .pl-bottle.is-squash { animation: none; }
+  .pl-item.is-in, .pl-bin.is-take, .pl-udon.is-hop .pl-ud-hop, .pl-tug.is-run { animation: none; }
 }
 
 /* Phân loại rác: how to play (a card the first time each level opens, "?"
@@ -2340,4 +2328,156 @@ input.pt-done-name:focus { border-bottom-style: solid; border-bottom-color: var(
 @media (prefers-reduced-motion: reduce) {
   .pl-stretch, .pl-stretch.is-squeeze, .pl-stretch.is-shake { animation: none; transition: none; }
   .pl-sfx { animation: none; }
+}
+
+/* Phân loại rác: five levels, each opened by the one before; the clock of
+   levels 3–5 (red and ticking in the last ten seconds); the party table of
+   levels 4–5 with its tools */
+.pl-levels { list-style: none; margin: var(--space-2) 0 0; padding: 0; display: grid; gap: 6px; }
+.pl-lv {
+  display: grid; grid-template-columns: 36px 1fr; align-items: center; column-gap: var(--space-2); width: 100%; min-height: 52px;
+  padding: 6px var(--space-3) 6px 8px; border: 1.5px solid var(--sage-light); border-radius: 12px; background: var(--paper-white);
+  cursor: pointer; font: inherit; color: var(--ink-dark); text-align: left;
+}
+.pl-lv-n { grid-row: 1 / 3; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%;
+  background: var(--sage-deep); color: var(--paper-white); font-family: var(--font-display); font-size: var(--text-base); }
+.pl-lv-t { font-family: var(--font-display); font-weight: 700; line-height: 1.3; }
+.pl-lv-s { display: flex; align-items: center; gap: 4px; color: var(--ink-soft); font-size: var(--text-xs); }
+.pl-lv.is-locked { cursor: default; background: transparent; border-style: dashed; color: var(--ink-soft); }
+.pl-lv.is-locked .pl-lv-n { background: var(--sage-light); }
+.pl-lock { width: 12px; height: 12px; flex: none; }
+.pl-stars { display: inline-flex; gap: 2px; }
+.pl-stars svg { width: 16px; height: 16px; fill: none; stroke: var(--kraft); stroke-width: 1.5; stroke-linejoin: round; }
+.pl-stars svg.is-on { fill: #F6DE7A; }
+.pl-end-stars { text-align: center; }
+.pl-end-stars svg { width: 40px; height: 40px; }
+.pl-end-p { text-align: center; }
+.pl-best { text-align: center; font-family: var(--font-display); font-weight: 700; color: var(--sage-deep); }
+
+/* the clock: a bar and the seconds; Udon sits at its end */
+.pl-hud { position: relative; min-height: 56px; padding-right: 64px; display: grid; gap: 2px; align-content: center; }
+.pl-hud .pl-udon { width: 56px; }
+.pl-hud .pl-count { text-align: left; }
+.pl-count.is-tight { color: #9A4A36; font-weight: 700; }
+.pl-clock { position: relative; display: flex; align-items: baseline; gap: 6px; }
+.pl-clock-bar { flex: 1; align-self: center; height: 12px; border-radius: 6px; background: rgba(195, 195, 165, 0.45); overflow: hidden; }
+.pl-clock-bar i { display: block; height: 100%; background: var(--sage-deep); transform-origin: left center; transition: transform 0.1s linear, background-color 0.3s; }
+.pl-clock-s { min-width: 2ch; font-family: var(--font-display); font-size: var(--text-xl); line-height: 1; text-align: right; font-variant-numeric: tabular-nums; }
+.pl-clock-u { color: var(--ink-soft); font-size: var(--text-xs); }
+.pl-clock.is-low .pl-clock-bar i { background: #C8644A; }
+.pl-clock.is-low .pl-clock-s { color: #9A4A36; animation: pl-beat 1s ease-out infinite; }
+@keyframes pl-beat { 0% { scale: 1.25; } 30% { scale: 1; } }
+.pl-minus { position: absolute; right: 0; bottom: 100%; font-family: var(--font-display); font-weight: 800; color: #9A4A36; white-space: nowrap; pointer-events: none; animation: pl-rise 1s ease-out forwards; }
+@keyframes pl-rise { from { opacity: 1; translate: 0 6px; } to { opacity: 0; translate: 0 -16px; } }
+.pl-bin.is-right { border-color: var(--sage-deep); background: #EEF1E2; box-shadow: 0 0 0 3px rgba(135, 150, 90, 0.5); }
+
+/* 3, 2, 1, go */
+.pl-ready { position: absolute; inset: 0; z-index: 4; display: grid; place-items: center; pointer-events: none; }
+.pl-ready[hidden] { display: none; }
+.pl-ready b {
+  font-family: var(--font-display); font-weight: 800; font-size: 76px; line-height: 1; color: var(--sage-deep);
+  -webkit-text-stroke: 3px var(--paper-white); paint-order: stroke fill; text-shadow: 0 3px 0 rgba(61, 74, 46, 0.25);
+  animation: pl-count 0.7s ease-out;
+}
+.pl-ready b.is-go { font-size: 48px; color: var(--kraft); }
+@keyframes pl-count { 0% { opacity: 0; scale: 1.6; } 25% { opacity: 1; scale: 1; } 85% { opacity: 1; } 100% { opacity: 0.2; } }
+
+/* the party table */
+.pl-stage-ban { display: block; min-height: 0; }
+.pl-table {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; align-content: start; min-height: 240px; padding: 8px;
+  border-radius: 14px; background: #EAD8BD; box-shadow: inset 0 0 0 1.5px rgba(184, 153, 104, 0.55), inset 0 6px 14px rgba(184, 153, 104, 0.25);
+}
+.pl-table.is-over { animation: pl-shake 0.36s linear 2; box-shadow: inset 0 0 0 2px #C8644A; }
+.pl-thing {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; padding: 4px 2px 6px;
+  border: 1.5px solid transparent; border-radius: 10px; background: rgba(251, 246, 238, 0.75); cursor: grab; touch-action: none;
+  font: inherit; font-size: 11px; line-height: 1.25; color: var(--ink-dark); -webkit-tap-highlight-color: transparent;
+}
+.pl-thing .pl-pic { display: flex; align-items: center; justify-content: center; height: 60px; }
+.pl-thing img { display: block; height: 56px; width: auto; max-width: 72px; object-fit: contain; pointer-events: none; }
+.pl-thing.is-sel { border-color: var(--sage-deep); background: var(--paper-white); box-shadow: 0 0 0 2px rgba(135, 150, 90, 0.35); }
+.pl-thing.is-lifted { opacity: 0.35; }
+.pl-thing.is-new { animation: pl-land 0.45s cubic-bezier(0.3, 1.5, 0.5, 1); }
+.pl-thing.is-in { animation: pl-in 0.3s ease-in forwards; }
+.pl-thing.is-shake { animation: pl-shake 0.36s linear; }
+@keyframes pl-land { from { transform: translateY(-40px); opacity: 0; } }
+.pl-tn { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; max-width: 100%; text-align: center; }
+.pl-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px; }
+.pl-chips i { padding: 1px 5px; border-radius: 6px; background: #F1BDB6; font-style: normal; font-size: 10px; white-space: nowrap; }
+/* a bottle on the table: the cap cut from the picture with it (water: its top 14%, cooking oil: 12%) */
+.pl-chai { position: relative; display: inline-block; }
+.pl-chai .pl-chai-cap { position: absolute; left: 50%; top: 0; transform: translateX(-50%); clip-path: inset(0 0 86% 0); }
+.pl-chai.is-nocap .pl-chai-img { clip-path: inset(14% 0 0 0); }
+.pl-chai.is-dau .pl-chai-cap { clip-path: inset(0 0 88% 0); }
+.pl-chai.is-dau.is-nocap .pl-chai-img { clip-path: inset(12% 0 0 0); }
+
+/* the tools */
+.pl-tools { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; margin-top: var(--space-2); -webkit-user-select: none; user-select: none; }
+.pl-tool {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 52px; padding: 4px 2px;
+  border: 1.5px solid var(--kraft); border-radius: 10px; background: var(--paper-white); cursor: pointer;
+  font: inherit; font-size: 11px; line-height: 1.15; color: var(--ink-dark); text-align: center; -webkit-tap-highlight-color: transparent;
+}
+.pl-tool svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.pl-tool:active { transform: scale(0.96); }
+.pl-tool.is-over { border-color: var(--sage-deep); box-shadow: 0 0 0 3px rgba(135, 150, 90, 0.35); }
+.pl[data-pl-view="ban"] .pl-bin img, .pl[data-pl-view="tiec"] .pl-bin img { width: 42px; height: 42px; }
+.pl[data-pl-view="ban"] .pl-say, .pl[data-pl-view="tiec"] .pl-say { min-height: 2.4em; margin: 6px 0; }
+.pl-sfx.is-xi b { color: var(--paper-white); font-size: 26px; letter-spacing: 0.08em; -webkit-text-stroke: 1.5px var(--ink-soft); text-shadow: none; }
+.pl-sfx.is-xi { animation-name: pl-float; }
+
+/* how to play: a number for a step, a tag, two tools */
+.pl-gi .pl-gi-num { position: absolute; inset: 8px; display: grid; place-items: center; border: 2px solid var(--sage-deep); border-radius: 50%;
+  font-family: var(--font-display); font-size: 24px; color: var(--sage-deep); }
+.pl-gi .pl-gi-num.is-red { border-color: #C8644A; color: #9A4A36; }
+.pl-gi .pl-gi-chip { position: absolute; right: 0; bottom: 2px; padding: 1px 5px; border-radius: 6px; background: #F1BDB6; font-style: normal; font-size: 10px; white-space: nowrap; }
+.pl-gi-tools { display: flex; align-items: center; justify-content: center; gap: 4px; }
+.pl-gi-tools svg { width: 30px; height: 30px; fill: none; stroke: var(--ink-dark); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
+@media (min-width: 768px) {
+  .pl-levels { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+  .pl-table { grid-template-columns: repeat(6, minmax(0, 1fr)); min-height: 260px; }
+  .pl-thing img { height: 68px; max-width: 90px; }
+  .pl-thing .pl-pic { height: 72px; }
+  .pl-thing { font-size: 12px; }
+  .pl-tools { max-width: 640px; margin-left: auto; margin-right: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pl-clock.is-low .pl-clock-s, .pl-ready b, .pl-thing.is-new, .pl-thing.is-in, .pl-thing.is-shake, .pl-table.is-over, .pl-minus { animation: none; }
+}
+
+/* Phân loại rác 24/10: level 1 on the table (big, a thing or three at a
+   time, no clock); level 5's bars (each thing's time) and its bin filling
+   up beside Udon; the overflowing bin at the end; いらすとや's credit */
+.pl-hud.is-intro { min-height: 48px; }
+.pl[data-pl-view="chai"] .pl-table { display: flex; flex-wrap: wrap; justify-content: center; align-content: center; gap: 8px; min-height: 196px; }
+.pl[data-pl-view="chai"] .pl-thing { width: 104px; font-size: 12px; }
+.pl[data-pl-view="chai"] .pl-thing .pl-pic { height: 118px; }
+.pl[data-pl-view="chai"] .pl-thing img { height: 112px; max-width: 100px; }
+.pl-life { position: absolute; left: 8px; right: 8px; bottom: 3px; height: 4px; border-radius: 2px; background: rgba(195, 195, 165, 0.55); overflow: hidden; }
+.pl-life i { display: block; height: 100%; background: var(--sage-deep); transform-origin: left center; transition: transform 0.1s linear; }
+.pl-thing { padding-bottom: 10px; }
+.pl-thing.is-late { border-color: #C8644A; }
+.pl-thing.is-late .pl-life i { background: #C8644A; }
+.pl-thing.is-gone { animation: pl-gone 0.35s ease-in forwards; }
+@keyframes pl-gone { to { transform: translateY(24px) scale(0.5); opacity: 0; filter: grayscale(1); } }
+.pl-hud.is-bin { padding-right: 104px; }
+.pl-meter { position: absolute; right: 62px; bottom: 4px; width: 36px; height: 42px; color: var(--ink-dark); }
+.pl-meter-fill { fill: var(--kraft); }
+.pl-meter.is-high .pl-meter-fill { fill: #C8644A; }
+.pl-end-thung { width: min(280px, 72vw); margin: 0 auto; }
+.pl-end-thung img { display: block; width: 100%; height: auto; }
+.pl-table-udon { width: 120px; height: auto; animation: pl-hop 0.6s ease-out 2; }
+.pl-g img { filter: drop-shadow(0 1px 2px rgba(61, 74, 46, 0.35)); }   /* the white bag on a white tile */
+.pl-credit { margin: var(--space-4) 0 0; color: var(--ink-soft); font-size: var(--text-xs); }
+.pl-credit a { color: inherit; }
+@media (min-width: 768px) {
+  .pl[data-pl-view="chai"] .pl-thing { width: 132px; font-size: 13px; }
+  .pl[data-pl-view="chai"] .pl-thing .pl-pic { height: 150px; }
+  .pl[data-pl-view="chai"] .pl-thing img { height: 144px; max-width: 128px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pl-thing.is-gone { animation: none; opacity: 0; }
+  .pl-table-udon { animation: none; }
 }

@@ -2373,12 +2373,23 @@ tường là lối vào. Bỏ "nhặt rác ngoài phố có đếm giờ": nặn
   `js/studio.js`, cùng `?v=` với `studio.js`); vào studio không tải gì của trò chơi. Mở từ
   poster ≈ 135 KB (script + poster to); chơi hết cả hai màn ≈ 615 KB (phép kiểm đo, chặn
   ở 800 KB). Hiệu ứng bằng CSS (mục `PHÂN LOẠI RÁC` trong `css/studio.css`), không thư viện.
-- **Màn 1 — Xử lý một cái chai:** chạm nắp (tháo) → bao Nhựa 2-4-5; chạm tem (bóc) → Nilon
-  cứng; chạm chai trần (bóp bẹp) → Nhựa 1 dễ. Kéo món vào bao, hoặc chạm món rồi chạm bao.
-  Bỏ cả chai khi chưa tháo → Udon kéo ống quần + "Khoan đã!…".
-- **Màn 2 — Phân loại 10 món:** 10 món ngẫu nhiên trong 31 (`ITEMS`, đều lấy từ poster),
-  6 bao của Tagom (ít nhất một món mỗi bao). Sai: hiện bao đúng + lý do (`pl.w.<id>`) + nút
-  "Xem poster". Bỏ ô "Mang tới Gem" (Anna 23/10): **xốp vào nhựa 6-7 (PS số 6)**, đĩa CD vào
+- **Màn 1 — Cái chai và các dụng cụ** (Anna 24/10: "thêm phần nhỏ về các dụng cụ để liên kết
+  với màn 4"): chạy trên cái bàn của màn 4 (`table('chai')`, `TABLE.chai.intro`), không đồng
+  hồ, không trừ: nhầm thì Udon kéo quần lần đầu + gợi ý dụng cụ đúng ("Thử "Tháo nắp" xem").
+  Phần 1: chai nước, chạm dụng cụ Tháo nắp (nắp thành món riêng → Nhựa 2-4-5), Bóc tem (→ Nilon
+  cứng), Bóp bẹp (→ Nhựa 1 dễ). Phần 2–4, từng món: ly trà sữa còn trà (Rửa sạch → Nhựa 1 khó),
+  túi khí (Làm xẹp → Nilon mềm), gói snack (Gấp gọn → Nilon cứng). Xong: Udon nhảy trên bàn,
+  nút "Sang màn 2". Màn 1 chỉ có 6 bao Tagom.
+- **Màn 2 — Phân loại 10 món:** 10 món ngẫu nhiên trong 36 (`ITEMS`), 6 bao của Tagom + ô
+  **Rác thường** (ít nhất một món mỗi ô). Sai: hiện bao đúng + lý do (`pl.w.<id>`) + nút
+  "Xem poster" (ô Rác thường không có poster).
+- **Rác thường + tranh いらすとや** (Anna 24/10, "dùng luôn của irasutoya, có chú thích"): ô thứ 7
+  từ màn 2 (`ALL_BINS`, hình túi nilon trắng `tui-rac`, nhãn xám — không phải của Tagom). Món:
+  xương cá, vỏ trứng, lõi táo (thức ăn thừa, Tagom không nhận) → Rác thường; chai có vòi bơm, xô
+  nhựa vỡ → Nhựa 2-4-5 (poster 2-4-5 có vòi bơm; xô dẻo, đàn hồi, đơn lớp). Móc áo bỏ (không có
+  trên poster Tagom). Tranh của いらすとや dùng nguyên; ghi nguồn cuối trang đầu (`pl.credit`,
+  link irasutoya.com). Quy định của いらすとや: dùng thương mại tối đa 20 tranh / sản phẩm —
+  đang dùng 3 tranh. Bỏ ô "Mang tới Gem" (Anna 23/10): **xốp vào nhựa 6-7 (PS số 6)**, đĩa CD vào
   nhựa 6-7 (có trên poster Tagom); chuyện Gem nhận xốp tấm, đĩa CD chỉ là thông tin ở màn cuối.
 - **Kí hiệu nhựa** (Anna 23/10, đối chiếu poster Tagom: nhựa 1 dễ / khó = số 1 PET, 2-4-5 = HDPE
   / LDPE / PP, 6-7 = PS / OTHER; nilon không có số, nhận biết bằng cảm giác): chỉ hiện ở món khó
@@ -2397,13 +2408,58 @@ tường là lối vào. Bỏ "nhặt rác ngoài phố có đếm giờ": nặn
   - Chữ và tiếng tạo bằng code (`squeeze()`, `stretch()`, `sfx()`, `crinkle()` trong
     `js/phanloai.js`), không file. "Nhạc: tắt" tắt cả tiếng sột soạt. Chữ: `pl.sfx_*`.
 - **Udon:** lần sai đầu tiên của mỗi màn, Udon chạy vào kéo gấu quần (ống quần thò từ mép
-  trái, một tranh cho mọi nhân vật), có lời thoại phía trên (`pl.ud_whole` / `pl.ud_wrong`,
+  trái, một tranh cho mọi nhân vật), có lời thoại phía trên (`pl.ud_prep` / `pl.ud_wrong` / `pl.ud_tool`,
   Anna 23/10); các lần sau chỉ hiện gợi ý. Đúng thì Udon nhảy. Không trừ điểm. Máy đặt giảm
   chuyển động: một khung, không chạy.
 - **Cách chơi** (Anna 23/10): mỗi màn, lần đầu vào thì hiện thẻ 3 bước có hình (giống thẻ
   1-2-3 của Bàn thiết kế), nút "?" cạnh tên màn mở lại. Đã xem thì nhớ ở `localStorage`
   `gem-pl` (`{chai: 1, sort: 1}`). Chữ: `pl.g1_*`, `pl.g2_*`.
 - **Xem poster giữa lượt:** nút "← Chơi tiếp" quay về lượt đang chơi, sang món kế tiếp.
+- **Năm màn, mở lần lượt** (Anna 23/10: "chơi xong màn 1 thì đến màn 2, màn 3"; màn 3–5 từ ý
+  "kết hợp màn 1 và màn 2", bỏ ý băng chuyền). Trang đầu liệt kê 5 màn; màn chưa mở mờ, có ổ
+  khoá + "Xong màn N để mở". Tiến độ ở `gem-pl` (`lv` = màn cao nhất đã xong, `b3` = kỷ lục
+  màn 3, `b4` / `b5` = `{s: sao, t: giây còn}`). Nút "Chơi phân loại" dưới poster mở màn đầu
+  tiên chưa xong. Màn xong khi: 1 chai + 3 món vào đúng bao; 2 hết 10 món; 3 hết 60 giây; 4 dọn sạch bàn
+  (hết giờ mà còn món thì chưa mở màn 5). Bảng `LEVELS` trong `js/phanloai.js`.
+  - **Đồng hồ (màn 3–5):** thanh + số giây, Udon ngồi cuối thanh. Đếm 3-2-1 "Bắt đầu!" sau thẻ
+    Cách chơi; trước đó bấm bao không tính. Chỉ chạy khi đang thấy (thẻ Cách chơi / "?" mở
+    hoặc chuyển tab thì dừng). 10 giây cuối: thanh đỏ, số giây đập, tích tắc mỗi giây, nhạc
+    nhanh lên (`tempo()`: 84 → màn 3 100 / 126, màn 4 92 / 116, màn 5 100 / 126 nhịp / phút).
+    Trừ giờ thì "−N giây" bay lên cạnh đồng hồ.
+  - **Màn 3 · Thử thách 60 giây:** món ngẫu nhiên trong 31 món, liên tục; đúng → món mới ngay,
+    sai bao → −3 giây, bao đúng sáng lên, món mới sau ~1 giây. Không có Udon kéo quần. Kỷ lục
+    lưu trên máy; màn cuối liệt kê món nhầm kèm lý do.
+  - **Màn 4 · Dọn bàn sau buổi tiệc:** 8 món trên bàn (4 món cần sửa soạn + 4 món tiệc ngẫu
+    nhiên trong `PARTY`, có cả đồ ăn thừa), 90 giây. Nhãn hồng dưới món nói món còn gì: chai nước
+    hoặc chai dầu ăn (ngẫu nhiên) còn nắp / còn tem / chưa bóp bẹp; ly trà sữa còn trà; túi khí
+    còn hơi; gói snack chưa gấp
+    (`PREP`). 6 dụng cụ (biểu tượng SVG tự vẽ): Tháo nắp, Bóc tem, Bóp bẹp, Rửa sạch, Làm xẹp,
+    Gấp gọn — chọn món rồi chạm dụng cụ, hoặc kéo món lên dụng cụ. Nắp, tem tháo ra thành món
+    riêng trên bàn (nắp → 2-4-5, tem → nilon cứng). Dùng dụng cụ không cần, hoặc bóp bẹp khi còn
+    nắp / tem: −2 giây. Bỏ vào bao khi chưa sửa soạn xong, hoặc nhầm bao: −5 giây (lần đầu Udon
+    kéo quần). Sao: 3 sao nếu nhầm ≤ 1 lần và còn ≥ 40% thời gian; 2 sao nếu nhầm ≤ 3; còn lại 1.
+  - **Màn 5 · Tiệc chưa tàn:** như màn 4 nhưng 6 món có sẵn (2 món cần sửa soạn), 10 món đặt
+    thêm, món đầu sau 8 giây, càng về sau càng nhanh (8 → 6 giây, `gap`); bàn trống thì món kế tới
+    ngay; 150 giây. **Mỗi món có giờ riêng** (Anna 24/10, thay luật "quá 10 món trên bàn"): vạch dưới
+    món ngắn dần, 26 giây + 8 giây cho mỗi bước cần làm (`life`, `per` trong `TABLE.tiec`); 6 món đầu
+    hết giờ so le 5 giây (`apart`, không rơi cùng lúc). Hết giờ thì món vào **thùng rác** cạnh Udon (thùng vẽ SVG đầy dần,
+    `binDraw()`); đồ tái chế = rác chôn lấp, tính vào thùng; đồ ăn thừa thì vốn vào rác thường,
+    không tính. 5 món trong thùng = **"Thùng rác đầy ắp rồi!"**: thua, hiện tranh thùng đầy
+    (`thung-day`) + danh sách món thành rác chôn lấp và đáng lẽ vào bao nào. Sao màn 5: 3 sao nếu
+    thùng trống và nhầm ≤ 1; 2 sao nếu thùng ≤ 2 và nhầm ≤ 3; còn lại 1. **Độ khó** (Anna 24/10:
+    "làm màn 5 dễ hơn chút", bản đầu 15 + 5 giây, món đến 6 → 4 giây, 120 giây: người chơi giả lập
+    biết hết đáp án thua từ 1,5 giây mỗi lần chạm). Giờ: 2 giây mỗi lần chạm thắng cả 3 ván thử
+    (1–2 sao), 2,5 giây thua 2/3 ván. Người chơi giả lập: `scratchpad` của phiên 24/10 (chạm món
+    sắp hết giờ trước, rồi dụng cụ / bao); muốn dễ nữa thì tăng `life` / `per`, giãn `gap`.
+  - **Tranh trước / sau** (ChatGPT, Anna 24/10, `sheet-don-ban`): ly còn trà `ly-tra-sua-day`, túi
+    khí xẹp `tui-khi-xep`, snack gấp `goi-snack-gap`, chai dầu ăn nắp đỏ `chai-dau-nap` (tháo nắp
+    trên hình: cắt 12% trên cùng, chai nước 14%). `BOTTLE`, `STEP_PIC`, `thingPic()`.
+  - **Nhẹ:** `js/phanloai.js` ~95 KB (nén khi tải ≈ 28 KB); chơi hết màn 1–2 ≈ 812 KB đo ở máy
+    thử (server không nén script, online nhẹ hơn ~65 KB); phép kiểm chặn 900 KB (từ 800, vì màn 1
+    thêm 3 món có tranh trước / sau).
+  - Chữ: `pl.lv*`, `pl.fast_*`, `pl.ban_*`, `pl.tiec_*`, `pl.t.*` (dụng cụ), `pl.c.*` (nhãn),
+    `pl.h.*` (gợi ý), `pl.g3_*` → `pl.g5_*`. Kiểm tra: `python3 tools/check-studio.py phanloai_lv`
+    (đồng hồ của trang chạy nhanh bằng Playwright).
 - **Màn cuối:** số món đúng, các món nhầm kèm lý do, và **Mang rác đi đâu?**:
   - Trạm Tagom: Số 105B1 (mặt sau), ngõ 3 Khuất Duy Tiến, Thanh Xuân Bắc (dãy nhà đối diện
     trường mầm non Thanh Xuân Bắc); T2–T6 14h–19h, T7–CN 9h–19h, nghỉ trưa 12h–14h; nút Chỉ
@@ -2416,8 +2472,17 @@ tường là lối vào. Bỏ "nhặt rác ngoài phố có đếm giờ": nặn
 - **Tranh:** ChatGPT (prompt: `docs/prompts.md` → "Phân loại rác"), cắt bằng
   `python3 tools/rac-assets.py <thư mục ảnh gốc>` → `images/studio/rac/` (Udon 240 px, món
   300 px, kéo quần 720 px) + poster. Thêm món: vẽ thêm tờ, thêm vào `SHEETS`
-  + `ITEMS` + chữ `pl.i.<id>`, `pl.w.<id>`.
-- **Kiểm tra:** `python3 tools/check-studio.py phanloai`.
+  + `ITEMS` + chữ `pl.i.<id>`, `pl.w.<id>`. Ảnh gốc 24/10 ở Drive, thư mục "elements" (Gem -
+  Elements 75–79): đặt tên lại `sheet-don-ban`, `thung-day`, `irasutoya-nhua`, `tui-rac`,
+  `irasutoya-an-thua` rồi chạy script (đồ ăn thừa nằm sát nhau: `GAP` 14; móc áo chạm xô: bỏ theo
+  màu xanh lá, `CLEAN`).
+- **Kéo thả (sửa 23/10, Anna: "không kéo được bằng tay"):** hình món đang kéo (`.pl-ghost`) gắn
+  vào `body` nhưng z-index 99, nằm **dưới** bảng (`.st-modal` 800): kéo vẫn chạy nhưng không thấy
+  gì di chuyển, chỉ thấy món mờ đi. Giờ z-index 1000 (trên cả giỏ hàng 900). Kéo chuột không
+  bôi đen chữ (`user-select: none` ở sân chơi và hàng bao). Đã kiểm: Chromium máy tính (chuột) +
+  điện thoại (ngón tay thật qua CDP); WebKit (lõi Safari, WebKitGTK qua WebDriver + Xvfb) bằng
+  chuột thật: nhặt, thấy hình đi theo, thả đúng bao. Firefox: không cài được (mạng chặn).
+- **Kiểm tra:** `python3 tools/check-studio.py phanloai` (màn 1–2) và `phanloai_lv` (màn 3–5).
 
 ### Studio hiện cảnh mặc định thay cho bố cục đã lắp (sửa 13/10/2026)
 
