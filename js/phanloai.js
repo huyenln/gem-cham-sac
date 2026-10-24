@@ -127,8 +127,9 @@
 
   var STR = {
     'pl.title':     { vi: `Phân loại rác cùng GemxTagom`, en: `Sorting waste with GemxTagom` },
-    'pl.lead':      { vi: `Theo cách phân loại của Tagom, nhóm thu gom rác tái chế ở Hà Nội. Chạm một poster để xem kĩ, hoặc chơi thử.`,
-                      en: `The way Tagom sorts it, a recycling collection group in Hanoi. Tap a poster to look closer, or have a go.` },
+    // who made it, on what (Anna 24/10)
+    'pl.lead':      { vi: `Trò chơi do Gem Chạm Sắc phát triển, dựa trên cách phân loại của Tagom, nhóm thu gom rác tái chế ở Hà Nội. Chạm một poster để xem kĩ, hoặc chơi thử.`,
+                      en: `A game made by Gem Chạm Sắc, on the way Tagom sorts waste (a recycling collection group in Hanoi). Tap a poster to look closer, or have a go.` },
     // the levels: each opens the next
     'pl.levels':    { vi: `Các màn chơi`, en: `Levels` },
     'pl.lv':        { vi: `Màn {n}`, en: `Level {n}` },
