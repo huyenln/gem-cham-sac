@@ -124,7 +124,7 @@
     ban:  { n: 4, h: 'pl.ban_h', p: 'pl.ban_p', g: 'pl.g4_p', ms: 90000, bpm: 92, fast: 116, start: 8, lead: 4, plain: 4,
             prep: ['chai', 'ly-tra-sua', 'tui-khi', 'goi-snack'], swap: 1 },
     tiec: { n: 5, h: 'pl.tiec_h', p: 'pl.tiec_p', g: 'pl.g5_p', ms: 150000, bpm: 100, fast: 126, start: 6, lead: 2, plain: 10,
-            life: 26000, per: 8000, gap: [8000, 6000], apart: 5000, bin: 5, prep: ['chai', 'chai-dau-nap', 'ly-tra-sua', 'tui-khi', 'goi-snack', 'ly-tra-sua'] }
+            life: 29000, per: 8000, gap: [8000, 6000], apart: 5000, bin: 5, prep: ['chai', 'chai-dau-nap', 'ly-tra-sua', 'tui-khi', 'goi-snack', 'ly-tra-sua'] }
   };
   // the tools, drawn here as before -> after (56 x 28, a line in the ink
   // colour, a little colour where it tells: the tea, the water, the bag)
