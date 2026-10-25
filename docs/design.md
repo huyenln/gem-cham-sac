@@ -2420,7 +2420,10 @@ tường là lối vào. Bỏ "nhặt rác ngoài phố có đếm giờ": nặn
     bao); đĩa CD, xốp, xô, đồ chơi, túi bóng, màng bọc, túi gói hàng không cần bước nào.
 - **Nút × của bảng** (24/10): phần đầu trò chơi (`.pl-head`, `position: relative`) nằm đè lên ×
   nên chạm × không tắt được trên điện thoại. `.st-close { z-index: 5 }`; thẻ Cách chơi đóng khi
-  chạm ra ngoài thẻ (nền mờ của nó phủ lên ×).
+  chạm ra ngoài thẻ (nền mờ của nó phủ lên ×). 25/10: bảng dài hơn màn hình điện thoại (trang đầu trò chơi, màn 1, màn
+  4) cuộn xuống tới các bao thì × trôi khỏi màn hình theo nội dung → × luôn ở góc trên của bảng
+  (dời xuống đúng bằng đoạn đã cuộn, `bindSheetDrag()` trong `js/studio.js`; nền giấy + bóng nhẹ
+  `.st-close.is-pinned` khi nằm đè lên chữ). Áp dụng cho mọi bảng của studio.
 - **Rác thường + tranh いらすとや** (Anna 24/10, "dùng luôn của irasutoya, có chú thích"): ô thứ 7
   từ màn 2 (`ALL_BINS`, hình túi nilon trắng `tui-rac`, nhãn xám — không phải của Tagom). Món:
   xương cá, vỏ trứng, lõi táo (thức ăn thừa, Tagom không nhận) → Rác thường; chai có vòi bơm, xô

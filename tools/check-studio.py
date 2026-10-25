@@ -4134,11 +4134,15 @@ async def phanloai(browser, db):
         # nor does it gzip: the script counts ~90 KB here, ~26 KB online).
         # 900 KB since 24/10: level 1's three more things, before and after
         # the sheet's × closes the game when tapped where it is drawn (the
-        # game's header lay over it and took the tap, 24/10)
+        # game's header lay over it and took the tap, 24/10), the sheet
+        # scrolled down too: the × stays at its top (it scrolled away, 25/10)
+        await pg.evaluate("document.querySelector('.st-sheet').scrollTop = 99999")
+        await pg.wait_for_timeout(200)
         x = await center(pg, '.st-close')
+        pinned = await pg.evaluate("(() => { const s = document.querySelector('.st-sheet').getBoundingClientRect(), x = document.querySelector('.st-close').getBoundingClientRect(); return x.top >= s.top && x.top < s.top + 60; })()")
         await pg.mouse.click(*x)
         await pg.wait_for_timeout(600)
-        check(await pg.evaluate("document.querySelector('.st-modal').hidden"), f'{name}: a tap on the × closes the game')
+        check(pinned and await pg.evaluate("document.querySelector('.st-modal').hidden"), f'{name}: the × at the sheet\'s top, scrolled down too; a tap on it closes the game ({pinned})')
         if name == 'desktop':
             m0 = await pg.evaluate('window.__src')
             await pg.wait_for_timeout(1500)
