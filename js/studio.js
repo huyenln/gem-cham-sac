@@ -2435,7 +2435,7 @@
       head('studio.fitting_h', 'studio.fitting_p') +
       '<div class="fit">' +
         '<div class="fit-side">' +
-          '<figure class="fit-model"><span class="fit-fr"></span><figcaption class="fit-cap"></figcaption></figure>' +
+          '<figure class="fit-model"><span class="fit-fr"></span><img class="fit-mac" alt="" hidden><figcaption class="fit-cap"></figcaption></figure>' +
           '<div class="fit-opts" role="group" hidden></div>' +
           '<p class="fit-wear"><button type="button" class="st-btn" data-wear></button>' +
             '<button type="button" class="st-btn st-btn-ghost fit-add" data-add></button></p>' +
@@ -2464,6 +2464,11 @@
     fr.style.aspectRatio = String(W.AT[key] ? W.AT[key][0] : 0.3);
     fr.innerHTML = '<img src="' + charSrc(who, 'front') + '" alt="" draggable="false">' +
       wornHtml(key, wornItems(cur ? wearPut(worn.slice(), tryOn) : worn));
+    // the scrunchie: its own drawing, as it always was (W.MAC)
+    var mac = cur && !cur.spec && W.MAC[cur.sku], mi = root.querySelector('.fit-mac');
+    fr.hidden = !!mac;
+    mi.hidden = !mac;
+    if (mac) mi.src = mac; else mi.removeAttribute('src');
     root.querySelector('.fit-cap').textContent = cur ? cur.name : '';
     // its "Mẫu", when it has them
     var info = cur && !cur.spec && B ? B.info(cur.sku) : null;

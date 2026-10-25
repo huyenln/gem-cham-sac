@@ -1498,6 +1498,19 @@ html:has(.studio-page) { overscroll-behavior: none; }   /* own rule: a Safari wi
   transform: translateX(-50%);
 }
 .fit-fr > img { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; }
+.fit-fr[hidden], .fit-mac[hidden] { display: none; }
+/* a piece with a drawing of its own being worn (the scrunchie's close-up) */
+.fit-mac {
+  position: absolute;
+  left: 51%;
+  bottom: 31%;
+  height: 52%;
+  width: auto;
+  max-width: 68%;
+  object-fit: contain;
+  object-position: bottom;
+  transform: translateX(-50%);
+}
 /* its "Mẫu" under the picture */
 .fit-opts { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px; margin: var(--space-2) auto 0; max-width: 360px; }
 .fit-opts[hidden] { display: none; }

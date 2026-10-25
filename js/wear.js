@@ -20,7 +20,7 @@ window.GemWear = (function () {
   // drawing order, back to front; one piece per slot
   var SLOTS = ['hair', 'bag', 'wrist', 'charm'];
   var SLOT_NAMES = {
-    bag: 'Cầm tay (túi)', wrist: 'Cổ tay (dây đeo)', charm: 'Móc vào túi (charm)', hair: 'Trên tóc (buộc tóc)'
+    bag: 'Cầm tay (túi)', wrist: 'Cổ tay (dây đeo)', charm: 'Móc vào túi (charm)', hair: 'Trên tóc (cài hoa)'
   };
   // a new piece of that slot starts here (admin.html)
   var SLOT_DEF = {
@@ -42,9 +42,9 @@ window.GemWear = (function () {
 
   // A piece sewn from one's design (GemPatch product id): how it is worn.
   // The picture is GemPatch.svg of the design, its viewBox cut to the
-  // piece (box: x, y, w, h of the 340 board); ax / ay on that box.
+  // piece (box: x, y, w, h of the 340 board); ax / ay on that box. Not the
+  // scrunchie: on the character it reads as a hair flower (Anna 25/10).
   var DESIGN = {
-    scrunchie: { slot: 'hair',  h: 0.09, ax: 0.5,  ay: 0.5, box: [0, 1, 340, 338] },
     origami:   { slot: 'charm', h: 0.09, ax: 0.15, ay: 0,   box: [1, 1, 338, 339] },
     oxford:    { slot: 'bag',   h: 0.2,  ax: 0.49, ay: 0,   box: [47, 0, 246, 340] },
     bloom:     { slot: 'charm', h: 0.1,  ax: 0.5,  ay: 0,   box: [83, 0, 174, 340] },
@@ -57,6 +57,12 @@ window.GemWear = (function () {
     laptop:    { slot: 'bag',   h: 0.2,  ax: 0.5,  ay: 0,   box: [0, 70, 340, 200] },
     laptopq:   { slot: 'bag',   h: 0.25, ax: 0.5,  ay: 0,   box: [0, 37, 340, 266] }
   };
+
+  // A drawing of the piece being worn, shown in the fitting corner in place
+  // of the character: a hair tie on a character facing us is a dot by the
+  // ear; the drawing shows it holding a ponytail (Anna 25/10: "phải kiểu
+  // đeo như cũ")
+  var MAC = { scrunchie: 'images/studio/wear/scrunchie-mac.webp' };
 
   var IMG = /^(images\/studio\/[a-z0-9\/_-]+\.(webp|png)|https:\/\/dxdovvqsfjeizsoprrfn\.supabase\.co\/storage\/v1\/object\/public\/gem-media\/[A-Za-z0-9%._-]+)$/;
   function num(v, lo, hi, d) { return typeof v === 'number' && isFinite(v) ? Math.min(hi, Math.max(lo, v)) : d; }
@@ -92,6 +98,6 @@ window.GemWear = (function () {
   }
   function held(w) { return w.slot !== 'hair'; }
 
-  return { AT: AT, SLOTS: SLOTS, SLOT_NAMES: SLOT_NAMES, SLOT_DEF: SLOT_DEF, LEGACY: LEGACY, DESIGN: DESIGN,
+  return { AT: AT, SLOTS: SLOTS, SLOT_NAMES: SLOT_NAMES, SLOT_DEF: SLOT_DEF, LEGACY: LEGACY, DESIGN: DESIGN, MAC: MAC,
     norm: norm, okImg: okImg, place: place, fist: fist, held: held };
 })();

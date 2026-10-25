@@ -3121,11 +3121,13 @@ Anna: thêm phụ kiện / túi để nhân vật đeo thử; không vẽ thêm 
 - **8 mẫu của Túi đi chơi / Túi đi chợ**: tách từ chính poster của mẫu bằng `tools/wear-cuts.py`, ra `images/studio/wear/<sku>-<mẫu>.webp`.
   - Cách tách: giữ khối lớn nhất không phải nền giấy, bỏ chữ, bóc viền kem quanh túi; chấm kem nhỏ trong hoạ tiết vẫn giữ.
   - Mẫu mới sau này: admin → mẫu đó → "Ảnh cắt nền của mẫu" (Xoá nền trắng / tải ảnh đã tách nền).
-- **Xem trước = chính nhân vật khách chọn ở cửa** (dáng đứng thẳng) đeo đồ đang đeo + món đang chạm. Bỏ 5 tranh người mẫu `wear/*-mac.webp`; `tools/studio-assets.py` không xuất chúng nữa (tên có `-`).
+- **Xem trước = chính nhân vật khách chọn ở cửa** (dáng đứng thẳng) đeo đồ đang đeo + món đang chạm. Bỏ 4 tranh người mẫu `wear/*-mac.webp`; `tools/studio-assets.py` không xuất chúng nữa (tên có `-`).
+  - **Trừ Dây buộc tóc** (Anna: "phải kiểu đeo như cũ"): khung xem trước vẫn là tranh cận cảnh tóc buộc đuôi ngựa `wear/scrunchie-mac.webp` (`GemWear.MAC`). Lý do: nhân vật nhìn thẳng thì dây buộc tóc thành một chấm cạnh tai, trông như cài hoa. Ngoài cảnh vẫn đeo ở gáy như trước.
+  - Cách đeo "Trên tóc" hợp với **cài hoa** (Gem sắp chụp và đăng sản phẩm này): admin chọn "Trên tóc (cài hoa)".
   - Dưới hình: chip Mẫu, "Đeo thử" / "Tháo ra", "Thêm vào giỏ" (đúng mẫu đang thử; mẫu hết hàng xem được, không mua được).
   - Món đang đeo lưu theo id: `<sku>`, `<sku>/<mẫu>` hoặc `d:<mã thiết kế>`. Mỗi lượt lưu ở sessionStorage `gem-mac`; món đã mua / thiết kế đã mua lưu ở localStorage `gem-mac`.
   - Món không còn được thử bị bỏ khi database trả lời.
-- **Túi tự thiết kế**: chỉ khi khách **đã mua**, tức Tủ sưu tầm có `owned` kèm mã thiết kế.
+- **Túi tự thiết kế**: chỉ khi khách **đã mua**, tức Tủ sưu tầm có `owned` kèm mã thiết kế. Thử được túi, Origami, Bloom, dây đeo tay; không thử dây buộc tóc tự thiết kế (đeo lên nhân vật trông như cài hoa).
   - Vẽ bằng `GemPatch.svg` của thiết kế, viewBox cắt sát món (`GemWear.DESIGN[món].box`, đo từ 12 món của Bàn thiết kế).
   - Món mua ở máy khác chỉ về dạng sản phẩm thường (mã thiết kế chỉ nằm trong ghi chú đơn), nên chỉ thử được trên máy đã đặt.
 - **Admin → Sản phẩm → Sửa → "Đeo thử ở Góc thử đồ"**: bật / tắt, cách đeo, cỡ (thanh kéo), xem trước trên Bạn 1–4.

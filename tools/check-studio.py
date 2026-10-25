@@ -3914,6 +3914,18 @@ async def thudo(browser, db):
         check(await pg.evaluate("!!document.querySelector('.fit-list-h')"), f'{name}: "Món bạn tự thiết kế" heads the own designs')
         fr = await pg.evaluate("[...document.querySelectorAll('.fit-fr img')].map(i => i.getAttribute('src'))")
         check(fr and fr[0] == 'images/studio/char/p2-front.webp', f'{name}: the picture is the character picked at the door ({fr[:1]})')
+        # the scrunchie keeps its close-up (a hair tie on a character facing
+        # us reads as a hair flower); the next piece: the character again
+        vis = "[document.querySelector('.fit-fr').hidden, document.querySelector('.fit-mac').hidden, document.querySelector('.fit-mac').getAttribute('src')]"
+        await js_click(pg, '.fit-pick[data-try="scrunchie"]')
+        await pg.wait_for_timeout(300)
+        sc = await pg.evaluate(vis)
+        await pg.screenshot(path=OUT / f'thudo-{name}-buoctoc.png')
+        await js_click(pg, '.fit-pick[data-try="oxford"]')
+        await pg.wait_for_timeout(300)
+        ox = await pg.evaluate(vis)
+        check(sc == [True, False, 'images/studio/wear/scrunchie-mac.webp'] and ox[:2] == [False, True],
+              f'{name}: Dây buộc tóc shows its close-up as before; Oxford, the character ({sc}, {ox[:2]})')
         # the bag with Mẫu: its chips, each its own picture; the one sold out shown, not bought
         await js_click(pg, '[data-try="tui-di-choi/jeans-xanh"]')
         await pg.wait_for_timeout(300)
