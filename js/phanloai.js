@@ -64,7 +64,7 @@
     { id: 'hop-sua-chua', bin: 'nhua-67', code: 6 }, { id: 'thia', bin: 'nhua-67' }, { id: 'dia', bin: 'nhua-67', code: 6 },
     { id: 'ban-chai', bin: 'nhua-67' },
     { id: 'goi-snack', bin: 'nilon-cung' }, { id: 'vo-banh', bin: 'nilon-cung' }, { id: 'tui-zip', bin: 'nilon-cung' },
-    { id: 'bao-gao', bin: 'nilon-cung' }, { id: 'tui-vai', bin: 'nilon-cung' },
+    { id: 'bao-gao', bin: 'nilon-cung' },   // tui-vai: back when its folded picture comes (tui-vai-gap)
     { id: 'tui-bong', bin: 'nilon-mem' }, { id: 'mang-boc', bin: 'nilon-mem' }, { id: 'xop-hoi', bin: 'nilon-mem' },
     { id: 'tui-khi', bin: 'nilon-mem' }, { id: 'tui-goi-hang', bin: 'nilon-mem' },
     { id: 'dia-cd', bin: 'nhua-67' }, { id: 'xop', bin: 'nhua-67' },
@@ -88,7 +88,7 @@
   // levels 2 and 3 have no tools: what wants getting ready comes ready (a
   // bottle squashed, the cushion with its air let out, the snack bag cleaned
   // and folded), as it is when it goes in a bag at every level
-  var READY = { 'chai-tran': 'chai-bep', 'tui-khi': 'tui-khi-xep', 'goi-snack': 'goi-snack-gap' };
+  var READY = { 'chai-tran': 'chai-bep', 'lo-thuoc': 'lo-thuoc-tran', 'tui-khi': 'tui-khi-xep', 'goi-snack': 'goi-snack-gap' };
   // the bottles, and what comes off them: things of their own on the table
   var EXTRA = { chai: 'nhua-1-de', 'chai-dau-nap': 'nhua-1-de', 'chai-to': 'nhua-1-de', nap: 'nhua-245', tem: 'nilon-cung' };
   // a bottle's pictures: cap and label on; bare (cap cut from the first).
@@ -109,6 +109,28 @@
     '<polygon points="190,26 193,21 196,20 201,22 201,24 199,27 194,28" fill="#C98F45"/><polygon points="204,44 209,44 211,47 210,50 204,52 200,50 199,46" fill="#8F5B24"/>' +
     '<polygon points="195,67 204,67 204,72 198,75 192,71" fill="#E3B865"/>' +
     '</svg>';
+  // food things a party leaves, about half of them dirty (Anna 25/10: one
+  // looks closely); their pictures' size, for the food drawn over them
+  var DIRTY = { 'hop-banh': [300, 204], 'khay-den': [300, 165], 'nap-cau': [300, 209], 'hop-sua-chua': [300, 277],
+                dia: [300, 246], thia: [198, 300], 'hop-com': [300, 236], 'lo-keo': [272, 300], 'vo-banh': [176, 300], 'tui-zip': [227, 300] };
+  // food left on it: smears and crumbs, at fractions of the picture, shown
+  // only where the picture is (masked by it)
+  var SMEARS = [[0.32, 0.38, 0.13, 0.08], [0.6, 0.55, 0.16, 0.09], [0.45, 0.72, 0.1, 0.06], [0.72, 0.3, 0.09, 0.07],
+                [0.25, 0.66, 0.08, 0.05], [0.55, 0.22, 0.07, 0.05], [0.8, 0.7, 0.07, 0.05]];
+  var BITS = [[0.4, 0.3], [0.52, 0.42], [0.36, 0.55], [0.66, 0.46], [0.48, 0.62], [0.7, 0.62], [0.28, 0.46], [0.58, 0.32], [0.44, 0.84], [0.62, 0.78]];
+  function smear(th) {
+    var w = DIRTY[th.id][0], h = DIRTY[th.id][1], m = 'pl-m-' + th.k, u = Math.min(w, h);
+    return '<svg class="pl-smear" viewBox="0 0 ' + w + ' ' + h + '" aria-hidden="true">' +
+      '<mask id="' + m + '"><image href="' + R + th.id + '.webp" width="' + w + '" height="' + h + '"/></mask><g mask="url(#' + m + ')">' +
+      SMEARS.map(function (e, i) {
+        return '<ellipse cx="' + Math.round(e[0] * w) + '" cy="' + Math.round(e[1] * h) + '" rx="' + Math.round(e[2] * u * 1.6) + '" ry="' + Math.round(e[3] * u * 1.6) +
+          '" transform="rotate(' + (i * 37 % 60 - 30) + ' ' + Math.round(e[0] * w) + ' ' + Math.round(e[1] * h) + ')" class="is-' + (i % 2 ? 'b' : 'a') + '"/>';
+      }).join('') +
+      BITS.map(function (b, i) {
+        var x = b[0] * w, y = b[1] * h, r = u * (0.025 + (i % 3) * 0.008);
+        return '<polygon points="' + [0, 1, 2, 3, 4].map(function (k) { var a = k * 1.26 + i, q = r * (k % 2 ? 0.7 : 1); return Math.round(x + q * Math.cos(a)) + ',' + Math.round(y + q * Math.sin(a)); }).join(' ') + '"/>';
+      }).join('') + '</g></svg>';
+  }
   // what else a party leaves (ids in ITEMS)
   var PARTY = ['hop-banh', 'thia', 'dia', 'nap-cau', 'vo-banh', 'hop-sua-chua', 'chai-to', 'hop-com', 'tui-bong',
                'khay-den', 'lo-keo', 'mang-boc', 'tui-zip', 'nap-chai', 'chai-tran', 'xuong-ca', 'vo-trung', 'loi-tao'];
@@ -124,7 +146,7 @@
     ban:  { n: 4, h: 'pl.ban_h', p: 'pl.ban_p', g: 'pl.g4_p', ms: 90000, bpm: 92, fast: 116, start: 8, lead: 4, plain: 4,
             prep: ['chai', 'ly-tra-sua', 'tui-khi', 'goi-snack'], swap: 1 },
     tiec: { n: 5, h: 'pl.tiec_h', p: 'pl.tiec_p', g: 'pl.g5_p', ms: 150000, bpm: 100, fast: 126, start: 6, lead: 2, plain: 10,
-            life: 29000, per: 8000, gap: [8000, 6000], apart: 5000, bin: 5, prep: ['chai', 'chai-dau-nap', 'ly-tra-sua', 'tui-khi', 'goi-snack', 'ly-tra-sua'] }
+            life: 33000, per: 8000, gap: [9000, 7000], apart: 7000, bin: 5, prep: ['chai', 'chai-dau-nap', 'ly-tra-sua', 'tui-khi', 'goi-snack', 'ly-tra-sua'] }
   };
   // the tools, drawn here as before -> after (56 x 28, a line in the ink
   // colour, a little colour where it tells: the tea, the water, the bag)
@@ -238,9 +260,10 @@
     'pl.g1_2':      { vi: `Kéo từng món vào bao, hoặc chạm món rồi chạm bao. Nhầm thì Udon nhắc, không trừ điểm.`,
                       en: `Drag each to its bag, or tap it, then the bag. Udon tells you if it's wrong; no points lost.` },
     'pl.g1_3h':     { vi: `Ba món nữa, ba dụng cụ`, en: `Three more, three tools` },
-    'pl.g1_3':      { vi: `Ly trà sữa còn trà: Làm sạch. Túi khí: Xả hơi, rồi kéo thử xem có giãn không. Gói snack còn vụn bánh: Làm sạch rồi mới Gấp gọn. Màn 4 dùng lại ba dụng cụ này.`,
+    'pl.g1_3':      { vi: `Ly trà sữa còn trà: Làm sạch. Túi khí: Làm xẹp, rồi kéo thử xem có giãn không. Gói snack còn vụn bánh: Làm sạch rồi mới Gấp gọn. Màn 4 dùng lại ba dụng cụ này.`,
                       en: `A cup with tea left: Clean. An air cushion: Air out, then pull it to see if it stretches. A snack bag with crumbs: Clean, then Fold. Level 4 uses these three tools.` },
-    'pl.g2_p':      { vi: `10 món đồ nhựa, nilon quen thuộc, lần lượt từng món.`, en: `Ten everyday plastic and nylon things, one at a time.` },
+    'pl.g2_p':      { vi: `10 món đồ nhựa, nilon quen thuộc, lần lượt từng món. Món nào cũng đã sửa soạn sẵn: sạch, tháo nắp, bóp bẹp, gấp gọn.`,
+                      en: `Ten everyday plastic and nylon things, one at a time. Each is ready already: clean, cap off, squashed, folded.` },
     'pl.g2_1h':     { vi: `Nhìn món đồ`, en: `Look at the thing` },
     'pl.g2_1':      { vi: `Món đang chơi hiện ở giữa. Hộp, cốc, khay khó nhận ra có kí hiệu số như in ở đáy đồ thật; nilon thì chạm để bóp thử, kéo mép để thử độ giãn.`,
                       en: `The thing to sort is in the middle. Boxes, cups and trays hard to tell carry their number, as under the real thing; nylon: tap to squeeze it, pull an edge to stretch it.` },
@@ -283,14 +306,16 @@
     'pl.lost_h':    { vi: `Không kịp phân loại, thành rác chôn lấp:`, en: `Too late to sort, gone to landfill:` },
     'pl.tools':     { vi: `Dụng cụ`, en: `Tools` },
     'pl.t.rua':     { vi: `Làm sạch`, en: `Clean` },
-    'pl.t.xep':     { vi: `Xả hơi`, en: `Air out` },
+    'pl.t.xep':     { vi: `Làm xẹp`, en: `Air out` },
     'pl.t.gap':     { vi: `Gấp gọn`, en: `Fold` },
     // what a thing still has, on its tag
     'pl.c.nap':     { vi: `Còn nắp`, en: `Cap on` },
     'pl.c.tem':     { vi: `Còn tem`, en: `Label on` },
     'pl.c.bep':     { vi: `Chưa bóp bẹp`, en: `Not squashed` },
-    'pl.c.rua':     { vi: `Còn trà`, en: `Tea left` },
+    'pl.c.rua':     { vi: `Còn thức ăn`, en: `Food left` },
+    'pl.c.rua.ly-tra-sua': { vi: `Còn trà`, en: `Tea left` },
     'pl.c.rua.goi-snack': { vi: `Còn vụn bánh`, en: `Crumbs in` },
+    'pl.c.rua.vo-banh': { vi: `Còn vụn bánh`, en: `Crumbs in` },
     'pl.c.xep':     { vi: `Còn hơi`, en: `Air in` },
     'pl.c.gap':     { vi: `Chưa gấp`, en: `Not folded` },
     // into a bag before it is ready: what to do first
@@ -304,10 +329,12 @@
     'pl.did_nap':   { vi: `Nắp tháo ra rồi: bỏ vào bao nào?`, en: `The cap's off: which bag?` },
     'pl.did_tem':   { vi: `Tem bóc ra rồi: bỏ vào bao nào?`, en: `The label's off: which bag?` },
     'pl.did_bep':   { vi: `Chai bẹp rồi: bỏ vào bao nào?`, en: `Squashed flat: which bag?` },
-    'pl.h.rua':     { vi: `Còn trà kìa: làm sạch đã.`, en: `There's tea left: clean it first.` },
+    'pl.h.rua':     { vi: `Còn thức ăn kìa: làm sạch đã.`, en: `There's food on it: clean it first.` },
+    'pl.h.rua.ly-tra-sua': { vi: `Còn trà kìa: làm sạch đã.`, en: `There's tea left: clean it first.` },
     'pl.h.rua.goi-snack': { vi: `Còn vụn bánh kìa: làm sạch đã.`, en: `Crumbs inside: clean it first.` },
+    'pl.h.rua.vo-banh': { vi: `Còn vụn bánh kìa: làm sạch đã.`, en: `Crumbs inside: clean it first.` },
     'pl.order_gap': { vi: `Làm sạch trước rồi mới gấp.`, en: `Clean it first, then fold.` },
-    'pl.h.xep':     { vi: `Còn hơi kìa: xả hơi đã.`, en: `Still full of air: let it out first.` },
+    'pl.h.xep':     { vi: `Còn hơi kìa: làm xẹp đã.`, en: `Still full of air: let it out first.` },
     'pl.h.gap':     { vi: `Gấp gọn gói snack đã.`, en: `Fold the bag flat first.` },
     'pl.pick_first': { vi: `Chạm chọn một món trên bàn trước nha.`, en: `Tap a thing on the table first.` },
     'pl.no_need':   { vi: `Món này không cần "{t}".`, en: `This one doesn't need "{t}".` },
@@ -324,11 +351,11 @@
     'pl.g4_p':      { vi: `Tiệc xong, trên bàn còn 8 món. Vài món cần sửa soạn trước khi vào bao.`,
                       en: `The party's over: eight things on the table. Some need getting ready before they go in a bag.` },
     'pl.g4_1h':     { vi: `Chọn món`, en: `Pick a thing` },
-    'pl.g4_1':      { vi: `Chạm một món trên bàn. Nhãn nhỏ dưới món cho biết món đó còn gì: còn nắp, còn trà, còn hơi…`,
-                      en: `Tap a thing on the table. The little tags say what is left: cap on, tea left, air in…` },
+    'pl.g4_1':      { vi: `Chạm một món trên bàn. Nhãn nhỏ dưới món cho biết món đó còn gì: còn nắp, còn trà, còn thức ăn, còn hơi… Đồ đựng thức ăn có cái bẩn, có cái sạch: nhìn kỹ nha.`,
+                      en: `Tap a thing on the table. The little tags say what is left: cap on, tea left, food left, air in… Some food things are dirty, some clean: look closely.` },
     'pl.g4_2h':     { vi: `Sửa soạn`, en: `Get it ready` },
-    'pl.g4_2':      { vi: `Chai: chạm vào nắp, tem, thân chai như màn 1. Ly, túi khí, gói snack: chạm dụng cụ (hoặc kéo món lên dụng cụ). Dùng dụng cụ khi không cần: trừ 2 giây.`,
-                      en: `A bottle: tap its cap, label, body, as in level 1. The cup, the cushion, the snack bag: tap a tool (or drag the thing onto it). A tool not needed: −2 s.` },
+    'pl.g4_2':      { vi: `Chai: chạm vào nắp, tem, thân chai như màn 1. Món còn thức ăn, túi khí, gói snack: chạm dụng cụ (hoặc kéo món lên dụng cụ). Dùng dụng cụ khi không cần: trừ 2 giây.`,
+                      en: `A bottle: tap its cap, label, body, as in level 1. Something with food left, the cushion, the snack bag: tap a tool (or drag the thing onto it). A tool not needed: −2 s.` },
     'pl.g4_3h':     { vi: `Bỏ vào bao`, en: `Into its bag` },
     'pl.g4_3':      { vi: `Chưa sửa soạn xong hay nhầm bao: trừ 5 giây. Dọn sạch bàn trong 90 giây để mở màn 5.`,
                       en: `Not ready, or the wrong bag: −5 s. Clear the table in 90 seconds to open level 5.` },
@@ -413,12 +440,13 @@
     'pl.i.mang-boc':     { vi: `Màng bọc thực phẩm`, en: `Cling film` },
     'pl.w.mang-boc':     { vi: `Mềm, kéo giãn được.`, en: `Soft and stretchy.` },
     'pl.i.xop-hoi':      { vi: `Màng xốp hơi`, en: `Bubble wrap` },
-    'pl.w.xop-hoi':      { vi: `Nilon mềm: xả hơi rồi mang đi.`, en: `Soft nylon: let the air out first.` },
+    'pl.w.xop-hoi':      { vi: `Màng xốp hơi: nilon mềm, kéo thì giãn.`, en: `Bubble wrap: soft nylon, it stretches.` },
     'pl.i.tui-khi':      { vi: `Túi khí chống sốc`, en: `An air-column cushion` },
     'pl.r.chai-tran':    { vi: `Chai nước trong (đã tháo nắp, bóc tem, bóp bẹp)`, en: `A clear water bottle (cap and label off, squashed)` },
-    'pl.r.tui-khi':      { vi: `Túi khí chống sốc (đã xả hơi)`, en: `An air-column cushion (air let out)` },
+    'pl.r.lo-thuoc':     { vi: `Lọ thuốc nhựa nâu (đã tháo nắp)`, en: `A brown medicine bottle (cap off)` },
+    'pl.r.tui-khi':      { vi: `Túi khí chống sốc (đã làm xẹp)`, en: `An air-column cushion (air let out)` },
     'pl.r.goi-snack':    { vi: `Gói snack (đã làm sạch, gấp gọn)`, en: `A snack bag (cleaned, folded)` },
-    'pl.w.tui-khi':      { vi: `Xả hơi các cột khí rồi bỏ vào nilon mềm.`, en: `Let the air out, then soft nylon.` },
+    'pl.w.tui-khi':      { vi: `Làm xẹp các cột khí rồi bỏ vào nilon mềm.`, en: `Let the air out, then soft nylon.` },
     'pl.i.tui-goi-hang': { vi: `Túi gói hàng online`, en: `A courier mailer bag` },
     'pl.w.tui-goi-hang': { vi: `Mềm, kéo giãn được: nilon mềm.`, en: `Soft and stretchy: soft nylon.` },
     'pl.i.xop':          { vi: `Tấm xốp phẳng`, en: `A flat foam sheet` },
@@ -866,7 +894,8 @@
     } else {
       // level 4: the water bottle or the cooking-oil one
       var prepIds = cfg.prep.map(function (id) { return cfg.swap && id === 'chai' && Math.random() < 0.5 ? 'chai-dau-nap' : id; });
-      var prep = shuffle(prepIds.map(mk)), plain = shuffle(PARTY.slice()).slice(0, cfg.plain).map(mk);
+      var dirt = function (x) { if (DIRTY[x.id] && Math.random() < 0.5) x.need = ['rua']; return x; };
+      var prep = shuffle(prepIds.map(mk)), plain = shuffle(PARTY.slice()).slice(0, cfg.plain).map(mk).map(dirt);
       S.table = shuffle(prep.splice(0, cfg.lead).concat(plain.splice(0, cfg.start - cfg.lead))).map(thing);
       S.queue = shuffle(prep.concat(plain)).map(thing);
     }
@@ -908,7 +937,7 @@
       '<span class="pl-gi pl-gi-tools">' + toolSvg('rua') + toolSvg('gap') + '</span>',
       '<span class="pl-gi">' + img('bao', 'pl-gi-d', '') + '</span>'];
   }
-  function thing(x) { return { k: 'k' + (++S.uid), id: x.id, bin: x.bin, need: (PREP[x.id] || []).slice() }; }
+  function thing(x) { return { k: 'k' + (++S.uid), id: x.id, bin: x.bin, need: (x.need || PREP[x.id] || []).slice() }; }
   function find(k) { return S.table.filter(function (th) { return th.k === k; })[0]; }
   function has(th, step) { return th.need.indexOf(step) >= 0; }
   // level 5: how long it may wait (longer for each step it needs)
@@ -927,6 +956,7 @@
       var pic = img(has(th, P[0]) ? P[1] : P[2], '', '');
       return th.id === 'goi-snack' && has(th, 'rua') ? '<span class="pl-dirty">' + pic + CRUMBS + '</span>' : pic;
     }
+    if (DIRTY[th.id] && has(th, 'rua')) return '<span class="pl-dirty">' + img(th.id, '', '') + smear(th) + '</span>';
     return img(th.id, '', '');
   }
   function drawTable() {
@@ -1651,5 +1681,5 @@
     return a;
   }
 
-  window.GemPhanLoai = { open: open, ITEMS: ITEMS, BINS: BINS, POSTERS: POSTERS, PREP: PREP, TABLE: TABLE };
+  window.GemPhanLoai = { open: open, ITEMS: ITEMS, BINS: BINS, POSTERS: POSTERS, PREP: PREP, TABLE: TABLE, DIRTY: DIRTY };
 })();
