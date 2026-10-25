@@ -43,9 +43,10 @@ window.GemWear = (function () {
   // A bag sewn from one's design (GemPatch product id): how it is worn.
   // The picture is GemPatch.svg of the design, its viewBox cut to the
   // piece (box: x, y, w, h of the 340 board); ax / ay on that box. Bags
-  // only (Anna 25/10): not the laptop sleeve, and the small pieces keep
-  // their own drawings (MAC)
+  // and the Origami key ring (Anna 25/10): not the laptop sleeve; the
+  // scrunchie, strap and charm are shown by their own drawings (MAC)
   var DESIGN = {
+    origami:   { slot: 'charm', h: 0.09, ax: 0.15, ay: 0,   box: [1, 1, 338, 339] },
     oxford:    { slot: 'bag',   h: 0.2,  ax: 0.49, ay: 0,   box: [47, 0, 246, 340] },
     tuitote:   { slot: 'bag',   h: 0.34, ax: 0.5,  ay: 0,   box: [60, 0, 220, 340] },
     tuino:     { slot: 'bag',   h: 0.28, ax: 0.6,  ay: 0,   box: [19, 0, 302, 340] },

@@ -3133,14 +3133,14 @@ Anna: thêm phụ kiện / túi để nhân vật đeo thử; không vẽ thêm 
   - Dưới hình: chip Mẫu, "Đeo thử" / "Tháo ra", "Thêm vào giỏ" (đúng mẫu đang thử; mẫu hết hàng xem được, không mua được).
   - Món đang đeo lưu theo id: `<sku>`, `<sku>/<mẫu>` hoặc `d:<mã thiết kế>`. Mỗi lượt lưu ở sessionStorage `gem-mac`; món đã mua / thiết kế đã mua lưu ở localStorage `gem-mac`.
   - Món không còn được thử bị bỏ khi database trả lời.
-- **Túi tự thiết kế**: chỉ khi khách **đã mua**, tức Tủ sưu tầm có `owned` kèm mã thiết kế. Chỉ **túi** (Oxford, các dáng Túi); không túi laptop, không các món nhỏ.
+- **Túi tự thiết kế**: chỉ khi khách **đã mua**, tức Tủ sưu tầm có `owned` kèm mã thiết kế. Chỉ **túi** (Oxford, các dáng Túi) và Origami; không túi laptop, không dây buộc tóc / dây đeo / Bloom (ba món này xem bằng tranh riêng).
   - Vẽ bằng `GemPatch.svg` của thiết kế, viewBox cắt sát món (`GemWear.DESIGN[món].box`, đo từ 12 món của Bàn thiết kế).
   - Món mua ở máy khác chỉ về dạng sản phẩm thường (mã thiết kế chỉ nằm trong ghi chú đơn), nên chỉ thử được trên máy đã đặt.
 - **Admin → Sản phẩm → Sửa → "Đeo thử ở Góc thử đồ"**: bật / tắt, cách đeo, cỡ (thanh kéo), xem trước trên Bạn 1–4.
   - Kéo món trên hình để đặt vào tay.
   - "Dùng ảnh cắt nền thay tranh vẽ" bỏ `wear.img`.
   - Chỉ gửi `wear` khi bản ghi đã có cột này (sau migration).
-- **Cấu hình ban đầu** (migration): 5 món cũ như trước; Túi đi chơi 0.32, Túi đi chợ 0.36 (cầm tay). Túi laptop và Origami **không** thử (Anna 25/10, `20261025b_thu_do_bot.sql`).
+- **Cấu hình ban đầu** (migration): 5 món cũ như trước; Túi đi chơi 0.32, Túi đi chợ 0.36 (cầm tay); Origami là charm (móc khoá treo cạnh túi, cầm ở vòng). Túi laptop **không** thử (Anna 25/10, `20261025b_thu_do_bot.sql`).
   - Cỡ đã xem trên 4 nhân vật; chỉnh tiếp ở admin.
 - **Database chưa có cột / không trả lời**: dùng lại 5 món cũ (`GemWear.LEGACY`).
 - Ảnh cắt nền là ảnh chụp, nhân vật là tranh vẽ: chấp nhận lệch phong cách, như kệ hàng đang dùng.
