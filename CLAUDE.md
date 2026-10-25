@@ -417,7 +417,7 @@ Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
   thành Khu vực `phanloai`) → màn 1 cái chai (chạm thẳng vào nắp / tem / thân chai) + 3 món bằng 3 dụng cụ
   (làm sạch / làm xẹp / gấp, hình trước → sau; gói snack làm sạch vụn rồi mới gấp; túi khí, snack kéo thử giãn), không giờ;
   sửa soạn theo poster Tagom ở mọi màn (màn 2–3 hiện sẵn đã sửa soạn; bàn tiệc: chai bóp bẹp, đồ đựng thức ăn bẩn
-  ngẫu nhiên ~1/2 phải làm sạch), chạm nilon = bóp thử ở mọi màn; túi vải chờ tranh đã gấp; màn 2 phân loại 10 món vào 6 bao Tagom + ô Rác thường (hộp, cốc khó
+  ngẫu nhiên ~1/2 phải làm sạch), chạm nilon = bóp thử ở mọi màn; màn 2 phân loại 10 món vào 6 bao Tagom + ô Rác thường (hộp, cốc khó
   nhận ra có kí hiệu số theo poster Tagom; nilon bóp thử ("SỘT SOẠT!" kiểu truyện tranh / "~ ~ ~") và kéo
   thử bằng tay nắm; xốp, CD vào nhựa 6-7; đồ ăn thừa vào Rác thường), màn 3 thử thách 60 giây, màn 4 dọn
   bàn sau tiệc (90 giây, sao), màn 5 tiệc chưa tàn (món đặt thêm, mỗi món có giờ riêng, không kịp thì vào

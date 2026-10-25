@@ -2393,7 +2393,7 @@ tường là lối vào. Bỏ "nhặt rác ngoài phố có đếm giờ": nặn
   **Rác thường** (ít nhất một món mỗi ô). Sai: hiện bao đúng + lý do (`pl.w.<id>`) + nút
   "Xem poster" (ô Rác thường không có poster). Màn 2–3 không có dụng cụ nên món cần sửa soạn hiện
   sẵn dạng đã sửa soạn (`READY`, tên `pl.r.<id>`): chai trần **đã bóp bẹp** (`chai-bep`), túi khí
-  **đã làm xẹp**, gói snack **đã làm sạch, gấp gọn**, lọ thuốc **đã tháo nắp** (`lo-thuoc-tran`, cắt
+  **đã làm xẹp**, gói snack **đã làm sạch, gấp gọn**, túi vải **đã gấp gọn**, lọ thuốc **đã tháo nắp** (`lo-thuoc-tran`, cắt
   nắp bằng `tools/rac-assets.py`); màn 4–5 vẫn phải sửa soạn. Lời dẫn màn 2 (`pl.g2_p`) nói rõ món nào
   cũng đã sửa soạn sẵn.
 - **Một luật cho cả 5 màn** (Anna 24/10, "các màn không thống nhất"): chai nhựa số 1 lúc nào cũng
@@ -2413,10 +2413,9 @@ tường là lối vào. Bỏ "nhặt rác ngoài phố có đếm giờ": nặn
   - **Lọ thuốc** còn nắp → màn 2–3 hiện đã tháo nắp (nắp sang 2-4-5 như màn 1 dạy).
   - **Màng xốp hơi**: Tagom chỉ bảo làm xẹp cột khí, nên lý do sửa thành "nilon mềm, kéo thì giãn"
     (trước ghi "xả hơi rồi mang đi" mà game không bắt làm).
-  - **Túi vải không dệt** tạm rút khỏi trò chơi: theo Tagom phải gấp gọn, Anna chọn vẽ tranh túi đã
-    gấp (ChatGPT, prompt ở `docs/prompts.md`). Có tranh thì: `tools/rac-assets.py` → `tui-vai-gap`,
-    thêm lại `{ id: 'tui-vai', bin: 'nilon-cung' }` vào `ITEMS` và `READY['tui-vai'] = 'tui-vai-gap'`
-    + `pl.r.tui-vai`.
+  - **Túi vải không dệt**: theo Tagom phải gấp gọn → màn 2–3 hiện đã gấp, "(đã gấp gọn)" (tranh
+    `tui-vai-gap`, ChatGPT 25/10, prompt ở `docs/prompts.md` mục 9; `READY['tui-vai']`). Phép kiểm
+    `phanloai`: món nào ở màn 2–3 cần sửa soạn (`PREP`) đều phải có tranh đã sửa soạn (`READY`).
   - Còn lại đã khớp: lọ kẹo, hũ kem không nắp; nắp can giặt, bình sữa, chai bơm cũng là 2-4-5 (chung
     bao); đĩa CD, xốp, xô, đồ chơi, túi bóng, màng bọc, túi gói hàng không cần bước nào.
 - **Nút × của bảng** (24/10): phần đầu trò chơi (`.pl-head`, `position: relative`) nằm đè lên ×

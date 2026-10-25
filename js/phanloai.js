@@ -64,7 +64,7 @@
     { id: 'hop-sua-chua', bin: 'nhua-67', code: 6 }, { id: 'thia', bin: 'nhua-67' }, { id: 'dia', bin: 'nhua-67', code: 6 },
     { id: 'ban-chai', bin: 'nhua-67' },
     { id: 'goi-snack', bin: 'nilon-cung' }, { id: 'vo-banh', bin: 'nilon-cung' }, { id: 'tui-zip', bin: 'nilon-cung' },
-    { id: 'bao-gao', bin: 'nilon-cung' },   // tui-vai: back when its folded picture comes (tui-vai-gap)
+    { id: 'bao-gao', bin: 'nilon-cung' }, { id: 'tui-vai', bin: 'nilon-cung' },
     { id: 'tui-bong', bin: 'nilon-mem' }, { id: 'mang-boc', bin: 'nilon-mem' }, { id: 'xop-hoi', bin: 'nilon-mem' },
     { id: 'tui-khi', bin: 'nilon-mem' }, { id: 'tui-goi-hang', bin: 'nilon-mem' },
     { id: 'dia-cd', bin: 'nhua-67' }, { id: 'xop', bin: 'nhua-67' },
@@ -86,9 +86,10 @@
                'ly-tra-sua': ['rua'], 'tui-khi': ['xep'], 'goi-snack': ['rua', 'gap'] };
   var TOOLS = ['rua', 'xep', 'gap'];
   // levels 2 and 3 have no tools: what wants getting ready comes ready (a
-  // bottle squashed, the cushion with its air let out, the snack bag cleaned
-  // and folded), as it is when it goes in a bag at every level
-  var READY = { 'chai-tran': 'chai-bep', 'lo-thuoc': 'lo-thuoc-tran', 'tui-khi': 'tui-khi-xep', 'goi-snack': 'goi-snack-gap' };
+  // bottle squashed, the medicine bottle's cap off, the cushion with its air
+  // let out, the snack bag cleaned and folded, the non-woven bag folded), as
+  // it is when it goes in a bag at every level
+  var READY = { 'chai-tran': 'chai-bep', 'lo-thuoc': 'lo-thuoc-tran', 'tui-khi': 'tui-khi-xep', 'goi-snack': 'goi-snack-gap', 'tui-vai': 'tui-vai-gap' };
   // the bottles, and what comes off them: things of their own on the table
   var EXTRA = { chai: 'nhua-1-de', 'chai-dau-nap': 'nhua-1-de', 'chai-to': 'nhua-1-de', nap: 'nhua-245', tem: 'nilon-cung' };
   // a bottle's pictures: cap and label on; bare (cap cut from the first).
@@ -444,6 +445,7 @@
     'pl.i.tui-khi':      { vi: `Túi khí chống sốc`, en: `An air-column cushion` },
     'pl.r.chai-tran':    { vi: `Chai nước trong (đã tháo nắp, bóc tem, bóp bẹp)`, en: `A clear water bottle (cap and label off, squashed)` },
     'pl.r.lo-thuoc':     { vi: `Lọ thuốc nhựa nâu (đã tháo nắp)`, en: `A brown medicine bottle (cap off)` },
+    'pl.r.tui-vai':      { vi: `Túi "vải" không dệt (đã gấp gọn)`, en: `A non-woven "fabric" bag (folded)` },
     'pl.r.tui-khi':      { vi: `Túi khí chống sốc (đã làm xẹp)`, en: `An air-column cushion (air let out)` },
     'pl.r.goi-snack':    { vi: `Gói snack (đã làm sạch, gấp gọn)`, en: `A snack bag (cleaned, folded)` },
     'pl.w.tui-khi':      { vi: `Làm xẹp các cột khí rồi bỏ vào nilon mềm.`, en: `Let the air out, then soft nylon.` },
@@ -1681,5 +1683,5 @@
     return a;
   }
 
-  window.GemPhanLoai = { open: open, ITEMS: ITEMS, BINS: BINS, POSTERS: POSTERS, PREP: PREP, TABLE: TABLE, DIRTY: DIRTY };
+  window.GemPhanLoai = { open: open, ITEMS: ITEMS, BINS: BINS, POSTERS: POSTERS, PREP: PREP, READY: READY, TABLE: TABLE, DIRTY: DIRTY };
 })();

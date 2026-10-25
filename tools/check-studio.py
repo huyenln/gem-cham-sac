@@ -4054,7 +4054,7 @@ async def phanloai(browser, db):
         wrong_seen, tugs, looked, marks, felt, scraps, ready = 0, [], False, [], {}, [], []
         for i in range(10):
             it = await pg.evaluate("(() => { const id = document.querySelector('.pl-one [data-pl-item]').dataset.plItem; return [id, GemPhanLoai.ITEMS.filter(x => x.id === id)[0].bin]; })()")
-            if it[0] in ('chai-tran', 'lo-thuoc', 'tui-khi', 'goi-snack'):   # no tools here: these come ready
+            if it[0] in ('chai-tran', 'lo-thuoc', 'tui-khi', 'goi-snack', 'tui-vai'):   # no tools here: these come ready
                 ready.append(await pg.evaluate("[document.querySelector('.pl-one img').getAttribute('src').split('/').pop(), document.querySelector('.pl-one [data-pl-item] > span:not(.pl-pic)').textContent]"))
             if it[1].startswith('nilon') and it[1] not in felt and name == 'desktop':
                 # nylon, felt: a tap squeezes it, a grip pulls it
@@ -4107,8 +4107,12 @@ async def phanloai(browser, db):
             await js_click(pg, '[data-pl-go="next"]')
             await pg.wait_for_timeout(120)
         check(looked, f'{name}: a poster was looked at mid-round')
-        check(all(r[0] in ('chai-bep.webp', 'lo-thuoc-tran.webp', 'tui-khi-xep.webp', 'goi-snack-gap.webp') and '(đã' in r[1] for r in ready),
-              f'{name}: the bottles, the cushion, the snack bag come ready (squashed; cap off; air out; cleaned, folded) ({ready})')
+        check(all(r[0] in ('chai-bep.webp', 'lo-thuoc-tran.webp', 'tui-khi-xep.webp', 'goi-snack-gap.webp', 'tui-vai-gap.webp') and '(đã' in r[1] for r in ready),
+              f'{name}: the bottles, the cushion, the bags come ready (squashed; cap off; air out; cleaned, folded) ({ready})')
+        # every thing levels 2–3 may show that wants getting ready has its ready picture
+        # (the milk-tea cup's own picture is the clean one)
+        unready = await pg.evaluate("GemPhanLoai.ITEMS.filter(i => GemPhanLoai.PREP[i.id] && !GemPhanLoai.READY[i.id] && i.id !== 'ly-tra-sua').map(i => i.id)")
+        check(unready == [], f'{name}: nothing in levels 2–3 needs a step the level cannot show done ({unready})')
         check(scraps and all(scraps), f'{name}: food scraps come up, general waste takes them ({scraps})')
         check(all(marks), f'{name}: each thing shows its number (hard plastics) or how it feels (nylon), nothing else ({marks})')
         if name == 'desktop':
