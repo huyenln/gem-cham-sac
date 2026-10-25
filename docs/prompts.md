@@ -767,3 +767,23 @@ Plain pure white background, no shadows, no text.
 Kiểm tra: túi khí phải **xẹp hẳn** (không còn phồng), gói snack **gấp gọn** thành khối nhỏ, chai
 dầu có **nắp đỏ + tem vàng** (không chữ). Thứ tự: ly trà sữa còn trà, túi khí xẹp, snack gấp
 gọn, chai dầu còn nắp và tem (`SHEETS['sheet-don-ban']` trong `tools/rac-assets.py`).
+
+### 9. Túi vải không dệt đã gấp gọn — `tui-vai-gap.png` (Anna 25/10)
+
+Theo poster Tagom, nilon cứng phải **làm sạch, khô và gấp gọn**; màn 2–3 hiện món đã sửa soạn sẵn,
+nên cần tranh túi đã gấp. Cùng cuộc chat (giữ "Phong cách chung"), **đính kèm** tranh túi hiện có
+`images/studio/rac/tui-vai.webp` để giữ đúng màu và chất vải.
+
+```
+Same style. Square 1024 x 1024, ONE object only, centered, filling about 70% of the
+picture. Transparent background (PNG with alpha), no shadow, no floor line, no text.
+The attached olive-green non-woven shopping bag, now empty and folded neatly flat: the
+body folded in half and then in half again into a small flat rectangle, the two handles
+folded down and tucked on top in a loose loop. Show the slightly felted, papery texture of
+non-woven fabric, the stitched side seams and soft creases at the folds. Same olive green
+as the reference, same warm-brown ink outline. No logo, no print, no text.
+```
+
+Kiểm tra: **một** túi, màu xanh rêu như tranh cũ, gấp phẳng thành khối chữ nhật nhỏ, nền trong
+suốt. Lưu `tui-vai-gap.png` vào thư mục nguồn rồi chạy `python3 tools/rac-assets.py <thư mục>`;
+sau đó thêm lại túi vải vào trò chơi (xem `docs/design.md` → "Rà soát theo poster Tagom").

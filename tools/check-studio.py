@@ -4054,7 +4054,7 @@ async def phanloai(browser, db):
         wrong_seen, tugs, looked, marks, felt, scraps, ready = 0, [], False, [], {}, [], []
         for i in range(10):
             it = await pg.evaluate("(() => { const id = document.querySelector('.pl-one [data-pl-item]').dataset.plItem; return [id, GemPhanLoai.ITEMS.filter(x => x.id === id)[0].bin]; })()")
-            if it[0] in ('chai-tran', 'tui-khi', 'goi-snack'):   # no tools here: these come ready
+            if it[0] in ('chai-tran', 'lo-thuoc', 'tui-khi', 'goi-snack'):   # no tools here: these come ready
                 ready.append(await pg.evaluate("[document.querySelector('.pl-one img').getAttribute('src').split('/').pop(), document.querySelector('.pl-one [data-pl-item] > span:not(.pl-pic)').textContent]"))
             if it[1].startswith('nilon') and it[1] not in felt and name == 'desktop':
                 # nylon, felt: a tap squeezes it, a grip pulls it
@@ -4107,8 +4107,8 @@ async def phanloai(browser, db):
             await js_click(pg, '[data-pl-go="next"]')
             await pg.wait_for_timeout(120)
         check(looked, f'{name}: a poster was looked at mid-round')
-        check(all(r[0] in ('chai-bep.webp', 'tui-khi-xep.webp', 'goi-snack-gap.webp') and '(đã' in r[1] for r in ready),
-              f'{name}: the bottle, the cushion, the snack bag come ready (squashed; air out; cleaned, folded) ({ready})')
+        check(all(r[0] in ('chai-bep.webp', 'lo-thuoc-tran.webp', 'tui-khi-xep.webp', 'goi-snack-gap.webp') and '(đã' in r[1] for r in ready),
+              f'{name}: the bottles, the cushion, the snack bag come ready (squashed; cap off; air out; cleaned, folded) ({ready})')
         check(scraps and all(scraps), f'{name}: food scraps come up, general waste takes them ({scraps})')
         check(all(marks), f'{name}: each thing shows its number (hard plastics) or how it feels (nylon), nothing else ({marks})')
         if name == 'desktop':
@@ -4249,7 +4249,7 @@ async def phanloai_lv(browser, db):
         left = await pg.evaluate(f"[[...document.querySelectorAll('.pl-thing[data-pl-item=\"{k}\"] .pl-chips i')].map(i => i.textContent), [...document.querySelectorAll('.pl-tn')].map(t => t.textContent).includes('Tem nhãn')]")
         check(left == [['Chưa bóp bẹp'], True], f'{name}: the label tapped off ({left})')
         # a drag onto a tool: a thing that needs one (a cup, a cushion, a bag)
-        one = await pg.evaluate("""(() => { const T = {'Còn trà': 'rua', 'Còn vụn bánh': 'rua', 'Còn hơi': 'xep', 'Chưa gấp': 'gap'};
+        one = await pg.evaluate("""(() => { const T = {'Còn trà': 'rua', 'Còn vụn bánh': 'rua', 'Còn thức ăn': 'rua', 'Còn hơi': 'xep', 'Chưa gấp': 'gap'};
             const b = [...document.querySelectorAll('.pl-thing')].find(b => b.querySelector('.pl-chips i') && T[b.querySelector('.pl-chips i').textContent]);
             return [b.dataset.plItem, T[b.querySelector('.pl-chips i').textContent]]; })()""")
         a = await center(pg, f'.pl-thing[data-pl-item="{one[0]}"] img')
@@ -4265,7 +4265,19 @@ async def phanloai_lv(browser, db):
         if name == 'mobile':
             await pg.screenshot(path=OUT / 'phanloai-ban-mobile.png')
         # the rest done right (the bottle's own steps: a tap on it)
-        tools = {'Còn nắp': None, 'Còn tem': None, 'Chưa bóp bẹp': None, 'Còn trà': 'rua', 'Còn vụn bánh': 'rua', 'Còn hơi': 'xep', 'Chưa gấp': 'gap'}
+        # food things come dirty about half the time: the food drawn on the
+        # picture until "Làm sạch"; a clean one goes straight in
+        food = await pg.evaluate("""[...document.querySelectorAll('.pl-thing')].filter(b => GemPhanLoai.DIRTY[b.querySelector('img').getAttribute('src').split('/').pop().replace('.webp', '')])
+            .map(b => [b.dataset.plItem, [...b.querySelectorAll('.pl-chips i')].map(i => i.textContent).join(), !!b.querySelector('.pl-smear')])""")
+        dirty = [f for f in food if f[1]]
+        check(food and all((f[1] in ('Còn thức ăn', 'Còn vụn bánh')) == f[2] for f in food),
+              f'{name}: food things on the table: the dirty ones tagged and drawn so, the rest clean ({food})')
+        if dirty:
+            await js_click(pg, f'.pl-thing[data-pl-item="{dirty[0][0]}"]')
+            await js_click(pg, '[data-pl-tool="rua"]')
+            after = await pg.evaluate(f"[!!document.querySelector('.pl-thing[data-pl-item=\"{dirty[0][0]}\"] .pl-smear'), document.querySelectorAll('.pl-thing[data-pl-item=\"{dirty[0][0]}\"] .pl-chips i').length]")
+            check(after == [False, 0], f'{name}: "Làm sạch" on a dirty one: the food gone, nothing left to do ({after})')
+        tools = {'Còn nắp': None, 'Còn tem': None, 'Chưa bóp bẹp': None, 'Còn trà': 'rua', 'Còn vụn bánh': 'rua', 'Còn thức ăn': 'rua', 'Còn hơi': 'xep', 'Chưa gấp': 'gap'}
         for _ in range(40):
             th = await pg.evaluate("""(() => { const b = document.querySelector('.pl-thing:not(.is-in)'); if (!b) return null;
                 const src = b.querySelector('img').getAttribute('src').split('/').pop().replace('.webp', '');
@@ -4294,7 +4306,7 @@ async def phanloai_lv(browser, db):
         await js_click(pg, '.pl-g-go')
         await pg.clock.run_for(2700)
         n0 = await pg.evaluate("[document.querySelectorAll('.pl-thing').length, document.querySelectorAll('.pl-thing .pl-life i').length]")
-        await pg.clock.run_for(8200)   # the first lands after 8 s
+        await pg.clock.run_for(9200)   # the first lands after 9 s
         n1 = await pg.evaluate("[document.querySelectorAll('.pl-thing').length, document.querySelector('.pl-count').textContent]")
         first = None
         for _ in range(90):
@@ -4325,6 +4337,30 @@ async def phanloai_lv(browser, db):
             await pg.screenshot(path=OUT / 'phanloai-ban-desktop.png')
         check(not pg.errors, f'{name}: no script errors {pg.errors}')
         await pg.context.close()
+    # a table with food things both dirty and clean (seed 8): the dirty ones
+    # tagged and drawn so; "Làm sạch" takes the food off
+    pg = await page(browser, db, 390, 844, GUIDE_OFF + "localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-studio-intro-touch','1');sessionStorage.setItem('gem-scene','in');"
+                    "localStorage.setItem('gem-pl', JSON.stringify({lv: 4, chai: 1, sort: 1, nhanh: 1, ban: 1, tiec: 1}));"
+                    "(() => { let s = 8; Math.random = () => (s = (s * 16807) % 2147483647) / 2147483647; })();")
+    await pg.goto(f'{BASE}/studio.html')
+    await pg.wait_for_timeout(2500)
+    await js_click(pg, '[data-thing-label]')
+    await pg.wait_for_timeout(1200)
+    await js_click(pg, '.pl-back')
+    await js_click(pg, '[data-pl-go="ban"]')
+    await pg.wait_for_timeout(3300)
+    food = await pg.evaluate("""[...document.querySelectorAll('.pl-thing')].filter(b => GemPhanLoai.DIRTY[b.querySelector('img').getAttribute('src').split('/').pop().replace('.webp', '')])
+        .map(b => [b.dataset.plItem, [...b.querySelectorAll('.pl-chips i')].map(i => i.textContent).join(), !!b.querySelector('.pl-smear')])""")
+    dirty = [f for f in food if f[2]]
+    ok = bool(dirty) and len(dirty) < len(food) and all((f[1] in ('Còn thức ăn', 'Còn vụn bánh')) == f[2] for f in food)
+    if dirty:
+        await js_click(pg, f'.pl-thing[data-pl-item="{dirty[0][0]}"]')
+        await js_click(pg, '[data-pl-tool="rua"]')
+        after = await pg.evaluate(f"[!!document.querySelector('.pl-thing[data-pl-item=\"{dirty[0][0]}\"] .pl-smear'), document.querySelectorAll('.pl-thing[data-pl-item=\"{dirty[0][0]}\"] .pl-chips i').length]")
+        ok = ok and after == [False, 0]
+    check(ok, f'party food things: some dirty (tagged, food drawn on), some clean; "Làm sạch" takes the food off ({food})')
+    check(not pg.errors, f'no script errors {pg.errors}')
+    await pg.context.close()
 
 
 async def main(which):

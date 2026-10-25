@@ -15,8 +15,10 @@ Sources (ChatGPT, 10/2026, transparent background; prompts in docs/prompts.md
   irasutoya-an-thua, irasutoya-nhua, tui-rac
                        いらすとや pictures (transparent PNG, credited in the game)
   thung-day            the overflowing bin (level 5 lost)
+  tui-vai-gap          the non-woven bag folded (levels 2–3)
   tagom-<id>.jpg       Tagom's posters, used whole (Tagom said yes, 23/10)
--> images/studio/rac/<name>.webp
+-> images/studio/rac/<name>.webp (and lo-thuoc-tran: the medicine bottle with
+   its cap cut off, as levels 2–3 show it; made from lo-thuoc.webp)
    images/studio/tagom/<id>.webp     (small: hung on the studio wall)
    images/studio/tagom/to/<id>.webp  (big: opened on a tap)
 Needs Pillow + numpy + scipy.
@@ -60,8 +62,9 @@ def no_green(a):
     return a
 CLEAN = {'irasutoya-nhua': no_green}
 # one picture each: the overflowing bin (ChatGPT, the end of level 5), the
-# general-waste bag (irasutoya, the "Rác thường" tile)
-SINGLE = {'thung-day': 640, 'tui-rac': 200}
+# general-waste bag (irasutoya, the "Rác thường" tile), the non-woven bag
+# folded (ChatGPT, levels 2–3 show it so)
+SINGLE = {'thung-day': 640, 'tui-rac': 200, 'tui-vai-gap': 300}
 # longest side, px: things are shown at most ~150 css px on a 2x phone
 # screen, Udon and the bags ~110
 SIDE = {'ud-chay-1': 240, 'ud-chay-2': 240, 'ud-ngoi-cho': 240, 'ud-nhay': 240, 'bao': 200}
@@ -74,6 +77,19 @@ def save(im, path, q=80):
     path.parent.mkdir(parents=True, exist_ok=True)
     im.save(path, 'WEBP', quality=q, method=6)
     print(f'  {path.relative_to(ROOT)}  {im.size[0]}x{im.size[1]}  {path.stat().st_size // 1024} KB')
+
+
+# the medicine bottle as levels 2–3 show it, its cap off (caps go to plastic
+# 2-4-5, Anna 25/10): the rows from the first that is mostly its brown glass
+def cap_off(im):
+    a = np.asarray(im.convert('RGBA')).astype(int)
+    r, g, b, al = a[..., 0], a[..., 1], a[..., 2], a[..., 3]
+    body, brown = al > 200, (al > 200) & (r > g + 25) & (g > b) & (r < 200)
+    for y in range(a.shape[0]):
+        if body[y].sum() > 40 and brown[y].sum() > 0.6 * body[y].sum():
+            part = im.crop((0, y, im.size[0], im.size[1]))
+            return part.crop(part.getbbox())
+    return im
 
 
 def fit(im, side):
@@ -146,6 +162,8 @@ def main(src):
         im = Image.open(f).convert('RGBA')
         im = im.crop(im.getbbox())
         save(im.resize((TUG, round(im.size[1] * TUG / im.size[0])), Image.LANCZOS), OUT / f'{name}.webp')
+    if (OUT / 'lo-thuoc.webp').exists():
+        save(cap_off(Image.open(OUT / 'lo-thuoc.webp')), OUT / 'lo-thuoc-tran.webp')
     for f in sorted(src.glob('tagom-*')):
         im = Image.open(f).convert('RGB')
         pid = f.stem[len('tagom-'):]

@@ -2383,7 +2383,7 @@ tường là lối vào. Bỏ "nhặt rác ngoài phố có đếm giờ": nặn
   cần làm oke hơn"): chạm nắp (1/3 trên của hình) → nắp thành món riêng → Nhựa 2-4-5; chạm tem
   (giữa hình) → Nilon cứng; tháo cả hai rồi chạm chai → hình bẹp xuống ("BẸP!") → Nhựa 1 dễ.
   Bấm phím Enter trên chai = làm bước kế tiếp (`tapThing()`, `partAt()`). Phần 2–4, từng món, bằng
-  dụng cụ: ly trà sữa còn trà (Làm sạch → Nhựa 1 khó), túi khí (Xả hơi → Nilon mềm), gói snack
+  dụng cụ: ly trà sữa còn trà (Làm sạch → Nhựa 1 khó), túi khí (Làm xẹp → Nilon mềm), gói snack
   còn vụn bánh (**Làm sạch rồi mới Gấp gọn** → Nilon cứng; Anna 24/10 — gấp trước là nhầm,
   `pl.order_gap`; vụn bánh vẽ bằng SVG đè lên tranh, `CRUMBS`, mất khi làm sạch). Nút "Rửa sạch"
   đổi tên **"Làm sạch"** (dùng chung cho ly và gói snack). Túi khí và gói snack sửa soạn xong thì có hai tay nắm để **kéo thử**
@@ -2393,12 +2393,32 @@ tường là lối vào. Bỏ "nhặt rác ngoài phố có đếm giờ": nặn
   **Rác thường** (ít nhất một món mỗi ô). Sai: hiện bao đúng + lý do (`pl.w.<id>`) + nút
   "Xem poster" (ô Rác thường không có poster). Màn 2–3 không có dụng cụ nên món cần sửa soạn hiện
   sẵn dạng đã sửa soạn (`READY`, tên `pl.r.<id>`): chai trần **đã bóp bẹp** (`chai-bep`), túi khí
-  **đã xả hơi**, gói snack **đã làm sạch, gấp gọn**; màn 4–5 vẫn phải sửa soạn.
+  **đã làm xẹp**, gói snack **đã làm sạch, gấp gọn**, lọ thuốc **đã tháo nắp** (`lo-thuoc-tran`, cắt
+  nắp bằng `tools/rac-assets.py`); màn 4–5 vẫn phải sửa soạn. Lời dẫn màn 2 (`pl.g2_p`) nói rõ món nào
+  cũng đã sửa soạn sẵn.
 - **Một luật cho cả 5 màn** (Anna 24/10, "các màn không thống nhất"): chai nhựa số 1 lúc nào cũng
   bóp bẹp trước khi vào bao — chạm vào chai = bóp bẹp, chạm vào nilon = bóp thử (SỘT SOẠT / ~ ~ ~,
   ở cả bàn màn 4–5). Chai 1,5 lít và chai dầu ăn trong bỏ khỏi màn 2–3 (bẹp rồi trông y hệt chai
   nước); chai 1,5 lít vẫn có trên bàn tiệc. Chai trần trên bàn (`chai-tran`, `chai-to`) có nhãn
-  "Chưa bóp bẹp", chạm là bẹp. Dụng cụ "Làm xẹp" đổi tên **"Xả hơi"** (khỏi lẫn với bóp bẹp).
+  "Chưa bóp bẹp", chạm là bẹp. Dụng cụ vẫn tên **"Làm xẹp"** (đúng chữ poster Tagom; Anna 25/10,
+  sau một hôm đổi thử thành "Xả hơi").
+- **Rà soát theo poster Tagom** (Anna 25/10, "kiểm tra lại tất cả các cái khác"): nhựa 1 dễ = tháo
+  nắp, bóc tem, làm bẹp chai; nhựa 1 khó = vệ sinh sạch, khô; nilon cứng = làm sạch, khô, gấp gọn;
+  nilon mềm = làm xẹp cột khí; 2-4-5, 6-7 không ghi bước nào. Theo đó:
+  - **Đồ đựng thức ăn trên bàn tiệc bẩn ngẫu nhiên** (~1/2, `DIRTY` + `dirt()` trong `table()`): hộp
+    bánh, khay đen, nắp cầu, hũ sữa chua, đĩa, thìa, hộp cơm, lọ kẹo, vỏ bánh, túi zip. Món bẩn có
+    vết thức ăn + vụn vẽ bằng SVG, che theo đúng hình món (`smear()`, `<mask>` bằng chính tranh), nhãn
+    "Còn thức ăn" (vỏ bánh: "Còn vụn bánh"); "Làm sạch" là sạch. Món sạch bỏ thẳng vào bao — người
+    chơi phải nhìn kỹ (Anna chọn ngẫu nhiên thay vì luôn bẩn).
+  - **Lọ thuốc** còn nắp → màn 2–3 hiện đã tháo nắp (nắp sang 2-4-5 như màn 1 dạy).
+  - **Màng xốp hơi**: Tagom chỉ bảo làm xẹp cột khí, nên lý do sửa thành "nilon mềm, kéo thì giãn"
+    (trước ghi "xả hơi rồi mang đi" mà game không bắt làm).
+  - **Túi vải không dệt** tạm rút khỏi trò chơi: theo Tagom phải gấp gọn, Anna chọn vẽ tranh túi đã
+    gấp (ChatGPT, prompt ở `docs/prompts.md`). Có tranh thì: `tools/rac-assets.py` → `tui-vai-gap`,
+    thêm lại `{ id: 'tui-vai', bin: 'nilon-cung' }` vào `ITEMS` và `READY['tui-vai'] = 'tui-vai-gap'`
+    + `pl.r.tui-vai`.
+  - Còn lại đã khớp: lọ kẹo, hũ kem không nắp; nắp can giặt, bình sữa, chai bơm cũng là 2-4-5 (chung
+    bao); đĩa CD, xốp, xô, đồ chơi, túi bóng, màng bọc, túi gói hàng không cần bước nào.
 - **Nút × của bảng** (24/10): phần đầu trò chơi (`.pl-head`, `position: relative`) nằm đè lên ×
   nên chạm × không tắt được trên điện thoại. `.st-close { z-index: 5 }`; thẻ Cách chơi đóng khi
   chạm ra ngoài thẻ (nền mờ của nó phủ lên ×).
@@ -2454,16 +2474,16 @@ tường là lối vào. Bỏ "nhặt rác ngoài phố có đếm giờ": nặn
     còn hơi; gói snack còn vụn bánh + chưa gấp (nhãn riêng từng món: `pl.c.<bước>.<id>`, `own()`)
     (`PREP`). Chai cao gấp đôi ô khác (`.is-bottle`, chiếm 2 hàng), chạm thẳng vào nắp / tem /
     thân chai như màn 1 (không trừ giờ khi chạm chỗ chưa làm được, chỉ chọn món). 3 dụng cụ, hình
-    trước → sau (SVG tự vẽ, `ICON`): Làm sạch (ly còn trà → ly sạch có giọt nước), Xả hơi (túi khí
+    trước → sau (SVG tự vẽ, `ICON`): Làm sạch (ly còn trà → ly sạch có giọt nước), Làm xẹp (túi khí
     phồng → dẹt), Gấp gọn (gói snack → gấp lại) — chọn món rồi chạm dụng cụ, hoặc kéo món lên dụng
     cụ. Nắp, tem tháo ra thành món riêng trên bàn (nắp → 2-4-5, tem → nilon cứng). Dùng dụng cụ không
     cần: −2 giây. Bỏ vào bao khi chưa sửa soạn xong, hoặc nhầm bao: −5 giây (lần đầu Udon
     kéo quần). Sao: 3 sao nếu nhầm ≤ 1 lần và còn ≥ 40% thời gian; 2 sao nếu nhầm ≤ 3; còn lại 1.
   - **Màn 5 · Tiệc chưa tàn:** như màn 4 nhưng 6 món có sẵn (2 món cần sửa soạn), 10 món đặt
-    thêm, món đầu sau 8 giây, càng về sau càng nhanh (8 → 6 giây, `gap`); bàn trống thì món kế tới
+    thêm, món đầu sau 9 giây, càng về sau càng nhanh (9 → 7 giây, `gap`); bàn trống thì món kế tới
     ngay; 150 giây. **Mỗi món có giờ riêng** (Anna 24/10, thay luật "quá 10 món trên bàn"): vạch dưới
-    món ngắn dần, 29 giây + 8 giây cho mỗi bước cần làm (`life`, `per` trong `TABLE.tiec`); 6 món đầu
-    hết giờ so le 5 giây (`apart`, không rơi cùng lúc). Hết giờ thì món vào **thùng rác** cạnh Udon (thùng vẽ SVG đầy dần,
+    món ngắn dần, 33 giây + 8 giây cho mỗi bước cần làm (`life`, `per` trong `TABLE.tiec`); 6 món đầu
+    hết giờ so le 7 giây (`apart`, không rơi cùng lúc). Hết giờ thì món vào **thùng rác** cạnh Udon (thùng vẽ SVG đầy dần,
     `binDraw()`); đồ tái chế = rác chôn lấp, tính vào thùng; đồ ăn thừa thì vốn vào rác thường,
     không tính. 5 món trong thùng = **"Thùng rác đầy ắp rồi!"**: thua, hiện tranh thùng đầy
     (`thung-day`) + danh sách món thành rác chôn lấp và đáng lẽ vào bao nào. Sao màn 5: 3 sao nếu
@@ -2471,9 +2491,14 @@ tường là lối vào. Bỏ "nhặt rác ngoài phố có đếm giờ": nặn
     "làm màn 5 dễ hơn chút", bản đầu 15 + 5 giây, món đến 6 → 4 giây, 120 giây: người chơi giả lập
     biết hết đáp án thua từ 1,5 giây mỗi lần chạm). Giờ: 2 giây mỗi lần chạm thắng cả 3 ván thử
     (1–3 sao), 2,5 giây thua 2/3 ván. Khi gói snack thêm bước làm sạch và chai trần trên bàn phải
-    bóp bẹp (24/10), `life` 26 → 29 giây để giữ đúng mức đó. Người chơi giả lập: `scratchpad` của
-    phiên 24/10 (chạm món sắp hết giờ trước, rồi dụng cụ / bao; nắp, tem tháo ra thì bỏ bao ngay);
-    muốn dễ nữa thì tăng `life` / `per`, giãn `gap`.
+    bóp bẹp (24/10), `life` 26 → 29 giây. Khi đồ đựng thức ăn bẩn ngẫu nhiên (25/10, nhiều việc hơn
+    hẳn; Anna: "khó chút cũng được, người khéo và nhớ vẫn qua được"): `life` 33 giây, `gap` 9 → 7
+    giây, `apart` 7 giây — người chơi giả lập chạm 2 giây một lần thắng 3/3 ván (1–2 sao, còn 29–38
+    giây), 2,5 giây thua sát nút (còn 2–5 món). Người chơi giả lập chọn món rồi chạm bao = 2 lần
+    chạm; người thật kéo thả một lần nên nhanh hơn thế. Người chơi giả lập: `scratchpad` của phiên
+    24/10 (chạm món sắp hết giờ trước, rồi dụng cụ / bao; nắp, tem tháo ra thì bỏ bao ngay); muốn dễ
+    nữa thì tăng `life` / `per`, giãn `gap`. Tăng riêng `life` gần như không đỡ: cái nghẽn là tổng
+    số việc so với nhịp món đến.
   - **Tranh trước / sau** (ChatGPT, Anna 24/10, `sheet-don-ban`): ly còn trà `ly-tra-sua-day`, túi
     khí xẹp `tui-khi-xep`, snack gấp `goi-snack-gap`, chai dầu ăn nắp đỏ `chai-dau-nap` (tháo nắp
     trên hình: cắt 12% trên cùng, chai nước 14%). `BOTTLE`, `STEP_PIC`, `thingPic()`.
