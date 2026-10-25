@@ -413,6 +413,10 @@ Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
   quai nơ, Origami". Một vải thì không tính phí kiểu ghép; ghép theo nét vẽ hơn 6
   đường thì Gem báo giá (23/10, migration `20261023_mot_vai_net_bao_gia.sql` chạy **trước** khi
   merge); dây túi Oxford gắn sau cổ áo; Oxford "Thân ô vuông": mảng dưới cổ áo cùng vải thân hai bên.
+- 🎨 Màu cơ bản + tâm trạng theo vải thật (25/10): 27 màu cơ bản (`GemPatch.BASIC`, khoá `c0<hex>`, chất vải
+  Gem tư vấn) ở Kho vải, rổ và Màu riêng; mỗi tâm trạng = 5 màu cơ bản + 3 tấm in thật theo `id`; chip
+  "Tâm trạng ngẫu nhiên" bốc lần lượt 5 bộ thêm (`MOOD_POOL`: Đêm nhung, Kem sữa, Kẹo ngọt, Nhiệt đới, Hoàng hôn).
+  Không cần migration. Chi tiết: `docs/design.md` → "Bàn thiết kế — Màu cơ bản, tâm trạng theo vải thật".
 - ♻️ Phân loại rác cùng GemxTagom (23/10, tên đổi 24/10): poster Tagom treo tường (Lắp studio → nhóm "Poster Tagom", tự
   thành Khu vực `phanloai`) → màn 1 cái chai (chạm thẳng vào nắp / tem / thân chai) + 3 món bằng 3 dụng cụ
   (làm sạch / làm xẹp / gấp, hình trước → sau; gói snack làm sạch vụn rồi mới gấp; túi khí, snack kéo thử giãn), không giờ;

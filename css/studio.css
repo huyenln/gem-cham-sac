@@ -1614,6 +1614,12 @@ html:has(.studio-page) { overscroll-behavior: none; }   /* own rule: a Safari wi
 }
 .pt-mood.is-on { border-color: var(--sage-deep); box-shadow: 0 0 0 2px var(--sage-deep) inset; background: #F3F1E4; }
 .pt-mood img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; flex: none; border: 1.5px solid var(--sage-light); }
+/* "Tâm trạng ngẫu nhiên": four of the palette's fabrics in the circle */
+.pt-mood-mix {
+  width: 34px; height: 34px; border-radius: 50%; overflow: hidden; flex: none; border: 1.5px solid var(--sage-light);
+  display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; background: var(--paper-cream);
+}
+.pt-mood-mix i { background: center / cover no-repeat; }
 
 /* the basket: scraps stand behind its front wall (images/studio/vai/ro-truoc)
    and stick out over the rim */
@@ -2043,6 +2049,20 @@ input.pt-done-name:focus { border-bottom-style: solid; border-bottom-color: var(
   border: solid #fff; border-width: 0 2.5px 2.5px 0; transform: rotate(45deg);
 }
 .kho-f:focus-visible { outline: 3px solid var(--sage-deep); outline-offset: 2px; }
+/* Màu cơ bản: six groups, each a row of small tiles under its name;
+   side by side on wider screens */
+.kho-grid.is-basic { grid-template-columns: minmax(0, 1fr); gap: 12px 20px; }
+@media (min-width: 640px) { .kho-grid.is-basic { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1100px) { .kho-grid.is-basic { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.kho-gp { grid-column: 1 / -1; font-size: var(--text-sm); color: var(--ink-soft); }
+.kho-grp { display: flex; flex-direction: column; gap: 6px; }
+.kho-gh { font: 700 var(--text-sm) var(--font-display); color: var(--ink-dark); }
+.kho-sws { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.kho-sw { display: block; width: 100%; aspect-ratio: 1; background: center / cover no-repeat; }
+.kho-c .kho-t { min-height: 0; padding: 4px 5px 5px; }
+.kho-c .kho-t b { font-size: 11px; }
+.kho-c.is-on::before { top: 4px; right: 4px; }
+.kho-c.is-on::after { top: 8px; right: 12px; }
 .kho-bar {
   position: sticky; bottom: calc(-1 * var(--space-6)); z-index: 3;
   display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
@@ -2050,7 +2070,8 @@ input.pt-done-name:focus { border-bottom-style: solid; border-bottom-color: var(
   background: var(--paper-white); border-top: 1px solid var(--sage-light); box-shadow: 0 -6px 14px rgba(61, 74, 46, 0.08);
 }
 .kho-picked { display: flex; gap: 3px; flex: 0 1 auto; min-width: 0; overflow: hidden; }
-.kho-picked img { width: 28px; height: 28px; border-radius: 5px; object-fit: cover; flex: none; border: 1px solid var(--sage-light); }
+.kho-picked img, .kho-picked i { width: 28px; height: 28px; border-radius: 5px; object-fit: cover; flex: none; border: 1px solid var(--sage-light); }
+.kho-picked i { background: center / cover no-repeat; }
 .kho-n { flex: 1 1 auto; font-size: var(--text-sm); color: var(--ink-dark); min-width: 8ch; }
 .kho-bar .st-btn { min-height: 44px; }
 @media (max-width: 767px) {
