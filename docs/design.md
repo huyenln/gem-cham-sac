@@ -3101,6 +3101,11 @@ lại phần dò điểm và dán `WEAR_AT` mới. Áo (đổi dáng người) t
 vẽ lại khung, không dán đè được. (25/10: `WEAR_AT` / `WEAR` chuyển sang `js/wear.js`, món thử đọc từ database:
 xem "Góc thử đồ từ database".)
 
+### Dây đeo cổ tay: chỉ "Ghép ngang" (25/10/2026)
+
+Anna: bỏ "Ghép dọc" ở Bàn thiết kế. `PRODUCTS.daydeo.layouts` còn `mot` / `ngang` / `tuve`; mã cũ có
+`doc` mở thành `ngang`, giữ hai vải (`LEGACY.daydeo.doc`).
+
 ### Góc thử đồ từ database (25/10/2026)
 
 Anna: thêm phụ kiện / túi để nhân vật đeo thử; không vẽ thêm tranh cho từng món.
@@ -3119,22 +3124,23 @@ Anna: thêm phụ kiện / túi để nhân vật đeo thử; không vẽ thêm 
   - Món không có Mẫu: `wear.img` nếu có, không thì "Ảnh cắt nền" của món.
   - Món có Mẫu mà vài mẫu đã có ảnh riêng: mẫu chưa có ảnh **không thử được** (chip mờ). Lý do: lấy ảnh chung sẽ hiện nhầm túi khác.
 - **8 mẫu của Túi đi chơi / Túi đi chợ**: tách từ chính poster của mẫu bằng `tools/wear-cuts.py`, ra `images/studio/wear/<sku>-<mẫu>.webp`.
+  - 25/10 (Anna: "cắt ảnh cắt luôn vào cái túi"): 4 mẫu dùng **tranh vẽ Anna gửi** (nền trong suốt, chỉ cắt sát + thu nhỏ): hoa-xanh, caro-hong, jeans-hong, jeans-vang. `wear-cuts.py` bỏ qua chúng (`DRAWN`). 4 mẫu còn lại vẫn là ảnh tách từ poster; có tranh thì thay file cùng tên + thêm vào `DRAWN`.
   - Cách tách: giữ khối lớn nhất không phải nền giấy, bỏ chữ, bóc viền kem quanh túi; chấm kem nhỏ trong hoạ tiết vẫn giữ.
   - Mẫu mới sau này: admin → mẫu đó → "Ảnh cắt nền của mẫu" (Xoá nền trắng / tải ảnh đã tách nền).
 - **Xem trước = chính nhân vật khách chọn ở cửa** (dáng đứng thẳng) đeo đồ đang đeo + món đang chạm. Bỏ 4 tranh người mẫu `wear/*-mac.webp`; `tools/studio-assets.py` không xuất chúng nữa (tên có `-`).
-  - **Trừ Dây buộc tóc** (Anna: "phải kiểu đeo như cũ"): khung xem trước vẫn là tranh cận cảnh tóc buộc đuôi ngựa `wear/scrunchie-mac.webp` (`GemWear.MAC`). Lý do: nhân vật nhìn thẳng thì dây buộc tóc thành một chấm cạnh tai, trông như cài hoa. Ngoài cảnh vẫn đeo ở gáy như trước.
+  - **Trừ Dây buộc tóc, Dây đeo cổ tay, Bloom Charm** (Anna: "phải kiểu đeo như cũ"): khung xem trước vẫn là tranh cũ `wear/<sku>-mac.webp` (`GemWear.MAC`). Lý do: dây buộc tóc trên nhân vật nhìn thẳng thành một chấm cạnh tai, trông như cài hoa; dây đeo và charm trong tranh cũ treo trên túi đeo vai. Ngoài cảnh vẫn đeo như trước.
   - Cách đeo "Trên tóc" hợp với **cài hoa** (Gem sắp chụp và đăng sản phẩm này): admin chọn "Trên tóc (cài hoa)".
   - Dưới hình: chip Mẫu, "Đeo thử" / "Tháo ra", "Thêm vào giỏ" (đúng mẫu đang thử; mẫu hết hàng xem được, không mua được).
   - Món đang đeo lưu theo id: `<sku>`, `<sku>/<mẫu>` hoặc `d:<mã thiết kế>`. Mỗi lượt lưu ở sessionStorage `gem-mac`; món đã mua / thiết kế đã mua lưu ở localStorage `gem-mac`.
   - Món không còn được thử bị bỏ khi database trả lời.
-- **Túi tự thiết kế**: chỉ khi khách **đã mua**, tức Tủ sưu tầm có `owned` kèm mã thiết kế. Thử được túi, Origami, Bloom, dây đeo tay; không thử dây buộc tóc tự thiết kế (đeo lên nhân vật trông như cài hoa).
+- **Túi tự thiết kế**: chỉ khi khách **đã mua**, tức Tủ sưu tầm có `owned` kèm mã thiết kế. Chỉ **túi** (Oxford, các dáng Túi); không túi laptop, không các món nhỏ.
   - Vẽ bằng `GemPatch.svg` của thiết kế, viewBox cắt sát món (`GemWear.DESIGN[món].box`, đo từ 12 món của Bàn thiết kế).
   - Món mua ở máy khác chỉ về dạng sản phẩm thường (mã thiết kế chỉ nằm trong ghi chú đơn), nên chỉ thử được trên máy đã đặt.
 - **Admin → Sản phẩm → Sửa → "Đeo thử ở Góc thử đồ"**: bật / tắt, cách đeo, cỡ (thanh kéo), xem trước trên Bạn 1–4.
   - Kéo món trên hình để đặt vào tay.
   - "Dùng ảnh cắt nền thay tranh vẽ" bỏ `wear.img`.
   - Chỉ gửi `wear` khi bản ghi đã có cột này (sau migration).
-- **Cấu hình ban đầu** (migration): 5 món cũ như trước; Túi đi chơi 0.32, Túi đi chợ 0.36, Túi laptop 0.2 (cầm tay); Origami là charm (móc khoá, cầm ở vòng).
+- **Cấu hình ban đầu** (migration): 5 món cũ như trước; Túi đi chơi 0.32, Túi đi chợ 0.36 (cầm tay). Túi laptop và Origami **không** thử (Anna 25/10, `20261025b_thu_do_bot.sql`).
   - Cỡ đã xem trên 4 nhân vật; chỉnh tiếp ở admin.
 - **Database chưa có cột / không trả lời**: dùng lại 5 món cũ (`GemWear.LEGACY`).
 - Ảnh cắt nền là ảnh chụp, nhân vật là tranh vẽ: chấp nhận lệch phong cách, như kệ hàng đang dùng.

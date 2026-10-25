@@ -3653,10 +3653,10 @@ async def guidance(browser, db):
     await pg.wait_for_timeout(300)
     got = [await at(170, 60), await at(170, 200)]
     check(got == [0, 1], f'"Ghép ngang": top half and bottom half ({got})')
-    await js_click(pg, '.pt-layouts [data-layout="doc"]')
-    await pg.wait_for_timeout(300)
-    got = [await at(152, 150), await at(188, 150)]
-    check(got == [0, 1], f'"Ghép dọc": left half and right half, each takes its own tap ({got})')
+    # "Ghép dọc" is gone (Anna 25/10): an old code of it opens pieced across
+    lays = await pg.evaluate("[...document.querySelectorAll('.pt-layouts [data-layout]')].map(b => b.dataset.layout)")
+    old = await pg.evaluate("(() => { const d = GemPatch.parse('2~daydeo~doc~~~~~~~~AB'); return d && [d.layout, d.fab]; })()")
+    check('doc' not in lays and 'ngang' in lays and old == ['ngang', 'AB'], f'the strap: "Ghép ngang" only; an old "ghép dọc" code opens across ({lays}, {old})')
     check(await pg.evaluate("document.querySelectorAll('.pt-board image[href*=\"mon-daydeo-mask\"]').length") == 1, 'one strap, not two')
     # an old two-sided code: its two fabrics piece the one side, across
     old = await pg.evaluate("(() => { const d = GemPatch.parse('2~daydeo~hai~~~~~~~~AB'); return d && [d.layout, d.fab]; })()")
@@ -3669,12 +3669,12 @@ async def guidance(browser, db):
     await js_click(pg, '[data-stitch="5"]')
     await js_click(pg, '[data-thread="2"]')
     await pg.wait_for_timeout(300)
-    rt = await pg.evaluate("(() => { const d = GemPatch.parse('2~daydeo~doc~~~~~~~~AB~~e52'); return d && [d.ext.e, d.ext.ec, GemPatch.encode(d).split('~').pop()]; })()")
+    rt = await pg.evaluate("(() => { const d = GemPatch.parse('2~daydeo~ngang~~~~~~~~AB~~e52'); return d && [d.ext.e, d.ext.ec, GemPatch.encode(d).split('~').pop()]; })()")
     check(rt == [5, 2, 'e52'], f'the stitch travels in the design code ({rt})')
     check(await pg.evaluate("GemPatch.parse('2~goi~mot~~~~~~~~A~~e52') === null"), 'a cushion takes no stitch')
     lines = await pg.evaluate("document.querySelector('.pt-price-lines').textContent")
     check('Thêu chỉ giữa dây' in lines, f'the stitch is in the price ({lines})')
-    order = await pg.evaluate("GemPatch.describe('2~daydeo~doc~~~~~~~~AB~~e52', 'vi')")
+    order = await pg.evaluate("GemPatch.describe('2~daydeo~ngang~~~~~~~~AB~~e52', 'vi')")
     check('thêu chỉ giữa dây: hình thoi, chỉ đỏ gạch' in order, f'the order says which stitch, which thread ({order})')
     # a bag's handle takes it too (not drawn); the sleeve without a handle does not
     await js_click(pg, '.pt-tab[data-product="tuitote"]')
@@ -3926,6 +3926,14 @@ async def thudo(browser, db):
         ox = await pg.evaluate(vis)
         check(sc == [True, False, 'images/studio/wear/scrunchie-mac.webp'] and ox[:2] == [False, True],
               f'{name}: Dây buộc tóc shows its close-up as before; Oxford, the character ({sc}, {ox[:2]})')
+        # the wrist strap and the charm too: their drawings, as before
+        mac = []
+        for sku in ('daydeo', 'bloom'):
+            await js_click(pg, f'.fit-pick[data-try="{sku}"]')
+            await pg.wait_for_timeout(200)
+            mac.append(await pg.evaluate(vis))
+        check(mac == [[True, False, 'images/studio/wear/daydeo-mac.webp'], [True, False, 'images/studio/wear/bloom-mac.webp']],
+              f'{name}: Dây đeo cổ tay, Bloom Charm: their own drawings as before ({mac})')
         # the bag with Mẫu: its chips, each its own picture; the one sold out shown, not bought
         await js_click(pg, '[data-try="tui-di-choi/jeans-xanh"]')
         await pg.wait_for_timeout(300)
