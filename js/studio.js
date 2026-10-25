@@ -2181,6 +2181,14 @@
     };
     sheetEl.addEventListener('touchend', end);
     sheetEl.addEventListener('touchcancel', end);
+    // The × stays at the top of a sheet scrolled down: a long one on a phone
+    // (the sorting game, down to its bags) took it off the screen (25/10)
+    var x = modal.querySelector('.st-close');
+    sheetEl.addEventListener('scroll', function () {
+      var y = sheetEl.scrollTop;
+      x.style.transform = y > 0 ? 'translateY(' + y + 'px)' : '';
+      x.classList.toggle('is-pinned', y > 0);
+    }, { passive: true });
   }
 
   /* ---------- swipe the stage to walk ----------
