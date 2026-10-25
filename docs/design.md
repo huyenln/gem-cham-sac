@@ -1639,6 +1639,7 @@ Góp ý: bàn thiết kế giống tờ khảo sát, bản vẽ trông rẻ, chi
   nắm trên cùng kéo xuống đóng được.
 - **Tâm trạng** (`GemPatch.MOODS`): 5 bộ chọn sẵn (bảng vải + kiểu ghép). Tên là
   nháp, Anna đổi trong `js/patch.js`. Món mới mở ra đã mặc tâm trạng đầu.
+  (25/10: mỗi bộ = 5 màu cơ bản + 3 tấm in thật, xem "Màu cơ bản, tâm trạng theo vải thật".)
 - **Vải từng ô:** danh mục 45 vải = 5 tông × 9 kiểu (`KINDS`: trơn, caro, sọc,
   chấm bi, hoa nhí, ren, hoa to, ô nhỏ, thổ cẩm), id = tông × 9 + kiểu. Mã thiết
   kế thêm trường thứ 11 (sau ảnh, có thể rỗng): một chữ B64 mỗi ô. Mã cũ vẫn đọc.
@@ -1694,7 +1695,7 @@ Góp ý: bàn thiết kế giống tờ khảo sát, bản vẽ trông rẻ, chi
   `lotcocv`; nút "Dáng" chỉ hiện ở lót cốc. Ghi chú đơn ghi rõ "Lót cốc tròn" /
   "Lót cốc vuông".
 - **Màu riêng (color picker):** nút "Màu riêng" ở rổ → bảng trượt từ dưới lên (22/10) với chọn màu của máy + 8
-  màu gợi ý → "Nhuộm vào rổ": rổ thành 9 kiểu vải của màu đó. Nhuộm ngay trong
+  màu gợi ý (25/10: thành 27 màu cơ bản) → "Nhuộm vào rổ": rổ thành 9 kiểu vải của màu đó. Nhuộm ngay trong
   trình duyệt từ tranh vải xanh lam (`customSrc`): điểm xanh nhận sắc mới, độ đậm
   so với chính tranh đó; nền kem, ren trắng, lá xanh giữ nguyên. Mã thiết kế thêm
   trường 12: `<kiểu 0-8><hex>` cách nhau bằng dấu chấm (tối đa 19 màu); mỗi ô dùng
@@ -1972,7 +1973,8 @@ Gem đang có**, nhân sự tự thêm tấm mới trong admin.
   - Rổ có 8 tấm đang còn và đang hiện. Chip lọc theo tông (kèm số tấm). "Lục rổ" đi lần lượt
     qua mọi tấm của lọc đang chọn.
   - Tâm trạng tự chọn tấm thật gần nhất: cùng tông và cùng hoa văn, rồi cùng nhóm hoa văn,
-    rồi cùng tông (`nearReal`).
+    rồi cùng tông (`nearReal`). (25/10: tâm trạng ghi đích danh 3 tấm in; `nearReal` chỉ còn
+    thay tấm đang hết / đang ẩn.)
   - Cầm một tấm thì gợi ý ghi cả chất liệu. Dòng "Vải trên món: …" nằm dưới món.
   - Database có ít hơn 8 tấm, hoặc không trả lời: dùng lại vải vẽ như trước.
 - **Admin → Kho vải** (mọi nhân sự):
@@ -2337,6 +2339,55 @@ Anna thử trên điện thoại (22/10) và gửi ảnh lỗi.
   là ô đó), nên không ghép vải khác vào được. `neck` trong `ART.shirt` (`js/patch.js`).
   Kiểu "Hai nửa" vốn đã vậy; "Ghép theo nét vẽ" thì theo nét khách vẽ.
 - Kiểm tra: `onefab()` trong `tools/check-studio.py`.
+
+### Bàn thiết kế — Màu cơ bản, tâm trạng theo vải thật, Tâm trạng ngẫu nhiên (25/10/2026)
+
+Anna: "phần phối màu hiện tại đang không hợp với vải có tại Gem". Tâm trạng cũ đặt theo cặp
+(tông, hoa văn) rộng, trong khi kho thật nhiều màu tươi / đậm, nền đen in hoa, rất ít xanh lá.
+
+- **Màu cơ bản** (`GemPatch.BASIC`, 27 màu, 6 nhóm `BASIC_GROUPS`): Trung tính (Trắng, Kem, Be,
+  Xám, Đen) · Đỏ – hồng (Đỏ tươi, Đỏ đô, Hồng phấn, Hồng sen, Cam san hô) · Cam – vàng – nâu
+  (Cam tươi, Vàng tươi, Vàng nghệ, Vàng mù tạt, Nâu) · Xanh lá (Xanh nõn chuối, Xanh lá tươi,
+  Xanh xô thơm, Xanh lục đậm) · Xanh dương (Xanh da trời, Xanh ngọc, Xanh cổ vịt, Xanh coban,
+  Xanh than) · Tím (Tím pastel, Tím tươi, Tím mận). Màu không theo chất liệu: Gem tư vấn và chọn
+  chất vải cùng khách. Anna muốn màu tươi, nên bộ màu cố ý sáng.
+  - Mỗi màu là một "màu riêng" trên kiểu trơn, khoá `c0<hex>`: mã thiết kế, giá, đơn hàng
+    không đổi gì, **không cần migration**. Tên lấy từ `BASIC`: đơn ghi "Đỏ tươi (màu cơ bản)",
+    và vì không phải vải thật nên đơn vẫn có dòng "chất vải: …" (Gem chọn nếu khách không chọn).
+  - Nhuộm kiểu trơn (`customSrc`, kiểu 0) giờ phủ cả tấm bằng đúng màu, giữ vân vải làm sáng /
+    tối quanh độ sáng của màu. Cách cũ chỉ nhuộm phần xanh nên màu tươi ra nhạt. Áp cho mọi
+    màu riêng kiểu trơn, không riêng 27 màu. Các kiểu khác (caro, hoa…) vẫn nhuộm như cũ.
+  - Kho vải: chip "Màu cơ bản 27" cạnh "Tất cả", 6 nhóm có tên, ô màu nhỏ (điện thoại 5 ô một
+    hàng; máy tính 3 nhóm một hàng). Chọn chung giới hạn 8 với vải thật. Rổ ở bàn thiết kế
+    cũng có chip "Màu cơ bản" ("Lục rổ" đi qua cả 27). Bảng "Màu riêng": 27 chấm màu cơ bản
+    thay 8 chấm cũ.
+  - "Vải trên món": có màu cơ bản thì ghi thêm "màu cơ bản thì Gem tư vấn và chọn chất vải
+    cùng bạn" (không nói "đúng các tấm Gem đang có" cho màu cơ bản).
+- **Tâm trạng = 5 màu cơ bản + 3 tấm in thật** (`mood()` trong `js/patch.js`; số trong ngoặc là
+  `id` bảng `fabrics`):
+  - Hà Nội mùa thu: Nâu, Vàng nghệ, Be, Kem, Đỏ đô + lá phong nền kem (48), kẻ chéo nâu đen (46),
+    hoa nhí nền kaki (103)
+  - Vintage nhà bà: Hồng phấn, Kem, Trắng, Xanh xô thơm, Tím pastel + 29, 32, 123
+  - Biển chiều: Xanh da trời, Xanh cổ vịt, Xanh coban, Trắng, Cam san hô + 11, 12, 15
+  - Đồng xanh: Xanh nõn chuối, Xanh lá tươi, Xanh lục đậm, Vàng tươi, Kem + 2, 4, 5
+  - Tết sum vầy: Đỏ tươi, Đỏ đô, Vàng nghệ, Vàng tươi, Hồng sen + 40, 41, 31
+  - Tấm in đang hết / ẩn: tấm gần nhất còn hàng cùng tông + hoa văn (`nearReal`). Database
+    không trả lời: màu cơ bản + vải vẽ cùng tông / hoa văn.
+- **Tâm trạng ngẫu nhiên** (chip `data-mood="mix"`, thay cho "Đêm nhung" / "Kem sữa" đề xuất
+  làm chip riêng): mỗi lần chạm một bộ trong `MOOD_POOL`, hết một vòng 5 bộ mới lặp, không
+  bao giờ ra lại bộ đang trên món (`nextMix`). Giữ kiểu ghép khách đã chọn, như các tâm trạng
+  khác. Hình trên chip là 4 ô vải của bộ đang dùng (chưa chọn: 4 ô của 4 bộ), không cần tranh
+  mới. Chip ghi "Ngẫu nhiên: <tên bộ>". Tên bộ lên thẻ chia sẻ và đi trong link (`&m=`).
+  - Đêm nhung: Đen, Tím mận, Đỏ đô, Xanh than, Xanh lục đậm + 66, 70, 75
+  - Kem sữa: Trắng, Kem, Be, Xám, Hồng phấn + 120, 61, 126
+  - Kẹo ngọt: Hồng phấn, Tím pastel, Xanh da trời, Xanh nõn chuối, Vàng tươi + 30, 15, 36
+  - Nhiệt đới: Xanh ngọc, Cam tươi, Hồng sen, Vàng tươi, Xanh lá tươi + 6, 38, 52
+  - Hoàng hôn: Cam san hô, Cam tươi, Tím tươi, Hồng sen, Vàng nghệ + 39, 18, 51
+  - Nút "Ngẫu nhiên" ở Kiểu ghép (đổi cả kiểu ghép) cũng bốc từ cả 10 bộ.
+- Thêm / đổi bộ: sửa `MOODS` / `POOL` trong `js/patch.js` (hex viết thường, đúng một màu trong
+  `BASIC`; tấm in ghi `[id, tông, hoa văn]`, tông / hoa văn dùng khi tấm đó không còn trong bảng).
+- Kiểm tra: `python3 tools/check-studio.py mau`. `fabric_rows()` giả lập giờ đánh id từ 73
+  cho 57 tấm "sau cửa" như database thật (thật bỏ qua 72), vì tâm trạng gọi tấm theo id.
 
 ### Phân loại rác cùng GemxTagom (23/10/2026; tên đổi 24/10, Anna)
 

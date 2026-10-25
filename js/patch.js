@@ -493,21 +493,74 @@
   }
   function fabricId(tone, kind) { return TONE_ORDER.indexOf(tone) * 9 + KINDS.indexOf(kind); }
 
-  /* ---------- moods: a ready palette + a layout, one tap ----------
-     Names are drafts for Anna to rename. */
-  var MOODS = [
-    { id: 'hanoi', vi: 'Hà Nội mùa thu', en: 'Hanoi in autumn', layout: 'vuong',
-      f: [['nau', 'tron'], ['nau', 'caro'], ['nau', 'hoa'], ['trung', 'ren'], ['trung', 'tron'], ['xanh', 'ono'], ['nau', 'hoato'], ['trung', 'hoa']] },
-    { id: 'nhaba', vi: 'Vintage nhà bà', en: "Grandma's house", layout: 'cabin',
-      f: [['hong', 'hoa'], ['trung', 'ren'], ['hong', 'hoato'], ['nau', 'caro'], ['trung', 'tron'], ['hong', 'ono'], ['xanh', 'hoa'], ['trung', 'cham']] },
-    { id: 'bien', vi: 'Biển chiều', en: 'Seaside evening', layout: 'chong',
-      f: [['lam', 'soc'], ['lam', 'tron'], ['trung', 'tron'], ['hong', 'tron'], ['lam', 'cham'], ['lam', 'ono'], ['trung', 'soc'], ['hong', 'hoa']] },
-    { id: 'dong', vi: 'Đồng xanh', en: 'Green fields', layout: 'vuong',
-      f: [['xanh', 'tron'], ['xanh', 'caro'], ['xanh', 'hoa'], ['nau', 'tron'], ['trung', 'tho'], ['xanh', 'soc'], ['nau', 'ono'], ['xanh', 'hoato']] },
-    { id: 'tet', vi: 'Tết sum vầy', en: 'Lunar New Year', layout: 'sao',
-      f: [['hong', 'caro'], ['hong', 'tho'], ['hong', 'hoato'], ['nau', 'tho'], ['trung', 'hoa'], ['hong', 'soc'], ['nau', 'tron'], ['hong', 'cham']] }
+  /* ---------- basic colours (Màu cơ bản) ----------
+     Plain colours that don't depend on the cloth: Gem picks the material
+     with the customer (Anna 25/10/2026). Each is an own colour on the plain
+     kind, key "c0<hex>", so a design code needs nothing new; the name comes
+     from here. Brighter ones on purpose: Gem's scraps are bright. */
+  var BASIC_GROUPS = [
+    { vi: 'Trung tính', en: 'Neutrals' }, { vi: 'Đỏ – hồng', en: 'Reds – pinks' },
+    { vi: 'Cam – vàng – nâu', en: 'Oranges – yellows – browns' }, { vi: 'Xanh lá', en: 'Greens' },
+    { vi: 'Xanh dương', en: 'Blues' }, { vi: 'Tím', en: 'Purples' }
   ];
-  MOODS.forEach(function (m) { m.ids = m.f.map(function (x) { return fabricId(x[0], x[1]); }); });
+  var BASIC = [
+    ['f7f6f1', 'Trắng', 'White', 0], ['f2e8d2', 'Kem', 'Cream', 0], ['e2cba6', 'Be', 'Beige', 0],
+    ['b4b5b2', 'Xám', 'Grey', 0], ['242223', 'Đen', 'Black', 0],
+    ['e3232c', 'Đỏ tươi', 'Bright red', 1], ['9c1f35', 'Đỏ đô', 'Burgundy', 1], ['f7c8d2', 'Hồng phấn', 'Powder pink', 1],
+    ['e8478e', 'Hồng sen', 'Lotus pink', 1], ['ff7e66', 'Cam san hô', 'Coral', 1],
+    ['f7821f', 'Cam tươi', 'Bright orange', 2], ['f8ce2c', 'Vàng tươi', 'Bright yellow', 2], ['e0a020', 'Vàng nghệ', 'Turmeric', 2],
+    ['c8b12c', 'Vàng mù tạt', 'Mustard', 2], ['94613a', 'Nâu', 'Brown', 2],
+    ['c2db6e', 'Xanh nõn chuối', 'Banana-leaf green', 3], ['3fae5e', 'Xanh lá tươi', 'Bright green', 3],
+    ['8fa898', 'Xanh xô thơm', 'Sage', 3], ['1f6b5a', 'Xanh lục đậm', 'Deep green', 3],
+    ['8ecdeb', 'Xanh da trời', 'Sky blue', 4], ['27b4b6', 'Xanh ngọc', 'Turquoise', 4], ['0d9dcc', 'Xanh cổ vịt', 'Teal', 4],
+    ['2a6fd0', 'Xanh coban', 'Cobalt', 4], ['1f3075', 'Xanh than', 'Navy', 4],
+    ['d8b3ec', 'Tím pastel', 'Lilac', 5], ['8d4fd0', 'Tím tươi', 'Bright purple', 5], ['74307e', 'Tím mận', 'Plum', 5]
+  ].map(function (x) { return { hex: x[0], key: 'c0' + x[0], vi: x[1], en: x[2], g: x[3] }; });
+  var BASIC_AT = {};
+  BASIC.forEach(function (b) { BASIC_AT[b.hex] = b; });
+  function basicOf(key) { return isCustom(key) && key[1] === '0' && BASIC_AT[key.slice(2)] || null; }
+
+  /* ---------- moods: a ready palette + a layout, one tap ----------
+     Each is 5 basic colours + 3 real prints from Kho vải (Anna 25/10:
+     the old ones asked for colours Gem hardly has). A print sold out or
+     hidden: the nearest one in stock (its colour family and kind). No real
+     fabrics at all: the painted print of that family and kind.
+     POOL: more palettes, no chip of their own: "Tâm trạng ngẫu nhiên"
+     brings one at a time. Names are drafts for Anna to rename. */
+  function mood(id, vi, en, layout, basic, prints) {
+    return { id: id, vi: vi, en: en, layout: layout, basic: basic.map(function (h) { return 'c0' + h; }), prints: prints };
+  }
+  var MOODS = [
+    mood('hanoi', 'Hà Nội mùa thu', 'Hanoi in autumn', 'vuong', ['94613a', 'e0a020', 'e2cba6', 'f2e8d2', '9c1f35'],
+      [[48, 'nau', 'hoato'], [46, 'nau', 'caro'], [103, 'nau', 'hoa']]),
+    mood('nhaba', 'Vintage nhà bà', "Grandma's house", 'cabin', ['f7c8d2', 'f2e8d2', 'f7f6f1', '8fa898', 'd8b3ec'],
+      [[29, 'hong', 'hoa'], [32, 'hong', 'hoa'], [123, 'trung', 'ren']]),
+    mood('bien', 'Biển chiều', 'Seaside evening', 'chong', ['8ecdeb', '0d9dcc', '2a6fd0', 'f7f6f1', 'ff7e66'],
+      [[11, 'lam', 'ono'], [12, 'lam', 'ono'], [15, 'lam', 'hoato']]),
+    mood('dong', 'Đồng xanh', 'Green fields', 'vuong', ['c2db6e', '3fae5e', '1f6b5a', 'f8ce2c', 'f2e8d2'],
+      [[2, 'xanh', 'caro'], [4, 'xanh', 'hoato'], [5, 'xanh', 'hoato']]),
+    mood('tet', 'Tết sum vầy', 'Lunar New Year', 'sao', ['e3232c', '9c1f35', 'e0a020', 'f8ce2c', 'e8478e'],
+      [[40, 'hong', 'hoato'], [41, 'hong', 'tho'], [31, 'hong', 'hoa']])
+  ];
+  var POOL = [
+    mood('demnhung', 'Đêm nhung', 'Velvet night', 'cabin', ['242223', '74307e', '9c1f35', '1f3075', '1f6b5a'],
+      [[66, 'trung', 'cham'], [70, 'trung', 'hoato'], [75, 'lam', 'hoato']]),
+    mood('kemsua', 'Kem sữa', 'Milk and cream', 'vuong', ['f7f6f1', 'f2e8d2', 'e2cba6', 'b4b5b2', 'f7c8d2'],
+      [[120, 'trung', 'ren'], [61, 'trung', 'soc'], [126, 'trung', 'hoato']]),
+    mood('keongot', 'Kẹo ngọt', 'Sweet shop', 'chong', ['f7c8d2', 'd8b3ec', '8ecdeb', 'c2db6e', 'f8ce2c'],
+      [[30, 'hong', 'hoa'], [15, 'lam', 'hoato'], [36, 'hong', 'hoato']]),
+    mood('nhietdoi', 'Nhiệt đới', 'Tropical', 'sao', ['27b4b6', 'f7821f', 'e8478e', 'f8ce2c', '3fae5e'],
+      [[6, 'xanh', 'hoato'], [38, 'hong', 'hoato'], [52, 'nau', 'hoato']]),
+    mood('hoanghon', 'Hoàng hôn', 'Sunset', 'vuong', ['ff7e66', 'f7821f', '8d4fd0', 'e8478e', 'e0a020'],
+      [[39, 'hong', 'hoato'], [18, 'lam', 'hoato'], [51, 'nau', 'hoato']])
+  ];
+  var ALL_MOODS = MOODS.concat(POOL);
+  // painted: the basics + the painted print of each family and kind
+  ALL_MOODS.forEach(function (m) {
+    m.ids = m.basic.concat(m.prints.map(function (x) { return fabricId(x[1], x[2]); }));
+    m.real = [];
+  });
+  function moodById(id) { return ALL_MOODS.filter(function (m) { return m.id === id; })[0] || null; }
 
   /* ---------- real fabrics (Kho vải) ----------
      The fabrics Gem actually has: table fabrics, edited in admin.html →
@@ -543,9 +596,15 @@
     REAL_ON.sort(function (a, b) {
       return TONE_ORDER.indexOf(a.tone) - TONE_ORDER.indexOf(b.tone) || a.sort - b.sort || a.id - b.id;
     });
-    MOODS.forEach(function (m) {
-      m.real = [];
-      m.f.forEach(function (x) { var k = nearReal(x[0], x[1], m.real); if (k) m.real.push(k); });
+    ALL_MOODS.forEach(function (m) {
+      var got = [];
+      m.prints.forEach(function (x) {
+        var f = REAL[x[0]];
+        var k = f && !f.out && !f.hidden && f.src && got.indexOf(f.key) < 0 ? f.key
+          : nearReal(f ? f.tone : x[1], f ? f.kind : x[2], got);
+        if (k) got.push(k);
+      });
+      m.real = m.basic.concat(got);
     });
   }
   // enough real fabrics in stock to fill the basket: the design table uses them
@@ -562,7 +621,7 @@
     });
     return best ? best.key : null;
   }
-  function moodKeys(m) { return hasReal() && m.real && m.real.length ? m.real : m.ids; }
+  function moodKeys(m) { return hasReal() && m.real.length > m.basic.length ? m.real : m.ids; }
   function isReal(key) { return typeof key === 'string' && /^r[1-9]\d{0,5}$/.test(key); }
   function realOf(key) { return isReal(key) ? REAL[+key.slice(1)] || null : null; }
 
@@ -2041,6 +2100,8 @@
     l = l || lang();
     if (typeof key === 'number') { var f = fabric(key); return KIND_NAMES[f.kind][l] + ' ' + TONES[f.tone][l].toLowerCase(); }
     if (isReal(key)) { var rf = realOf(key); return rf ? rf[l] : (l === 'vi' ? 'Vải #' : 'Fabric #') + key.slice(1); }
+    var b = basicOf(key);
+    if (b) return b[l] + (l === 'vi' ? ' (màu cơ bản)' : ' (basic colour)');
     return KIND_NAMES[KINDS[+key[1]]][l] + (l === 'vi' ? ' màu riêng #' : ' own colour #') + key.slice(2);
   }
 
@@ -2107,8 +2168,8 @@
     if (!d.fab) return null;
     var keys = [];
     for (var i = 0; i < d.fab.length; i++) keys.push(keyOf(d, B64.indexOf(d.fab[i])));
-    var fits = MOODS.filter(function (m) {
-      return [m.ids, m.real || []].some(function (set) { return keys.every(function (x) { return set.indexOf(x) >= 0; }); });
+    var fits = ALL_MOODS.filter(function (m) {
+      return [m.ids, m.real].some(function (set) { return keys.every(function (x) { return set.indexOf(x) >= 0; }); });
     });
     return fits.filter(function (m) { return m.id === d.moodId; })[0] || fits[0] || null;
   }
@@ -2161,26 +2222,40 @@
         g.drawImage(img, 0, 0);
         var data = g.getImageData(0, 0, c.width, c.height), px = data.data;
         var rgb = hexRgb(hex), t = rgbHsl(rgb[0], rgb[1], rgb[2]);
-        // how strong this painting's blue is (some are barely tinted): the
-        // strongest blue becomes the full chosen colour
-        var sats = [];
-        for (var q0 = 0; q0 < px.length; q0 += 4 * 7) {
-          var h0 = rgbHsl(px[q0], px[q0 + 1], px[q0 + 2]);
-          if (h0[0] >= 140 && h0[0] <= 300 && h0[1] >= 0.012) sats.push(h0[1]);
-        }
-        sats.sort(function (x, y) { return x - y; });
-        var ref = Math.max(0.08, sats.length ? sats[Math.floor(sats.length * 0.9)] : 0.3);
-        for (var q = 0; q < px.length; q += 4) {
-          var hsl = rgbHsl(px[q], px[q + 1], px[q + 2]);
-          // the blue ink, faded or strong; cream (hue ~40), white lace and
-          // green leaves (hue ~90) are left as painted
-          if (hsl[0] < 140 || hsl[0] > 300 || hsl[1] < 0.012) continue;
-          var w = Math.min(1, (hsl[1] - 0.012) / 0.03);
-          // pale blue stays pale, strong blue becomes the strong colour
-          var s2 = Math.min(1, t[1] * Math.max(0.5, Math.min(1.2, hsl[1] / ref)));
-          var l2 = Math.max(0, Math.min(1, hsl[2] + 0.85 * (t[2] - 0.55)));
-          var out = hslRgb(t[0], s2 * w + hsl[1] * (1 - w), l2 * w + hsl[2] * (1 - w));
-          px[q] = out[0]; px[q + 1] = out[1]; px[q + 2] = out[2];
+        if (k === 0) {
+          // plain: the whole sheet takes the colour, its weave kept as light
+          // and shade around the colour's own lightness (repainting only the
+          // blue left bright colours pale; Màu cơ bản are meant bright)
+          var sum = 0, cnt = 0;
+          for (var q1 = 0; q1 < px.length; q1 += 4 * 5) { sum += rgbHsl(px[q1], px[q1 + 1], px[q1 + 2])[2]; cnt++; }
+          var mean = sum / cnt;
+          for (var q2 = 0; q2 < px.length; q2 += 4) {
+            var lp = Math.max(0, Math.min(1, t[2] + 0.55 * (rgbHsl(px[q2], px[q2 + 1], px[q2 + 2])[2] - mean)));
+            var o2 = hslRgb(t[0], t[1], lp);
+            px[q2] = o2[0]; px[q2 + 1] = o2[1]; px[q2 + 2] = o2[2];
+          }
+        } else {
+          // how strong this painting's blue is (some are barely tinted): the
+          // strongest blue becomes the full chosen colour
+          var sats = [];
+          for (var q0 = 0; q0 < px.length; q0 += 4 * 7) {
+            var h0 = rgbHsl(px[q0], px[q0 + 1], px[q0 + 2]);
+            if (h0[0] >= 140 && h0[0] <= 300 && h0[1] >= 0.012) sats.push(h0[1]);
+          }
+          sats.sort(function (x, y) { return x - y; });
+          var ref = Math.max(0.08, sats.length ? sats[Math.floor(sats.length * 0.9)] : 0.3);
+          for (var q = 0; q < px.length; q += 4) {
+            var hsl = rgbHsl(px[q], px[q + 1], px[q + 2]);
+            // the blue ink, faded or strong; cream (hue ~40), white lace and
+            // green leaves (hue ~90) are left as painted
+            if (hsl[0] < 140 || hsl[0] > 300 || hsl[1] < 0.012) continue;
+            var w = Math.min(1, (hsl[1] - 0.012) / 0.03);
+            // pale blue stays pale, strong blue becomes the strong colour
+            var s2 = Math.min(1, t[1] * Math.max(0.5, Math.min(1.2, hsl[1] / ref)));
+            var l2 = Math.max(0, Math.min(1, hsl[2] + 0.85 * (t[2] - 0.55)));
+            var out = hslRgb(t[0], s2 * w + hsl[1] * (1 - w), l2 * w + hsl[2] * (1 - w));
+            px[q] = out[0]; px[q + 1] = out[1]; px[q + 2] = out[2];
+          }
         }
         g.putImageData(data, 0, 0);
         c.toBlob(function (b) {
@@ -2234,7 +2309,7 @@
     }
     if (n * 2 >= (d.fab || '').length && n) {
       var top = Object.keys(own).sort(function (a, b) { return own[b] - own[a]; })[0];
-      var hn = hueName(top, l);
+      var hn = BASIC_AT[top] ? BASIC_AT[top][l].toLowerCase() : hueName(top, l);
       return l === 'vi' ? 'Sắc ' + hn : hn.charAt(0).toUpperCase() + hn.slice(1) + ' shade';
     }
     var tones = d.tones.filter(function (t) { return t !== GEM; });
@@ -2265,7 +2340,8 @@
     blank: blank, encode: encode, parse: parse, isComplete: isComplete, describe: describe,
     tones: tones, randomFill: randomFill, svg: svg, toneDot: toneDot, printDot: printDot,
     sketchPaths: sketchPaths,
-    KINDS: KINDS, KIND_NAMES: KIND_NAMES, N_FABRICS: N_FABRICS, MOODS: MOODS, B64: B64,
+    KINDS: KINDS, KIND_NAMES: KIND_NAMES, N_FABRICS: N_FABRICS, MOODS: MOODS, MOOD_POOL: POOL, moodById: moodById, B64: B64,
+    BASIC: BASIC, BASIC_GROUPS: BASIC_GROUPS, basicOf: basicOf,
     fabric: fabric, fabricId: fabricId, slots: slots, scatter: scatter, setPatch: setPatch, syncTaste: syncTaste,
     turnPatch: turnPatch, rotAt: rotAt, TURN_STEP: TURN_STEP,
     moodOf: moodOf, applyMood: applyMood, title: title, serial: serial, swatch: swatch,
@@ -2288,7 +2364,7 @@
     url: function (spec, by, mood) {
       return location.origin + location.pathname.replace(/[^/]*$/, '') + 'studio.html?d=' + encodeURIComponent(spec) +
         (by ? '&by=' + encodeURIComponent(String(by).slice(0, 24)) : '') +
-        (mood && MOODS.some(function (m) { return m.id === mood; }) ? '&m=' + mood : '');
+        (mood && moodById(mood) ? '&m=' + mood : '');
     }
   };
 })();

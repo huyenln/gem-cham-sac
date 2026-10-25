@@ -27,6 +27,9 @@ and walks through what broke before:
   design   the design table: a mood dresses the piece, tap a scrap then a patch,
            drag a scrap onto a patch, "May xong" sews and makes the 9:16 card,
            the share link (with a name) opens the same design for a friend
+  mau      Màu cơ bản: 27 colours in Kho vải, over the basket and in Màu riêng;
+           moods of 5 colours + 3 real prints (a sold-out print: the nearest);
+           "Tâm trạng ngẫu nhiên" brings the 5 pool palettes in turn
   catalog  san-pham.html builds a card for a product only the database knows,
            in its category and order, and the lightbox opens on it
   kinds    (owner) a piece's "Loại": story, zone, talk, board, dates to show
@@ -102,6 +105,15 @@ def check(ok, what):
     print(('  ok    ' if ok else '  FAIL  ') + what)
     if not ok:
         failures.append(what)
+
+
+def wears(fill, key):
+    """A patch's fill is that fabric: a painted one "…-f<n>)", a colour
+    (Màu cơ bản / Màu riêng) "…-c<kind><hex>)", a real one "…-r<id>p<n>)"."""
+    key = str(key)
+    if key.startswith('r'):
+        return bool(re.search(r'-%sp\d+\)$' % key, fill or ''))
+    return (fill or '').endswith(('-' if key.startswith('c') else '-f') + key + ')')
 
 
 class Quiet(http.server.SimpleHTTPRequestHandler):
@@ -189,7 +201,9 @@ def fabric_rows():
     # 20261022: the room "sau cửa treo đồ", next ids, photo and place in the rows
     sau = (ROOT / 'supabase/migrations/20261022_kho_vai_sau_cua.sql').read_text(encoding='utf-8')
     place = re.search(r"select id, '([^']+)' from added", sau)[1]
-    nid = max(r['id'] for r in rows)
+    # the live table gave them 73 on (its sequence had passed 72): the moods
+    # name real prints by id (js/patch.js MOODS), so the same ids here
+    nid = max(max(r['id'] for r in rows), 72)
     for m in re.finditer(r"\('((?:[^']|'')*)', '((?:[^']|'')*)', '(\w+)', '(\w+)', '((?:[^']|'')*)', '([^']+)', '([^']+)', ([\d.]+), (\d+)\)", sau):
         nid += 1
         rows.append({'id': nid, 'name_vi': m[1], 'name_en': m[2], 'tone': m[3], 'kind': m[4], 'material': m[5], 'img': m[6],
@@ -1068,9 +1082,8 @@ async def design(browser, db):
         await pg.click('.pt-board [data-i="4"]')
         await pg.wait_for_timeout(300)
         cell = await pg.evaluate("document.querySelector('.pt-board [data-i=\"4\"]').getAttribute('fill')")
-        want = f'-f{sid})'
         # (already that fabric there: the tap only picks the patch)
-        check(re.search(r'-f%s\)$' % sid, cell), f'{name}: tap scrap, tap patch puts that fabric there ({want} in {cell})')
+        check(wears(cell, sid), f'{name}: tap scrap, tap patch puts that fabric there ({sid} in {cell})')
         # drag another scrap onto patch 0
         sid2 = await pg.evaluate("document.querySelectorAll('.pt-scrap')[2].getAttribute('data-scrap')")
         await pg.evaluate("document.querySelector('.pt-board').scrollIntoView({block: 'start'})")
@@ -1080,8 +1093,7 @@ async def design(browser, db):
         await drag(pg, a, bx)
         await pg.wait_for_timeout(300)
         cell0 = await pg.evaluate("document.querySelector('.pt-board [data-i=\"0\"]').getAttribute('fill')")
-        want2 = f'-f{sid2})'
-        check(cell0.endswith(want2), f'{name}: drag a scrap onto a patch ({want2} in {cell0})')
+        check(wears(cell0, sid2), f'{name}: drag a scrap onto a patch ({sid2} in {cell0})')
         await pg.screenshot(path=OUT / f'design-{name}-1.png')
         if name == 'mobile':
             # phone: one column that does not change as it scrolls - the
@@ -1155,7 +1167,7 @@ async def design(browser, db):
         await pg.mouse.click(cx, cy)
         await pg.wait_for_timeout(300)
         fill1 = await pg.evaluate("[...document.querySelectorAll('.pt-board path[data-i]')].map(p => p.getAttribute('fill')).join(' ')")
-        check(f'f{sid3})' in fill1 or 'c' in sid3, f'{name}: tapping a cut patch through the canvas lays the held scrap on it')
+        check(any(wears(f, sid3) for f in fill1.split(' ')), f'{name}: tapping a cut patch through the canvas lays the held scrap on it ({sid3})')
         await pg.screenshot(path=OUT / f'design-{name}-net.png')
         # through the canvas too: nothing in hand, a tap picks the patch; a tap
         # elsewhere lets go; a new cut line (patches renumbered) drops it
@@ -3090,10 +3102,12 @@ async def vai(browser, db):
     for name, w, h in (('mobile', 393, 852), ('desktop', 1440, 900)):
         db.fab_urls.clear()
         pg = await open_table(browser, db, w, h)
+        # a fresh piece wears the first mood: 5 basic colours + 3 real prints
         keys = await pg.evaluate("[...document.querySelectorAll('.pt-scrap')].map(b => b.dataset.scrap)")
-        check(len(keys) == 8 and all(re.fullmatch(r'r\d+', k) for k in keys), f'{name}: eight real fabrics in the basket ({keys})')
-        srcs = await pg.evaluate("[...document.querySelectorAll('.pt-sf')].map(e => e.style.backgroundImage)")
-        check(all('vai-that/' in x for x in srcs), f'{name}: each scrap is its photo')
+        check(len(keys) == 8 and all(re.fullmatch(r'c0[0-9a-f]{6}', k) for k in keys[:5]) and all(re.fullmatch(r'r\d+', k) for k in keys[5:]),
+              f'{name}: the mood\'s basket: five basic colours, three real fabrics ({keys})')
+        srcs = await pg.evaluate("[...document.querySelectorAll('.pt-scrap.is-real .pt-sf')].map(e => e.style.backgroundImage)")
+        check(len(srcs) == 3 and all('vai-that/' in x for x in srcs), f'{name}: each real scrap is its photo')
         check(await pg.evaluate("document.querySelectorAll('.pt-board image[href*=\"vai-that\"]').length") > 0, f'{name}: the piece is dressed in the photos')
         check(await pg.evaluate("document.querySelector('.pt-board image[href*=\"-bong\"]').getAttribute('opacity')") == '0.6',
               f'{name}: lighter shading over real fabric')
@@ -3101,7 +3115,8 @@ async def vai(browser, db):
         check(line.startswith('Vải trên món:') and '×' in line, f'{name}: "Vải trên món" names the fabrics ({line[:70]})')
         chips = await pg.evaluate("[...document.querySelectorAll('.pt-vtone')].map(b => b.textContent)")
         on = len(db.fabrics) - len(gone)
-        check(len(chips) == 6 and chips[0].startswith(f'Tất cả {on}'), f'{name}: colour chips, sold-out / hidden left out ({chips})')
+        check(len(chips) == 7 and chips[0].startswith(f'Tất cả {on}') and chips[1] == 'Màu cơ bản 27',
+              f'{name}: colour chips, sold-out / hidden left out, "Màu cơ bản" second ({chips})')
         # one colour: only blues, and "Lục rổ" walks through all of them, 8 at a time
         await js_click(pg, '[data-vtone="lam"]')
         seen = set(await pg.evaluate("[...document.querySelectorAll('.pt-scrap')].map(b => b.dataset.scrap)"))
@@ -3233,8 +3248,13 @@ async def vai(browser, db):
       const spec = P.encode(d), back = P.parse(spec);
       return [spec, !!back && P.encode(back) === spec, P.describe(spec, 'vi'), P.url(spec)];
     })""")
-    check(got[1] and re.search(r'~r\d+(\.r\d+)*$', got[0]), f'design code carries the real fabrics and reads back ({got[0][-40:]})')
-    check('Caro xanh lá (đã hết)' in got[2] and 'chất vải' not in got[2], f'order line: real names, sold out marked ({got[2][:120]})')
+    check(got[1] and re.search(r'~r2\.', got[0]) and re.search(r'\.r\d+', got[0]) and re.search(r'\.0[0-9a-f]{6}', got[0]),
+          f'design code carries the real fabrics and the basic colours, and reads back ({got[0][-60:]})')
+    check('Caro xanh lá (đã hết)' in got[2] and '(màu cơ bản)' in got[2] and 'chất vải: Gem chọn' in got[2],
+          f'order line: real names, sold out marked; basic colours named, the cloth left to Gem ({got[2][:160]})')
+    # real fabrics only: the material is known, no "chất vải" line
+    only = await pg.evaluate("(() => { const P = window.GemPatch, d = P.blank('goi'); P.scatter(d, ['r2', 'r5', 'r6']); return P.describe(P.encode(d), 'vi'); })()")
+    check('chất vải' not in only, f'real fabrics only: no "chất vải" line ({only[:100]})')
     await pg.goto(got[3])
     await pg.wait_for_timeout(3500)
     check(await pg.evaluate("document.querySelectorAll('.pt-board image[href*=\"vai-that\"]').length") > 0, 'a shared link opens with the fabric photos')
@@ -3245,8 +3265,11 @@ async def vai(browser, db):
     db.fabrics = []
     pg = await open_table(browser, db, 393, 852)
     keys = await pg.evaluate("[...document.querySelectorAll('.pt-scrap')].map(b => b.dataset.scrap)")
-    check(len(keys) == 8 and all(k.isdigit() for k in keys), f'no fabrics in the database: painted ones ({keys})')
-    check(await pg.evaluate("document.querySelector('.pt-vtones').hidden && document.querySelector('.pt-onpiece').hidden"), 'no colour chips, no "Vải trên món" then')
+    check(len(keys) == 8 and all(k.startswith('c0') for k in keys[:5]) and all(k.isdigit() for k in keys[5:]),
+          f'no fabrics in the database: the basic colours + painted prints ({keys})')
+    onp = await pg.evaluate("(() => { const e = document.querySelector('.pt-onpiece'); return e.hidden ? '' : e.textContent; })()")
+    check(await pg.evaluate("document.querySelector('.pt-vtones').hidden") and 'đúng các tấm' not in onp,
+          f'no colour chips then, and no word of "the very fabrics Gem has" ({onp[:90]})')
     check(not pg.errors, f'no script errors {pg.errors}')
     await pg.context.close()
 
@@ -3701,6 +3724,126 @@ async def guidance(browser, db):
     check(old == [['canh', 'AB'], ['mot', 'A']], f'old origami codes: two sectors become base + petals, cut lines one fabric ({old})')
     check(not pg.errors, f'no script errors {pg.errors}')
     await pg.context.close()
+
+
+async def mau(browser, db):
+    """25/10 (Anna: the moods didn't fit the fabric Gem has): 27 basic colours
+    in Kho vải (the cloth chosen with Gem), moods of 5 basic colours + 3 real
+    prints (a sold-out one: the nearest in stock), "Tâm trạng ngẫu nhiên"
+    bringing more palettes one at a time, a "Màu cơ bản" chip on the basket."""
+    print('mau')
+    db.fabrics = fabric_rows()
+    pg = await page(browser, db, 1440, 900)
+    await pg.goto(f'{BASE}/studio.html')
+    await pg.wait_for_timeout(1200)
+    got = await pg.evaluate("""() => window.GemPatch.loadReal().then(() => {
+      const P = window.GemPatch;
+      return [P.BASIC.length, P.BASIC_GROUPS.length, P.MOODS.length, P.MOOD_POOL.length,
+        P.MOODS.concat(P.MOOD_POOL).map(m => [m.id, P.moodKeys(m).join(' '), m.prints.map(x => 'r' + x[0]).join(' ')]),
+        P.keyName('c0e3232c', 'vi'), P.keyName('c0123456', 'vi'), P.keyName('c0e3232c', 'en')];
+    })""")
+    check(got[:4] == [27, 6, 5, 5], f'27 basic colours in 6 groups, 5 moods + 5 more for "ngẫu nhiên" ({got[:4]})')
+    for mid, keys, prints in got[4]:
+        k = keys.split()
+        check(len(k) == 8 and all(re.fullmatch(r'c0[0-9a-f]{6}', x) for x in k[:5]) and k[5:] == prints.split(),
+              f'mood {mid}: five basic colours + its three prints ({keys})')
+    check(got[5:] == ['Đỏ tươi (màu cơ bản)', 'Trơn màu riêng #123456', 'Bright red (basic colour)'],
+          f'a basic colour goes by its name, an own colour as before ({got[5:]})')
+    # a print sold out: the nearest one in stock (same family, same kind)
+    sub = await pg.evaluate("""() => window.GemDB.fabrics().then(rows => {
+      const P = window.GemPatch;
+      rows.forEach(r => { if (r.id === 48) r.in_stock = false; });
+      P.setReal(rows);
+      const k = P.moodKeys(P.moodById('hanoi')), f = P.realOf(k[5]);
+      const out = [k.length, k.indexOf('r48'), f && f.tone, f && f.kind];
+      rows.forEach(r => { if (r.id === 48) r.in_stock = true; });
+      P.setReal(rows);
+      return out;
+    })""")
+    check(sub[0] == 8 and sub[1] < 0 and sub[2:] == ['nau', 'hoato'], f'a mood\'s print sold out: another brown big floral in its place ({sub})')
+    # the dyed plain sheet keeps the colour bright (Anna: "thêm màu tươi")
+    dye = await pg.evaluate("""() => new Promise(done => {
+      const P = window.GemPatch, hexes = ['e3232c', 'f7821f', '27b4b6', '242223', 'f7f6f1'];
+      hexes.forEach(h => P.customSrc(0, h));
+      setTimeout(() => Promise.all(hexes.map(h => new Promise(ok => {
+        const im = new Image();
+        im.onload = () => {
+          const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight;
+          const g = c.getContext('2d'); g.drawImage(im, 0, 0);
+          const px = g.getImageData(0, 0, c.width, c.height).data; let r = 0, gg = 0, b = 0, n = 0;
+          for (let i = 0; i < px.length; i += 16) { r += px[i]; gg += px[i + 1]; b += px[i + 2]; n++; }
+          const t = [0, 2, 4].map(j => parseInt(h.slice(j, j + 2), 16));
+          ok([h, Math.round(Math.hypot(r / n - t[0], gg / n - t[1], b / n - t[2]))]);
+        };
+        im.onerror = () => ok([h, 999]);
+        im.src = P.customSrc(0, h);
+      }))).then(done), 2500);
+    })""")
+    check(all(d < 30 for h, d in dye), f'a basic colour dyed on the plain sheet stays that colour (distance per colour: {dye})')
+    await pg.context.close()
+
+    for name, w, h in (('mobile', 393, 852), ('desktop', 1440, 900)):
+        pg = await open_table(browser, db, w, h)
+        # "Tâm trạng ngẫu nhiên": five taps, the five palettes of the pool,
+        # each with its own basket; the layout stays as picked
+        await js_click(pg, '.pt-layouts [data-layout="chong"]')
+        await pg.wait_for_timeout(200)
+        seen = []
+        for i in range(5):
+            await js_click(pg, '[data-mood="mix"]')
+            await pg.wait_for_timeout(250)
+            seen.append(await pg.evaluate("""(() => { const b = document.querySelector('[data-mood="mix"]');
+                const sc = [...document.querySelectorAll('.pt-scrap')].map(x => x.dataset.scrap).join(' ');
+                const lay = document.querySelector('.pt-layouts .is-on'), tiles = b.querySelectorAll('.pt-mood-mix i').length;
+                return [b.textContent, b.classList.contains('is-on'), lay && lay.dataset.layout, sc, tiles]; })()"""))
+        names = [x[0] for x in seen]
+        pool = await pg.evaluate("GemPatch.MOOD_POOL.map(m => ['Ngẫu nhiên: ' + m.vi, GemPatch.moodKeys(m).join(' ')])")
+        check(sorted(names) == sorted(p[0] for p in pool), f'{name}: five taps, the five palettes of the pool ({names})')
+        check(all(x[1] and x[2] == 'chong' and x[4] == 4 for x in seen), f'{name}: the chip is on, four fabrics in its circle, the layout kept ({[x[1:3] + [x[4]] for x in seen]})')
+        want = dict(pool)
+        check(all(x[3] == want[x[0]] for x in seen), f'{name}: the basket is the palette picked')
+        t2 = await pg.evaluate("""(() => { const P = window.GemPatch, d = P.blank('goi'); P.applyMood(d, P.moodById('demnhung'));
+            return [P.title(d, 'vi'), P.url(P.encode(d), '', 'demnhung').split('&m=')[1]]; })()""")
+        check(t2 == ['Đêm nhung', 'demnhung'], f'{name}: a pool palette names the card and travels in the share link ({t2})')
+        # the basket's own "Màu cơ bản" chip: only basic colours, "Lục rổ" walks through all 27
+        await js_click(pg, '[data-vtone="basic"]')
+        got = set(await pg.evaluate("[...document.querySelectorAll('.pt-scrap')].map(b => b.dataset.scrap)"))
+        first = len(got)
+        for _ in range(3):
+            await js_click(pg, '[data-pt="rummage"]')
+            got |= set(await pg.evaluate("[...document.querySelectorAll('.pt-scrap')].map(b => b.dataset.scrap)"))
+        check(first == 8 and len(got) == 27 and all(k.startswith('c0') for k in got), f'{name}: "Màu cơ bản" over the basket: all 27 in four rummages ({first}, {len(got)})')
+        # Màu riêng: the 27 as starting points, by name
+        dots = await pg.evaluate("[...document.querySelectorAll('.pt-own-dot')].map(b => b.getAttribute('aria-label'))")
+        check(len(dots) == 27 and dots[5] == 'Đỏ tươi', f'{name}: Màu riêng offers the 27 basic colours by name ({len(dots)}, {dots[5:6]})')
+        # Kho vải: the "Màu cơ bản" chip, six groups; two colours + one real fabric → Ghép thử
+        await js_click(pg, '[data-pt="kho"]')
+        await pg.wait_for_timeout(500)
+        chips = await pg.evaluate("[...document.querySelectorAll('.kho .pt-vtone')].map(b => b.textContent)")
+        check(chips[1] == 'Màu cơ bản 27', f'{name}: Kho vải has "Màu cơ bản 27" next to "Tất cả" ({chips[:2]})')
+        await js_click(pg, '[data-kho="clear"]')
+        await js_click(pg, '[data-ktone="basic"]')
+        grid = await pg.evaluate("[document.querySelectorAll('.kho-grp').length, document.querySelectorAll('.kho-c').length, document.querySelector('.kho-gp').textContent]")
+        check(grid[:2] == [6, 27] and 'Gem tư vấn' in grid[2], f'{name}: six groups, 27 colours, the cloth chosen with Gem ({grid})')
+        await js_click(pg, '[data-kho-f="c0e3232c"]')
+        await js_click(pg, '[data-kho-f="c02a6fd0"]')
+        await pg.screenshot(path=OUT / f'mau-kho-{name}.png')
+        await js_click(pg, '[data-ktone=""]')
+        real = await pg.evaluate("document.querySelector('.kho-f').dataset.khoF")
+        await js_click(pg, f'[data-kho-f="{real}"]')
+        bar = await pg.evaluate("[document.querySelector('.kho-n').textContent, document.querySelectorAll('.kho-picked i').length, document.querySelectorAll('.kho-picked img').length]")
+        check(bar == ['Đã chọn 3/8', 2, 1], f'{name}: two colours + one fabric picked, all three in the bar ({bar})')
+        await js_click(pg, '[data-kho="go"]')
+        await pg.wait_for_timeout(800)
+        basket = await pg.evaluate("[...document.querySelectorAll('.pt-scrap')].map(b => b.dataset.scrap)")
+        check(basket == ['c0e3232c', 'c02a6fd0', real], f'{name}: "Ghép thử": the basket is the three picked ({basket})')
+        onp = await pg.evaluate("document.querySelector('.pt-onpiece').textContent")
+        # (the pinwheel has few patches: not every pick needs to be on it)
+        check(re.search(r'(Đỏ tươi|Xanh coban) \(màu cơ bản\)', onp) and 'chọn chất vải cùng bạn' in onp,
+              f'{name}: "Vải trên món" names the colours, the cloth chosen with Gem ({onp[:160]})')
+        await pg.screenshot(path=OUT / f'mau-ban-{name}.png')
+        check(not pg.errors, f'{name}: no script errors {pg.errors}')
+        await pg.context.close()
 
 
 async def onefab(browser, db):
@@ -4381,7 +4524,7 @@ async def main(which):
         browser = await launch(p)
         for name, fn in (('street', street), ('wear', wear), ('shop', shop), ('spots', spots), ('editor', editor),
                          ('library', library), ('product', product), ('prodlib', prodlib), ('workshop', workshop), ('design', design), ('catalog', catalog), ('kinds', kinds),
-                         ('layers', layers), ('zones', zones), ('cart', cart), ('choices', choices), ('zither', zither), ('guide', guide), ('vai', vai), ('tui', tui), ('kho', kho), ('guidance', guidance), ('onefab', onefab), ('taggroup', taggroup), ('phanloai', phanloai), ('phanloai_lv', phanloai_lv), ('slow', slow), ('topbar', topbar), ('motion', motion),
+                         ('layers', layers), ('zones', zones), ('cart', cart), ('choices', choices), ('zither', zither), ('guide', guide), ('vai', vai), ('tui', tui), ('kho', kho), ('guidance', guidance), ('onefab', onefab), ('mau', mau), ('taggroup', taggroup), ('phanloai', phanloai), ('phanloai_lv', phanloai_lv), ('slow', slow), ('topbar', topbar), ('motion', motion),
                          ('phone', phone), ('taps', taps)):
             if which in (None, name):
                 await fn(browser, db)

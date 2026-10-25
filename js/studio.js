@@ -330,12 +330,12 @@
     'studio.pt_in_go':     { vi: `Bắt đầu thiết kế`, en: `Start designing` },
     'studio.pt_hb_rummage': { vi: `đổi sang 8 mảnh vải khác.`, en: `swaps in 8 other scraps.` },
     'studio.pt_hb_own':    { vi: `chọn một màu để nhuộm cả rổ. Gem tìm vải thật gần màu nhất và nhắn ảnh cho bạn duyệt trước khi may.`, en: `pick a colour to dye the whole basket. Gem finds the real fabric closest to it and sends you a photo to approve before sewing.` },
-    'studio.pt_hb_kho':    { vi: `xem hết vải thật Gem đang có, chọn tối đa 8 tấm cho vào rổ.`, en: `see all the real fabric Gem has, and put up to 8 of them in the basket.` },
+    'studio.pt_hb_kho':    { vi: `xem hết vải thật Gem đang có và 27 màu cơ bản, chọn tối đa 8 cho vào rổ.`, en: `see all the real fabric Gem has and 27 basic colours, and put up to 8 of them in the basket.` },
     'studio.pt_hb_tones_t': { vi: `Hàng tông màu`, en: `Colour chips` },
     'studio.pt_hb_tones':  { vi: `(Tất cả, Xanh lá…) rổ chỉ còn vải tông đó.`, en: `(All, Green…) the basket keeps only fabrics of that colour.` },
     'studio.pt_hb_turn':   { vi: `chạm một ô trên món, rồi bấm để đổi hướng vải trong ô đó.`, en: `tap a patch on the piece, then tap this to turn its fabric.` },
     'studio.pt_hb_layout': { vi: `món được chia thành các ô thế nào. “Xáo mảnh” đổi chỗ các mảnh, “Ngẫu nhiên” để Gem ghép giúp.`, en: `how the piece is split into patches. “Shuffle” swaps the scraps around, “Surprise me” lets Gem piece it for you.` },
-    'studio.pt_hb_moods':  { vi: `bộ màu và kiểu ghép gợi ý sẵn, chạm là đắp cả món.`, en: `ready colours and piecing: one tap dresses the whole piece.` },
+    'studio.pt_hb_moods':  { vi: `bộ màu gợi ý sẵn (màu cơ bản + vải hoa văn Gem có), chạm là đắp cả món. “Tâm trạng ngẫu nhiên”: mỗi lần chạm một bộ khác.`, en: `ready palettes (basic colours + prints Gem has): one tap dresses the whole piece. “Surprise mood”: another palette each tap.` },
     'studio.pt_hb_opts':   { vi: `cỡ món; túi có thêm chần bông, túi trong, khoá kéo, nút bấm; dây đeo có thêu chỉ giữa dây.`, en: `the size; bags can be quilted and get pockets, a zip or a snap; the strap can get a stitch down the middle.` },
     'studio.pt_hb_price_t': { vi: `Giá`, en: `Price` },
     'studio.pt_hb_price':  { vi: `ở thanh dưới cùng, tự tính lại theo kiểu ghép, số vải và tuỳ chọn.`, en: `at the bottom, worked out again from the piecing, the number of fabrics and the options.` },
@@ -373,7 +373,9 @@
     'studio.pt_vt_all':    { vi: `Tất cả`, en: `All` },
     'studio.pt_kho':       { vi: `Kho vải`, en: `All fabrics` },
     'studio.kho_h':        { vi: `Kho vải của Gem`, en: `Gem's fabric store` },
-    'studio.kho_p':        { vi: `Vải vụn thật đang có ở Gem. Chọn tối đa 8 tấm cho rổ của bạn, rồi ghép thử lên món.`, en: `The real scraps Gem has right now. Pick up to 8 for your basket, then try them on a piece.` },
+    'studio.kho_p':        { vi: `Vải vụn thật đang có ở Gem, và các màu cơ bản. Chọn tối đa 8 cho rổ của bạn, rồi ghép thử lên món.`, en: `The real scraps Gem has right now, and the basic colours. Pick up to 8 for your basket, then try them on a piece.` },
+    'studio.kho_basic':    { vi: `Màu cơ bản`, en: `Basic colours` },
+    'studio.kho_basic_p':  { vi: `Vải trơn theo màu, không theo chất liệu: Gem tư vấn và chọn chất vải cùng bạn.`, en: `Plain fabric by colour, any material: Gem helps you choose the cloth.` },
     'studio.kho_n':        { vi: `Đã chọn {n}/8`, en: `{n} of 8 picked` },
     'studio.kho_full':     { vi: `Rổ đầy 8 tấm rồi, bỏ bớt một tấm nhé.`, en: `The basket holds 8. Take one out first.` },
     'studio.kho_go':       { vi: `Ghép thử`, en: `Try them on` },
@@ -382,6 +384,8 @@
     'studio.pt_vt_label':  { vi: `Lọc vải theo tông màu`, en: `Filter the fabrics by colour` },
     'studio.pt_onpiece':   { vi: `Vải trên món:`, en: `On the piece:` },
     'studio.pt_onpiece_p': { vi: `— đúng các tấm Gem đang có (vải kẻ, caro được vẽ lại cho thẳng).`, en: `— the very fabrics Gem has (checks and stripes drawn again, straight).` },
+    'studio.pt_onpiece_b': { vi: `— vải hoa văn là đúng các tấm Gem đang có; màu cơ bản thì Gem tư vấn và chọn chất vải cùng bạn.`, en: `— the prints are the very fabrics Gem has; for the basic colours Gem helps you choose the cloth.` },
+    'studio.pt_onpiece_c': { vi: `— màu cơ bản: Gem tư vấn và chọn chất vải cùng bạn.`, en: `— basic colours: Gem helps you choose the cloth.` },
     'studio.pt_hint_draw': { vi: `Kiểu "theo hình mình vẽ": vẽ trong mục Tự chỉnh bên dưới.`, en: `"From my drawing": draw it under Fine-tune below.` },
     'studio.pt_sew':       { vi: `May xong!`, en: `Sew it!` },
     'studio.pt_letter':    { vi: `Tờ nhắn gửi Gem`, en: `A note to Gem` },
@@ -390,6 +394,8 @@
     'studio.pt_onefab':    { vi: `Một vải nên không tính phí kiểu ghép`, en: `One fabric, so no piecing fee` },
     'studio.pt_net_q':     { vi: `Nét vẽ phức tạp (hơn 6 đường): Gem xem có may được không rồi báo giá công khi nhắn lại.`, en: `A detailed drawing (more than 6 lines): Gem checks it can be sewn, then quotes the work when we reply.` },
     'studio.pt_mood_gem':  { vi: `Gem chọn giúp`, en: `Gem picks` },
+    'studio.pt_mood_mix':  { vi: `Tâm trạng ngẫu nhiên`, en: `Surprise mood` },
+    'studio.pt_mood_mix_on': { vi: `Ngẫu nhiên: {m}`, en: `Surprise: {m}` },
     'studio.pt_net_on':    { vi: `Vẽ đường cắt lên món: nét khép kín, hoặc chạy từ mép này sang mép kia. Lấy một mảnh vải trong rổ rồi chạm vào từng mảnh để đắp.`, en: `Draw cut lines on the piece: a closed shape, or edge to edge. Take a scrap from the basket, then tap each piece to lay it on.` },
     'studio.pt_net_full':  { vi: `Nhiều mảnh quá, Gem gộp bớt mảnh nhỏ (tối đa {n} mảnh).`, en: `That's a lot of pieces — Gem merges the small ones (up to {n}).` },
     'studio.pt_draw_on':   { vi: `Vẽ thẳng lên món bằng ngón tay. Chạm một mảnh trong rổ để đổi vải nền.`, en: `Draw right on the piece with your finger. Tap a scrap in the basket to change the fabric under it.` },
@@ -2816,7 +2822,9 @@
     // real fabrics: the colour chip picked, and the order "Lục rổ" walks through
     vtone: '', pool: [], poolAt: 0, poolFor: null, realOk: false,
     // Kho vải: the fabrics picked for the basket, the colour chip there
-    pick: [], ktone: '' };
+    pick: [], ktone: '',
+    // "Tâm trạng ngẫu nhiên": the palettes still to come this round
+    mixBag: [] };
 
   function specNow() { return P.encode(D.d); }
 
@@ -2920,8 +2928,10 @@
             tr('p', 'studio.pt_own_h', ' class="pt-own-h"') +
             '<div class="pt-own-row">' +
               '<input type="color" name="own" value="#' + ownColour() + '" data-i18n-attr="aria-label:studio.pt_own_h" aria-label="' + esc(t('studio.pt_own_h')) + '">' +
-              OWN_PICKS.map(function (h) {
-                return '<button type="button" class="pt-own-dot" data-own-pick="' + h + '" style="background:#' + h + '" aria-label="#' + h + '"></button>';
+              // the 27 basic colours as starting points
+              P.BASIC.map(function (b) {
+                return '<button type="button" class="pt-own-dot" data-own-pick="' + b.hex + '" style="background:#' + b.hex + '" aria-label="' +
+                  esc(b[lng()]) + '" title="' + esc(b[lng()]) + '"></button>';
               }).join('') +
             '</div>' +
             '<button type="button" class="st-btn pt-own-go" data-own-go data-i18n="studio.pt_own_go">' + esc(t('studio.pt_own_go')) + '</button>' +
@@ -3086,8 +3096,8 @@
     if (!withReal(khoSheet)) return;
     if (!P.hasReal()) { designerSheet(); return; }
     var have = P.realList().map(function (f) { return f.key; });
-    D.pick = (D.pick.length ? D.pick : D.basket.filter(P.isReal))
-      .filter(function (k) { return have.indexOf(k) >= 0; }).slice(0, KHO_MAX);
+    var inKho = function (k) { return have.indexOf(k) >= 0 || !!P.basicOf(k); };
+    D.pick = (D.pick.length ? D.pick : D.basket.filter(inKho)).filter(inKho).slice(0, KHO_MAX);
     openSheet(
       head('studio.kho_h', 'studio.kho_p') +
       '<div class="kho">' +
@@ -3106,17 +3116,39 @@
     renderKho();
   }
 
+  // a basic colour's tile: its dyed plain sheet once ready, the flat colour till then
+  function basicTile(key) {
+    var src = P.keySrc(key);
+    return 'background-color:' + P.keyColor(key) + (src ? ';background-image:url(' + src + ')' : '');
+  }
+
   function renderKho() {
     var root = sheetBody.querySelector('.kho');
     if (!root) return;
     var l = lng(), list = P.realList();
     var n = function (tn) { return list.filter(function (f) { return !tn || f.tone === tn; }).length; };
-    root.querySelector('.pt-vtones').innerHTML = [''].concat(P.TONE_ORDER).filter(function (tn) { return !tn || n(tn); }).map(function (tn) {
+    // "Màu cơ bản" next to "Tất cả": colours by name, the cloth chosen with Gem
+    root.querySelector('.pt-vtones').innerHTML = ['', 'basic'].concat(P.TONE_ORDER).filter(function (tn) { return !tn || tn === 'basic' || n(tn); }).map(function (tn) {
       var on = D.ktone === tn;
       return '<button type="button" class="pt-vtone' + (on ? ' is-on' : '') + '" data-ktone="' + tn + '" aria-pressed="' + on + '">' +
-        esc(tn ? P.TONES[tn][l] : t('studio.pt_vt_all')) + ' <span>' + n(tn) + '</span></button>';
+        esc(tn === 'basic' ? t('studio.kho_basic') : tn ? P.TONES[tn][l] : t('studio.pt_vt_all')) + ' <span>' + (tn === 'basic' ? P.BASIC.length : n(tn)) + '</span></button>';
     }).join('');
     var grid = root.querySelector('.kho-grid');
+    grid.classList.toggle('is-basic', D.ktone === 'basic');
+    if (D.ktone === 'basic') {
+      // the six groups, each under its name (names are ours: plain text)
+      grid.innerHTML = '<li class="kho-gp">' + esc(t('studio.kho_basic_p')) + '</li>' +
+        P.BASIC_GROUPS.map(function (g, gi) {
+          return '<li class="kho-grp"><span class="kho-gh">' + esc(g[l]) + '</span><span class="kho-sws">' +
+            P.BASIC.filter(function (b) { return b.g === gi; }).map(function (b) {
+              var on = D.pick.indexOf(b.key) >= 0;
+              return '<button type="button" class="kho-f kho-c' + (on ? ' is-on' : '') + '" data-kho-f="' + b.key + '" aria-pressed="' + on + '">' +
+                '<span class="kho-sw" style="' + basicTile(b.key) + '"></span><span class="kho-t"><b>' + esc(b[l]) + '</b></span></button>';
+            }).join('') + '</span></li>';
+        }).join('');
+      renderKhoBar();
+      return;
+    }
     grid.innerHTML = list.filter(function (f) { return !D.ktone || f.tone === D.ktone; }).map(function (f) {
       var on = D.pick.indexOf(f.key) >= 0;
       return '<li><button type="button" class="kho-f' + (on ? ' is-on' : '') + '" data-kho-f="' + f.key + '" aria-pressed="' + on + '">' +
@@ -3136,7 +3168,7 @@
     root.querySelector('.kho-n').textContent = msg || t('studio.kho_n').replace('{n}', D.pick.length);
     root.querySelector('.kho-picked').innerHTML = D.pick.map(function (k) {
       var f = P.realOf(k);
-      return f ? '<img src="' + esc(f.src) + '" alt="">' : '';
+      return f ? '<img src="' + esc(f.src) + '" alt="">' : P.basicOf(k) ? '<i style="' + basicTile(k) + '"></i>' : '';
     }).join('');
     root.querySelector('[data-kho="go"]').disabled = !D.pick.length;
     root.querySelector('[data-kho="clear"]').disabled = !D.pick.length;
@@ -3310,11 +3342,9 @@
   }
 
   // The 9 kinds in the customer's own colour: the whole basket.
-  // starting points next to the picker: colours Gem's fabrics don't cover
-  var OWN_PICKS = ['7a4fa0', 'c2577f', 'e08a3c', 'e3c04a', '2f7f77', '1f3f6b', '5b3a29', '2e2c29'];
   function ownColour() {
     try { var h = localStorage.getItem('gem-own-colour'); if (/^[0-9a-f]{6}$/.test(h || '')) return h; } catch (e) { /* private mode */ }
-    return OWN_PICKS[0];
+    return '7a4fa0';
   }
 
   function ownBasket(hex) {
@@ -3328,7 +3358,7 @@
   function realMode() { return !!(P && P.hasReal()); }
   function nextScraps(keep) {
     if (D.poolFor !== D.vtone || !D.pool.length) {
-      D.pool = P.realList().filter(function (f) { return !D.vtone || f.tone === D.vtone; })
+      D.pool = (D.vtone === 'basic' ? P.BASIC : P.realList().filter(function (f) { return !D.vtone || f.tone === D.vtone; }))
         .map(function (f) { return f.key; }).sort(function () { return Math.random() - 0.5; });
       D.poolAt = 0; D.poolFor = D.vtone;
     }
@@ -3392,10 +3422,10 @@
     if (box.hidden) return;
     var list = P.realList(), l = lng();
     var n = function (tn) { return list.filter(function (f) { return !tn || f.tone === tn; }).length; };
-    box.innerHTML = [''].concat(P.TONE_ORDER).filter(function (tn) { return !tn || n(tn); }).map(function (tn) {
+    box.innerHTML = ['', 'basic'].concat(P.TONE_ORDER).filter(function (tn) { return !tn || tn === 'basic' || n(tn); }).map(function (tn) {
       var on = D.vtone === tn;
       return '<button type="button" class="pt-vtone' + (on ? ' is-on' : '') + '" data-vtone="' + tn + '" aria-pressed="' + on + '">' +
-        esc(tn ? P.TONES[tn][l] : t('studio.pt_vt_all')) + ' <span>' + n(tn) + '</span></button>';
+        esc(tn === 'basic' ? t('studio.kho_basic') : tn ? P.TONES[tn][l] : t('studio.pt_vt_all')) + ' <span>' + (tn === 'basic' ? P.BASIC.length : n(tn)) + '</span></button>';
     }).join('');
   }
 
@@ -3403,12 +3433,13 @@
   function renderOnPiece() {
     var el = sheetBody.querySelector('.pt-onpiece');
     if (!el) return;
-    el.hidden = D.d.layout === 'tuve' || !keysOn(D.d).some(P.isReal);
+    var on = keysOn(D.d), real = on.some(P.isReal), basic = on.some(P.basicOf);
+    el.hidden = D.d.layout === 'tuve' || !(real || basic);
     if (el.hidden) return;
     el.innerHTML = '<b></b> <span></span> <span></span>';
     el.children[0].textContent = t('studio.pt_onpiece');
     el.children[1].textContent = P.fabricList(D.d, lng());
-    el.children[2].textContent = t('studio.pt_onpiece_p');
+    el.children[2].textContent = t(!basic ? 'studio.pt_onpiece_p' : real ? 'studio.pt_onpiece_b' : 'studio.pt_onpiece_c');
   }
 
   function renderMoods() {
@@ -3416,14 +3447,40 @@
     if (!box) return;
     var cur = P.moodOf(D.d), l = lng();
     var gem = !D.d.fab && D.d.tones[0] === P.GEM;
+    var mix = !!cur && P.MOOD_POOL.indexOf(cur) >= 0;
     box.innerHTML = P.MOODS.map(function (m) {
       var on = cur === m;
       return '<button type="button" class="pt-mood' + (on ? ' is-on' : '') + '" data-mood="' + m.id + '" aria-pressed="' + on + '">' +
         '<img src="' + P.VAI + 'mood-' + m.id + '.webp" alt="" draggable="false"><span>' + esc(m[l]) + '</span></button>';
     }).join('') +
+      // "Tâm trạng ngẫu nhiên": another palette of the pool each tap. No
+      // drawing of its own: its picture is four of that palette's fabrics
+      '<button type="button" class="pt-mood' + (mix ? ' is-on' : '') + '" data-mood="mix" aria-pressed="' + mix + '">' +
+        '<span class="pt-mood-mix" aria-hidden="true">' + mixTiles(mix ? cur : null) + '</span><span>' +
+        esc(mix ? t('studio.pt_mood_mix_on').replace('{m}', cur[l]) : t('studio.pt_mood_mix')) + '</span></button>' +
       // Gem picks the fabrics: the order note says so, the preview is a guess
       '<button type="button" class="pt-mood' + (gem ? ' is-on' : '') + '" data-mood="gem" aria-pressed="' + gem + '">' +
         '<img src="images/mascot/udon_portrait.png" alt="" draggable="false"><span>' + esc(t('studio.pt_mood_gem')) + '</span></button>';
+  }
+
+  // Two prints and two colours of a palette; none picked yet: a fabric
+  // from each of four palettes, a mix ([palette, fabric]: no white one)
+  function mixTiles(m) {
+    var keys = m ? [5, 0, 1, 6].map(function (i) { return P.moodKeys(m)[i]; })
+      : [[0, 5], [3, 0], [4, 0], [2, 5]].map(function (x) { return P.moodKeys(P.MOOD_POOL[x[0]])[x[1]]; });
+    return keys.map(function (k) {
+      if (k == null) return '<i></i>';
+      var src = P.keySrc(k);
+      return '<i style="background-color:' + P.keyColor(k) + (src ? ';background-image:url(' + src + ')' : '') + '"></i>';
+    }).join('');
+  }
+  // the pool in a shuffled round: each palette once before any comes back,
+  // never the one already on the piece
+  function nextMix() {
+    var cur = P.moodOf(D.d), other = function (m) { return m !== cur; };
+    D.mixBag = D.mixBag.filter(other);
+    if (!D.mixBag.length) D.mixBag = P.MOOD_POOL.filter(other).sort(function () { return Math.random() - 0.5; });
+    return D.mixBag.shift();
   }
 
   function renderShared() {
@@ -4295,7 +4352,7 @@
         unsew(); renderDesigner(); teach('taste');
         return true;
       }
-      var mood = P.MOODS.filter(function (m) { return m.id === el.getAttribute('data-mood'); })[0];
+      var mood = el.getAttribute('data-mood') === 'mix' ? nextMix() : P.moodById(el.getAttribute('data-mood'));
       if (!mood) return true;
       P.applyMood(D.d, mood, true);
       D.basket = P.moodKeys(mood).slice(0, BASKET_N);
@@ -4382,7 +4439,8 @@
       } else if (act === 'photo-del') {
         D.d.img = '';
       } else if (act === 'random') {
-        var rm = P.MOODS[Math.floor(Math.random() * P.MOODS.length)], rk = P.moodKeys(rm);
+        // any palette, the pool's too
+        var all = P.MOODS.concat(P.MOOD_POOL), rm = all[Math.floor(Math.random() * all.length)], rk = P.moodKeys(rm);
         var lays = P.PRODUCTS[D.d.product].layouts.filter(function (x) { return x !== 'tuve'; });
         D.d.layout = lays[Math.floor(Math.random() * lays.length)];
         D.d.fab = P.scatter(D.d, rk);
