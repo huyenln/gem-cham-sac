@@ -3648,7 +3648,7 @@ async def guidance(browser, db):
     await js_click(pg, '.pt-tab[data-product="daydeo"]')
     await pg.wait_for_timeout(300)
     lays = await pg.evaluate("[...document.querySelectorAll('.pt-layouts [data-layout]')].map(b => b.dataset.layout)")
-    check(lays == ['mot', 'ngang', 'doc', 'tuve'], f'the strap: one fabric, across, along, drawn ({lays})')
+    check(lays == ['mot', 'ngang', 'tuve'], f'the strap: one fabric, across, drawn ({lays})')
     await js_click(pg, '.pt-layouts [data-layout="ngang"]')
     await pg.wait_for_timeout(300)
     got = [await at(170, 60), await at(170, 200)]

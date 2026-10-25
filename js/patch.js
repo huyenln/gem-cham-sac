@@ -784,7 +784,7 @@
       if (fab) {
         if (f[1] === 'bloom') fab = was === 'hai' ? a + a + b + b : a + a + a + a;
         else if (f[1] === 'bookmark') fab = was === 'vuong' ? a + fab[fab.length - 1] : a;
-        else if ((f[1] === 'daydeo' || f[1] === 'origami') && was === 'hai') fab = a + b;
+        else if ((f[1] === 'daydeo' && (was === 'hai' || was === 'doc')) || (f[1] === 'origami' && was === 'hai')) fab = a + b;
         else fab = a;
       }
     }
