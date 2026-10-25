@@ -527,33 +527,38 @@
      hidden: the nearest one in stock (its colour family and kind). No real
      fabrics at all: the painted print of that family and kind.
      POOL: more palettes, no chip of their own: "Tâm trạng ngẫu nhiên"
-     brings one at a time. Names are drafts for Anna to rename. */
-  function mood(id, vi, en, layout, basic, prints) {
-    return { id: id, vi: vi, en: en, layout: layout, basic: basic.map(function (h) { return 'c0' + h; }), prints: prints };
+     brings one at a time. Names are drafts for Anna to rename.
+     combos: what a suggestion puts on the piece (Anna 25/10: two or three
+     fabrics, not all eight), [plain base, print, second plain] as places
+     in basic / prints — the base a plain whose lightness sets the print
+     off, the second plain one of the print's own colours, in a small dose
+     (suggest()). Picked by eye on the real prints; Anna can change them. */
+  function mood(id, vi, en, layout, basic, prints, combos) {
+    return { id: id, vi: vi, en: en, layout: layout, basic: basic.map(function (h) { return 'c0' + h; }), prints: prints, combos: combos };
   }
   var MOODS = [
     mood('hanoi', 'Hà Nội mùa thu', 'Hanoi in autumn', 'vuong', ['94613a', 'e0a020', 'e2cba6', 'f2e8d2', '9c1f35'],
-      [[48, 'nau', 'hoato'], [46, 'nau', 'caro'], [103, 'nau', 'hoa']]),
+      [[48, 'nau', 'hoato'], [46, 'nau', 'caro'], [103, 'nau', 'hoa']], [[3, 1, 0], [0, 2, 3], [4, 0, 1]]),
     mood('nhaba', 'Vintage nhà bà', "Grandma's house", 'cabin', ['f7c8d2', 'f2e8d2', 'f7f6f1', '8fa898', 'd8b3ec'],
-      [[29, 'hong', 'hoa'], [32, 'hong', 'hoa'], [123, 'trung', 'ren']]),
+      [[29, 'hong', 'hoa'], [32, 'hong', 'hoa'], [123, 'trung', 'ren']], [[3, 1, 0], [1, 0, 3], [0, 2, 3]]),
     mood('bien', 'Biển chiều', 'Seaside evening', 'chong', ['8ecdeb', '0d9dcc', '2a6fd0', 'f7f6f1', 'ff7e66'],
-      [[11, 'lam', 'ono'], [12, 'lam', 'ono'], [15, 'lam', 'hoato']]),
+      [[11, 'lam', 'ono'], [12, 'lam', 'ono'], [15, 'lam', 'hoato']], [[3, 1, 4], [2, 2, 4], [1, 0, 3]]),
     mood('dong', 'Đồng xanh', 'Green fields', 'vuong', ['c2db6e', '3fae5e', '1f6b5a', 'f8ce2c', 'f2e8d2'],
-      [[2, 'xanh', 'caro'], [4, 'xanh', 'hoato'], [5, 'xanh', 'hoato']]),
+      [[2, 'xanh', 'caro'], [4, 'xanh', 'hoato'], [5, 'xanh', 'hoato']], [[4, 0, 1], [2, 2, 3], [4, 1, 0]]),
     mood('tet', 'Tết sum vầy', 'Lunar New Year', 'sao', ['e3232c', '9c1f35', 'e0a020', 'f8ce2c', 'e8478e'],
-      [[40, 'hong', 'hoato'], [41, 'hong', 'tho'], [31, 'hong', 'hoa']])
+      [[40, 'hong', 'hoato'], [41, 'hong', 'tho'], [31, 'hong', 'hoa']], [[1, 2, 2], [2, 1, 0], [1, 0, 3]])
   ];
   var POOL = [
     mood('demnhung', 'Đêm nhung', 'Velvet night', 'cabin', ['242223', '74307e', '9c1f35', '1f3075', '1f6b5a'],
-      [[66, 'trung', 'cham'], [70, 'trung', 'hoato'], [75, 'lam', 'hoato']]),
+      [[66, 'trung', 'cham'], [70, 'trung', 'hoato'], [75, 'lam', 'hoato']], [[3, 0, 2], [2, 1, 4], [0, 2, 1]]),
     mood('kemsua', 'Kem sữa', 'Milk and cream', 'vuong', ['f7f6f1', 'f2e8d2', 'e2cba6', 'b4b5b2', 'f7c8d2'],
-      [[120, 'trung', 'ren'], [61, 'trung', 'soc'], [126, 'trung', 'hoato']]),
+      [[120, 'trung', 'ren'], [61, 'trung', 'soc'], [126, 'trung', 'hoato']], [[2, 0, 4], [3, 1, 1], [4, 2, 3]]),
     mood('keongot', 'Kẹo ngọt', 'Sweet shop', 'chong', ['f7c8d2', 'd8b3ec', '8ecdeb', 'c2db6e', 'f8ce2c'],
-      [[30, 'hong', 'hoa'], [15, 'lam', 'hoato'], [36, 'hong', 'hoato']]),
+      [[30, 'hong', 'hoa'], [15, 'lam', 'hoato'], [36, 'hong', 'hoato']], [[0, 1, 2], [1, 2, 3], [3, 0, 0]]),
     mood('nhietdoi', 'Nhiệt đới', 'Tropical', 'sao', ['27b4b6', 'f7821f', 'e8478e', 'f8ce2c', '3fae5e'],
-      [[6, 'xanh', 'hoato'], [38, 'hong', 'hoato'], [52, 'nau', 'hoato']]),
+      [[6, 'xanh', 'hoato'], [38, 'hong', 'hoato'], [52, 'nau', 'hoato']], [[0, 0, 1], [4, 1, 2], [0, 2, 3]]),
     mood('hoanghon', 'Hoàng hôn', 'Sunset', 'vuong', ['ff7e66', 'f7821f', '8d4fd0', 'e8478e', 'e0a020'],
-      [[39, 'hong', 'hoato'], [18, 'lam', 'hoato'], [51, 'nau', 'hoato']])
+      [[39, 'hong', 'hoato'], [18, 'lam', 'hoato'], [51, 'nau', 'hoato']], [[2, 0, 3], [0, 1, 2], [4, 2, 1]])
   ];
   var ALL_MOODS = MOODS.concat(POOL);
   // painted: the basics + the painted print of each family and kind
@@ -2116,6 +2121,139 @@
     return d.fab;
   }
 
+  /* ---------- a suggestion: two or three fabrics, in a pattern ----------
+     A mood, "Ngẫu nhiên" and "Xáo mảnh" put a plain base, one print and,
+     where the piece has a place for it, a second plain in a small dose —
+     laid the way a quilter would (Anna 25/10: eight fabrics on a cushion
+     looked a mess; more fabrics are the customer's to add by hand).
+     plan(): which of the three each patch takes, 0 base, 1 print, 2 the
+     second plain (three false: that place falls back to base or print). */
+  var BASE = 0, PRINT = 1, MORE = 2;
+  function plan(d, v, three) {
+    var p = PRODUCTS[d.product], L = d.layout, n = slots(d), g = p.grid || 1, out = [], i;
+    var A = ART[p.shape] && L !== 'tuve' ? artOf(d) : null;
+    // these look wrong in two: the log cabin's middle, the turning petals
+    if (L === 'cabin' || L === 'xen' || L === 'moi') three = true;
+    var np = !A || L === 'net' ? 0 : A.petals ? (L === 'canh' ? 1 : L === 'xen' ? 2 : L === 'moi' ? A.petals.length : 0)
+      : partsOf(d).length;
+    var nb = n - np, alt = v % 2 ? [PRINT, BASE] : [BASE, PRINT];
+    if (L === 'tuve') return n ? [BASE] : [];
+    if (L === 'vuong' && nb === g * g && g > 1) {
+      // squares: a checkerboard (its middle the second plain), stripes, or
+      // (three fabrics) the print on the corners round a plain cross, its
+      // middle the second plain — on a bigger grid a plain frame round the
+      // print, the second plain on its corners. The second plain stays a
+      // small dose; in two fabrics a frame would be all plain: not offered
+      var k = v % (g >= 3 && three ? 3 : 2), mid = (g - 1) / 2;
+      for (i = 0; i < nb; i++) {
+        var r = Math.floor(i / g), c = i % g, edge = !r || !c || r === g - 1 || c === g - 1, corner = edge && (r === c || r + c === g - 1);
+        var centre = g % 2 && r === mid && c === mid;
+        if (k === 0) out.push(three && centre ? MORE : (r + c) % 2 ? PRINT : BASE);
+        else if (k === 1) out.push(r % 2 ? PRINT : BASE);
+        else if (g === 3) out.push(centre ? MORE : corner ? PRINT : BASE);
+        else out.push(!edge ? PRINT : corner ? MORE : BASE);
+      }
+    } else if (L === 'cabin') {
+      // log cabin: the middle on its own, a light half (top, right) and a
+      // darker half round it
+      patches('cabin', g).forEach(function (pt, j) {
+        var cx = 0, cy = 0;
+        pt.pts.forEach(function (q) { cx += q[0] / pt.pts.length; cy += q[1] / pt.pts.length; });
+        out.push(!j ? MORE : (Math.abs(cy - 50) >= Math.abs(cx - 50) ? cy < 50 : cx > 50) ? BASE : PRINT);
+      });
+    } else if (L === 'sao') {
+      out = [BASE, PRINT, three ? MORE : PRINT];   // background, points, middle
+    } else if (L === 'chong') {
+      out = [BASE, PRINT];                         // background, blades
+    } else if (L === 'doc') {
+      for (i = 0; i < nb; i++) out.push(i % 2 ? PRINT : three && i === (nb - 1) / 2 ? MORE : BASE);
+    } else if (nb === 1) {
+      // one body: a base under petals / flowers; else the print, or (with a
+      // collar, a strap) either way round
+      out = [np && (A.petals || A.buds) ? BASE : np ? alt[0] : PRINT];
+    } else {
+      for (i = 0; i < nb; i++) out.push(three && nb > 2 ? [BASE, PRINT, MORE][i % 3] : alt[i % 2]);
+    }
+    for (i = 0; i < np; i++) {
+      if (A.petals) out.push(L === 'canh' ? PRINT : i % 2 ? MORE : PRINT);
+      else if (A.buds) out.push(three && i % 2 ? MORE : PRINT);
+      else out.push(nb === 1 ? (out[0] === BASE ? PRINT : BASE) : three ? MORE : BASE);
+    }
+    while (out.length < n) out.push(BASE);
+    return out.slice(0, n);
+  }
+
+  // Lay three fabrics (base, print, second plain) on the piece by plan()
+  function lay(d, keys, v, three) {
+    // the plan first: counting the patches draws the piece as it is now
+    var roles = plan(d, v, three), out = '';
+    d.cus = [];
+    roles.forEach(function (r) { out += letter(d, keys[r] != null ? keys[r] : keys[0]) || B64[0]; });
+    d.fab = out;
+    d.rot = '';
+    prune(d);
+    return d.fab;
+  }
+
+  function kindOfKey(key) {
+    if (typeof key === 'number') return fabric(key).kind;
+    if (isReal(key)) { var rf = realOf(key); return rf ? rf.kind : 'tron'; }
+    return isCustom(key) ? KINDS[+key[1]] : 'tron';
+  }
+
+  // A mood's suggestion c: [base, print, second plain]
+  function comboKeys(m, c) {
+    var keys = moodKeys(m), nb = m.basic.length, prints = keys.slice(nb), co = m.combos[c % m.combos.length];
+    return [keys[co[0]], prints[co[1]] != null ? prints[co[1]] : prints.length ? prints[0] : keys[(co[0] + 2) % nb], keys[co[2]]];
+  }
+
+  // A new suggestion from a mood: one of its combos, a pattern, two or three
+  // fabrics — another one than the piece wears now
+  function suggest(d, m) {
+    var was = d.fab || '', tries = 0;
+    do {
+      lay(d, comboKeys(m, Math.floor(Math.random() * m.combos.length)), Math.floor(Math.random() * 6), Math.random() < 0.6);
+    } while (d.fab === was && tries++ < 12);
+    d.moodId = m.id;
+    syncTaste(d);
+    return d.fab;
+  }
+
+  // The fabrics on the piece, the most used first
+  function byUse(d) {
+    var count = {}, keys = [];
+    for (var i = 0; i < (d.fab || '').length; i++) {
+      var k = keyAt(d, i), s = String(k);
+      if (!(s in count)) { count[s] = 0; keys.push(k); }
+      count[s]++;
+    }
+    return keys.sort(function (a, b) { return count[String(b)] - count[String(a)]; });
+  }
+
+  // Put these fabrics on the piece again (another layout, another piece):
+  // up to three in the pattern (the print found by its kind); more are the
+  // customer's own choice, spread over all of them
+  function arrange(d, keys, v) {
+    if (!keys || !keys.length) return d.fab;
+    if (keys.length > 3) return scatter(d, keys);
+    var pr = keys.filter(function (k) { return kindOfKey(k) !== 'tron'; })[0];
+    if (pr == null) pr = keys[1] != null ? keys[1] : keys[0];
+    var rest = keys.filter(function (k) { return k !== pr; });
+    return lay(d, [rest[0] != null ? rest[0] : pr, pr, rest[1] != null ? rest[1] : rest[0]], v == null ? Math.floor(Math.random() * 6) : v,
+      keys.length === 3);
+  }
+
+  // Two or three fabrics out of these at random (a print, plains round
+  // it), laid in a pattern: "Xáo mảnh" on a basket that is no mood
+  function pick(d, keys) {
+    var sh = keys.slice().sort(function () { return Math.random() - 0.5; });
+    var pr = sh.filter(function (k) { return kindOfKey(k) !== 'tron'; }), pl = sh.filter(function (k) { return kindOfKey(k) === 'tron'; });
+    var take = pr.slice(0, 1).concat(pl.slice(0, Math.random() < 0.6 ? 2 : 1));
+    // prints only, or plains only: two or three of them
+    sh.forEach(function (k) { if (take.length < 2 && take.indexOf(k) < 0) take.push(k); });
+    return arrange(d, take);
+  }
+
   // the fabric the preview shows on patch i while Gem picks (no d.fab):
   // a real one of that family when there is one, else the painted one
   function paintedKey(d, i) {
@@ -2174,9 +2312,7 @@
     var p = PRODUCTS[d.product];
     if (d.layout !== 'tuve' && !keepLayout) d.layout = p.layouts.indexOf(mood.layout) >= 0 ? mood.layout
       : p.def || (p.layouts.indexOf('hai') >= 0 ? 'hai' : p.layouts[0]);
-    scatter(d, moodKeys(mood));
-    d.moodId = mood.id;
-    syncTaste(d);
+    suggest(d, mood);
   }
 
   /* ---------- the customer's own colour ----------
@@ -2338,7 +2474,7 @@
     BASIC: BASIC, BASIC_GROUPS: BASIC_GROUPS, basicOf: basicOf,
     fabric: fabric, fabricId: fabricId, slots: slots, scatter: scatter, setPatch: setPatch, syncTaste: syncTaste,
     turnPatch: turnPatch, rotAt: rotAt, TURN_STEP: TURN_STEP,
-    moodOf: moodOf, applyMood: applyMood, title: title, serial: serial, swatch: swatch,
+    moodOf: moodOf, applyMood: applyMood, suggest: suggest, arrange: arrange, pick: pick, byUse: byUse, plan: plan, title: title, serial: serial, swatch: swatch,
     swatchSrc: swatchSrc, VAI: VAI, netRegions: netRegions, refit: refit, NET_MAX: NET_MAX, keySrc: keySrc, keyAt: keyAt, keyName: keyName,
     isCustom: isCustom, customSrc: customSrc,
     // the fabric a patch shows, set on it or not (the mood's / Gem's pick)
