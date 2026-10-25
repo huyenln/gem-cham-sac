@@ -87,9 +87,8 @@
     // (top / bottom half) or along it (left / right half) (Anna 22/10); a
     // machine stitch can run down its middle (opts e: Gem's Janome)
     daydeo:    { sku: 'daydeo',    vi: 'Dây đeo cổ tay', en: 'Wrist strap',     shape: 'strap', grid: 1, span: 30,
-                 layouts: ['mot', 'ngang', 'doc', 'tuve'], opts: 'e',
-                 names: { mot: { vi: 'Một vải', en: 'One fabric' }, ngang: { vi: 'Ghép ngang', en: 'Pieced across' },
-                          doc: { vi: 'Ghép dọc', en: 'Pieced lengthwise' } } },
+                 layouts: ['mot', 'ngang', 'tuve'], opts: 'e',
+                 names: { mot: { vi: 'Một vải', en: 'One fabric' }, ngang: { vi: 'Ghép ngang', en: 'Pieced across' } } },
     // Bags: one tab "Túi", the shape picked on it (from Gem's own bags, and
     // two shapes many makers sew); the laptop sleeve is a tab of its own,
     // with or without a shoulder strap. A designed bag is ordered as the
@@ -149,7 +148,9 @@
   // now piece the one side, across)
   // (the origami's "hai" was every other sector of the hexagon: its two
   // fabrics become the base and the petals; its cut lines, one fabric)
-  var LEGACY = { bloom: { mot: 'hoa3', hai: 'hoa3', net: 'hoa3' }, bookmark: { vuong: 'hai', net: 'mot' }, daydeo: { net: 'mot', hai: 'ngang' },
+  // (the strap's "doc", two strips along it, is gone: Anna 25/10 keeps only
+  // "ghép ngang"; its two fabrics piece it across)
+  var LEGACY = { bloom: { mot: 'hoa3', hai: 'hoa3', net: 'hoa3' }, bookmark: { vuong: 'hai', net: 'mot' }, daydeo: { net: 'mot', hai: 'ngang', doc: 'ngang' },
     origami: { hai: 'canh', net: 'mot' } };
   var PRODUCT_ORDER = ['goi', 'lotcoc', 'scrunchie', 'origami', 'oxford', 'bloom', 'bookmark', 'daydeo', 'tuitote', 'laptop'];
 
@@ -783,7 +784,7 @@
       if (fab) {
         if (f[1] === 'bloom') fab = was === 'hai' ? a + a + b + b : a + a + a + a;
         else if (f[1] === 'bookmark') fab = was === 'vuong' ? a + fab[fab.length - 1] : a;
-        else if ((f[1] === 'daydeo' || f[1] === 'origami') && was === 'hai') fab = a + b;
+        else if ((f[1] === 'daydeo' && (was === 'hai' || was === 'doc')) || (f[1] === 'origami' && was === 'hai')) fab = a + b;
         else fab = a;
       }
     }
@@ -915,7 +916,6 @@
       return [nen].concat([1, 2, 3, 4, 5, 6].map(function (n) { return canh + ' ' + n; }));
     }
     if (d.product === 'daydeo' && d.layout === 'ngang') return [vi ? 'Nửa trên' : 'Top half', vi ? 'Nửa dưới' : 'Bottom half'];
-    if (d.product === 'daydeo' && d.layout === 'doc') return [vi ? 'Nửa trái' : 'Left half', vi ? 'Nửa phải' : 'Right half'];
     var parts = partsOf(d);
     if (!parts.length || !MAIN_NAMES[d.product]) return null;
     var n = slots(d), out = [];
@@ -1569,7 +1569,7 @@
     } },
     // the strap stands upright, its middle on x 170 (measured on the mask):
     // pieced across at y 120 (its middle), along it at x 170
-    strap: { n: 'daydeo', top: 1, strap: { x: 170, y: 120 } },
+    strap: { n: 'daydeo', top: 1, strap: { y: 120 } },
     // the corner bookmark: a square back and a triangle flap that slips over
     // the corner of a page
     bookmark: { n: 'bookmark', diag: 1 },
@@ -1691,12 +1691,6 @@
       out += '<rect width="340" height="' + sy + '" fill="' + f(0, [0, 0, 340, sy]) + '"/>' +
         '<rect y="' + sy + '" width="340" height="' + (340 - sy) + '" fill="' + f(1, [0, sy, 340, 340 - sy]) + '"/>' +
         '<path d="M0 ' + sy + 'H340' + SEAM;
-    } else if (A.strap && d.layout === 'doc') {
-      // the strap: two strips along it, the seam down the middle
-      var sx = A.strap.x;
-      out += '<rect width="' + sx + '" height="340" fill="' + f(0, [0, 0, sx, 340]) + '"/>' +
-        '<rect x="' + sx + '" width="' + (340 - sx) + '" height="340" fill="' + f(1, [sx, 0, 340 - sx, 340]) + '"/>' +
-        '<path d="M' + sx + ' 0V340' + SEAM;
     } else if (d.layout === 'hai' && A.diag) {
       // the bookmark: the square back (0) and the triangle flap (1)
       out += '<path d="M0 0L0 340L340 340Z" fill="' + f(0, FULL) + '"/><path d="M0 0L340 0L340 340Z" fill="' + f(1, FULL) + '"/>' +

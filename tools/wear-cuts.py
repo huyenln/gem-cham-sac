@@ -10,6 +10,9 @@ of it caught between the straps. Small cream bits of a print stay.
 
     python3 tools/wear-cuts.py              → images/studio/wear/<sku>-<mẫu>.webp
 
+Mẫu Gem has a drawing of (DRAWN, sent by Anna 25/10: the photo cut ate into
+the knotted strap) are not cut: their drawing is the picture.
+
 The migration (supabase/migrations/20261025_thu_do.sql) points each mẫu's
 "cut" at its file. A new mẫu later: Admin → Sản phẩm → Sửa → the mẫu's
 "Ảnh cắt nền" (Xoá nền trắng / a file), no need to run this again.
@@ -29,6 +32,8 @@ TOL = 22                      # how far from the poster's paper a pixel is the b
 BAND = (0.04, 0.84)           # between the header and the big title
 GLOW = (240, 229, 173)        # the cream glow round the bag
 MAX = 700                     # longest side of the result
+# drawn by Gem (transparent PNGs, cropped + shrunk into images/studio/wear/)
+DRAWN = {'tui-di-choi-hoa-xanh', 'tui-di-cho-caro-hong', 'tui-di-choi-jeans-hong', 'tui-di-choi-jeans-vang'}
 
 
 def cut(path):
@@ -79,6 +84,9 @@ def main():
         if path.endswith('-thumb.webp'):
             continue
         name = os.path.basename(path)[len('vai-vun-'):-len('.webp')]
+        if name in DRAWN:
+            print(name, 'drawn, kept')
+            continue
         im = cut(path)
         if im is None:
             print('nothing found:', name)

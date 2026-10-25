@@ -40,29 +40,30 @@ window.GemWear = (function () {
     scrunchie: { slot: 'hair',  h: 0.075, dy: 0,     ax: 0.55, ay: 0.5,  img: 'images/studio/wear/scrunchie.webp' }
   };
 
-  // A piece sewn from one's design (GemPatch product id): how it is worn.
+  // A bag sewn from one's design (GemPatch product id): how it is worn.
   // The picture is GemPatch.svg of the design, its viewBox cut to the
-  // piece (box: x, y, w, h of the 340 board); ax / ay on that box. Not the
-  // scrunchie: on the character it reads as a hair flower (Anna 25/10).
+  // piece (box: x, y, w, h of the 340 board); ax / ay on that box. Bags
+  // and the Origami key ring (Anna 25/10): not the laptop sleeve; the
+  // scrunchie, strap and charm are shown by their own drawings (MAC)
   var DESIGN = {
     origami:   { slot: 'charm', h: 0.09, ax: 0.15, ay: 0,   box: [1, 1, 338, 339] },
     oxford:    { slot: 'bag',   h: 0.2,  ax: 0.49, ay: 0,   box: [47, 0, 246, 340] },
-    bloom:     { slot: 'charm', h: 0.1,  ax: 0.5,  ay: 0,   box: [83, 0, 174, 340] },
-    daydeo:    { slot: 'wrist', h: 0.13, ax: 0.5,  ay: 0,   box: [136, 0, 68, 340] },
     tuitote:   { slot: 'bag',   h: 0.34, ax: 0.5,  ay: 0,   box: [60, 0, 220, 340] },
     tuino:     { slot: 'bag',   h: 0.28, ax: 0.6,  ay: 0,   box: [19, 0, 302, 340] },
     tuikhoa:   { slot: 'bag',   h: 0.3,  ax: 0.49, ay: 0,   box: [22, 0, 296, 340] },
     tuitamgiac: { slot: 'bag',  h: 0.28, ax: 0.5,  ay: 0,   box: [0, 0, 340, 340] },
-    tuibuoc:   { slot: 'bag',   h: 0.28, ax: 0.5,  ay: 0,   box: [0, 0, 340, 340] },
-    laptop:    { slot: 'bag',   h: 0.2,  ax: 0.5,  ay: 0,   box: [0, 70, 340, 200] },
-    laptopq:   { slot: 'bag',   h: 0.25, ax: 0.5,  ay: 0,   box: [0, 37, 340, 266] }
+    tuibuoc:   { slot: 'bag',   h: 0.28, ax: 0.5,  ay: 0,   box: [0, 0, 340, 340] }
   };
 
   // A drawing of the piece being worn, shown in the fitting corner in place
-  // of the character: a hair tie on a character facing us is a dot by the
-  // ear; the drawing shows it holding a ponytail (Anna 25/10: "phải kiểu
-  // đeo như cũ")
-  var MAC = { scrunchie: 'images/studio/wear/scrunchie-mac.webp' };
+  // of the character, as it always was (Anna 25/10: "phải kiểu đeo như
+  // cũ"): a hair tie on a character facing us is a dot by the ear; the
+  // wrist strap and the charm hang from a bag on the shoulder
+  var MAC = {
+    scrunchie: 'images/studio/wear/scrunchie-mac.webp',
+    daydeo: 'images/studio/wear/daydeo-mac.webp',
+    bloom: 'images/studio/wear/bloom-mac.webp'
+  };
 
   var IMG = /^(images\/studio\/[a-z0-9\/_-]+\.(webp|png)|https:\/\/dxdovvqsfjeizsoprrfn\.supabase\.co\/storage\/v1\/object\/public\/gem-media\/[A-Za-z0-9%._-]+)$/;
   function num(v, lo, hi, d) { return typeof v === 'number' && isFinite(v) ? Math.min(hi, Math.max(lo, v)) : d; }

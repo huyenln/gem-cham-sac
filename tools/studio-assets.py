@@ -435,13 +435,13 @@ def build_cast(src):
 # ---------------------------------------------------------------------------
 PIECES = {
     # character holding it + the piece; '-': not kept (Góc thử đồ shows the
-    # visitor's own character wearing the piece since 25/10/2026; the
-    # scrunchie keeps its close-up: a hair tie isn't seen from the front)
+    # visitor's own character with a bag in hand since 25/10/2026; the
+    # scrunchie, the wrist strap and the charm keep their drawings)
     'wear-oxford':    ['-wear/oxford-mac', 'wear/oxford'],
     'wear-scrunchie': ['wear/scrunchie-mac', 'wear/scrunchie'],
-    'wear-daydeo':    ['-wear/daydeo-mac', 'wear/daydeo'],
+    'wear-daydeo':    ['wear/daydeo-mac', 'wear/daydeo'],
     'wear-denim':     ['-wear/denim-mac', 'wear/denim'],
-    'wear-bloom':     ['-wear/bloom-mac', 'wear/bloom'],
+    'wear-bloom':     ['wear/bloom-mac', 'wear/bloom'],
     'ud-vay':         ['udon/ud-vay'],                         # waving
     'ud-ngoi':        ['udon/ud-ngoi'],                        # sitting
     'ud-ngu':         ['udon/ud-ngu'],                         # asleep
