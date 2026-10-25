@@ -938,6 +938,30 @@
           '<option value="display">Kệ trưng bày — Túi &amp; sổ</option>' +
           '<option value="cabinet">Tủ — Gối &amp; quà</option>' +
         '</select></label>' +
+        // Góc thử đồ (Studio 2D): how the character wears it (js/wear.js)
+        (window.GemWear ? '<fieldset class="ad-opts ad-wear">' +
+          '<legend>Đeo thử ở Góc thử đồ (Studio 2D)</legend>' +
+          '<label class="ad-check"><input type="checkbox" name="wear_on"><span>Cho khách đeo thử món này</span></label>' +
+          '<div class="ad-wear-body" hidden>' +
+            '<div class="ad-f-row">' +
+              '<label class="ad-f"><span>Cách đeo</span><select name="wear_slot">' +
+                window.GemWear.SLOTS.slice().reverse().map(function (k) {
+                  return '<option value="' + k + '">' + esc(window.GemWear.SLOT_NAMES[k]) + '</option>';
+                }).join('') + '</select></label>' +
+              '<label class="ad-f"><span>Xem trên nhân vật</span><select name="wear_who">' +
+                ['p1', 'p2', 'p3', 'p4'].map(function (k, i) { return '<option value="' + k + '">Bạn ' + (i + 1) + '</option>'; }).join('') +
+              '</select></label>' +
+            '</div>' +
+            '<label class="ad-f"><span>Cỡ: <b class="ad-wear-hv"></b> chiều cao người</span>' +
+              '<input type="range" name="wear_h" min="0.03" max="0.5" step="0.005"></label>' +
+            '<div class="ad-wear-prev"><div class="ad-wear-fr"></div></div>' +
+            '<p class="ad-hint ad-wear-src"></p>' +
+            '<p class="ad-hint">Kéo món trên hình để đặt vào tay (quai túi nằm trong nắm tay), lên tóc, hay móc vào túi. ' +
+              'Món có Mẫu: mỗi mẫu dùng ảnh cắt nền riêng của mẫu đó (ô bên dưới mỗi lựa chọn).</p>' +
+            '<div class="ad-acts"><button type="button" class="ad-btn ad-wear-reset">Đặt lại vị trí</button>' +
+              '<button type="button" class="ad-btn ad-wear-noimg" hidden>Dùng ảnh cắt nền thay tranh vẽ</button></div>' +
+          '</div>' +
+        '</fieldset>' : '') +
         '<label class="ad-check"><input type="checkbox" name="in_stock"' +
           (p.in_stock === false ? '' : ' checked') + '><span>Còn hàng</span></label>' +
         '<label class="ad-check"><input type="checkbox" name="is_published"' +
@@ -1027,6 +1051,14 @@
               '<input data-cf="note_vi" maxlength="300" value="' + esc(c.note_vi || '') + '"></label>' +
             '<label class="ad-f"><span>Mô tả ngắn (EN)</span>' +
               '<input data-cf="note_en" maxlength="300" value="' + esc(c.note_en || '') + '"></label>' +
+            // the mẫu's own cut-out: what the character wears at Góc thử đồ
+            '<div class="ad-choice-cut"><span class="ad-cut-prev ad-cut-sm">' +
+              (c.cut ? '<img src="' + esc(c.cut) + '" alt="">' : '') + '</span>' +
+              '<span class="ad-choice-cut-acts"><span class="ad-hint">Ảnh cắt nền của mẫu (đeo thử)</span>' +
+                '<button type="button" class="ad-btn" data-choice="cut"' + (c.image ? '' : ' disabled') + '>Xoá nền trắng</button>' +
+                '<label class="ad-btn ad-upload">Ảnh đã tách nền<input type="file" accept="image/png,image/webp" hidden data-choice-cut="' + i + '"></label>' +
+                (c.cut ? '<button type="button" class="ad-btn" data-choice="nocut">Bỏ ảnh cắt</button>' : '') +
+              '</span></div>' +
             '<div class="ad-acts">' +
               '<button type="button" class="ad-btn' + (c.out ? ' on' : '') + '" data-choice="out">' +
                 (c.out ? 'Hết' : 'Còn hàng') + '</button>' +
@@ -1049,6 +1081,24 @@
       if (!b) return;
       var i = +b.closest('.ad-choice').getAttribute('data-i');
       var act = b.getAttribute('data-choice');
+      if (act === 'cut') {
+        // "Xoá nền trắng" on the mẫu's photo, uploaded at once like its photo
+        var bc = b;
+        bc.disabled = true; bc.textContent = 'Đang xoá nền…';
+        var tol = +form.querySelector('.ad-cut-tol input').value;
+        setTimeout(function () {
+          IMG.removeWhite(choices[i].image, { tol: tol, max: 1024 }).then(up).then(function (url) {
+            choices[i].cut = url;
+            renderChoices(); renderWear();
+            toast('Đã có ảnh cắt nền của mẫu — bấm Lưu để giữ');
+          }).catch(function (err) {
+            bc.disabled = false; bc.textContent = 'Xoá nền trắng';
+            toast(err.message || 'Không xoá được nền', true);
+          });
+        }, 30);
+        return;
+      }
+      if (act === 'nocut') { delete choices[i].cut; renderChoices(); renderWear(); return; }
       if (act === 'out') choices[i].out = !choices[i].out;
       else if (act === 'up' && i > 0) choices.splice(i - 1, 0, choices.splice(i, 1)[0]);
       else if (act === 'del') {
@@ -1059,6 +1109,21 @@
       renderChoices();
     });
     chUl.addEventListener('change', function (e) {
+      var ci = e.target.closest('[data-choice-cut]');
+      var cf = ci && (ci.files || [])[0];
+      if (cf) {
+        var k = +ci.getAttribute('data-choice-cut');
+        busy(ci, true);
+        IMG.shrink(cf, { max: 1024, alpha: true }).then(up).then(function (url) {
+          choices[k].cut = url;
+          renderChoices(); renderWear();
+          toast('Đã tải ảnh lên — bấm Lưu để giữ');
+        }).catch(function (err) {
+          busy(ci, false); ci.value = '';
+          toast('Tải ảnh không được: ' + (err.message || ''), true);
+        });
+        return;
+      }
       var inp = e.target.closest('[data-choice-pic]');
       var file = inp && (inp.files || [])[0];
       if (!file) return;
@@ -1116,6 +1181,7 @@
     function showCut(src) {
       if (cutImg.src.indexOf('blob:') === 0) URL.revokeObjectURL(cutImg.src);
       if (src) { cutImg.src = src; cutImg.hidden = false; } else { cutImg.removeAttribute('src'); cutImg.hidden = true; }
+      renderWear();
     }
 
     form.querySelector('.ad-cut-go').addEventListener('click', function (e) {
@@ -1192,6 +1258,89 @@
       toast('Đã chọn — bấm Lưu để giữ');
     });
 
+    /* ---------- Đeo thử (Góc thử đồ, Studio 2D) ----------
+       How the character wears it (js/wear.js): the way, the size, and a drag
+       on the preview for where it hangs. The picture: a drawing of its own
+       (the five of the first round), else the first mẫu's cut-out, else the
+       cut-out above. Saved with the rest on Lưu (products.wear). */
+    var GW = window.GemWear, wearBox = form.querySelector('.ad-wear');
+    var wear = GW && p.wear ? GW.norm(p.wear) : null;
+    if (wearBox) {
+      form.elements['wear_on'].checked = !!wear;
+      if (!wear) wear = GW.norm({ slot: 'bag' });
+    }
+    function wearSrc() {
+      if (wear.img) return wear.img;
+      var ch = choices.filter(function (c) { return c.cut; })[0];
+      if (ch) return ch.cut;
+      return cutImg.hidden ? null : cutImg.getAttribute('src');
+    }
+    function renderWear() {
+      if (!wearBox || !wear) return;
+      var on = form.elements['wear_on'].checked;
+      wearBox.querySelector('.ad-wear-body').hidden = !on;
+      if (!on) return;
+      form.elements['wear_slot'].value = wear.slot;
+      form.elements['wear_h'].value = wear.h;
+      wearBox.querySelector('.ad-wear-hv').textContent = Math.round(wear.h * 100) + '%';
+      var who = form.elements['wear_who'].value || 'p1', key = who + '-front', at = GW.AT[key];
+      var fr = wearBox.querySelector('.ad-wear-fr'), src = wearSrc();
+      fr.style.aspectRatio = String(at[0]);
+      var st = GW.place(key, wear, false), f = GW.held(wear) && GW.fist(key);
+      fr.innerHTML = '<img src="images/studio/char/' + key + '.webp" alt="" draggable="false">' +
+        (src ? '<img class="ad-wear-acc" src="' + esc(src) + '" alt="" draggable="false" style="left:' + st.left + ';top:' + st.top +
+          ';height:' + st.height + ';transform:' + st.transform + '">' : '') +
+        (src && f ? '<img src="images/studio/char/' + key + '-tay.webp" alt="" draggable="false" style="left:' + f.left + ';top:' + f.top +
+          ';width:' + f.width + ';height:' + f.height + '">' : '');
+      wearBox.querySelector('.ad-wear-src').textContent = !src
+        ? 'Chưa có ảnh để đeo: thêm Ảnh cắt nền ở trên (hoặc ảnh cắt nền cho từng mẫu).'
+        : wear.img ? 'Đang dùng tranh vẽ riêng cho Góc thử đồ.'
+        : choices.some(function (c) { return c.cut; }) ? 'Xem thử bằng ảnh cắt nền của mẫu đầu tiên có ảnh.'
+        : 'Đang dùng Ảnh cắt nền ở trên.';
+      wearBox.querySelector('.ad-wear-noimg').hidden = !wear.img;
+    }
+    if (wearBox) {
+      wearBox.addEventListener('change', function (e) {
+        var n = e.target.name;
+        if (n === 'wear_slot') {
+          // another way of wearing: its usual size and hold point
+          var img = wear.img;
+          wear = GW.norm({ slot: e.target.value });
+          wear.img = img;
+        }
+        renderWear();
+      });
+      wearBox.addEventListener('input', function (e) {
+        if (e.target.name !== 'wear_h') return;
+        wear.h = +e.target.value;
+        renderWear();
+      });
+      wearBox.addEventListener('click', function (e) {
+        if (e.target.closest('.ad-wear-reset')) { wear.dx = 0; wear.dy = GW.SLOT_DEF[wear.slot].dy; renderWear(); }
+        if (e.target.closest('.ad-wear-noimg')) { wear.img = null; renderWear(); }
+      });
+      // drag the piece where it hangs: the nudge is in character heights
+      var drag = null;
+      wearBox.addEventListener('pointerdown', function (e) {
+        if (!e.target.classList.contains('ad-wear-acc')) return;
+        e.preventDefault();
+        var h = wearBox.querySelector('.ad-wear-fr').getBoundingClientRect().height;
+        drag = { x: e.clientX, y: e.clientY, dx: wear.dx, dy: wear.dy, h: h, el: e.target };
+        e.target.setPointerCapture(e.pointerId);
+      });
+      wearBox.addEventListener('pointermove', function (e) {
+        if (!drag) return;
+        wear.dx = Math.max(-0.5, Math.min(0.5, drag.dx + (e.clientX - drag.x) / drag.h));
+        wear.dy = Math.max(-0.5, Math.min(0.5, drag.dy + (e.clientY - drag.y) / drag.h));
+        var key = (form.elements['wear_who'].value || 'p1') + '-front', st = GW.place(key, wear, false);
+        drag.el.style.left = st.left; drag.el.style.top = st.top;
+      });
+      var drop = function () { drag = null; };
+      wearBox.addEventListener('pointerup', drop);
+      wearBox.addEventListener('pointercancel', drop);
+    }
+    renderWear();
+
     el.main.querySelector('.ad-cancel').addEventListener('click', function () {
       editingProduct = null; renderProducts();
     });
@@ -1254,6 +1403,7 @@
             if (v) o[k] = v;
           });
           if (c.image) o.image = c.image;
+          if (c.cut) o.cut = c.cut;
           if (c.out) o.out = true;
           return o;
         })
@@ -1276,6 +1426,12 @@
         is_published: f['is_published'].checked
       };
       if (!p.id) row.sort_order = (products.reduce(function (m, x) { return Math.max(m, x.sort_order || 0); }, 0)) + 10;
+      // only once the database has the column (20261025_thu_do.sql)
+      if (wearBox && (!p.id || 'wear' in p)) {
+        var r3 = function (v) { return Math.round(v * 1000) / 1000; };
+        row.wear = f['wear_on'].checked ? { slot: wear.slot, h: r3(wear.h), dx: r3(wear.dx), dy: r3(wear.dy), ax: r3(wear.ax), ay: r3(wear.ay) } : null;
+        if (row.wear && wear.img) row.wear.img = wear.img;
+      }
 
       var btn = form.querySelector('[type="submit"]');
       btn.disabled = true; btn.textContent = 'Đang lưu…';

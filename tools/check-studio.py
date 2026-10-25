@@ -27,6 +27,8 @@ and walks through what broke before:
   design   the design table: a mood dresses the piece, tap a scrap then a patch,
            drag a scrap onto a patch, "May xong" sews and makes the 9:16 card,
            the share link (with a name) opens the same design for a friend
+  thudo    Góc thử đồ from the database: the character picked wears the piece,
+           each Mẫu its own cut-out, a bought design of one's own; admin sets it
   mau      Màu cơ bản: 27 colours in Kho vải, over the basket and in Màu riêng;
            moods of 5 colours + 3 real prints (a sold-out print: the nearest);
            "Tâm trạng ngẫu nhiên" brings the 5 pool palettes in turn
@@ -229,6 +231,7 @@ class FakeDB:
         self.wtypes = []     # workshop_types
         self.wt_patches = []
         self.extra = []      # more products rows (the choices check)
+        self.wear = None     # products.wear by sku (the thudo check); None: no such column yet
         self.layout_delay = 0   # seconds the live layout takes to come (a slow phone)
         self.fabrics = []    # Kho vải rows, each with its place (fabric_private)
         self.fab_log = []    # writes to fabrics / fabric_private
@@ -339,8 +342,10 @@ class FakeDB:
             if m == 'PATCH':
                 self.patches.append(json.loads(r.request.post_data))
                 return await r.fulfill(status=200, content_type='application/json', body='[{}]')
-            return await r.fulfill(status=200, content_type='application/json',
-                                   body=json.dumps([p for p in product_rows() + self.extra if p['category'] not in self.gone]))
+            rows = [p for p in product_rows() + self.extra if p['category'] not in self.gone]
+            if self.wear is not None:
+                rows = [p if 'wear' in p else dict(p, wear=self.wear.get(p['sku'])) for p in rows]
+            return await r.fulfill(status=200, content_type='application/json', body=json.dumps(rows))
         if '/rest/v1/studio_assets' in u:
             i = (re.search(r'id=eq\.([^&]+)', u) or [None, None])[1]
             if m == 'POST':
@@ -3846,6 +3851,192 @@ async def mau(browser, db):
         await pg.context.close()
 
 
+# products.wear of the five pieces of the first round (20261025_thu_do.sql)
+WEAR_DB = {'denim': {'slot': 'bag', 'h': 0.2, 'dy': -0.02, 'ax': 0.44, 'ay': 0, 'img': 'images/studio/wear/denim.webp'},
+           'oxford': {'slot': 'bag', 'h': 0.18, 'dy': -0.02, 'ax': 0.42, 'ay': 0, 'img': 'images/studio/wear/oxford.webp'},
+           'daydeo': {'slot': 'wrist', 'h': 0.13, 'dy': -0.05, 'ax': 0.22, 'ay': 0, 'img': 'images/studio/wear/daydeo.webp'},
+           'bloom': {'slot': 'charm', 'h': 0.1, 'dy': 0, 'ax': 0.2, 'ay': 0.04, 'img': 'images/studio/wear/bloom.webp'},
+           'scrunchie': {'slot': 'hair', 'h': 0.075, 'dy': 0, 'ax': 0.55, 'ay': 0.5, 'img': 'images/studio/wear/scrunchie.webp'}}
+
+
+async def thudo(browser, db):
+    """25/10 (Anna: more accessories / bags to try on): Góc thử đồ reads what
+    can be tried from the database (products.wear); the picture is the
+    character picked at the door wearing it; a product with Mẫu is tried in
+    each of them (its own cut-out); a piece sewn from one's own design is
+    tried once it was bought; admin.html sets how a piece is worn."""
+    print('thudo')
+    bucket = 'https://dxdovvqsfjeizsoprrfn.supabase.co/storage/v1/object/public/gem-media/'
+    jeans = bucket + '1-tui-jeans-cut.webp'
+    db.wear = dict(WEAR_DB)
+    choi = db.extra = [dict(product_rows()[0], id='p-choi', sku='tui-di-choi', name_vi='Túi đi chơi', name_en='Day bag', shelf=None,
+                     sort_order=5, cutout='images/studio/wear/denim.webp', wear={'slot': 'bag', 'h': 0.28, 'ax': 0.45, 'ay': 0},
+                     options={'label_vi': 'Mẫu', 'label_en': 'Design', 'choices': [
+                         {'key': 'jeans-xanh', 'vi': 'Jeans xanh', 'en': 'Blue jeans', 'cut': jeans},
+                         {'key': 'caro', 'vi': 'Caro xanh', 'en': 'Green check', 'cut': 'images/studio/wear/oxford.webp'},
+                         {'key': 'het', 'vi': 'Đã bán', 'out': True, 'cut': 'images/studio/wear/tui-di-choi-do-den.webp'},
+                         {'key': 'moi', 'vi': 'Mẫu mới'}]})]
+    patch = (ROOT / 'images/studio/wear/denim.webp').read_bytes()
+    seen = "localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-studio-intro-touch','1');"
+
+    async def fitting(pg):
+        await pg.evaluate("(() => { const b = [...document.querySelectorAll('.st-nav button, .st-bar button, button')].find(x => x.textContent.trim() === 'Thử đồ'); b && b.click(); })()")
+        for _ in range(24):
+            if await pg.evaluate("!!document.querySelector('.fit')"):
+                break
+            await pg.evaluate("(() => { const e = [...document.querySelectorAll('button, [role=button], span')].find(x => x.textContent.trim().startsWith('Góc thử đồ') && x.offsetParent); e && e.click(); })()")
+            await pg.wait_for_timeout(500)
+        await pg.wait_for_timeout(600)
+
+    # a design of one's own, bought on this browser (and one only saved)
+    pg = await page(browser, db, 800, 800)
+    await pg.goto(f'{BASE}/studio.html')
+    await pg.wait_for_timeout(1200)
+    specs = await pg.evaluate("""(() => { const P = window.GemPatch, a = P.blank('tuitote'), b = P.blank('goi');
+        P.applyMood(a, P.MOODS[3]); P.applyMood(b, P.MOODS[1]); return [P.encode(a), P.encode(b)]; })()""")
+    await pg.context.close()
+    tu = json.dumps({'designs': [{'spec': specs[0], 'at': 1}], 'owned': [{'sku': 'tui-di-cho', 'spec': specs[0], 'code': 'GEM1234', 'at': 1}]})
+    tu_saved = json.dumps({'designs': [{'spec': specs[0], 'at': 1}], 'owned': []})
+
+    for name, w, h in (('mobile', 393, 852), ('desktop', 1440, 900)):
+        init = (f"sessionStorage.setItem('gem-scene','in');localStorage.setItem('gem-char','p2');{seen}{GUIDE_OFF}"
+                f"localStorage.setItem('gem-tu',{json.dumps(tu)});"
+                "sessionStorage.setItem('gem-mac', JSON.stringify(['tuibut']));")
+        pg = await page(browser, db, w, h, init)
+        await pg.route(jeans, lambda r: r.fulfill(status=200, content_type='image/webp', body=patch))
+        await pg.goto(f'{BASE}/studio.html')
+        await pg.wait_for_timeout(2500)
+        await fitting(pg)
+        ids = await pg.evaluate("[...document.querySelectorAll('.fit-pick')].map(b => b.dataset.try)")
+        check(ids[:2] == ['origami', 'tui-di-choi/jeans-xanh'] or 'tui-di-choi/jeans-xanh' in ids, f'{name}: a bag with Mẫu is offered, in its first mẫu with a cut-out ({ids})')
+        want = sorted(['oxford', 'denim', 'bloom', 'daydeo', 'scrunchie', 'tui-di-choi/jeans-xanh', 'd:' + specs[0]])
+        check(sorted(ids) == want, f'{name}: what the database offers + the bag designed and bought; nothing without "wear" ({ids})')
+        check(await pg.evaluate("!!document.querySelector('.fit-list-h')"), f'{name}: "Món bạn tự thiết kế" heads the own designs')
+        fr = await pg.evaluate("[...document.querySelectorAll('.fit-fr img')].map(i => i.getAttribute('src'))")
+        check(fr and fr[0] == 'images/studio/char/p2-front.webp', f'{name}: the picture is the character picked at the door ({fr[:1]})')
+        # the bag with Mẫu: its chips, each its own picture; the one sold out shown, not bought
+        await js_click(pg, '[data-try="tui-di-choi/jeans-xanh"]')
+        await pg.wait_for_timeout(300)
+        st = await pg.evaluate("""(() => { const r = document.querySelector('.fit');
+            return [[...r.querySelectorAll('.fit-opts [data-try]')].map(b => b.textContent + (b.classList.contains('is-on') ? '*' : '')),
+              [...r.querySelectorAll('.fit-fr .st-acc')].map(i => i.getAttribute('src')), r.querySelector('.fit-cap').textContent]; })()""")
+        check(st[0] == ['Jeans xanh*', 'Caro xanh', 'Đã bán', 'Mẫu mới'] and jeans in st[1] and st[2] == 'Túi đi chơi · Jeans xanh',
+              f'{name}: its Mẫu under the picture, the bag in hand is that mẫu ({st})')
+        # a mẫu without its own cut-out (the others have one): not tried in another's picture
+        nc = await pg.evaluate("document.querySelector('.fit-opts [data-try=\"tui-di-choi/moi\"]').disabled")
+        check(nc, f'{name}: a mẫu with no cut-out of its own can\'t be tried ({nc})')
+        await pg.screenshot(path=OUT / f'thudo-{name}-mau.png')
+        await js_click(pg, '.fit-opts [data-try="tui-di-choi/caro"]')
+        await pg.wait_for_timeout(300)
+        src = await pg.evaluate("[...document.querySelectorAll('.fit-fr .st-acc')].map(i => i.getAttribute('src'))")
+        check('images/studio/wear/oxford.webp' in src and jeans not in src, f'{name}: another mẫu, another bag in hand ({src})')
+        n0 = await pg.evaluate("window.GemBasket.count()")
+        await js_click(pg, '.fit-add')
+        await pg.wait_for_timeout(1500)   # it flies into the basket first
+        line = await pg.evaluate("JSON.parse(localStorage.getItem('gem-basket') || '[]').filter(i => i.sku === 'tui-di-choi')")
+        check(await pg.evaluate("window.GemBasket.count()") == n0 + 1 and line and line[0].get('opt') == 'caro',
+              f'{name}: "Thêm vào giỏ" adds the very mẫu tried ({line})')
+        await js_click(pg, '.fit-opts [data-try="tui-di-choi/het"]')
+        await pg.wait_for_timeout(200)
+        sold = await pg.evaluate("[document.querySelector('.fit-add').disabled, document.querySelector('.fit-add').textContent]")
+        check(sold[0] and 'hết' in sold[1], f'{name}: a mẫu sold out can be looked at, not bought ({sold})')
+        await js_click(pg, '.fit-opts [data-try="tui-di-choi/caro"]')
+        # worn in the scene: every frame, the fist over the handle; the
+        # "tuibut" kept from before (not offered) is gone
+        await js_click(pg, '.fit-wear [data-wear]')
+        await pg.wait_for_timeout(600)
+        fr = await pg.evaluate("""[...document.querySelectorAll('.st-fr')].map(f => [...f.querySelectorAll('.st-acc')].map(i => i.getAttribute('src') || 'svg'))""")
+        check(len(fr) == 10 and all('images/studio/wear/oxford.webp' in f and any(x.endswith('-tay.webp') for x in f) for f in fr),
+              f'{name}: "Đeo thử": the bag on all 10 frames, the fist over its handle ({fr[0]})')
+        mac = await pg.evaluate("sessionStorage.getItem('gem-mac')")
+        check(mac == '["tui-di-choi/caro"]', f'{name}: kept for this visit as that mẫu; a piece not offered dropped ({mac})')
+        # the bag sewn from one's design: drawn from its code, worn too
+        await fitting(pg)
+        await js_click(pg, f'.fit-pick[data-try="d:{specs[0]}"]')
+        await pg.wait_for_timeout(400)
+        d = await pg.evaluate("""(() => { const a = document.querySelector('.fit-fr .st-acc-d'); return a ? [a.querySelectorAll('svg path').length, a.querySelector('svg').getAttribute('viewBox'), document.querySelector('.fit-add').hidden, document.querySelector('.fit-cap').textContent] : null; })()""")
+        check(d and d[0] > 3 and d[1] == '60 0 220 340' and d[2] and d[3].startswith('Túi tote · '),
+              f'{name}: your own tote, drawn from its code, in hand; nothing to buy ({d})')
+        await pg.screenshot(path=OUT / f'thudo-{name}-thietke.png')
+        await js_click(pg, '.fit-wear [data-wear]')
+        await pg.wait_for_timeout(600)
+        mac = json.loads(await pg.evaluate("localStorage.getItem('gem-mac')") or '[]')
+        n = await pg.evaluate("[...document.querySelectorAll('.st-fr')].filter(f => f.querySelector('.st-acc-d')).length")
+        check(n == 10 and mac == ['d:' + specs[0]], f'{name}: worn in the scene (one bag at a time), kept for good: it is bought ({n}, {len(mac)})')
+        await pg.evaluate("document.querySelectorAll('.st-fr').forEach((f, k) => f.hidden = k !== 0)")
+        await pg.screenshot(path=OUT / f'thudo-{name}-canh.png')
+        check(not pg.errors, f'{name}: no script errors {pg.errors}')
+        await pg.context.close()
+
+    # only saved, not bought: not offered; the database without the column:
+    # the five of the first round, as before
+    pg = await page(browser, db, 1440, 900, f"sessionStorage.setItem('gem-scene','in');{seen}{GUIDE_OFF}localStorage.setItem('gem-tu',{json.dumps(tu_saved)});")
+    await pg.goto(f'{BASE}/studio.html')
+    await pg.wait_for_timeout(2500)
+    await fitting(pg)
+    ids = await pg.evaluate("[...document.querySelectorAll('.fit-pick')].map(b => b.dataset.try)")
+    check(not any(i.startswith('d:') for i in ids), f'a design only saved (not bought) is not tried on ({len(ids)})')
+    await pg.context.close()
+    db.wear = None; db.extra = []
+    pg = await page(browser, db, 1440, 900, f"sessionStorage.setItem('gem-scene','in');{seen}{GUIDE_OFF}")
+    await pg.goto(f'{BASE}/studio.html')
+    await pg.wait_for_timeout(2500)
+    await fitting(pg)
+    ids = await pg.evaluate("[...document.querySelectorAll('.fit-pick')].map(b => b.dataset.try)")
+    check(sorted(ids) == sorted(WEAR_DB), f'no "wear" column yet: the five of the first round ({ids})')
+    check(not pg.errors, f'no script errors {pg.errors}')
+    await pg.context.close()
+
+    # admin.html: the way, the size, a drag; each mẫu its own cut-out
+    db.wear = dict(WEAR_DB); db.patches.clear(); db.files.clear(); db.extra = choi
+    pg = await admin_page(browser, db, 1440, 900)
+    await pg.route(jeans, lambda r: r.fulfill(status=200, content_type='image/webp', body=patch))
+    await js_click(pg, '[data-tab="products"]')
+    await pg.wait_for_timeout(800)
+    edit = "(sku) => { const c = [...document.querySelectorAll('.ad-edit-prod')].find(b => (b.closest('li, article, .ad-prod, tr') || b.parentNode).textContent.includes(sku)); c.click(); }"
+    await pg.evaluate(edit, 'Origami Pouch')
+    await pg.wait_for_timeout(400)
+    check(await pg.evaluate("!document.querySelector('[name=wear_on]').checked && document.querySelector('.ad-wear-body').hidden"),
+          'admin: a piece not worn yet: "Cho khách đeo thử" off')
+    await js_click(pg, '[name="wear_on"]')
+    await pg.wait_for_timeout(200)
+    await pg.evaluate("(() => { const r = document.querySelector('[name=wear_h]'); r.value = '0.15'; r.dispatchEvent(new Event('input', {bubbles: true})); })()")
+    await pg.evaluate("document.querySelector('.ad-wear-prev').scrollIntoView({block: 'center', behavior: 'instant'})")
+    await pg.wait_for_timeout(300)
+    a = await center(pg, '.ad-wear-acc')
+    await drag(pg, a, (a[0] + 36, a[1] + 18))
+    await pg.wait_for_timeout(200)
+    await pg.screenshot(path=OUT / 'thudo-admin.png')
+    await js_click(pg, '.ad-post-form [type="submit"]')
+    await pg.wait_for_timeout(1200)
+    body = db.patches[-1] if db.patches else {}
+    wv = body.get('wear') or {}
+    check(wv.get('slot') == 'bag' and wv.get('h') == 0.15 and 0.07 < wv.get('dx', 0) < 0.13 and 0.02 < wv.get('dy', 0) < 0.04 and 'img' not in wv,
+          f'admin: "Cầm tay", size, the drag saved with the product ({wv})')
+    await pg.evaluate(edit, 'Túi đi chơi')
+    await pg.wait_for_timeout(400)
+    st = await pg.evaluate("[document.querySelector('[name=wear_on]').checked, [...document.querySelectorAll('.ad-choice-cut img')].length, document.querySelector('.ad-wear-acc').getAttribute('src')]")
+    check(st == [True, 3, jeans], f'admin: a bag with Mẫu: each mẫu its cut-out, the preview in the first ({st})')
+    await pg.evaluate("[...document.querySelectorAll('[data-choice=\"nocut\"]')][0].click()")
+    await pg.wait_for_timeout(200)
+    await js_click(pg, '.ad-post-form [type="submit"]')
+    await pg.wait_for_timeout(1200)
+    body = db.patches[-1] if db.patches else {}
+    cuts = [c.get('cut') for c in (body.get('options') or {}).get('choices', [])]
+    check(cuts == [None, 'images/studio/wear/oxford.webp', 'images/studio/wear/tui-di-choi-do-den.webp', None],
+          f'admin: "Bỏ ảnh cắt" on one mẫu, the others kept ({cuts})')
+    await pg.evaluate(edit, 'Túi đi chơi')
+    await pg.wait_for_timeout(400)
+    await js_click(pg, '[name="wear_on"]')
+    await js_click(pg, '.ad-post-form [type="submit"]')
+    await pg.wait_for_timeout(1200)
+    body = db.patches[-1] if db.patches else {}
+    check('wear' in body and body['wear'] is None, f'admin: off again: not tried on any more ({body.get("wear", "missing")})')
+    check(not pg.errors, f'admin: no script errors {pg.errors}')
+    await pg.context.close()
+    db.wear = None; db.extra = []
+
+
 async def onefab(browser, db):
     """23/10: one fabric over a pieced layout is no piecing (no layout fee,
     same rule as design_price); the real-photo card says whose photo it is
@@ -4524,7 +4715,7 @@ async def main(which):
         browser = await launch(p)
         for name, fn in (('street', street), ('wear', wear), ('shop', shop), ('spots', spots), ('editor', editor),
                          ('library', library), ('product', product), ('prodlib', prodlib), ('workshop', workshop), ('design', design), ('catalog', catalog), ('kinds', kinds),
-                         ('layers', layers), ('zones', zones), ('cart', cart), ('choices', choices), ('zither', zither), ('guide', guide), ('vai', vai), ('tui', tui), ('kho', kho), ('guidance', guidance), ('onefab', onefab), ('mau', mau), ('taggroup', taggroup), ('phanloai', phanloai), ('phanloai_lv', phanloai_lv), ('slow', slow), ('topbar', topbar), ('motion', motion),
+                         ('layers', layers), ('zones', zones), ('cart', cart), ('choices', choices), ('zither', zither), ('guide', guide), ('vai', vai), ('tui', tui), ('kho', kho), ('guidance', guidance), ('onefab', onefab), ('mau', mau), ('thudo', thudo), ('taggroup', taggroup), ('phanloai', phanloai), ('phanloai_lv', phanloai_lv), ('slow', slow), ('topbar', topbar), ('motion', motion),
                          ('phone', phone), ('taps', taps)):
             if which in (None, name):
                 await fn(browser, db)

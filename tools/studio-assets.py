@@ -434,11 +434,13 @@ def build_cast(src):
 # Run: python3 tools/studio-assets.py --pieces <folder>
 # ---------------------------------------------------------------------------
 PIECES = {
-    'wear-oxford':    ['wear/oxford-mac', 'wear/oxford'],      # character holding it + the piece
-    'wear-scrunchie': ['wear/scrunchie-mac', 'wear/scrunchie'],
-    'wear-daydeo':    ['wear/daydeo-mac', 'wear/daydeo'],
-    'wear-denim':     ['wear/denim-mac', 'wear/denim'],
-    'wear-bloom':     ['wear/bloom-mac', 'wear/bloom'],
+    # character holding it + the piece; '-': not kept (Góc thử đồ shows the
+    # visitor's own character wearing the piece since 25/10/2026)
+    'wear-oxford':    ['-wear/oxford-mac', 'wear/oxford'],
+    'wear-scrunchie': ['-wear/scrunchie-mac', 'wear/scrunchie'],
+    'wear-daydeo':    ['-wear/daydeo-mac', 'wear/daydeo'],
+    'wear-denim':     ['-wear/denim-mac', 'wear/denim'],
+    'wear-bloom':     ['-wear/bloom-mac', 'wear/bloom'],
     'ud-vay':         ['udon/ud-vay'],                         # waving
     'ud-ngoi':        ['udon/ud-ngoi'],                        # sitting
     'ud-ngu':         ['udon/ud-ngu'],                         # asleep
@@ -496,6 +498,8 @@ def cut_one(cut, outs):
         a = np.asarray(cut)[:, :, 3]
         boxes = [(0, a.shape[1])] if len(outs) == 1 else territories(a, frame_boxes(cut, len(outs)))
         for name, (x0, x1) in zip(outs, boxes):
+            if name.startswith('-'):
+                continue
             part = a[:, x0:x1] > 40
             rows = np.where(part.sum(axis=1) > 2)[0]
             cols = np.where(part.sum(axis=0) > 2)[0]
