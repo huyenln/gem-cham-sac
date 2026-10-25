@@ -3098,7 +3098,47 @@ ra". Nắm tay gần (`char/pN-<khung>-tay.webp`, `--hands` cắt ra cùng `WEAR
 quai túi / vòng dây nên món đồ trông như đang cầm, không dán bên ngoài. Đồ thử theo khách hết lượt (sessionStorage `gem-mac`); món đã mua (có
 trong Tủ) thì nhớ luôn (localStorage `gem-mac`). Có tranh nhân vật mới → chạy
 lại phần dò điểm và dán `WEAR_AT` mới. Áo (đổi dáng người) thuộc đợt 2: phải
-vẽ lại khung, không dán đè được.
+vẽ lại khung, không dán đè được. (25/10: `WEAR_AT` / `WEAR` chuyển sang `js/wear.js`, món thử đọc từ database:
+xem "Góc thử đồ từ database".)
+
+### Góc thử đồ từ database (25/10/2026)
+
+Anna: thêm phụ kiện / túi để nhân vật đeo thử; không vẽ thêm tranh cho từng món.
+
+- **`products.wear`** (jsonb, migration `20261025_thu_do.sql`, chạy **trước** khi merge): món đeo thử
+  thế nào; null = không có ở Góc thử đồ. `{slot, h, dx, dy, ax, ay, img}`:
+  - `slot`: `bag` cầm tay, `wrist` cổ tay, `charm` móc vào túi, `hair` trên tóc. Mỗi slot một món.
+  - `h`: cao bằng bao nhiêu phần chiều cao nhân vật.
+  - `dx`, `dy`: xê dịch từ điểm bàn tay / gáy, tính theo chiều cao nhân vật.
+  - `ax`, `ay`: điểm cầm trên ảnh, quai túi ≈ (0.5, 0).
+  - `img`: tranh riêng, chỉ 5 món đợt 1 dùng.
+  - Kiểm bằng `product_wear_ok()`.
+  - **Bảng `products` cấp quyền theo cột**: migration có `grant select (wear)` cho anon + authenticated, `insert/update (wear)` cho authenticated.
+- **Ảnh để đeo**:
+  - Món có Mẫu: ảnh của mẫu (`options.choices[].cut`, `product_options_ok` kiểm đường dẫn).
+  - Món không có Mẫu: `wear.img` nếu có, không thì "Ảnh cắt nền" của món.
+  - Món có Mẫu mà vài mẫu đã có ảnh riêng: mẫu chưa có ảnh **không thử được** (chip mờ). Lý do: lấy ảnh chung sẽ hiện nhầm túi khác.
+- **8 mẫu của Túi đi chơi / Túi đi chợ**: tách từ chính poster của mẫu bằng `tools/wear-cuts.py`, ra `images/studio/wear/<sku>-<mẫu>.webp`.
+  - Cách tách: giữ khối lớn nhất không phải nền giấy, bỏ chữ, bóc viền kem quanh túi; chấm kem nhỏ trong hoạ tiết vẫn giữ.
+  - Mẫu mới sau này: admin → mẫu đó → "Ảnh cắt nền của mẫu" (Xoá nền trắng / tải ảnh đã tách nền).
+- **Xem trước = chính nhân vật khách chọn ở cửa** (dáng đứng thẳng) đeo đồ đang đeo + món đang chạm. Bỏ 4 tranh người mẫu `wear/*-mac.webp`; `tools/studio-assets.py` không xuất chúng nữa (tên có `-`).
+  - **Trừ Dây buộc tóc** (Anna: "phải kiểu đeo như cũ"): khung xem trước vẫn là tranh cận cảnh tóc buộc đuôi ngựa `wear/scrunchie-mac.webp` (`GemWear.MAC`). Lý do: nhân vật nhìn thẳng thì dây buộc tóc thành một chấm cạnh tai, trông như cài hoa. Ngoài cảnh vẫn đeo ở gáy như trước.
+  - Cách đeo "Trên tóc" hợp với **cài hoa** (Gem sắp chụp và đăng sản phẩm này): admin chọn "Trên tóc (cài hoa)".
+  - Dưới hình: chip Mẫu, "Đeo thử" / "Tháo ra", "Thêm vào giỏ" (đúng mẫu đang thử; mẫu hết hàng xem được, không mua được).
+  - Món đang đeo lưu theo id: `<sku>`, `<sku>/<mẫu>` hoặc `d:<mã thiết kế>`. Mỗi lượt lưu ở sessionStorage `gem-mac`; món đã mua / thiết kế đã mua lưu ở localStorage `gem-mac`.
+  - Món không còn được thử bị bỏ khi database trả lời.
+- **Túi tự thiết kế**: chỉ khi khách **đã mua**, tức Tủ sưu tầm có `owned` kèm mã thiết kế. Thử được túi, Origami, Bloom, dây đeo tay; không thử dây buộc tóc tự thiết kế (đeo lên nhân vật trông như cài hoa).
+  - Vẽ bằng `GemPatch.svg` của thiết kế, viewBox cắt sát món (`GemWear.DESIGN[món].box`, đo từ 12 món của Bàn thiết kế).
+  - Món mua ở máy khác chỉ về dạng sản phẩm thường (mã thiết kế chỉ nằm trong ghi chú đơn), nên chỉ thử được trên máy đã đặt.
+- **Admin → Sản phẩm → Sửa → "Đeo thử ở Góc thử đồ"**: bật / tắt, cách đeo, cỡ (thanh kéo), xem trước trên Bạn 1–4.
+  - Kéo món trên hình để đặt vào tay.
+  - "Dùng ảnh cắt nền thay tranh vẽ" bỏ `wear.img`.
+  - Chỉ gửi `wear` khi bản ghi đã có cột này (sau migration).
+- **Cấu hình ban đầu** (migration): 5 món cũ như trước; Túi đi chơi 0.32, Túi đi chợ 0.36, Túi laptop 0.2 (cầm tay); Origami là charm (móc khoá, cầm ở vòng).
+  - Cỡ đã xem trên 4 nhân vật; chỉnh tiếp ở admin.
+- **Database chưa có cột / không trả lời**: dùng lại 5 món cũ (`GemWear.LEGACY`).
+- Ảnh cắt nền là ảnh chụp, nhân vật là tranh vẽ: chấp nhận lệch phong cách, như kệ hàng đang dùng.
+- Kiểm tra: `python3 tools/check-studio.py thudo` (và `wear`).
 
 ### Báo mail cho nhân sự (đơn mới / đặt workshop / lời nhắn)
 

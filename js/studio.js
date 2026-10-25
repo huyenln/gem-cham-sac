@@ -79,26 +79,7 @@
   var ANCHOR = {"p1-front": 0.514, "p1-side": 0.515, "p1-q": 0.475, "p1-walk1": 0.486, "p1-walk2": 0.534, "p1-walk3": 0.5, "p1-walk4": 0.435, "p1-cart1": 0.378, "p1-cart2": 0.241, "p1-cart3": 0.301, "p2-front": 0.509, "p2-side": 0.486, "p2-q": 0.498, "p2-walk1": 0.552, "p2-walk2": 0.552, "p2-walk3": 0.522, "p2-walk4": 0.52, "p2-cart1": 0.451, "p2-cart2": 0.335, "p2-cart3": 0.391, "p3-front": 0.542, "p3-side": 0.472, "p3-q": 0.514, "p3-walk1": 0.471, "p3-walk2": 0.512, "p3-walk3": 0.463, "p3-walk4": 0.5, "p3-cart1": 0.344, "p3-cart2": 0.294, "p3-cart3": 0.268, "p4-front": 0.519, "p4-side": 0.547, "p4-q": 0.502, "p4-walk1": 0.491, "p4-walk2": 0.476, "p4-walk3": 0.463, "p4-walk4": 0.425, "p4-cart1": 0.378, "p4-cart2": 0.332, "p4-cart3": 0.347};
   var STEP_MS = 150;   // one walk / push frame
 
-  // Where accessories go on each frame (tools/studio-assets.py --hands):
-  // [width/height, hand x, hand y, back-of-head x, y, fist box x, y, w, h],
-  // fractions of the frame. The hand is the near one (the front fist in a
-  // walk, the grip on the cart handle); bags hang from it, and the fist
-  // (char/pN-<frame>-tay.webp) is drawn back over the handle.
-  var WEAR_AT = {"p1-front": [0.3042, 0.917, 0.565, 0.114, 0.12, 0.8447, 0.4722, 0.1507, 0.1194], "p1-side": [0.2708, 0.659, 0.578, 0.149, 0.12, 0.559, 0.4931, 0.2051, 0.1083], "p1-q": [0.3097, 0.826, 0.515, 0.135, 0.12, 0.7578, 0.5042, 0.1659, 0.0236], "p1-walk1": [0.5292, 0.761, 0.558, 0.299, 0.12, 0.5774, 0.4903, 0.2441, 0.0931], "p1-walk2": [0.3042, 0.884, 0.594, 0.201, 0.12, 0.8128, 0.5208, 0.1096, 0.0958], "p1-walk3": [0.5472, 0.781, 0.558, 0.312, 0.12, 0.5279, 0.4764, 0.3122, 0.1083], "p1-walk4": [0.3833, 0.575, 0.587, 0.167, 0.12, 0.4493, 0.4958, 0.1993, 0.1153], "p1-cart1": [0.8653, 0.545, 0.524, 0.252, 0.12, 0.5104, 0.5028, 0.0514, 0.0361], "p1-cart2": [0.6708, 0.451, 0.505, 0.085, 0.12, 0.4244, 0.4944, 0.06, 0.0236], "p1-cart3": [0.7958, 0.496, 0.514, 0.161, 0.12, 0.4538, 0.5, 0.0646, 0.0375], "p2-front": [0.3181, 0.855, 0.584, 0.275, 0.12, 0.7817, 0.4986, 0.1572, 0.1139], "p2-side": [0.2042, 0.584, 0.587, 0.075, 0.12, 0.4014, 0.4986, 0.3265, 0.1111], "p2-q": [0.3097, 0.867, 0.579, 0.256, 0.12, 0.7848, 0.4944, 0.1525, 0.1125], "p2-walk1": [0.5292, 0.813, 0.534, 0.367, 0.12, 0.664, 0.4819, 0.2073, 0.075], "p2-walk2": [0.2528, 0.629, 0.601, 0.143, 0.12, 0.4396, 0.5125, 0.3132, 0.1125], "p2-walk3": [0.5361, 0.814, 0.529, 0.324, 0.12, 0.6451, 0.4736, 0.2409, 0.0847], "p2-walk4": [0.2389, 0.638, 0.598, 0.128, 0.12, 0.4244, 0.5125, 0.3372, 0.1097], "p2-cart1": [0.8292, 0.619, 0.53, 0.312, 0.12, 0.5812, 0.5083, 0.0553, 0.0375], "p2-cart2": [0.6861, 0.549, 0.525, 0.164, 0.12, 0.5081, 0.5069, 0.0628, 0.0319], "p2-cart3": [0.7444, 0.591, 0.52, 0.229, 0.12, 0.541, 0.5042, 0.0653, 0.0347], "p3-front": [0.3514, 0.903, 0.562, 0.277, 0.12, 0.8024, 0.4542, 0.1621, 0.1444], "p3-side": [0.3014, 0.589, 0.576, 0.138, 0.12, 0.4608, 0.4625, 0.212, 0.1417], "p3-q": [0.3472, 0.906, 0.565, 0.232, 0.12, 0.808, 0.4597, 0.144, 0.1361], "p3-walk1": [0.5208, 0.708, 0.567, 0.307, 0.12, 0.4853, 0.4611, 0.288, 0.1361], "p3-walk2": [0.3389, 0.933, 0.564, 0.266, 0.12, 0.8361, 0.5333, 0.1639, 0.05], "p3-walk3": [0.5278, 0.714, 0.557, 0.3, 0.12, 0.4789, 0.4583, 0.3, 0.1306], "p3-walk4": [0.3639, 0.621, 0.589, 0.26, 0.12, 0.4847, 0.4681, 0.2099, 0.1486], "p3-cart1": [0.8, 0.494, 0.528, 0.224, 0.12, 0.4427, 0.5139, 0.1233, 0.0292], "p3-cart2": [0.7028, 0.476, 0.526, 0.158, 0.12, 0.3874, 0.5056, 0.1462, 0.0431], "p3-cart3": [0.7181, 0.507, 0.527, 0.132, 0.12, 0.4526, 0.5153, 0.0812, 0.0306], "p4-front": [0.3681, 0.878, 0.608, 0.211, 0.12, 0.8151, 0.5556, 0.1321, 0.0778], "p4-side": [0.2958, 0.847, 0.469, 0.127, 0.12, 0.7277, 0.4319, 0.2629, 0.0625], "p4-q": [0.3903, 0.849, 0.607, 0.199, 0.12, 0.7865, 0.5542, 0.1174, 0.0736], "p4-walk1": [0.5264, 0.864, 0.564, 0.243, 0.12, 0.7995, 0.5389, 0.0844, 0.0403], "p4-walk2": [0.3833, 0.904, 0.555, 0.134, 0.12, 0.8225, 0.5319, 0.1232, 0.0417], "p4-walk3": [0.5125, 0.794, 0.556, 0.209, 0.12, 0.7398, 0.5389, 0.084, 0.0333], "p4-walk4": [0.4278, 0.83, 0.556, 0.12, 0.12, 0.7565, 0.5319, 0.1039, 0.0403], "p4-cart1": [0.8083, 0.615, 0.515, 0.21, 0.12, 0.5653, 0.4917, 0.0687, 0.0431], "p4-cart2": [0.7042, 0.557, 0.518, 0.132, 0.12, 0.5247, 0.4958, 0.0631, 0.0389], "p4-cart3": [0.7625, 0.592, 0.512, 0.169, 0.12, 0.5337, 0.4917, 0.0783, 0.0389]};
-
-  // How each piece sits: slot (one bag at a time), height as a fraction of
-  // the character, which point it hangs from, and the CSS shift that puts
-  // its hook / handle on that point.
-  // dy: nudge from the point, in character heights (the hand point is the
-  // fingertips; the grip is a little higher). shift puts the handle's top /
-  // the loop's top on that point.
-  var WEAR = {
-    denim:     { slot: 'bag',   h: 0.2,  at: 'hand', dy: -0.02, shift: 'translate(-44%, 0)' },
-    oxford:    { slot: 'bag',   h: 0.18, at: 'hand', dy: -0.02, shift: 'translate(-42%, 0)' },
-    daydeo:    { slot: 'wrist', h: 0.13, at: 'hand', dy: -0.05, shift: 'translate(-22%, 0)' },
-    bloom:     { slot: 'charm', h: 0.1,  at: 'hand', dy: 0,      shift: 'translate(-20%, -4%)' },
-    scrunchie: { slot: 'hair',  h: 0.075, at: 'head', dy: 0,     shift: 'translate(-55%, -50%)' }
-  };
+  // Where pieces sit on each frame, and how each is worn: js/wear.js (GemWear).
 
   function charSrc(who, name) { return 'images/studio/char/' + who + '-' + name + '.webp'; }
 
@@ -149,11 +130,9 @@
   // by a photo, not by the drawing.
   var REAL = ['goi', 'tham', 'lotcoc', 'scrunchie'];
 
-  // Things the character can wear later — bought first, then unlocked.
-  // Pieces you can try on at the fitting corner: images/studio/wear/<sku>-mac
-  // (the model wearing / carrying it) and <sku> (the piece on its own).
-  var WEARABLES = ['oxford', 'denim', 'scrunchie', 'daydeo', 'bloom'];
-  var tryOn = WEARABLES[0];
+  // The fitting corner: the worn id shown in it ("<sku>", "<sku>/<mẫu>",
+  // "d:<design code>"), and the mẫu each product was last tried in
+  var tryOn = null, tryOpt = {};
 
   var THUMB = {
     origami: 'vai-vun-tui-1-thumb.jpg',
@@ -294,9 +273,12 @@
     'studio.wear_note':    { vi: `Đồ đeo thử theo bạn hết lượt này. Món đã mua thì đeo lần nào cũng được.`, en: `Tried-on pieces stay with you this visit. Pieces you own, every visit.` },
 
     'studio.fitting_h':    { vi: `Góc thử đồ`, en: `Fitting corner` },
-    'studio.fitting_p':    { vi: `Chạm vào một món để thử lên người. Mua rồi thì món đó nằm trong tủ của bạn.`, en: `Tap a piece to try it on. Once it's yours, it waits in your cabinet.` },
+    'studio.fitting_p':    { vi: `Chạm vào một món để xem bạn đeo thử. Món có nhiều mẫu thì chọn mẫu dưới hình. Mua rồi thì món đó nằm trong tủ của bạn.`, en: `Tap a piece to see it on you. A piece with several designs: pick one under the picture. Once it's yours, it waits in your cabinet.` },
     'studio.fitting_lock': { vi: `Mua để mặc`, en: `Buy to wear` },
     'studio.fitting_have': { vi: `Đã có`, en: `Yours` },
+    'studio.fitting_mine': { vi: `Bạn thiết kế`, en: `Your design` },
+    'studio.fitting_nocut': { vi: `Mẫu này chưa có ảnh để thử`, en: `No picture to try this one yet` },
+    'studio.fitting_mine_h': { vi: `Món bạn tự thiết kế (đã mua)`, en: `Pieces you designed (bought)` },
 
     'studio.sofa_h':       { vi: `Góc nghỉ chân`, en: `Sofa corner` },
     'studio.sofa_p':       { vi: `Ngồi chút, xem studio dạo này có gì.`, en: `Sit down for a bit and see what's on.` },
@@ -1617,7 +1599,7 @@
       var key = who + '-' + name;
       var fr = document.createElement('span');
       fr.className = 'st-fr';
-      if (WEAR_AT[key]) fr.style.aspectRatio = String(WEAR_AT[key][0]);
+      if (W && W.AT[key]) fr.style.aspectRatio = String(W.AT[key][0]);
       fr.style.transform = 'translateX(' + (-(ANCHOR[key] || 0.5) * 100) + '%)';
       fr.hidden = true;
       var img = document.createElement('img');
@@ -1642,85 +1624,136 @@
 
   /* ---------- accessories on the character ----------
      Anything can be tried on; a tried piece stays for this visit
-     (sessionStorage), a piece you own stays for good (localStorage). */
+     (sessionStorage), a piece you own stays for good (localStorage). A
+     worn piece is an id: "<sku>", "<sku>/<mẫu>" for a product with choices,
+     or "d:<design code>" for a piece sewn from one's own design (bought:
+     Tủ sưu tầm has it). How each is worn: GemWear (js/wear.js). */
+  var W = window.GemWear;
   var worn = [];
-  var SLOT_ORDER = ['hair', 'bag', 'wrist', 'charm'];   // drawing order, back to front
+  // sku -> how it is worn: the database's products.wear once it answers,
+  // the five of the first round until then (or without the column)
+  var wearConf = W ? W.LEGACY : {};
+  var wearDb = false;
 
   function owns(sku) { return !!(window.GemTu && window.GemTu.owns(sku)); }
+  function ownsDesign(spec) {
+    return !!(window.GemTu && window.GemTu.owned().some(function (o) { return o.spec === spec; }));
+  }
 
-  function wearPut(sku) {
-    var slot = WEAR[sku].slot;
-    worn = worn.filter(function (s) { return WEAR[s].slot !== slot; });
-    worn.push(sku);
+  function setWearRows(rows) {
+    if (!W || !Array.isArray(rows) || !rows.some(function (r) { return r && 'wear' in r; })) return;
+    var c = {};
+    rows.forEach(function (r) { var w = r && W.norm(r.wear); if (w) c[r.sku] = w; });
+    wearConf = c;
+    wearDb = true;
+  }
+
+  // What a worn id is: { id, sku, opt, spec, w, img | html, name } or null
+  function wearOf(id) {
+    if (!W || typeof id !== 'string') return null;
+    if (id.indexOf('d:') === 0) {
+      var spec = id.slice(2), d = P && P.parse(spec), dw = d && W.DESIGN[d.product];
+      if (!dw || !ownsDesign(spec)) return null;
+      return { id: id, sku: P.PRODUCTS[d.product].sku, spec: spec, d: d, w: dw,
+        name: P.PRODUCTS[d.product][lng()] + ' · ' + P.title(d, lng()) };
+    }
+    var at = id.indexOf('/'), sku = at < 0 ? id : id.slice(0, at), opt = at < 0 ? null : id.slice(at + 1);
+    var w = wearConf[sku];
+    if (!w) return null;
+    var info = window.GemBasket ? window.GemBasket.info(sku) : null;
+    var cs = info && info.options && info.options.choices, ch = null;
+    if (cs) {
+      ch = cs.filter(function (c) { return c.key === opt; })[0] || null;
+      if (!ch) return null;   // a product with choices is tried in one of them
+    } else if (opt) return null;
+    // a mẫu is worn in its own cut-out; once some mẫu have one, one without
+    // it can't be tried (the product's picture would show another bag)
+    var own = cs && cs.some(function (c) { return W.okImg(c.cut); });
+    var img = (ch && W.okImg(ch.cut) && ch.cut) || (own ? null : w.img || (info && W.okImg(info.cutout) && info.cutout)) || null;
+    if (!img) return null;
+    return { id: id, sku: sku, opt: opt, w: w, img: img, ch: ch,
+      name: (info ? info.name : sku) + (ch ? ' · ' + ((lng() === 'en' && ch.en) || ch.vi) : '') };
+  }
+
+  // The picture of a worn piece, placed on a frame ("p2-front")
+  function accHtml(key, it, bag) {
+    var s = W.place(key, it.w, bag);
+    if (!s) return '';
+    var css = 'left:' + s.left + ';top:' + s.top + ';height:' + s.height + ';transform:' + s.transform;
+    if (it.img) return '<img class="st-acc" src="' + esc(it.img) + '" alt="" draggable="false" style="' + css + '">';
+    // one's own design: the piece drawn from its code, its viewBox cut to it
+    var b = it.w.box;
+    return '<span class="st-acc st-acc-d" style="' + css + ';aspect-ratio:' + b[2] + ' / ' + b[3] + '">' +
+      P.svg(it.d).replace('viewBox="0 0 340 340"', 'viewBox="' + b.join(' ') + '" preserveAspectRatio="xMidYMid meet"') + '</span>';
+  }
+
+  // Everything worn on one frame, back to front, and the near fist back on
+  // top of what the hand holds
+  function wornHtml(key, items) {
+    var list = items.slice().sort(function (a, b) { return W.SLOTS.indexOf(a.w.slot) - W.SLOTS.indexOf(b.w.slot); });
+    var bag = list.some(function (it) { return it.w.slot === 'bag'; });
+    var html = list.map(function (it) { return accHtml(key, it, bag); }).join('');
+    var f = list.some(function (it) { return W.held(it.w); }) && W.fist(key);
+    if (f) {
+      html += '<img class="st-acc" src="images/studio/char/' + key + '-tay.webp" alt="" draggable="false" style="left:' + f.left + ';top:' + f.top + ';width:' + f.width + ';height:' + f.height + '">';
+    }
+    return html;
+  }
+
+  function wornItems(ids) {
+    return (ids || worn).map(wearOf).filter(Boolean);
+  }
+
+  // one piece per slot
+  function wearPut(list, id) {
+    var it = wearOf(id);
+    if (!it) return list;
+    return list.filter(function (x) { var o = wearOf(x); return !o || o.w.slot !== it.w.slot; }).concat(id);
   }
 
   function loadWorn() {
     var a = [], b = [];
     try { a = JSON.parse(sessionStorage.getItem('gem-mac') || '[]'); } catch (e) { /* private mode */ }
     try { b = JSON.parse(localStorage.getItem('gem-mac') || '[]'); } catch (e) { /* private mode */ }
+    // kept as ids until the database says what they are (wearOf)
     worn = [];
-    (Array.isArray(b) ? b.filter(owns) : []).concat(Array.isArray(a) ? a : []).forEach(function (s) {
-      if (typeof s === 'string' && WEAR.hasOwnProperty(s) && worn.indexOf(s) < 0) wearPut(s);
+    (Array.isArray(b) ? b : []).concat(Array.isArray(a) ? a : []).forEach(function (s) {
+      if (typeof s === 'string' && s.length <= 600 && worn.indexOf(s) < 0) worn.push(s);
     });
+  }
+
+  // the database answered: drop what isn't worn any more, one per slot
+  function settleWorn() {
+    var out = [];
+    worn.forEach(function (id) { if (wearOf(id)) out = wearPut(out, id); });
+    worn = out;
   }
 
   function saveWorn() {
     try { sessionStorage.setItem('gem-mac', JSON.stringify(worn)); } catch (e) { /* private mode */ }
-    try { localStorage.setItem('gem-mac', JSON.stringify(worn.filter(owns))); } catch (e) { /* private mode */ }
+    try {
+      localStorage.setItem('gem-mac', JSON.stringify(worn.filter(function (id) {
+        var it = wearOf(id);
+        return it && (it.spec || owns(it.sku));
+      })));
+    } catch (e) { /* private mode */ }
   }
 
-  function toggleWear(sku) {
-    if (!WEAR.hasOwnProperty(sku)) return false;
-    var on = worn.indexOf(sku) < 0;
-    if (on) wearPut(sku);
-    else worn = worn.filter(function (s) { return s !== sku; });
+  function toggleWear(id) {
+    if (!wearOf(id)) return false;
+    var on = worn.indexOf(id) < 0;
+    worn = on ? wearPut(worn, id) : worn.filter(function (s) { return s !== id; });
     saveWorn();
     dressWear();
     return on;
   }
 
   function dressWear() {
-    var list = worn.slice().sort(function (a, b) {
-      return SLOT_ORDER.indexOf(WEAR[a].slot) - SLOT_ORDER.indexOf(WEAR[b].slot);
-    });
-    var bag = list.some(function (s) { return WEAR[s].slot === 'bag'; });
+    var items = wornItems();
     Object.keys(frameEls).forEach(function (name) {
-      var fr = frameEls[name], at = WEAR_AT[who + '-' + name];
+      var fr = frameEls[name];
       fr.querySelectorAll('.st-acc').forEach(function (n) { n.remove(); });
-      if (!at) return;
-      list.forEach(function (sku) {
-        var w = WEAR[sku];
-        var x = w.at === 'head' ? at[3] : at[1];
-        var y = w.at === 'head' ? at[4] : at[2];
-        // Offsets are in character heights (÷ aspect for x): with a bag in
-        // hand, the charm hangs off its far side and the strap off the near
-        // side, so the bag doesn't hide them.
-        y += w.dy;
-        if (w.slot === 'charm') { x += (bag ? 0.05 : 0.01) / at[0]; y += bag ? 0.02 : -0.01; }   // clipped to the bag's handle
-        var im = document.createElement('img');
-        im.className = 'st-acc';
-        im.src = 'images/studio/wear/' + sku + '.webp';
-        im.alt = '';
-        im.draggable = false;
-        im.style.left = (x * 100).toFixed(2) + '%';
-        im.style.top = (y * 100).toFixed(2) + '%';
-        im.style.height = (w.h * 100) + '%';
-        im.style.transform = w.shift;
-        fr.appendChild(im);
-      });
-      // the fist back on top of whatever it holds
-      if (at.length > 5 && list.some(function (sku) { return WEAR[sku].at === 'hand'; })) {
-        var fist = document.createElement('img');
-        fist.className = 'st-acc';
-        fist.src = 'images/studio/char/' + who + '-' + name + '-tay.webp';
-        fist.alt = '';
-        fist.draggable = false;
-        fist.style.left = (at[5] * 100).toFixed(2) + '%';
-        fist.style.top = (at[6] * 100).toFixed(2) + '%';
-        fist.style.width = (at[7] * 100).toFixed(2) + '%';
-        fist.style.height = (at[8] * 100).toFixed(2) + '%';
-        fr.appendChild(fist);
-      }
+      if (items.length) fr.insertAdjacentHTML('beforeend', wornHtml(who + '-' + name, items));
     });
   }
 
@@ -2363,13 +2396,49 @@
     );
   }
 
+  /* ---------- Góc thử đồ ----------
+     The pieces the database offers to try on (products.wear, set in
+     admin.html), in the shop's order, then the pieces sewn from one's own
+     designs that were bought. The picture is the character picked at the
+     door, wearing what it wears plus the piece tapped (no drawing per
+     piece). A product with "Mẫu" is tried in one of them. */
+  function wearables() {
+    var B = window.GemBasket;
+    if (!B) return [];
+    var order = (B.skus() || []).concat(Object.keys(wearConf));
+    return order.filter(function (sku, i) { return order.indexOf(sku) === i && wearConf[sku] && B.info(sku) && wearOf(tryId(sku)); });
+  }
+  function myDesigns() {
+    if (!window.GemTu || !P || !W) return [];
+    var out = [];
+    window.GemTu.owned().forEach(function (o) {
+      var id = 'd:' + o.spec;
+      if (o.spec && out.indexOf(id) < 0 && wearOf(id)) out.push(id);
+    });
+    return out;
+  }
+  // a product as tried: the mẫu tried before, else the first in stock with
+  // its own cut-out, else the first in stock
+  function tryId(sku) {
+    var info = window.GemBasket && window.GemBasket.info(sku);
+    var cs = info && info.options && info.options.choices;
+    if (!cs) return sku;
+    var ch = cs.filter(function (c) { return c.key === tryOpt[sku]; })[0] ||
+      cs.filter(function (c) { return !c.out && W.okImg(c.cut); })[0] ||
+      cs.filter(function (c) { return !c.out; })[0] || cs[0];
+    return sku + '/' + ch.key;
+  }
+  function choiceName(c) { return (lng() === 'en' && c.en) || c.vi; }
+
   function fittingSheet() {
     openSheet(
       head('studio.fitting_h', 'studio.fitting_p') +
       '<div class="fit">' +
         '<div class="fit-side">' +
-          '<figure class="fit-model"><img alt=""><figcaption class="fit-cap"></figcaption></figure>' +
-          '<p class="fit-wear"><button type="button" class="st-btn" data-wear></button></p>' +
+          '<figure class="fit-model"><span class="fit-fr"></span><img class="fit-mac" alt="" hidden><figcaption class="fit-cap"></figcaption></figure>' +
+          '<div class="fit-opts" role="group" hidden></div>' +
+          '<p class="fit-wear"><button type="button" class="st-btn" data-wear></button>' +
+            '<button type="button" class="st-btn st-btn-ghost fit-add" data-add></button></p>' +
           tr('p', 'studio.wear_note', ' class="fit-note"') +
         '</div>' +
         '<ul class="fit-list"></ul>' +
@@ -2378,34 +2447,74 @@
     renderFitting();
   }
 
+  // a small picture of a piece for the list
+  function wearThumb(it) {
+    if (it.img) return '<img src="' + esc(it.img) + '" alt="" loading="lazy">';
+    return '<span class="fit-svg">' + P.svg(it.d) + '</span>';
+  }
+
   function renderFitting() {
     var root = sheetBody.querySelector('.fit');
-    if (!root) return;
-    var info = window.GemBasket ? window.GemBasket.info(tryOn) : null;
-    var model = root.querySelector('.fit-model img');
-    model.src = 'images/studio/wear/' + tryOn + '-mac.webp';
-    root.querySelector('.fit-cap').textContent = info ? info.name : '';
-    var wb = root.querySelector('[data-wear]'), wearing = worn.indexOf(tryOn) >= 0;
-    wb.setAttribute('data-wear', tryOn);
+    if (!root || !W) return;
+    var list = wearables().map(tryId), mine = myDesigns(), all = list.concat(mine);
+    if (!tryOn || !wearOf(tryOn)) tryOn = all[0] || null;
+    var cur = tryOn && wearOf(tryOn), B = window.GemBasket;
+    // the character, wearing what it wears with this piece in its slot
+    var key = who + '-front', fr = root.querySelector('.fit-fr');
+    fr.style.aspectRatio = String(W.AT[key] ? W.AT[key][0] : 0.3);
+    fr.innerHTML = '<img src="' + charSrc(who, 'front') + '" alt="" draggable="false">' +
+      wornHtml(key, wornItems(cur ? wearPut(worn.slice(), tryOn) : worn));
+    // the scrunchie: its own drawing, as it always was (W.MAC)
+    var mac = cur && !cur.spec && W.MAC[cur.sku], mi = root.querySelector('.fit-mac');
+    fr.hidden = !!mac;
+    mi.hidden = !mac;
+    if (mac) mi.src = mac; else mi.removeAttribute('src');
+    root.querySelector('.fit-cap').textContent = cur ? cur.name : '';
+    // its "Mẫu", when it has them
+    var info = cur && !cur.spec && B ? B.info(cur.sku) : null;
+    var cs = info && info.options && info.options.choices, ob = root.querySelector('.fit-opts');
+    ob.hidden = !cs;
+    if (cs) {
+      ob.innerHTML = '<span class="fit-opts-h"></span>' + cs.map(function (c) {
+        var on = cur.opt === c.key;
+        var can = !!wearOf(cur.sku + '/' + c.key);
+        return '<button type="button" class="pt-chip' + (on ? ' is-on' : '') + (c.out ? ' is-out' : '') + '" data-try="' + esc(cur.sku + '/' + c.key) +
+          '" aria-pressed="' + on + '"' + (can ? '' : ' disabled title="' + esc(t('studio.fitting_nocut')) + '"') + '></button>';
+      }).join('');
+      ob.querySelector('.fit-opts-h').textContent = (lng() === 'en' && info.options.label_en) || info.options.label_vi || '';
+      ob.querySelectorAll('[data-try]').forEach(function (b, i) { b.textContent = choiceName(cs[i]); });
+    }
+    var wb = root.querySelector('[data-wear]'), wearing = !!cur && worn.indexOf(tryOn) >= 0;
+    wb.hidden = !cur;
+    wb.setAttribute('data-wear', tryOn || '');
     wb.textContent = t(wearing ? 'studio.wear_off' : 'studio.wear_on');
     wb.classList.toggle('is-added', wearing);
-    root.querySelector('.fit-list').innerHTML = WEARABLES.map(function (sku) {
-      var it = window.GemBasket ? window.GemBasket.info(sku) : null;
-      if (!it) return '';
-      var have = window.GemTu && window.GemTu.owns(sku);
-      return '<li class="fit-item' + (sku === tryOn ? ' is-on' : '') + '">' +
-        '<button type="button" class="fit-pick" data-try="' + esc(sku) + '" aria-pressed="' + (sku === tryOn) + '">' +
-          (worn.indexOf(sku) >= 0 ? tr('i', 'studio.wear_tag', ' class="fit-worn"') : '') +
-          '<img src="images/studio/wear/' + esc(sku) + '.webp" alt="" loading="lazy">' +
-          '<b>' + esc(it.name) + '</b>' +
-        '</button>' +
-        (have
-          ? tr('span', 'studio.fitting_have', ' class="st-lock-tag is-have"')
-          : it.inStock
-            ? '<button type="button" class="st-btn st-btn-sm" data-add="' + esc(sku) + '" data-i18n="studio.add">' + esc(t('studio.add')) + '</button>'
-            : tr('span', 'studio.out', ' class="st-lock-tag"')) +
+    // buy the very one tried (a design is bought already)
+    var ab = root.querySelector('.fit-add'), sold = !info || !info.inStock || (cur.ch && cur.ch.out);
+    ab.hidden = !cur || !!cur.spec;
+    if (!ab.hidden) {
+      ab.setAttribute('data-add', cur.sku);
+      if (cur.opt) ab.setAttribute('data-opt', cur.opt); else ab.removeAttribute('data-opt');
+      ab.disabled = sold;
+      ab.textContent = t(sold ? 'studio.out' : 'studio.add');
+    }
+    var item = function (id) {
+      var it = wearOf(id), on = tryOn && (id === tryOn || (!it.spec && it.sku === cur.sku && !cur.spec));
+      var wore = worn.some(function (x) { var o = wearOf(x); return o && (x === id || (!it.spec && !o.spec && o.sku === it.sku)); });
+      var have = it.spec || (window.GemTu && window.GemTu.owns(it.sku));
+      return '<li class="fit-item' + (on ? ' is-on' : '') + '">' +
+        '<button type="button" class="fit-pick" data-try="' + esc(id) + '" aria-pressed="' + !!on + '">' +
+          (wore ? tr('i', 'studio.wear_tag', ' class="fit-worn"') : '') + wearThumb(it) + '<b></b></button>' +
+        (have ? tr('span', it.spec ? 'studio.fitting_mine' : 'studio.fitting_have', ' class="st-lock-tag is-have"') : '') +
       '</li>';
-    }).join('');
+    };
+    var ul = root.querySelector('.fit-list');
+    ul.innerHTML = list.map(item).join('') +
+      (mine.length ? tr('li', 'studio.fitting_mine_h', ' class="fit-list-h"') + mine.map(item).join('') : '');
+    ul.querySelectorAll('.fit-pick').forEach(function (b) {
+      var it = wearOf(b.getAttribute('data-try'));
+      b.querySelector('b').textContent = it ? it.name : '';
+    });
   }
 
 
@@ -5676,8 +5785,9 @@
       if (pd && pdClick(pd)) return;
       var add = e.target.closest('[data-add]');
       if (add && window.GemBasket) {
-        var card = add.closest('.st-prod, .fit-item');
-        if (window.GemBasket.add(add.getAttribute('data-add'), card && card.querySelector('img'), null, add.getAttribute('data-cut'))) {
+        var card = add.closest('.st-prod, .fit-item, .fit-side');
+        if (window.GemBasket.add(add.getAttribute('data-add'), card && card.querySelector('img'), null, add.getAttribute('data-cut'),
+            add.getAttribute('data-opt') || undefined)) {
           add.textContent = t('studio.added');
           add.classList.add('is-added');
           setTimeout(function () {
@@ -5704,7 +5814,13 @@
         return;
       }
       var tri = e.target.closest('[data-try]');
-      if (tri) { tryOn = tri.getAttribute('data-try'); renderFitting(); return; }
+      if (tri) {
+        tryOn = tri.getAttribute('data-try');
+        var slash = tryOn.indexOf('/');
+        if (slash > 0 && tryOn.indexOf('d:') !== 0) tryOpt[tryOn.slice(0, slash)] = tryOn.slice(slash + 1);
+        renderFitting();
+        return;
+      }
       var ch = e.target.closest('[data-char]');
       if (ch) {
         pickChar(ch.getAttribute('data-char'));
@@ -5830,6 +5946,17 @@
     INSIDE = { width: SCENE.width, height: SCENE.height, startX: SCENE.startX,
       bg: LAYOUT ? LAYOUT.bg.src : 'images/studio/bg/strip.webp' };
     loadWorn();
+    // what can be tried on comes with the products (products.wear)
+    if (window.GemDB && window.GemDB.products && W) {
+      var wearRows = function (rows) {
+        setWearRows(rows);
+        settleWorn();
+        dressWear();
+        if (sheetBody.querySelector('.fit')) renderFitting();
+      };
+      window.GemDB.products().then(wearRows, function () { /* the five of the first round stay */ });
+      document.addEventListener('gem:products', function (e) { if (e.detail && e.detail.rows) wearRows(e.detail.rows); });
+    }
     bind();
     shareCuts();
     cartCount = window.GemBasket ? window.GemBasket.count() : 0;

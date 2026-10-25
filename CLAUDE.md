@@ -48,6 +48,7 @@ Static website cho cửa hàng **Gem Chạm Sắc** — pop-up store sustainabil
 ├── js/collection.js         Tủ sưu tầm: thiết kế đã lưu + món đã mua (localStorage gem-tu, rpc claim_collection)
 ├── js/phanloai.js           Trò "Phân loại rác" theo 6 poster Tagom (5 màn mở lần lượt: dụng cụ → 10 món → 60 giây → dọn bàn tiệc → tiệc chưa tàn; mang đi đâu); studio.js chỉ tải khi mở
 ├── js/studio-layout.js        Định dạng + kiểm tra bố cục studio (dùng chung studio.html / admin.html)
+├── js/wear.js                 Góc thử đồ: điểm tay / gáy từng khung nhân vật, cách đeo (products.wear), túi tự thiết kế (dùng chung studio.html / admin.html)
 ├── js/studio-editor.js        Tab "Lắp studio" trong admin (chỉ owner): kéo, đổi cỡ, xoay asset — cả trong studio lẫn ngoài cửa
 ├── supabase/functions/notify/ Edge Function báo mail cho nhân sự (đơn / workshop / lời nhắn) — xem docs/design.md
 ├── supabase/migrations/      SQL chạy tay trong Supabase SQL Editor (khi Claude không có quyền ghi)
@@ -58,6 +59,7 @@ Static website cho cửa hàng **Gem Chạm Sắc** — pop-up store sustainabil
 ├── tools/check-studio.py     Kiểm tra studio + trình lắp bằng Playwright (Supabase giả lập)
 ├── tools/kv-swatches.py      Chạy tay khi làm lại ảnh các tấm vải nhập sẵn (ảnh gốc trên Drive) → images/studio/vai-that/
 ├── tools/rac-assets.py       Chạy tay khi có tranh Phân loại rác mới (ChatGPT) / poster Tagom → images/studio/rac/, tagom/
+├── tools/wear-cuts.py        Tách túi từng Mẫu ra khỏi poster sản phẩm → images/studio/wear/<sku>-<mẫu>.webp (Góc thử đồ)
 ├── images/
 │   ├── logo/                 Logo Gem variants
 │   ├── mascot/               6 pose Udon (PNG transparent)
@@ -76,7 +78,7 @@ Static website cho cửa hàng **Gem Chạm Sắc** — pop-up store sustainabil
 **Backend (từ Sprint 3):** Supabase (project `dxdovvqsfjeizsoprrfn`, Singapore,
 Postgres 17). Bảng: `products`, `orders`, `order_items`, `sessions`, `bookings`,
 `workshop_types`, `staff`, `settings`, `posts`, `notes` (bảng lời nhắn Studio),
-`fabrics` (Kho vải: ai cũng đọc, nhân sự ghi) + `fabric_private` (chỗ để vải, chỉ nhân sự), `studio_layout` (bố cục studio, chỉ owner ghi), `studio_assets` (thư viện ảnh của trình lắp, chỉ owner), `studio_info` (loại + câu chuyện + lời thoại theo ảnh; khách đọc, owner ghi — SQL ở `supabase/migrations/20261006_studio_info.sql`). Kho ảnh: Storage bucket
+`fabrics` (Kho vải: ai cũng đọc, nhân sự ghi) + `fabric_private` (chỗ để vải, chỉ nhân sự), `products.wear` (Góc thử đồ, cột GRANT riêng), `studio_layout` (bố cục studio, chỉ owner ghi), `studio_assets` (thư viện ảnh của trình lắp, chỉ owner), `studio_info` (loại + câu chuyện + lời thoại theo ảnh; khách đọc, owner ghi — SQL ở `supabase/migrations/20261006_studio_info.sql`). Kho ảnh: Storage bucket
 `gem-media` (đọc công khai, tải lên chỉ nhân sự). Chi tiết ở `docs/design.md`.
 
 > ⚠️ **Hai luật bảo mật, đọc trước khi đụng vào database:**
@@ -413,6 +415,10 @@ Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
   quai nơ, Origami". Một vải thì không tính phí kiểu ghép; ghép theo nét vẽ hơn 6
   đường thì Gem báo giá (23/10, migration `20261023_mot_vai_net_bao_gia.sql` chạy **trước** khi
   merge); dây túi Oxford gắn sau cổ áo; Oxford "Thân ô vuông": mảng dưới cổ áo cùng vải thân hai bên.
+- 👜 Góc thử đồ từ database (25/10, `20261025_thu_do.sql` chạy **trước** khi merge): món đeo thử = `products.wear`
+  (admin → Sản phẩm → Sửa → "Đeo thử": cách đeo, cỡ, kéo trên hình); xem trước = nhân vật khách chọn; món có Mẫu thử
+  từng mẫu (ảnh cắt nền của mẫu, `choices[].cut`); túi tự thiết kế thử được khi đã mua. Chi tiết: `docs/design.md` →
+  "Góc thử đồ từ database".
 - 🎨 Màu cơ bản + tâm trạng theo vải thật (25/10): 27 màu cơ bản (`GemPatch.BASIC`, khoá `c0<hex>`, chất vải
   Gem tư vấn) ở Kho vải, rổ và Màu riêng; mỗi tâm trạng = 5 màu cơ bản + 3 tấm in thật theo `id`; chip
   "Tâm trạng ngẫu nhiên" bốc lần lượt 5 bộ thêm (`MOOD_POOL`: Đêm nhung, Kem sữa, Kẹo ngọt, Nhiệt đới, Hoàng hôn).
