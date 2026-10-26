@@ -2389,6 +2389,38 @@ Anna: "phần phối màu hiện tại đang không hợp với vải có tại 
 - Kiểm tra: `python3 tools/check-studio.py mau`. `fabric_rows()` giả lập giờ đánh id từ 73
   cho 57 tấm "sau cửa" như database thật (thật bỏ qua 72), vì tâm trạng gọi tấm theo id.
 
+### Bàn thiết kế — gợi ý chỉ 2–3 vải, xếp theo khuôn (25/10/2026)
+
+Anna: chọn tâm trạng thì gối 9 ô ra 8 vải khác nhau, "xấu cái gối"; gợi ý ngẫu nhiên phải đẹp.
+Khách muốn thêm vải thì tự kéo từ rổ.
+
+- **Mỗi gợi ý** (chạm tâm trạng, Tâm trạng ngẫu nhiên, "Ngẫu nhiên", "Xáo mảnh", món mới mở) đặt
+  **2 hoặc 3 vải** (`GemPatch.suggest`):
+  - một màu trơn làm **nền**, đậm nhạt khác hẳn vải hoa văn;
+  - **một** vải hoa văn;
+  - (món có chỗ) một màu trơn thứ hai **điểm xuyết**, lấy từ màu trong vải hoa văn.
+- Mỗi tâm trạng có **3 công thức phối** chọn bằng mắt trên ảnh vải thật (`combos` trong
+  `mood()`, `[nền, hoa văn, màu phụ]` theo vị trí trong `basic` / `prints`). Anna sửa được ở đó.
+  Mỗi lần chạm lấy ngẫu nhiên một công thức + một kiểu xếp, không trùng cách đang trên món.
+- **Xếp theo khuôn** (`plan()`), không rải lung tung:
+  - Ô vuông: bàn cờ (ô giữa là màu phụ); sọc ngang; hoặc (3 vải) hoa văn ở 4 góc quanh chữ thập
+    trơn, ô giữa màu phụ. Lưới 4×4: khung trơn quanh ô hoa văn, màu phụ ở góc.
+  - Nhà gỗ: ô giữa màu phụ, nửa trên-phải một vải, nửa dưới-trái vải kia.
+  - Ngôi sao: nền, cánh sao, ô giữa. Chong chóng: nền, cánh.
+  - Sọc dọc (túi): nền – hoa văn – màu phụ – hoa văn – nền.
+  - Origami: nền một vải, cánh hoa văn (xen kẽ / mỗi cánh: hoa văn và màu phụ xen nhau).
+  - Bloom: dây là nền, bông hoa văn (3 bông: giữa là màu phụ).
+  - Oxford, túi: thân một vải thì cổ áo / quai là vải kia; thân ghép thì cổ / quai là màu phụ.
+- **Rổ vẫn đủ 8 vải** của bộ để khách tự thêm.
+- **Đổi món / đổi kiểu ghép**: giữ đúng các vải đang trên món, xếp lại theo khuôn của món mới
+  (`arrange`). Trên món có hơn 3 vải (khách tự chọn) thì rải đủ các vải đó như trước.
+- **Kho vải → "Ghép thử"**: dùng đủ các tấm khách chọn (≤ 3 tấm thì xếp theo khuôn).
+- **"Xáo mảnh"**: món đang theo tâm trạng → một cách phối khác cùng bộ. Món có hơn 3 vải khách
+  chọn → đổi chỗ các vải đó. Còn lại → 2–3 vải từ rổ (một hoa văn + màu trơn, `pick`).
+- Ít vải hơn nên phần "Thêm N vải" trong giá thiết kế cũng ít hơn.
+- Kiểm tra: `python3 tools/check-studio.py phoi` (mọi tâm trạng × mọi món × mọi kiểu ghép: ≤ 3
+  vải, 1 hoa văn, vẫn đúng tâm trạng; các khuôn; bấm trên bàn thiết kế điện thoại + máy tính).
+
 ### Phân loại rác cùng GemxTagom (23/10/2026; tên đổi 24/10, Anna)
 
 Trang đầu ghi rõ: trò chơi do Gem Chạm Sắc phát triển, dựa trên cách phân loại của Tagom (`pl.lead`,
@@ -3121,7 +3153,10 @@ Anna: thêm phụ kiện / túi để nhân vật đeo thử; không vẽ thêm 
   - **Bảng `products` cấp quyền theo cột**: migration có `grant select (wear)` cho anon + authenticated, `insert/update (wear)` cho authenticated.
 - **Ảnh để đeo**:
   - Món có Mẫu: ảnh của mẫu (`options.choices[].cut`, `product_options_ok` kiểm đường dẫn).
-  - Món không có Mẫu: `wear.img` nếu có, không thì "Ảnh cắt nền" của món.
+  - Món không có Mẫu: **"Ảnh cắt nền" của món (ảnh thật) trước**, `wear.img` (tranh vẽ) chỉ dùng khi chưa có ảnh cắt nền (Anna 25/10: ảnh thật làm khách muốn mua hơn).
+  - Với 5 món cũ: Oxford, Bloom, Dây buộc tóc đã có ảnh cắt nền nên đeo bằng ảnh thật; Denim chưa có, vẫn là tranh.
+  - **Dây đeo cổ tay giữ tranh vẽ cũ** (Anna 26/10), kể cả khi sau này có Ảnh cắt nền (cho kệ): `GemWear.DRAWN` (thêm sku vào đó nếu món khác cũng muốn giữ tranh). Ảnh cắt nền nằm ở gem-media, máy của Claude không mở được, nên cỡ / điểm cầm (chỉnh theo tranh cũ) cần xem lại ở admin.
+  - Tách nền ảnh thật: Canva (Background Remover giữ nguyên ảnh). ChatGPT thường vẽ lại cả món.
   - Món có Mẫu mà vài mẫu đã có ảnh riêng: mẫu chưa có ảnh **không thử được** (chip mờ). Lý do: lấy ảnh chung sẽ hiện nhầm túi khác.
 - **8 mẫu của Túi đi chơi / Túi đi chợ**: tách từ chính poster của mẫu bằng `tools/wear-cuts.py`, ra `images/studio/wear/<sku>-<mẫu>.webp`.
   - 25/10 (Anna: "cắt ảnh cắt luôn vào cái túi"): 4 mẫu dùng **tranh vẽ Anna gửi** (nền trong suốt, chỉ cắt sát + thu nhỏ): hoa-xanh, caro-hong, jeans-hong, jeans-vang. `wear-cuts.py` bỏ qua chúng (`DRAWN`). 4 mẫu còn lại vẫn là ảnh tách từ poster; có tranh thì thay file cùng tên + thêm vào `DRAWN`.
@@ -3138,7 +3173,7 @@ Anna: thêm phụ kiện / túi để nhân vật đeo thử; không vẽ thêm 
   - Món mua ở máy khác chỉ về dạng sản phẩm thường (mã thiết kế chỉ nằm trong ghi chú đơn), nên chỉ thử được trên máy đã đặt.
 - **Admin → Sản phẩm → Sửa → "Đeo thử ở Góc thử đồ"**: bật / tắt, cách đeo, cỡ (thanh kéo), xem trước trên Bạn 1–4.
   - Kéo món trên hình để đặt vào tay.
-  - "Dùng ảnh cắt nền thay tranh vẽ" bỏ `wear.img`.
+  - Dòng dưới hình nói đang dùng ảnh nào. "Bỏ tranh vẽ dự phòng" bỏ `wear.img` (chỉ hiện khi món đã có ảnh cắt nền).
   - Chỉ gửi `wear` khi bản ghi đã có cột này (sau migration).
 - **Cấu hình ban đầu** (migration): 5 món cũ như trước; Túi đi chơi 0.32, Túi đi chợ 0.36 (cầm tay); Origami là charm (móc khoá treo cạnh túi, cầm ở vòng). Túi laptop **không** thử (Anna 25/10, `20261025b_thu_do_bot.sql`).
   - Cỡ đã xem trên 4 nhân vật; chỉnh tiếp ở admin.

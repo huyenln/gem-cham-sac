@@ -417,12 +417,15 @@ Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
   merge); dây túi Oxford gắn sau cổ áo; Oxford "Thân ô vuông": mảng dưới cổ áo cùng vải thân hai bên.
 - 👜 Góc thử đồ từ database (25/10, `20261025_thu_do.sql` chạy **trước** khi merge): món đeo thử = `products.wear`
   (admin → Sản phẩm → Sửa → "Đeo thử": cách đeo, cỡ, kéo trên hình); xem trước = nhân vật khách chọn; món có Mẫu thử
-  từng mẫu (ảnh cắt nền của mẫu, `choices[].cut`); túi tự thiết kế thử được khi đã mua. Chi tiết: `docs/design.md` →
-  "Góc thử đồ từ database".
+  từng mẫu (ảnh cắt nền của mẫu, `choices[].cut`); túi tự thiết kế thử được khi đã mua. Ảnh thật (Ảnh cắt nền) trước,
+  tranh vẽ chỉ khi chưa có. Chi tiết: `docs/design.md` → "Góc thử đồ từ database".
 - 🎨 Màu cơ bản + tâm trạng theo vải thật (25/10): 27 màu cơ bản (`GemPatch.BASIC`, khoá `c0<hex>`, chất vải
   Gem tư vấn) ở Kho vải, rổ và Màu riêng; mỗi tâm trạng = 5 màu cơ bản + 3 tấm in thật theo `id`; chip
   "Tâm trạng ngẫu nhiên" bốc lần lượt 5 bộ thêm (`MOOD_POOL`: Đêm nhung, Kem sữa, Kẹo ngọt, Nhiệt đới, Hoàng hôn).
   Không cần migration. Chi tiết: `docs/design.md` → "Bàn thiết kế — Màu cơ bản, tâm trạng theo vải thật".
+  Gợi ý (tâm trạng / Ngẫu nhiên / Xáo mảnh) chỉ đặt **2–3 vải** (nền trơn + 1 hoa văn + màu phụ), xếp theo
+  khuôn (`suggest` / `plan`, 3 công thức mỗi bộ ở `combos`); rổ vẫn 8 vải (Anna 25/10). Chi tiết: `docs/design.md` →
+  "Bàn thiết kế — gợi ý chỉ 2–3 vải".
 - ♻️ Phân loại rác cùng GemxTagom (23/10, tên đổi 24/10): poster Tagom treo tường (Lắp studio → nhóm "Poster Tagom", tự
   thành Khu vực `phanloai`) → màn 1 cái chai (chạm thẳng vào nắp / tem / thân chai) + 3 món bằng 3 dụng cụ
   (làm sạch / làm xẹp / gấp, hình trước → sau; gói snack làm sạch vụn rồi mới gấp; túi khí, snack kéo thử giãn), không giờ;

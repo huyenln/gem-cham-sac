@@ -959,7 +959,7 @@
             '<p class="ad-hint">Kéo món trên hình để đặt vào tay (quai túi nằm trong nắm tay), lên tóc, hay móc vào túi. ' +
               'Món có Mẫu: mỗi mẫu dùng ảnh cắt nền riêng của mẫu đó (ô bên dưới mỗi lựa chọn).</p>' +
             '<div class="ad-acts"><button type="button" class="ad-btn ad-wear-reset">Đặt lại vị trí</button>' +
-              '<button type="button" class="ad-btn ad-wear-noimg" hidden>Dùng ảnh cắt nền thay tranh vẽ</button></div>' +
+              '<button type="button" class="ad-btn ad-wear-noimg" hidden>Bỏ tranh vẽ dự phòng</button></div>' +
           '</div>' +
         '</fieldset>' : '') +
         '<label class="ad-check"><input type="checkbox" name="in_stock"' +
@@ -1269,11 +1269,12 @@
       form.elements['wear_on'].checked = !!wear;
       if (!wear) wear = GW.norm({ slot: 'bag' });
     }
+    // as Góc thử đồ picks: a mẫu's cut-out, the product's, the drawing last
     function wearSrc() {
-      if (wear.img) return wear.img;
       var ch = choices.filter(function (c) { return c.cut; })[0];
       if (ch) return ch.cut;
-      return cutImg.hidden ? null : cutImg.getAttribute('src');
+      if (!(GW.DRAWN[p.sku] && wear.img) && !cutImg.hidden && cutImg.getAttribute('src')) return cutImg.getAttribute('src');
+      return wear.img || null;
     }
     function renderWear() {
       if (!wearBox || !wear) return;
@@ -1294,10 +1295,11 @@
           ';width:' + f.width + ';height:' + f.height + '">' : '');
       wearBox.querySelector('.ad-wear-src').textContent = !src
         ? 'Chưa có ảnh để đeo: thêm Ảnh cắt nền ở trên (hoặc ảnh cắt nền cho từng mẫu).'
-        : wear.img ? 'Đang dùng tranh vẽ riêng cho Góc thử đồ.'
+        : src === wear.img && GW.DRAWN[p.sku] ? 'Món này giữ tranh vẽ cũ ở Góc thử đồ.'
+        : src === wear.img ? 'Đang dùng tranh vẽ, vì món chưa có Ảnh cắt nền. Thêm Ảnh cắt nền ở trên là Góc thử đồ dùng ảnh thật.'
         : choices.some(function (c) { return c.cut; }) ? 'Xem thử bằng ảnh cắt nền của mẫu đầu tiên có ảnh.'
-        : 'Đang dùng Ảnh cắt nền ở trên.';
-      wearBox.querySelector('.ad-wear-noimg').hidden = !wear.img;
+        : 'Đang dùng Ảnh cắt nền ở trên (ảnh thật).' + (wear.img ? ' Tranh vẽ cũ chỉ để dự phòng.' : '');
+      wearBox.querySelector('.ad-wear-noimg').hidden = !wear.img || src === wear.img;
     }
     if (wearBox) {
       wearBox.addEventListener('change', function (e) {

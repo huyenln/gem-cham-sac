@@ -316,8 +316,8 @@
     'studio.pt_hb_tones_t': { vi: `Hàng tông màu`, en: `Colour chips` },
     'studio.pt_hb_tones':  { vi: `(Tất cả, Xanh lá…) rổ chỉ còn vải tông đó.`, en: `(All, Green…) the basket keeps only fabrics of that colour.` },
     'studio.pt_hb_turn':   { vi: `chạm một ô trên món, rồi bấm để đổi hướng vải trong ô đó.`, en: `tap a patch on the piece, then tap this to turn its fabric.` },
-    'studio.pt_hb_layout': { vi: `món được chia thành các ô thế nào. “Xáo mảnh” đổi chỗ các mảnh, “Ngẫu nhiên” để Gem ghép giúp.`, en: `how the piece is split into patches. “Shuffle” swaps the scraps around, “Surprise me” lets Gem piece it for you.` },
-    'studio.pt_hb_moods':  { vi: `bộ màu gợi ý sẵn (màu cơ bản + vải hoa văn Gem có), chạm là đắp cả món. “Tâm trạng ngẫu nhiên”: mỗi lần chạm một bộ khác.`, en: `ready palettes (basic colours + prints Gem has): one tap dresses the whole piece. “Surprise mood”: another palette each tap.` },
+    'studio.pt_hb_layout': { vi: `món được chia thành các ô thế nào. “Xáo mảnh” thử một cách phối khác (2–3 vải cùng bộ), “Ngẫu nhiên” để Gem ghép giúp.`, en: `how the piece is split into patches. “Shuffle” tries another pairing (two or three fabrics of the set), “Surprise me” lets Gem piece it for you.` },
+    'studio.pt_hb_moods':  { vi: `bộ màu gợi ý sẵn (màu cơ bản + vải hoa văn Gem có). Chạm là Gem phối 2–3 vải của bộ lên món; muốn thêm vải thì kéo từ rổ. “Tâm trạng ngẫu nhiên”: mỗi lần chạm một bộ khác.`, en: `ready palettes (basic colours + prints Gem has). One tap and Gem pairs two or three of its fabrics on the piece; drag more from the basket if you like. “Surprise mood”: another palette each tap.` },
     'studio.pt_hb_opts':   { vi: `cỡ món; túi có thêm chần bông, túi trong, khoá kéo, nút bấm; dây đeo có thêu chỉ giữa dây.`, en: `the size; bags can be quilted and get pockets, a zip or a snap; the strap can get a stitch down the middle.` },
     'studio.pt_hb_price_t': { vi: `Giá`, en: `Price` },
     'studio.pt_hb_price':  { vi: `ở thanh dưới cùng, tự tính lại theo kiểu ghép, số vải và tuỳ chọn.`, en: `at the bottom, worked out again from the piecing, the number of fabrics and the options.` },
@@ -1667,9 +1667,12 @@
       if (!ch) return null;   // a product with choices is tried in one of them
     } else if (opt) return null;
     // a mẫu is worn in its own cut-out; once some mẫu have one, one without
-    // it can't be tried (the product's picture would show another bag)
+    // it can't be tried (the product's picture would show another bag).
+    // The real photo before a drawing (Anna 25/10: a real piece is what
+    // makes people want it): the drawing only while there is no cut-out
     var own = cs && cs.some(function (c) { return W.okImg(c.cut); });
-    var img = (ch && W.okImg(ch.cut) && ch.cut) || (own ? null : w.img || (info && W.okImg(info.cutout) && info.cutout)) || null;
+    var real = !(W.DRAWN[sku] && w.img) && info && W.okImg(info.cutout) && info.cutout;
+    var img = (ch && W.okImg(ch.cut) && ch.cut) || (own ? null : real || w.img) || null;
     if (!img) return null;
     return { id: id, sku: sku, opt: opt, w: w, img: img, ch: ch,
       name: (info ? info.name : sku) + (ch ? ' · ' + ((lng() === 'en' && ch.en) || ch.vi) : '') };
@@ -3314,7 +3317,7 @@
         D.basket = D.pick.slice();
         D.vtone = ''; D.held = null; D.d.moodId = ''; D.dyeTip = false;
         if (D.d.layout === 'net') P.refit(D.d, D.basket);
-        else if (D.d.layout !== 'tuve') P.scatter(D.d, D.basket);
+        else if (D.d.layout !== 'tuve') P.arrange(D.d, D.basket);
         P.syncTaste(D.d);
         designerSheet(true);
       }
@@ -4362,7 +4365,7 @@
   // The fabrics on the piece, as a palette to re-spread after the layout or
   // the piece changes (the number of patches changes with them).
   function paletteNow() {
-    var ids = keysOn(D.d);
+    var ids = P.byUse(D.d);
     return ids.length ? ids : D.basket;
   }
 
@@ -4373,7 +4376,7 @@
     ['tones', 'prints', 'fabrics', 'other', 'note', 'sketch', 'img', 'ext'].forEach(function (k) { D.d[k] = keep[k]; });
     P.fitExt(D.d);
     D.d.layout = P.PRODUCTS[product].layouts.indexOf(keep.layout) >= 0 ? keep.layout : D.d.layout;
-    if (keep.fab && D.d.layout !== 'tuve') { P.scatter(D.d, pal); P.syncTaste(D.d); }
+    if (keep.fab && D.d.layout !== 'tuve') { P.arrange(D.d, pal); D.d.moodId = keep.moodId; P.syncTaste(D.d); }
   }
 
   function designerClick(e) {
@@ -4483,15 +4486,14 @@
       D.d.tones = keep.tones; D.d.prints = keep.prints; D.d.fabrics = keep.fabrics;
       D.d.other = keep.other; D.d.note = keep.note; D.d.sketch = keep.sketch; D.d.img = keep.img;
       if (keep.layout === 'tuve') D.d.layout = 'tuve';
-      var km = P.moodOf(keep);
-      if (km) P.applyMood(D.d, km, true);
-      else if (keep.fab) { D.d.fab = P.scatter(D.d, pal); P.syncTaste(D.d); }
+      // the same fabrics on the new piece, in its own pattern
+      if (keep.fab) { P.arrange(D.d, pal); D.d.moodId = keep.moodId; P.syncTaste(D.d); }
     } else if ((el = e.target.closest('[data-layout]'))) {
       var pal2 = paletteNow();
       D.d.layout = el.getAttribute('data-layout');
       D.last = null;
       if (D.d.layout === 'net') { if (!D.d.fab) D.d.fab = ''; P.refit(D.d, pal2); P.syncTaste(D.d); }
-      else if (D.d.fab) P.scatter(D.d, pal2);
+      else if (D.d.fab) P.arrange(D.d, pal2);
     } else if ((el = e.target.closest('[data-tone]'))) {
       toggle('tones', el.getAttribute('data-tone'), P.MAX_TONES);
       D.d.fab = ''; D.d.rot = ''; D.last = null;   // the chips decide again
@@ -4526,7 +4528,7 @@
     } else if ((el = e.target.closest('[data-tie]'))) {
       // lace ribbon is not sewn from the basket: one fabric slot fewer
       D.d.ext.t = +el.getAttribute('data-tie');
-      if (D.d.fab && D.d.fab.length !== P.slots(D.d)) { P.scatter(D.d, paletteNow()); P.syncTaste(D.d); }
+      if (D.d.fab && D.d.fab.length !== P.slots(D.d)) { P.arrange(D.d, paletteNow()); P.syncTaste(D.d); }
     } else if ((el = e.target.closest('[data-pocket]'))) {
       D.d.ext.p = Math.max(0, Math.min(P.MAX_POCKETS, D.d.ext.p + (+el.getAttribute('data-pocket'))));
     } else if ((el = e.target.closest('[data-ink]'))) {
@@ -4549,20 +4551,23 @@
         D.d.img = '';
       } else if (act === 'random') {
         // any palette, the pool's too
-        var all = P.MOODS.concat(P.MOOD_POOL), rm = all[Math.floor(Math.random() * all.length)], rk = P.moodKeys(rm);
+        var all = P.MOODS.concat(P.MOOD_POOL), rm = all[Math.floor(Math.random() * all.length)];
         var lays = P.PRODUCTS[D.d.product].layouts.filter(function (x) { return x !== 'tuve'; });
         D.d.layout = lays[Math.floor(Math.random() * lays.length)];
-        D.d.fab = P.scatter(D.d, rk);
-        P.syncTaste(D.d);
-        D.basket = rk.slice(0, BASKET_N);
+        P.suggest(D.d, rm);
+        D.basket = P.moodKeys(rm).slice(0, BASKET_N);
         D.vtone = '';
         D.held = null;
         shuffled = true;
         teachAfter = 'taste';
       } else if (act === 'shuffle') {
         if (D.d.layout === 'tuve') return true;
-        D.d.fab = P.scatter(D.d, D.basket);
-        P.syncTaste(D.d);
+        // another suggestion of the piece's mood; more than three fabrics
+        // (the customer's own choice) change places; else two or three
+        // from the basket
+        var sm = P.moodOf(D.d), on = P.byUse(D.d);
+        if (sm && on.length <= 3) P.suggest(D.d, sm);
+        else { if (on.length > 3) P.scatter(D.d, on); else P.pick(D.d, D.basket); P.syncTaste(D.d); }
         shuffled = true;
       } else if (act === 'own') {
         ownOpen(sheetBody.querySelector('.pt-own').hidden);

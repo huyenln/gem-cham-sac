@@ -232,6 +232,7 @@ class FakeDB:
         self.wt_patches = []
         self.extra = []      # more products rows (the choices check)
         self.wear = None     # products.wear by sku (the thudo check); None: no such column yet
+        self.cuts = {}       # Ảnh cắt nền by sku, over product_rows()
         self.layout_delay = 0   # seconds the live layout takes to come (a slow phone)
         self.fabrics = []    # Kho vải rows, each with its place (fabric_private)
         self.fab_log = []    # writes to fabrics / fabric_private
@@ -345,6 +346,7 @@ class FakeDB:
             rows = [p for p in product_rows() + self.extra if p['category'] not in self.gone]
             if self.wear is not None:
                 rows = [p if 'wear' in p else dict(p, wear=self.wear.get(p['sku'])) for p in rows]
+            rows = [dict(p, cutout=self.cuts[p['sku']]) if p['sku'] in self.cuts else p for p in rows]
             return await r.fulfill(status=200, content_type='application/json', body=json.dumps(rows))
         if '/rest/v1/studio_assets' in u:
             i = (re.search(r'id=eq\.([^&]+)', u) or [None, None])[1]
@@ -3851,6 +3853,105 @@ async def mau(browser, db):
         await pg.context.close()
 
 
+# the fabrics on the board now, as keys (r<id>, c<kind><hex>, painted number)
+ON_PIECE = r"""(() => [...new Set([...document.querySelectorAll('.pt-board [data-i]')].map(p => {
+  const f = p.getAttribute('fill') || '';
+  const m = f.match(/-(r\d+)(p\d+)?\)$/) || f.match(/-(c\d[0-9a-f]{6})(o\d+)?\)$/) || f.match(/-f(\d+)(o\d+)?\)$/);
+  return m ? m[1] : f; }))])()"""
+
+
+async def phoi(browser, db):
+    """25/10 (Anna: a mood laid all eight of its fabrics on a cushion, "xấu
+    cái gối"): a suggestion is two or three fabrics — a plain base, one
+    print, maybe a second plain — in a pattern; the basket keeps all eight,
+    more fabrics are the customer's to add."""
+    print('phoi')
+    db.fabrics = fabric_rows()
+    pg = await page(browser, db, 1440, 900)
+    await pg.goto(f'{BASE}/studio.html')
+    await pg.wait_for_timeout(1200)
+    got = await pg.evaluate("""() => window.GemPatch.loadReal().then(() => {
+      const P = window.GemPatch, bad = [], seen = {};
+      const kind = k => typeof k === 'number' ? P.fabric(k).kind : /^r/.test(k) ? (P.realOf(k) || {}).kind : 'tron';
+      const pieces = Object.keys(P.PRODUCTS);
+      P.MOODS.concat(P.MOOD_POOL).forEach(m => pieces.forEach(pr => P.PRODUCTS[pr].layouts.forEach(L => {
+        if (L === 'tuve' || L === 'net') return;
+        for (let t = 0; t < 6; t++) {
+          const d = P.blank(pr); d.layout = L; P.suggest(d, m);
+          const keys = [...new Set(d.fab.split('').map((c, i) => P.keyAt(d, i)))];
+          const prints = keys.filter(k => kind(k) !== 'tron');
+          seen[keys.length] = (seen[keys.length] || 0) + 1;
+          if (keys.length > 3 || prints.length > 1 || (P.moodOf(d) || {}).id !== m.id || d.fab.length !== P.slots(d))
+            bad.push([m.id, pr, L, d.fab, keys.join(' ')]);
+        }
+      })));
+      // the patterns
+      const pl = (pr, L, v, three) => { const d = P.blank(pr); d.layout = L; return P.plan(d, v, three).join(''); };
+      return [bad.slice(0, 6), bad.length, seen, pl('goi', 'vuong', 0, false), pl('goi', 'vuong', 0, true), pl('goi', 'vuong', 2, true),
+        pl('goi', 'vuong', 2, false), pl('goi', 'vuong', 1, false), pl('goi', 'sao', 0, true), pl('goi', 'cabin', 0, false)[0],
+        pl('tuitote', 'doc', 0, true), pl('origami', 'moi', 0, false), pl('bloom', 'hoa3', 0, false)];
+    })""")
+    check(got[1] == 0 and not got[0], f'every mood on every piece and layout: at most three fabrics, one print, the mood kept ({got[1]} bad: {got[0]}; fabrics per suggestion {got[2]})')
+    check(set(got[2]) <= {'1', '2', '3'} and got[2].get('2', 0) and got[2].get('3', 0), f'two or three fabrics, both happen ({got[2]})')
+    check(got[3:7] == ['010101010', '010121010', '101020101', '010101010'],
+          f'cushion squares: a checkerboard, its middle the second plain; the print on the corners round a plain cross (a checkerboard in two) ({got[3:7]})')
+    check(got[7] == '000111000' and got[8] == '012' and got[9] == '2', f'stripes; star: background, points, middle; log cabin: the middle its own ({got[7:10]})')
+    check(got[10] == '01210' + got[10][5:] and got[11] == '0' + '121212' and got[12][0] == '0', f'the tote in strips, the origami petals turning on its base, the charm\'s cord the base ({got[10:]})')
+    await pg.context.close()
+
+    for name, w, h in (('mobile', 393, 852), ('desktop', 1440, 900)):
+        pg = await open_table(browser, db, w, h)
+        start = await pg.evaluate(ON_PIECE)
+        check(1 <= len(start) <= 3, f'{name}: a fresh piece starts in two or three fabrics ({start})')
+        await js_click(pg, '.pt-layouts [data-layout="vuong"]')
+        await js_click(pg, '[data-mood="dong"]')
+        await pg.wait_for_timeout(300)
+        on = await pg.evaluate(ON_PIECE)
+        basket = await pg.evaluate("[...document.querySelectorAll('.pt-scrap')].map(b => b.dataset.scrap)")
+        mood = await pg.evaluate("GemPatch.moodKeys(GemPatch.moodById('dong'))")
+        check(2 <= len(on) <= 3 and set(on) <= set(mood) and basket == mood,
+              f'{name}: "Đồng xanh": two or three of its fabrics on the cushion, all eight in the basket ({on}; {len(basket)})')
+        await pg.screenshot(path=OUT / f'phoi-dong-{name}.png')
+        fabs, chips = set(), []
+        for _ in range(4):
+            await js_click(pg, '[data-pt="shuffle"]')
+            await pg.wait_for_timeout(250)
+            o = await pg.evaluate(ON_PIECE)
+            fabs.add(' '.join(sorted(o)))
+            chips.append(await pg.evaluate("(document.querySelector('.pt-mood.is-on') || {dataset: {}}).dataset.mood"))
+            check(len(o) <= 3 and set(o) <= set(mood), f'{name}: "Xáo mảnh": another pairing of the same set ({o})')
+        check(chips == ['dong'] * 4 and len(fabs) >= 2, f'{name}: "Xáo mảnh" stays in the mood and pairs differently ({chips}, {len(fabs)} pairings)')
+        # another piece: the same fabrics, in its own pattern
+        was = set(await pg.evaluate(ON_PIECE))
+        await js_click(pg, '.pt-tab[data-product="lotcoc"]')
+        await pg.wait_for_timeout(300)
+        now = set(await pg.evaluate(ON_PIECE))
+        check(now and now <= was, f'{name}: on another piece the same fabrics ({sorted(was)} -> {sorted(now)})')
+        await js_click(pg, '.pt-tab[data-product="goi"]')
+        await js_click(pg, '[data-pt="random"]')
+        await pg.wait_for_timeout(300)
+        o = await pg.evaluate(ON_PIECE)
+        check(1 <= len(o) <= 3, f'{name}: "Ngẫu nhiên": two or three fabrics ({o})')
+        # fabrics the customer chose in Kho vải: all of them go on
+        await js_click(pg, '.pt-layouts [data-layout="vuong"]')
+        await js_click(pg, '[data-pt="kho"]')
+        await pg.wait_for_timeout(500)
+        await js_click(pg, '[data-kho="clear"]')
+        picks = await pg.evaluate("[...document.querySelectorAll('.kho-f')].slice(0, 5).map(b => b.dataset.khoF)")
+        for k in picks:
+            await js_click(pg, f'[data-kho-f="{k}"]')
+        await js_click(pg, '[data-kho="go"]')
+        await pg.wait_for_timeout(800)
+        o = await pg.evaluate(ON_PIECE)
+        check(sorted(o) == sorted(picks), f'{name}: five fabrics picked in Kho vải: all five on the cushion ({o})')
+        await js_click(pg, '[data-pt="shuffle"]')
+        await pg.wait_for_timeout(250)
+        o2 = await pg.evaluate(ON_PIECE)
+        check(sorted(o2) == sorted(picks), f'{name}: "Xáo mảnh" moves them about, keeps all five ({o2})')
+        check(not pg.errors, f'{name}: no script errors {pg.errors}')
+        await pg.context.close()
+
+
 # products.wear of the five pieces of the first round (20261025_thu_do.sql)
 WEAR_DB = {'denim': {'slot': 'bag', 'h': 0.2, 'dy': -0.02, 'ax': 0.44, 'ay': 0, 'img': 'images/studio/wear/denim.webp'},
            'oxford': {'slot': 'bag', 'h': 0.18, 'dy': -0.02, 'ax': 0.42, 'ay': 0, 'img': 'images/studio/wear/oxford.webp'},
@@ -4054,7 +4155,51 @@ async def thudo(browser, db):
     check('wear' in body and body['wear'] is None, f'admin: off again: not tried on any more ({body.get("wear", "missing")})')
     check(not pg.errors, f'admin: no script errors {pg.errors}')
     await pg.context.close()
-    db.wear = None; db.extra = []
+
+    # the real photo before the drawing (Anna 25/10): Bloom has an Ảnh cắt
+    # nền, so it is worn; Denim has none, its drawing stays; the wrist strap
+    # keeps its drawing even with a cut-out (Anna 26/10)
+    db.extra = []; db.cuts = {'bloom': 'images/studio/sp/origami.webp', 'daydeo': 'images/studio/sp/origami.webp'}
+    pg = await page(browser, db, 1440, 900, f"sessionStorage.setItem('gem-scene','in');{seen}{GUIDE_OFF}"
+                    "sessionStorage.setItem('gem-mac', JSON.stringify(['bloom', 'denim', 'daydeo']));")
+    await pg.goto(f'{BASE}/studio.html')
+    await pg.wait_for_timeout(2500)
+    srcs = await pg.evaluate("[...new Set([...document.querySelectorAll('.st-fr .st-acc')].map(i => i.getAttribute('src')))]")
+    check('images/studio/sp/origami.webp' in srcs and 'images/studio/wear/denim.webp' in srcs and 'images/studio/wear/bloom.webp' not in srcs
+          and 'images/studio/wear/daydeo.webp' in srcs,
+          f'a piece with an Ảnh cắt nền is worn in it; without one, its drawing; the wrist strap keeps its drawing ({srcs})')
+    check(not pg.errors, f'no script errors {pg.errors}')
+    await pg.context.close()
+    pg = await admin_page(browser, db, 1440, 900)
+    await js_click(pg, '[data-tab="products"]')
+    await pg.wait_for_timeout(800)
+    await pg.evaluate(edit, 'Bloom Charm')
+    await pg.wait_for_timeout(400)
+    st = await pg.evaluate("[document.querySelector('.ad-wear-acc').getAttribute('src'), document.querySelector('.ad-wear-src').textContent, document.querySelector('.ad-wear-noimg').hidden]")
+    check(st[0] == 'images/studio/sp/origami.webp' and 'ảnh thật' in st[1] and st[2] is False,
+          f'admin: the preview wears the Ảnh cắt nền, the drawing is only kept in reserve ({st})')
+    check(not pg.errors, f'admin: no script errors {pg.errors}')
+    await pg.context.close()
+    pg = await admin_page(browser, db, 1440, 900)
+    await js_click(pg, '[data-tab="products"]')
+    await pg.wait_for_timeout(800)
+    await pg.evaluate(edit, 'Reimagine the Denim')
+    await pg.wait_for_timeout(400)
+    st = await pg.evaluate("[document.querySelector('.ad-wear-acc').getAttribute('src'), document.querySelector('.ad-wear-src').textContent, document.querySelector('.ad-wear-noimg').hidden]")
+    check(st[0] == 'images/studio/wear/denim.webp' and 'chưa có Ảnh cắt nền' in st[1] and st[2] is True,
+          f'admin: no Ảnh cắt nền yet: the drawing, and how to bring in the real photo ({st})')
+    check(not pg.errors, f'admin: no script errors {pg.errors}')
+    await pg.context.close()
+    pg = await admin_page(browser, db, 1440, 900)
+    await js_click(pg, '[data-tab="products"]')
+    await pg.wait_for_timeout(800)
+    await pg.evaluate(edit, 'Dây đeo cổ tay')
+    await pg.wait_for_timeout(400)
+    st = await pg.evaluate("[document.querySelector('.ad-wear-acc').getAttribute('src'), document.querySelector('.ad-wear-src').textContent]")
+    check(st == ['images/studio/wear/daydeo.webp', 'Món này giữ tranh vẽ cũ ở Góc thử đồ.'], f'admin: the wrist strap keeps its drawing ({st})')
+    check(not pg.errors, f'admin: no script errors {pg.errors}')
+    await pg.context.close()
+    db.wear = None; db.extra = []; db.cuts = {}
 
 
 async def onefab(browser, db):
@@ -4735,7 +4880,7 @@ async def main(which):
         browser = await launch(p)
         for name, fn in (('street', street), ('wear', wear), ('shop', shop), ('spots', spots), ('editor', editor),
                          ('library', library), ('product', product), ('prodlib', prodlib), ('workshop', workshop), ('design', design), ('catalog', catalog), ('kinds', kinds),
-                         ('layers', layers), ('zones', zones), ('cart', cart), ('choices', choices), ('zither', zither), ('guide', guide), ('vai', vai), ('tui', tui), ('kho', kho), ('guidance', guidance), ('onefab', onefab), ('mau', mau), ('thudo', thudo), ('taggroup', taggroup), ('phanloai', phanloai), ('phanloai_lv', phanloai_lv), ('slow', slow), ('topbar', topbar), ('motion', motion),
+                         ('layers', layers), ('zones', zones), ('cart', cart), ('choices', choices), ('zither', zither), ('guide', guide), ('vai', vai), ('tui', tui), ('kho', kho), ('guidance', guidance), ('onefab', onefab), ('mau', mau), ('phoi', phoi), ('thudo', thudo), ('taggroup', taggroup), ('phanloai', phanloai), ('phanloai_lv', phanloai_lv), ('slow', slow), ('topbar', topbar), ('motion', motion),
                          ('phone', phone), ('taps', taps)):
             if which in (None, name):
                 await fn(browser, db)
