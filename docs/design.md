@@ -3154,7 +3154,8 @@ Anna: thêm phụ kiện / túi để nhân vật đeo thử; không vẽ thêm 
 - **Ảnh để đeo**:
   - Món có Mẫu: ảnh của mẫu (`options.choices[].cut`, `product_options_ok` kiểm đường dẫn).
   - Món không có Mẫu: **"Ảnh cắt nền" của món (ảnh thật) trước**, `wear.img` (tranh vẽ) chỉ dùng khi chưa có ảnh cắt nền (Anna 25/10: ảnh thật làm khách muốn mua hơn).
-  - Với 5 món cũ: Oxford, Bloom, Dây buộc tóc đã có ảnh cắt nền nên đeo bằng ảnh thật; Denim, Dây đeo cổ tay chưa có, vẫn là tranh. Ảnh cắt nền nằm ở gem-media, máy của Claude không mở được, nên cỡ / điểm cầm (chỉnh theo tranh cũ) cần xem lại ở admin.
+  - Với 5 món cũ: Oxford, Bloom, Dây buộc tóc đã có ảnh cắt nền nên đeo bằng ảnh thật; Denim chưa có, vẫn là tranh.
+  - **Dây đeo cổ tay giữ tranh vẽ cũ** (Anna 26/10), kể cả khi sau này có Ảnh cắt nền (cho kệ): `GemWear.DRAWN` (thêm sku vào đó nếu món khác cũng muốn giữ tranh). Ảnh cắt nền nằm ở gem-media, máy của Claude không mở được, nên cỡ / điểm cầm (chỉnh theo tranh cũ) cần xem lại ở admin.
   - Tách nền ảnh thật: Canva (Background Remover giữ nguyên ảnh). ChatGPT thường vẽ lại cả món.
   - Món có Mẫu mà vài mẫu đã có ảnh riêng: mẫu chưa có ảnh **không thử được** (chip mờ). Lý do: lấy ảnh chung sẽ hiện nhầm túi khác.
 - **8 mẫu của Túi đi chơi / Túi đi chợ**: tách từ chính poster của mẫu bằng `tools/wear-cuts.py`, ra `images/studio/wear/<sku>-<mẫu>.webp`.

@@ -1273,7 +1273,7 @@
     function wearSrc() {
       var ch = choices.filter(function (c) { return c.cut; })[0];
       if (ch) return ch.cut;
-      if (!cutImg.hidden && cutImg.getAttribute('src')) return cutImg.getAttribute('src');
+      if (!(GW.DRAWN[p.sku] && wear.img) && !cutImg.hidden && cutImg.getAttribute('src')) return cutImg.getAttribute('src');
       return wear.img || null;
     }
     function renderWear() {
@@ -1295,6 +1295,7 @@
           ';width:' + f.width + ';height:' + f.height + '">' : '');
       wearBox.querySelector('.ad-wear-src').textContent = !src
         ? 'Chưa có ảnh để đeo: thêm Ảnh cắt nền ở trên (hoặc ảnh cắt nền cho từng mẫu).'
+        : src === wear.img && GW.DRAWN[p.sku] ? 'Món này giữ tranh vẽ cũ ở Góc thử đồ.'
         : src === wear.img ? 'Đang dùng tranh vẽ, vì món chưa có Ảnh cắt nền. Thêm Ảnh cắt nền ở trên là Góc thử đồ dùng ảnh thật.'
         : choices.some(function (c) { return c.cut; }) ? 'Xem thử bằng ảnh cắt nền của mẫu đầu tiên có ảnh.'
         : 'Đang dùng Ảnh cắt nền ở trên (ảnh thật).' + (wear.img ? ' Tranh vẽ cũ chỉ để dự phòng.' : '');

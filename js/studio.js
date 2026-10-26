@@ -1671,7 +1671,7 @@
     // The real photo before a drawing (Anna 25/10: a real piece is what
     // makes people want it): the drawing only while there is no cut-out
     var own = cs && cs.some(function (c) { return W.okImg(c.cut); });
-    var real = info && W.okImg(info.cutout) && info.cutout;
+    var real = !(W.DRAWN[sku] && w.img) && info && W.okImg(info.cutout) && info.cutout;
     var img = (ch && W.okImg(ch.cut) && ch.cut) || (own ? null : real || w.img) || null;
     if (!img) return null;
     return { id: id, sku: sku, opt: opt, w: w, img: img, ch: ch,

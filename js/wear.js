@@ -65,6 +65,10 @@ window.GemWear = (function () {
     bloom: 'images/studio/wear/bloom-mac.webp'
   };
 
+  // Worn in its drawing (products.wear img) even once it has a cut-out
+  // (Anna 26/10: the wrist strap as before); the rest wear the real photo
+  var DRAWN = { daydeo: 1 };
+
   var IMG = /^(images\/studio\/[a-z0-9\/_-]+\.(webp|png)|https:\/\/dxdovvqsfjeizsoprrfn\.supabase\.co\/storage\/v1\/object\/public\/gem-media\/[A-Za-z0-9%._-]+)$/;
   function num(v, lo, hi, d) { return typeof v === 'number' && isFinite(v) ? Math.min(hi, Math.max(lo, v)) : d; }
 
@@ -99,6 +103,6 @@ window.GemWear = (function () {
   }
   function held(w) { return w.slot !== 'hair'; }
 
-  return { AT: AT, SLOTS: SLOTS, SLOT_NAMES: SLOT_NAMES, SLOT_DEF: SLOT_DEF, LEGACY: LEGACY, DESIGN: DESIGN, MAC: MAC,
+  return { AT: AT, SLOTS: SLOTS, SLOT_NAMES: SLOT_NAMES, SLOT_DEF: SLOT_DEF, LEGACY: LEGACY, DESIGN: DESIGN, MAC: MAC, DRAWN: DRAWN,
     norm: norm, okImg: okImg, place: place, fist: fist, held: held };
 })();

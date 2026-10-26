@@ -4157,15 +4157,17 @@ async def thudo(browser, db):
     await pg.context.close()
 
     # the real photo before the drawing (Anna 25/10): Bloom has an Ảnh cắt
-    # nền, so it is worn; Denim has none, its drawing stays
-    db.extra = []; db.cuts = {'bloom': 'images/studio/sp/origami.webp'}
+    # nền, so it is worn; Denim has none, its drawing stays; the wrist strap
+    # keeps its drawing even with a cut-out (Anna 26/10)
+    db.extra = []; db.cuts = {'bloom': 'images/studio/sp/origami.webp', 'daydeo': 'images/studio/sp/origami.webp'}
     pg = await page(browser, db, 1440, 900, f"sessionStorage.setItem('gem-scene','in');{seen}{GUIDE_OFF}"
-                    "sessionStorage.setItem('gem-mac', JSON.stringify(['bloom', 'denim']));")
+                    "sessionStorage.setItem('gem-mac', JSON.stringify(['bloom', 'denim', 'daydeo']));")
     await pg.goto(f'{BASE}/studio.html')
     await pg.wait_for_timeout(2500)
     srcs = await pg.evaluate("[...new Set([...document.querySelectorAll('.st-fr .st-acc')].map(i => i.getAttribute('src')))]")
-    check('images/studio/sp/origami.webp' in srcs and 'images/studio/wear/denim.webp' in srcs and 'images/studio/wear/bloom.webp' not in srcs,
-          f'a piece with an Ảnh cắt nền is worn in it; without one, its drawing ({srcs})')
+    check('images/studio/sp/origami.webp' in srcs and 'images/studio/wear/denim.webp' in srcs and 'images/studio/wear/bloom.webp' not in srcs
+          and 'images/studio/wear/daydeo.webp' in srcs,
+          f'a piece with an Ảnh cắt nền is worn in it; without one, its drawing; the wrist strap keeps its drawing ({srcs})')
     check(not pg.errors, f'no script errors {pg.errors}')
     await pg.context.close()
     pg = await admin_page(browser, db, 1440, 900)
@@ -4186,6 +4188,15 @@ async def thudo(browser, db):
     st = await pg.evaluate("[document.querySelector('.ad-wear-acc').getAttribute('src'), document.querySelector('.ad-wear-src').textContent, document.querySelector('.ad-wear-noimg').hidden]")
     check(st[0] == 'images/studio/wear/denim.webp' and 'chưa có Ảnh cắt nền' in st[1] and st[2] is True,
           f'admin: no Ảnh cắt nền yet: the drawing, and how to bring in the real photo ({st})')
+    check(not pg.errors, f'admin: no script errors {pg.errors}')
+    await pg.context.close()
+    pg = await admin_page(browser, db, 1440, 900)
+    await js_click(pg, '[data-tab="products"]')
+    await pg.wait_for_timeout(800)
+    await pg.evaluate(edit, 'Dây đeo cổ tay')
+    await pg.wait_for_timeout(400)
+    st = await pg.evaluate("[document.querySelector('.ad-wear-acc').getAttribute('src'), document.querySelector('.ad-wear-src').textContent]")
+    check(st == ['images/studio/wear/daydeo.webp', 'Món này giữ tranh vẽ cũ ở Góc thử đồ.'], f'admin: the wrist strap keeps its drawing ({st})')
     check(not pg.errors, f'admin: no script errors {pg.errors}')
     await pg.context.close()
     db.wear = None; db.extra = []; db.cuts = {}
