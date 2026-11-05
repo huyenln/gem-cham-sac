@@ -2617,6 +2617,49 @@ tường là lối vào. Bỏ "nhặt rác ngoài phố có đếm giờ": nặn
   chuột thật: nhặt, thấy hình đi theo, thả đúng bao. Firefox: không cài được (mạng chặn).
 - **Kiểm tra:** `python3 tools/check-studio.py phanloai` (màn 1–2) và `phanloai_lv` (màn 3–5).
 
+### Bất ngờ ngoài phố: rác rơi (05/11/2026, Anna)
+
+Ngoài phố thỉnh thoảng có rác rơi cạnh chân nhân vật; khách chạm để nhặt. Chỉ để vui: không
+điểm, không phạt. Code: `js/racroi.js` (`window.GemRacRoi`, tải khi lần đầu cần), lịch hẹn giờ +
+nút bật / tắt ở cuối `js/studio.js` (`bn*`, "Bất ngờ ngoài phố").
+
+- **Khi nào rơi:** chỉ ngoài phố. Lần 1 sau 15–20 giây, lần 2 sau 1–2 phút, từ lần 3 cách nhau
+  3–5 phút, tối đa 6 lần một lượt ghé (`BN_MAX`, `bnGap`). Đồng hồ chỉ chạy khi đang ở ngoài phố,
+  không mở bảng nào, không có thẻ hướng dẫn, tab đang mở (sessionStorage `gem-bn` = {n, left}:
+  tải lại trang không đếm lại từ đầu). Vào studio khi rác đang nằm đó: rác biến mất, không đếm,
+  lát nữa rơi lại.
+- **Một lần rơi:** 80% là 1 món, còn lại 2–3 món (10 giây, thêm 3 giây mỗi món). Món lấy trong
+  `images/studio/rac/` (chai, ly trà sữa, gói snack… dùng chung tranh với Phân loại rác). Rác nằm
+  giữa khung nhìn (hai góc dưới có giỏ hàng và nút "?"), cạnh chân nhưng không đè lên nhân vật,
+  không chồng lên nhau, cao ít nhất 44 px trên màn hình (điện thoại xoay ngang). Dải trên cùng
+  báo "Ơ, có rác rơi!" + vòng đếm ngược. Chạm vào rác không làm nhân vật đi.
+- **Không nhặt kịp:** Udon chạy vào từ phía có rác, cảnh cận Udon cắn ống quần (~3 giây, một câu
+  ngẫu nhiên `rr.l1`–`rr.l8`, kiểu "Một bước chân qua, một cái chai ở lại." — vui, không bi kịch),
+  nhân vật bị kéo lùi về chỗ rác, Udon ngồi chờ cạnh đó tới khi nhặt ("Udon chờ bạn nhặt nè").
+  Kéo lùi dùng `dragTo` trong `js/studio.js` (vuốt / chạm chỗ khác thì thôi kéo).
+- **Nhặt xong:** thẻ quà là **một thông điệp** (mẹo về rác, phân loại…), luôn kèm **nguồn có
+  link** (mở tab mới). Thông điệp chưa xem ra trước, xem hết thì ngẫu nhiên. Số rác đã nhặt + các
+  thông điệp đã mở lưu ở localStorage `gem-rac` = {n, seen, badges}. Huy hiệu khi đủ 100 / 200 / 500
+  món ("Lá non", "Cây xanh", "Rừng nhỏ") — chỉ để vui. Đếm ngay khi nhặt món cuối, không đợi đóng thẻ.
+- **Tủ sưu tầm:** mục "Nhặt rác ngoài phố" (số món) + nút "Mở Sổ thông điệp" (huy hiệu + các
+  thông điệp đã mở, kèm nguồn).
+- **Tắt:** bảng "?" → "Bất ngờ ngoài phố" (công tắc, localStorage `gem-batngo` = '0'). Tên chung để
+  sau này thêm trò ngẫu nhiên khác vào cùng công tắc.
+- **Thông điệp (`MSGS`):** mới có **14 câu, đều từ poster phân loại của Tagom** (nguồn:
+  fanpage Tagom). Muốn thêm nhóm khác (mẹo tái chế vải, xử lý đồ cũ, quy định ở Hà Nội…) thì
+  **mỗi câu phải có nguồn đọc được, đã mở trang kiểm** — không viết theo trí nhớ. Lần soạn
+  05/11 mạng của phiên làm việc chặn các trang nguồn (thuvienphapluat.vn, vbpl.vn,
+  chinhphu.vn, moit.gov.vn, hanoi.gov.vn, unep.org, epa.gov, wrap.ngo,
+  loveyourclothes.org.uk, ellenmacarthurfoundation.org, eea.europa.eu,
+  environment.ec.europa.eu) nên chưa thêm. Thêm câu: một dòng trong `MSGS` (`id`, `cat`,
+  `vi`, `en`, `source`, `url`), `id` không đổi về sau (Sổ thông điệp nhớ theo `id`).
+- **Chữ:** `rr.*` trong `js/racroi.js`; `studio.bn_*`, `studio.tu_rac_*`, `studio.tu_book` trong
+  `js/studio.js`.
+- **Kiểm tra:** `python3 tools/check-studio.py racroi` (điện thoại: rơi trong khung, nhặt, thẻ có
+  nguồn, đếm; máy tính: hết giờ → Udon kéo, ngồi chờ; vào trong thì dọn; công tắc tắt; huy hiệu
+  100 + Sổ thông điệp). Các phần kiểm khác tắt sẵn trò này (`BN_OFF`) cho rác khỏi đè lên chỗ
+  chúng chạm.
+
 ### Studio hiện cảnh mặc định thay cho bố cục đã lắp (sửa 13/10/2026)
 
 **Triệu chứng:** mở `studio.html` thấy mặt phố mặc định (monstera, bình tưới, ghế gỗ,

@@ -388,11 +388,15 @@ async def launch(p):
 # The first-visit tips would sit over what the other checks tap: off, except
 # where a check names gem-guide itself.
 GUIDE_OFF = "localStorage.setItem('gem-guide', JSON.stringify({seen: {}, off: true}));"
+# Litter falling on the street (Bất ngờ ngoài phố) would land on what the
+# other checks tap: off, except where a check names gem-batngo itself.
+BN_OFF = "localStorage.setItem('gem-batngo', '0');"
 
 
 async def page(browser, db, w, h, init=''):
     ctx = await browser.new_context(viewport={'width': w, 'height': h}, is_mobile=w < 768, has_touch=w < 768)
     await ctx.route('**/*.supabase.co/**', db.route)
+    init = init if 'gem-batngo' in init else BN_OFF + init
     await ctx.add_init_script(init if 'gem-guide' in init else GUIDE_OFF + init)
     pg = await ctx.new_page()
     pg.errors = []
@@ -4870,6 +4874,136 @@ async def phanloai_lv(browser, db):
     await pg.context.close()
 
 
+async def racroi(browser, db):
+    """Bất ngờ ngoài phố: litter falls on the street (js/racroi.js)."""
+    print('racroi')
+    SOON = "sessionStorage.setItem('gem-scene','out');sessionStorage.setItem('gem-bn', JSON.stringify({n: 0, left: 2}));"
+    ON = GUIDE_OFF + "localStorage.setItem('gem-batngo','1');localStorage.setItem('gem-lang','vi');"
+    BOXES = """[...document.querySelectorAll('.rr-item:not(.is-up)')].map(e => { const r = e.getBoundingClientRect();
+        return [r.left, r.top, r.right, r.bottom]; })"""
+    PX = "parseFloat(document.querySelector('.st-player').style.left)"
+    STORE = "[JSON.parse(localStorage.getItem('gem-rac') || 'null'), JSON.parse(sessionStorage.getItem('gem-bn') || 'null')]"
+
+    # A. a phone: it falls in view, clear of the corner buttons; a tap picks
+    #    it up (not a walk), and the card has a message with a linked source
+    pg = await page(browser, db, 393, 852, ON + SOON)
+    await pg.goto(f'{BASE}/studio.html')
+    await pg.wait_for_timeout(3800)
+    boxes = await pg.evaluate(BOXES)
+    bar = await pg.evaluate("(document.querySelector('.rr-bar') || {}).textContent || ''")
+    check(boxes and 'rác' in bar, f'phone: litter falls on the street and the strip says so ({len(boxes)} · {bar!r})')
+    cart = await pg.evaluate("(() => { const e = document.querySelector('.gb-widget'); if (!e) return null; const r = e.getBoundingClientRect(); return [r.left, r.top]; })()")
+    check(all(b[0] >= 0 and b[2] <= 393 and b[3] <= 852 for b in boxes) and
+          (not cart or all(b[2] <= cart[0] for b in boxes)) and all(b[0] >= 64 for b in boxes),
+          f'phone: every piece in view, clear of the cart and "?" ({[[round(v) for v in b] for b in boxes]}, cart {cart})')
+    apart = all(abs((a[0] + a[2]) / 2 - (b[0] + b[2]) / 2) >= 0.8 * min(a[3] - a[1], b[3] - b[1])
+                for i, a in enumerate(boxes) for b in boxes[i + 1:])
+    check(apart, 'phone: the pieces do not lie on top of each other')
+    check(all(b[3] - b[1] >= 40 for b in boxes), f'phone: big enough for a finger ({[round(b[3] - b[1]) for b in boxes]})')
+    x0 = await pg.evaluate(PX)
+    for _ in range(len(boxes)):
+        b = (await pg.evaluate(BOXES))[0]
+        await pg.touchscreen.tap((b[0] + b[2]) / 2, (b[1] + b[3]) / 2)
+        await pg.wait_for_timeout(250)
+    await pg.wait_for_timeout(500)
+    check(abs(await pg.evaluate(PX) - x0) < 2, 'phone: tapping litter does not walk the character')
+    card = await pg.evaluate("""(() => { const c = document.querySelector('.rr-card'); if (!c) return null; const a = c.querySelector('.rr-src a');
+        return [c.querySelector('.rr-text') && c.querySelector('.rr-text').textContent, a && a.href, a && a.target, a && a.rel, c.querySelector('.rr-count').textContent]; })()""")
+    check(card and card[0] and card[1].startswith('https://') and card[2] == '_blank' and 'noopener' in card[3] and str(len(boxes)) in card[4],
+          f'phone: all picked → a message with its source linked, and the count ({card})')
+    rac, bnst = await pg.evaluate(STORE)
+    check(rac and rac['n'] == len(boxes) and len(rac['seen']) == 1 and bnst['n'] == 1 and 50 <= bnst['left'] <= 120,
+          f'phone: the count is kept; the next one is 1–2 min away ({rac}, {bnst})')
+    await pg.screenshot(path=OUT / 'racroi-phone-card.png')
+    await js_click(pg, '.rr-close')
+    await pg.wait_for_timeout(300)
+    check(await pg.evaluate("document.querySelectorAll('.rr-card,.rr-bar,.rr-item').length") == 0, 'phone: closing the card tidies it all away')
+    check(not pg.errors, f'phone: no script errors {pg.errors}')
+    await pg.context.close()
+
+    # B. a desktop, too slow: Udon runs in, tugs, the character is pulled
+    #    back to the litter; Udon waits there till it is picked
+    pg = await page(browser, db, 1440, 900, ON + SOON)
+    await pg.goto(f'{BASE}/studio.html')
+    await pg.wait_for_timeout(3800)
+    n = len(await pg.evaluate(BOXES))
+    x0 = await pg.evaluate(PX)
+    await pg.wait_for_function("document.querySelector('.rr-tug')", timeout=(11 + 3 * n) * 1000)
+    say = await pg.evaluate("document.querySelector('.rr-tug-say').textContent")
+    check(n and say and '{' not in say, f'desktop: time up → Udon tugs, with a line ({say!r})')
+    await pg.screenshot(path=OUT / 'racroi-desktop-tug.png')
+    await pg.wait_for_timeout(3400)
+    st = await pg.evaluate("[(document.querySelector('.rr-udon') || {}).className, document.querySelector('.rr-bar').classList.contains('is-late'), !!document.querySelector('.rr-tug')]")
+    x1 = await pg.evaluate(PX)
+    check('is-sit' in (st[0] or '') and st[1] and not st[2], f'desktop: then he sits by the litter, the strip says he waits ({st})')
+    check(abs(x1 - x0) > 20, f'desktop: the character was pulled ({x0:.0f} → {x1:.0f})')
+    await pg.screenshot(path=OUT / 'racroi-desktop-wait.png')
+    for _ in range(n):
+        await js_click(pg, '.rr-item:not(.is-up)')
+        await pg.wait_for_timeout(200)
+    await pg.wait_for_timeout(400)
+    check(await pg.evaluate("!!document.querySelector('.rr-card .rr-src a')"), 'desktop: picked late still gives a message')
+    check(not pg.errors, f'desktop: no script errors {pg.errors}')
+    await pg.context.close()
+
+    # C. going in while it lies there: gone, nothing counted, it comes again later
+    pg = await page(browser, db, 1440, 900, ON + SOON)
+    await pg.goto(f'{BASE}/studio.html')
+    await pg.wait_for_timeout(3800)
+    check(await pg.evaluate("document.querySelectorAll('.rr-item').length") > 0, 'in: litter is down before going in')
+    await js_click(pg, '.st-hot[data-hot="enter"]')
+    await pg.wait_for_timeout(3000)
+    rac, bnst = await pg.evaluate(STORE)
+    check(await pg.evaluate("document.querySelectorAll('.rr-item,.rr-bar,.rr-udon,.rr-tug').length") == 0 and bnst['n'] == 0 and not rac,
+          f'in: going in clears it, nothing counted ({rac}, {bnst})')
+    await pg.wait_for_timeout(2500)
+    check(await pg.evaluate("document.querySelectorAll('.rr-item').length") == 0, 'in: nothing falls indoors')
+    await pg.context.close()
+
+    # D. "Bất ngờ ngoài phố" off (in the "?" sheet): nothing falls
+    pg = await page(browser, db, 1440, 900, ON + "sessionStorage.setItem('gem-scene','out');sessionStorage.setItem('gem-bn', JSON.stringify({n: 0, left: 4}));")
+    await pg.goto(f'{BASE}/studio.html')
+    await pg.wait_for_timeout(1200)
+    await pg.click('.st-help-b')
+    await pg.wait_for_timeout(400)
+    sw = await pg.evaluate("(() => { const b = document.querySelector('[data-bn-toggle]'); return b && [b.closest('.st-bn').textContent, b.getAttribute('aria-checked')]; })()")
+    check(sw and 'Bất ngờ ngoài phố' in sw[0] and sw[1] == 'true', f'off: the "?" sheet has the switch, on ({sw})')
+    await js_click(pg, '[data-bn-toggle]')
+    sw = await pg.evaluate("[document.querySelector('[data-bn-toggle]').getAttribute('aria-checked'), localStorage.getItem('gem-batngo')]")
+    check(sw == ['false', '0'], f'off: one tap turns it off, and it is kept ({sw})')
+    await pg.keyboard.press('Escape')
+    await pg.wait_for_timeout(6000)
+    check(await pg.evaluate("document.querySelectorAll('.rr-item,.rr-bar').length") == 0, 'off: nothing falls')
+    await pg.context.close()
+
+    # E. the hundredth piece: a badge on the card, and the book in Tủ sưu tầm
+    pg = await page(browser, db, 1440, 900, ON + SOON +
+                    "if (!sessionStorage.getItem('rr-t')) { sessionStorage.setItem('rr-t','1'); localStorage.setItem('gem-rac', JSON.stringify({n: 99, seen: ['tg-01'], badges: []})); }")
+    await pg.goto(f'{BASE}/studio.html')
+    await pg.wait_for_timeout(3800)
+    n = len(await pg.evaluate(BOXES))
+    for _ in range(n):
+        await js_click(pg, '.rr-item:not(.is-up)')
+        await pg.wait_for_timeout(200)
+    await pg.wait_for_timeout(400)
+    c = await pg.evaluate("(() => { const c = document.querySelector('.rr-card'); return c && [!!c.querySelector('.rr-card-badge svg'), c.textContent]; })()")
+    check(c and c[0] and 'Lá non' in c[1], f'badge: 100 picked → "Lá non" on the card ({c and c[1][:80]!r})')
+    rac = (await pg.evaluate(STORE))[0]
+    check(rac['badges'] == [100] and 'tg-01' in rac['seen'] and len(rac['seen']) == 2, f'badge: kept, and a new message (unseen first) ({rac})')
+    await js_click(pg, '.rr-close')
+    await js_click(pg, '[data-go="tu"]')
+    await pg.wait_for_timeout(3500)
+    tu = await pg.evaluate("(document.querySelector('.tu-rac') || {}).textContent || ''")
+    check(str(99 + n) in tu, f'Tủ: the count shows ({tu!r})')
+    await js_click(pg, '[data-tu-book]')
+    await pg.wait_for_timeout(1200)
+    book = await pg.evaluate("[document.querySelectorAll('.rr-list li').length, document.querySelectorAll('.rr-badges li').length, [...document.querySelectorAll('.rr-list a')].every(a => a.href.startsWith('https://') && a.target === '_blank')]")
+    check(book == [2, 1, True], f'Tủ: the book lists both messages with sources, and the badge ({book})')
+    await pg.screenshot(path=OUT / 'racroi-tu.png')
+    check(not pg.errors, f'badge: no script errors {pg.errors}')
+    await pg.context.close()
+
+
 async def main(which):
     if hasattr(sys.stdout, 'reconfigure'):
         sys.stdout.reconfigure(encoding='utf-8', errors='replace')   # a Windows console's code page has no Vietnamese
@@ -4880,7 +5014,7 @@ async def main(which):
         browser = await launch(p)
         for name, fn in (('street', street), ('wear', wear), ('shop', shop), ('spots', spots), ('editor', editor),
                          ('library', library), ('product', product), ('prodlib', prodlib), ('workshop', workshop), ('design', design), ('catalog', catalog), ('kinds', kinds),
-                         ('layers', layers), ('zones', zones), ('cart', cart), ('choices', choices), ('zither', zither), ('guide', guide), ('vai', vai), ('tui', tui), ('kho', kho), ('guidance', guidance), ('onefab', onefab), ('mau', mau), ('phoi', phoi), ('thudo', thudo), ('taggroup', taggroup), ('phanloai', phanloai), ('phanloai_lv', phanloai_lv), ('slow', slow), ('topbar', topbar), ('motion', motion),
+                         ('layers', layers), ('zones', zones), ('cart', cart), ('choices', choices), ('zither', zither), ('guide', guide), ('vai', vai), ('tui', tui), ('kho', kho), ('guidance', guidance), ('onefab', onefab), ('mau', mau), ('phoi', phoi), ('thudo', thudo), ('taggroup', taggroup), ('phanloai', phanloai), ('phanloai_lv', phanloai_lv), ('racroi', racroi), ('slow', slow), ('topbar', topbar), ('motion', motion),
                          ('phone', phone), ('taps', taps)):
             if which in (None, name):
                 await fn(browser, db)

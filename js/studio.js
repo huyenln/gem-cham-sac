@@ -240,6 +240,14 @@
     'studio.help_here':    { vi: `Ở đây có gì`, en: `What's here` },
     'studio.help_go':      { vi: `Đi tới`, en: `Go` },
     'studio.help_replay':  { vi: `Xem lại hướng dẫn từ đầu`, en: `Show the tips again` },
+    'studio.bn_h':         { vi: `Bất ngờ ngoài phố`, en: `Street surprises` },
+    'studio.bn_p':         { vi: `Thỉnh thoảng ngoài phố có chuyện bất ngờ, như rác rơi cần nhặt.`, en: `Now and then something happens out on the street, like litter that wants picking up.` },
+    'studio.bn_on':        { vi: `Đang bật`, en: `On` },
+    'studio.bn_off':       { vi: `Đang tắt`, en: `Off` },
+    'studio.tu_rac_h':     { vi: `Nhặt rác ngoài phố`, en: `Litter picked up on the street` },
+    'studio.tu_rac_n':     { vi: `Bạn đã nhặt {n} món.`, en: `You've picked up {n}.` },
+    'studio.tu_rac_0':     { vi: `Chưa nhặt món nào. Ra phố dạo một vòng, thỉnh thoảng có rác rơi đấy.`, en: `None yet. Take a walk on the street: now and then some litter falls.` },
+    'studio.tu_book':      { vi: `Mở Sổ thông điệp`, en: `Open the notebook` },
     'studio.zt_h':         { vi: `Đàn tranh`, en: `Đàn tranh` },
     'studio.zt_p':         { vi: `Chạm để gảy · vuốt để rải · chạm chữ nhỏ bên trái nhạn để nhấn.`, en: `Tap to pluck · sweep for a run · tap a small name left of a bridge to press.` },
     'studio.zt_names':     { vi: `Tên nốt`, en: `Note names` },
@@ -2102,8 +2110,17 @@
           return '<li><span>' + esc(p.name) + '</span><button type="button" class="st-help-go" data-help-go="' + i + '" data-i18n="studio.help_go">' +
             esc(t('studio.help_go')) + '</button></li>';
         }).join('') + '</ul>' : '') +
+      // surprises out on the street (falling litter now, more later)
+      '<div class="st-bn"><div><b data-i18n="studio.bn_h">' + esc(t('studio.bn_h')) + '</b>' + tr('p', 'studio.bn_p', ' class="st-bn-p"') + '</div>' +
+        '<button type="button" class="st-bn-sw" role="switch" aria-checked="' + bnOn() + '" data-bn-toggle>' + esc(t(bnOn() ? 'studio.bn_on' : 'studio.bn_off')) + '</button></div>' +
       '<p class="st-help-again"><button type="button" class="st-link" data-help-replay data-i18n="studio.help_replay">' + esc(t('studio.help_replay')) + '</button></p>'
     );
+    sheetBody.querySelector('[data-bn-toggle]').addEventListener('click', function (e) {
+      var on = !bnOn();
+      try { localStorage.setItem('gem-batngo', on ? '1' : '0'); } catch (x) { /* private mode */ }
+      e.currentTarget.setAttribute('aria-checked', String(on));
+      e.currentTarget.textContent = t(on ? 'studio.bn_on' : 'studio.bn_off');
+    });
     sheetBody.querySelectorAll('[data-help-go]').forEach(function (b) {
       b.addEventListener('click', function () {
         var p = list[+b.getAttribute('data-help-go')];
@@ -4723,6 +4740,7 @@
         '<div class="tu-designs"></div>' +
         tr('h3', 'studio.tu_owned', ' class="tu-h"') +
         '<div class="tu-owned"></div>' +
+        '<div class="tu-rac"></div>' +
         '<details class="tu-claim">' +
           tr('summary', 'studio.tu_claim_h') +
           tr('p', 'studio.tu_claim_p', ' class="tu-small"') +
@@ -4786,10 +4804,28 @@
     root.querySelector('.tu-owned').innerHTML = cards
       ? '<ul class="tu-grid">' + cards + '</ul>'
       : '<p class="tu-empty">' + esc(t('studio.tu_owned_0')) + '</p>';
+
+    // litter picked up on the street (js/racroi.js keeps it in gem-rac)
+    var rac = null;
+    try { rac = JSON.parse(localStorage.getItem('gem-rac') || 'null'); } catch (e) { /* private mode */ }
+    var rn = rac && +rac.n > 0 ? Math.floor(+rac.n) : 0;
+    root.querySelector('.tu-rac').innerHTML = '<h3 class="tu-h">' + esc(t('studio.tu_rac_h')) + '</h3>' +
+      '<p class="tu-small">' + esc(rn ? t('studio.tu_rac_n').replace('{n}', rn) : t('studio.tu_rac_0')) + '</p>' +
+      (rn ? '<button type="button" class="pt-tool" data-tu-book>' + esc(t('studio.tu_book')) + '</button>' : '');
   }
 
   function tuClick(e) {
     var el;
+    if ((el = e.target.closest('[data-tu-book]'))) {
+      el.disabled = true;
+      loadScript('racroi', function (ok) {
+        var box = sheetBody.querySelector('.tu-rac');
+        if (!ok || !box || !window.GemRacRoi) { el.disabled = false; return; }
+        el.remove();
+        box.insertAdjacentHTML('beforeend', window.GemRacRoi.bookHtml());
+      });
+      return true;
+    }
     if ((el = e.target.closest('[data-tu-open]'))) {
       var spec = P && P.parse(el.getAttribute('data-tu-open'));
       if (!spec) return true;
@@ -5425,6 +5461,108 @@
     document.head.appendChild(s);
   }
 
+  /* ---------- a file of its own, fetched once (same ?v= as this one) ---------- */
+  var scriptState = {}, scriptWait = {};
+  function loadScript(name, cb) {
+    if (scriptState[name] === 2) { cb(true); return; }
+    (scriptWait[name] = scriptWait[name] || []).push(cb);
+    if (scriptState[name] === 1) return;
+    scriptState[name] = 1;
+    var me = document.querySelector('script[src*="js/studio.js"]'), q = me ? me.src.indexOf('?') : -1;
+    var s = document.createElement('script');
+    s.src = 'js/' + name + '.js' + (q > 0 ? me.src.slice(q) : '');
+    var fin = function (ok) {
+      scriptState[name] = ok ? 2 : 0;
+      if (!ok) s.remove();
+      var cbs = scriptWait[name]; scriptWait[name] = [];
+      cbs.forEach(function (f) { f(ok); });
+    };
+    s.onload = function () { fin(true); };
+    s.onerror = function () { fin(false); };
+    document.head.appendChild(s);
+  }
+
+  /* ---------- Bất ngờ ngoài phố (js/racroi.js) ----------
+     Out on the street, now and then, something happens: for now litter falls
+     and wants picking up. The clock runs only while the visitor is on the
+     street with nothing open (no sheet, no tip, the tab in view): the first
+     15–20 s in, the next 1–2 min later, then every 3–5 min, at most 6 a visit
+     (Anna 05/11; sessionStorage gem-bn). "Bất ngờ ngoài phố" in the "?" sheet
+     turns them off (localStorage gem-batngo); later surprises go under it. */
+  var BN_MAX = 6;
+  var bn = { n: 0, left: 0, busy: false };
+  function bnOn() {
+    try { return localStorage.getItem('gem-batngo') !== '0'; } catch (e) { return true; }
+  }
+  function bnGap(n) {
+    var r = function (a, b) { return a + Math.random() * (b - a); };
+    return n === 0 ? r(15, 20) : n === 1 ? r(60, 120) : r(180, 300);
+  }
+  function bnSave() {
+    try { sessionStorage.setItem('gem-bn', JSON.stringify({ n: bn.n, left: Math.max(0, Math.round(bn.left)) })); } catch (e) { /* private mode */ }
+  }
+  function bnStart() {
+    var s = null;
+    try { s = JSON.parse(sessionStorage.getItem('gem-bn') || 'null'); } catch (e) { /* private mode */ }
+    bn.n = s && +s.n >= 0 ? Math.min(BN_MAX, Math.floor(+s.n)) : 0;
+    bn.left = s && +s.left >= 0 ? +s.left : bnGap(bn.n);
+    setInterval(bnTick, 1000);
+  }
+  function bnTick() {
+    if (bn.busy || bn.n >= BN_MAX || !bnOn() || sceneName !== 'out' || !modal.hidden || document.hidden || guide.cur ||
+        document.documentElement.classList.contains('st-wait')) return;
+    bn.left -= 1;
+    bnSave();
+    if (bn.left > 0) return;
+    bn.busy = true;
+    loadScript('racroi', function (ok) {
+      if (!ok || !window.GemRacRoi || sceneName !== 'out') { bn.busy = false; bn.left = 20; bnSave(); return; }
+      window.GemRacRoi.drop({
+        world: world, stage: stage, reduce: reduceMotion, sound: audioCtx,
+        scene: function () {
+          return { w: SCENE.width, h: SCENE.height, feet: SCENE.feetY, playerH: SCENE.playerH, k: k, cam: cam, viewW: stage.clientWidth };
+        },
+        player: function () { return { x: player.x, facing: player.facing }; },
+        out: function () { return sceneName === 'out'; },
+        calm: function () { return modal.hidden && !document.hidden; },
+        drag: dragTo,
+        picked: function () { bn.n++; bn.left = bnGap(bn.n); bnSave(); }
+      }).then(function (r) {
+        // picked: counted already (picked above); left behind: again later
+        bn.busy = false;
+        if (!(r && r.picked)) { bn.left = bnGap(bn.n); bnSave(); }
+      });
+    });
+  }
+
+  // Pulled back (Bất ngờ ngoài phố): to x, facing away from where it goes,
+  // walking backwards; a swipe or a tap takes over (walkToken)
+  function dragTo(x, ms, done, step) {
+    var target = Math.max(120, Math.min(SCENE.width - 120, x));
+    var token = ++walkToken, from = player.x, start = performance.now();
+    if (Math.abs(target - from) > 4) player.facing = target > from ? -1 : 1;
+    player.moved = true;
+    if (!ms || reduceMotion) {
+      player.x = target; player.moving = false; render();
+      if (step) step(player.x);
+      if (done) done();
+      return;
+    }
+    player.moving = true;
+    (function go(now) {
+      if (token !== walkToken) { if (done) done(); return; }
+      var p = Math.min(1, (now - start) / ms), e = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+      player.x = from + (target - from) * e;
+      render(now);
+      if (step) step(player.x);
+      if (p < 1) { requestAnimationFrame(go); return; }
+      player.moving = false;
+      rest();
+      render(now);
+      if (done) done();
+    })(start);
+  }
+
   var ACTIONS = {
     door: doorSheet,
     sofa: sofaSheet,
@@ -5963,6 +6101,7 @@
       document.addEventListener('gem:products', function (e) { if (e.detail && e.detail.rows) wearRows(e.detail.rows); });
     }
     bind();
+    bnStart();
     shareCuts();
     cartCount = window.GemBasket ? window.GemBasket.count() : 0;
     loadNotes();   // pins on the memo board
