@@ -4999,6 +4999,12 @@ async def racroi(browser, db):
     await pg.wait_for_timeout(1200)
     book = await pg.evaluate("[document.querySelectorAll('.rr-list li').length, document.querySelectorAll('.rr-badges li').length, [...document.querySelectorAll('.rr-list a')].every(a => a.href.startsWith('https://') && a.target === '_blank')]")
     check(book == [2, 1, True], f'Tủ: the book lists both messages with sources, and the badge ({book})')
+    # every message: both languages, a source to open, a category with a name
+    msgs = await pg.evaluate("window.GemRacRoi.MSGS.map(m => [m.id, m.cat, !!(m.vi && m.en && m.source), m.url])")
+    src = (ROOT / 'js' / 'racroi.js').read_text(encoding='utf-8')
+    bad = [m[0] for m in msgs if not m[2] or not m[3].startswith('https://') or f"'rr.cat.{m[1]}'" not in src]
+    check(len(msgs) >= 40 and not bad and len({m[0] for m in msgs}) == len(msgs),
+          f'messages: {len(msgs)}, each with VI + EN, an https source and a named category, ids unique ({bad})')
     await pg.screenshot(path=OUT / 'racroi-tu.png')
     check(not pg.errors, f'badge: no script errors {pg.errors}')
     await pg.context.close()

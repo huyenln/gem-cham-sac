@@ -2645,14 +2645,25 @@ nút bật / tắt ở cuối `js/studio.js` (`bn*`, "Bất ngờ ngoài phố")
   thông điệp đã mở, kèm nguồn).
 - **Tắt:** bảng "?" → "Bất ngờ ngoài phố" (công tắc, localStorage `gem-batngo` = '0'). Tên chung để
   sau này thêm trò ngẫu nhiên khác vào cùng công tắc.
-- **Thông điệp (`MSGS`):** mới có **14 câu, đều từ poster phân loại của Tagom** (nguồn:
-  fanpage Tagom). Muốn thêm nhóm khác (mẹo tái chế vải, xử lý đồ cũ, quy định ở Hà Nội…) thì
-  **mỗi câu phải có nguồn đọc được, đã mở trang kiểm** — không viết theo trí nhớ. Lần soạn
-  05/11 mạng của phiên làm việc chặn các trang nguồn (thuvienphapluat.vn, vbpl.vn,
-  chinhphu.vn, moit.gov.vn, hanoi.gov.vn, unep.org, epa.gov, wrap.ngo,
-  loveyourclothes.org.uk, ellenmacarthurfoundation.org, eea.europa.eu,
-  environment.ec.europa.eu) nên chưa thêm. Thêm câu: một dòng trong `MSGS` (`id`, `cat`,
-  `vi`, `en`, `source`, `url`), `id` không đổi về sau (Sổ thông điệp nhớ theo `id`).
+- **Thông điệp (`MSGS`, 46 câu, soạn 05/11/2026):** mỗi câu phải có **nguồn mở được, đã đọc
+  trang kiểm** — không viết theo trí nhớ, không suy diễn quá lời nguồn. Sáu nhóm (`rr.cat.*`):
+  - *Phân loại rác* + *Bỏ rác đúng* (`tg-*`, 14 câu): 6 poster Tagom (fanpage Tagom).
+  - *Bỏ rác đúng / Đồ cũ / Bớt rác* (`ep-*`): US EPA — What You Can Do, Used Lithium-Ion Batteries,
+    Electronics Donation and Recycling, Preventing Wasted Food At Home, Composting At Home.
+  - *Vải và tái chế / Đồ cũ* (`ee-*`, `ec-01`, `em-01`): Cơ quan Môi trường châu Âu (EEA: trang
+    Textiles, FAQ, hai báo cáo "role of design" và "management of used and waste textiles"), Ủy ban
+    châu Âu (Textiles Strategy), Ellen MacArthur Foundation.
+  - *Quy định* (`lu-*`): Báo điện tử Chính phủ (25/08/2022) — Điều 75 Luật BVMT 2020 (3 nhóm rác),
+    hạn 31/12/2024, Điều 26 Nghị định 45/2022 (phạt 500.000 – 1.000.000 đồng). **Nghị định 45/2022
+    còn hiệu lực (11/2026) nhưng đang có dự thảo sửa đổi (lấy ý kiến 04/2026)**: khi ban hành thì
+    kiểm lại `lu-03`.
+  - Không dùng được: unep.org, loveyourclothes.org.uk, thuvienphapluat.vn (Cloudflare chặn truy cập
+    tự động), hanoi.gov.vn (máy chủ ngắt kết nối từ phiên làm việc), vbpl.vn (đường dẫn văn bản cũ
+    chuyển về trang chủ). Số liệu WRAP về "kéo dài đời quần áo 9 tháng" khác nhau giữa các báo cáo
+    (4–10%, 5–10%, 20–30%) nên không đưa vào.
+  - Nguồn hiện theo ngôn ngữ (`source` / `source_en`). Thêm câu: một dòng trong `MSGS` (`id`, `cat`,
+    `vi`, `en`, `source`, `source_en` nếu cần, `url`); `id` không đổi về sau (Sổ thông điệp nhớ theo
+    `id`). Nhóm mới thì thêm chữ `rr.cat.<nhóm>`.
 - **Chữ:** `rr.*` trong `js/racroi.js`; `studio.bn_*`, `studio.tu_rac_*`, `studio.tu_book` trong
   `js/studio.js`.
 - **Kiểm tra:** `python3 tools/check-studio.py racroi` (điện thoại: rơi trong khung, nhặt, thẻ có
