@@ -2645,7 +2645,7 @@ nút bật / tắt ở cuối `js/studio.js` (`bn*`, "Bất ngờ ngoài phố")
   thông điệp đã mở, kèm nguồn).
 - **Tắt:** bảng "?" → "Bất ngờ ngoài phố" (công tắc, localStorage `gem-batngo` = '0'). Tên chung để
   sau này thêm trò ngẫu nhiên khác vào cùng công tắc.
-- **Thông điệp (`MSGS`, 51 câu, soạn 05–06/11/2026):** mỗi câu phải có **nguồn mở được, đã đọc
+- **Thông điệp (`MSGS`, 56 câu, soạn 05–06/11/2026):** mỗi câu phải có **nguồn mở được, đã đọc
   trang kiểm** — không viết theo trí nhớ, không suy diễn quá lời nguồn. Sáu nhóm (`rr.cat.*`):
   - *Phân loại rác* + *Bỏ rác đúng* (`tg-*`, 14 câu): 6 poster Tagom (fanpage Tagom).
   - *Bỏ rác đúng / Đồ cũ / Bớt rác* (`ep-*`): US EPA — What You Can Do, Used Lithium-Ion Batteries,
@@ -2653,8 +2653,15 @@ nút bật / tắt ở cuối `js/studio.js` (`bn*`, "Bất ngờ ngoài phố")
   - *Vải và tái chế / Đồ cũ* (`ee-*`, `ec-01`, `em-01`): Cơ quan Môi trường châu Âu (EEA: trang
     Textiles, FAQ, hai báo cáo "role of design" và "management of used and waste textiles"), Ủy ban
     châu Âu (Textiles Strategy), Ellen MacArthur Foundation.
-  - *Khí hậu* (`cb-*`, 7 câu + 1 câu Đồ cũ): sách Climate Box của UNDP (2015), link trang thư viện
-    UN CC:Learn (climate-box.com chặn truy cập tự động). Số liệu là ví dụ của sách, ghi "khoảng".
+  - *Khí hậu* (12 câu) — Climate Box của UNDP:
+    - `cs-*` (7 câu): **bản Đông Nam Á** (2024), đọc qua bản thảo dịch tiếng Việt 13/06/2025 (YPWG + Live &
+      Learn) Gem gửi trên Drive, thư mục "Climate Box" (bản thảo chỉ có Phần 1–2). Link: trang UNDP Thái Lan của
+      bản Đông Nam Á (undp.org chặn truy cập tự động, mở bằng trình duyệt thì được). Bản in tiếng Anh
+      `Final_ClimateBox2024PRINT_SEA.pdf` (29 MB) công cụ Drive không đọc được.
+    - `cb-*` (5 câu + 1 câu Đồ cũ): mẹo thực hành từ **sách 2015** (Phần 3: dấu chân carbon, tiết kiệm
+      năng lượng — bản thảo Đông Nam Á không có phần này), link trang thư viện UN CC:Learn; số liệu là ví
+      dụ của sách, ghi "khoảng". Bỏ câu "xe đạp thay ô tô" (không hợp cách đi lại ở Hà Nội). Khi có Phần 3 bản
+      Đông Nam Á thì thay `cb-*`.
   - **Bỏ nhóm "Quy định"** (Anna 06/11): không dùng Báo điện tử Chính phủ; mức phạt không phân loại
     rác trên thực tế gần như chưa áp dụng nên không nhắc.
   - Không dùng được: unep.org, loveyourclothes.org.uk, thuvienphapluat.vn, climate-box.com

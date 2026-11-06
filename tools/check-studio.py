@@ -4980,8 +4980,14 @@ async def racroi(browser, db):
     pg = await page(browser, db, 1440, 900, ON + SOON +
                     "if (!sessionStorage.getItem('rr-t')) { sessionStorage.setItem('rr-t','1'); localStorage.setItem('gem-rac', JSON.stringify({n: 99, seen: ['tg-01'], badges: []})); }")
     await pg.goto(f'{BASE}/studio.html')
-    await pg.wait_for_timeout(3800)
+    # two pieces fall this time (Math.random held low while it falls): the
+    # badge comes with the first piece and must still be on the card
+    await pg.evaluate("window.__rnd = Math.random; Math.random = () => 0.1")
+    await pg.wait_for_function("document.querySelector('.rr-item')", timeout=8000)
+    await pg.evaluate("Math.random = window.__rnd")
+    await pg.wait_for_timeout(1500)
     n = len(await pg.evaluate(BOXES))
+    check(n == 2, f'badge: two pieces fell ({n})')
     for _ in range(n):
         await js_click(pg, '.rr-item:not(.is-up)')
         await pg.wait_for_timeout(200)

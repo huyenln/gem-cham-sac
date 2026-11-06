@@ -173,31 +173,50 @@ window.GemRacRoi = (function () {
       vi: "Đống ủ ở nhà không nên có thịt, cá, xương, đồ sữa, dầu mỡ, phân thú cưng, giấy bóng hay tem dán trên trái cây.",
       en: "Keep meat, fish, bones, dairy, fats and oils, pet waste, glossy paper and fruit stickers out of a home compost pile." },
 
-    // climate: UNDP's Climate Box textbook (2015), via the UN CC:Learn library
-    // (the climate-box.com site refuses automated access). Its figures are
-    // the textbook's own examples, kept with "khoảng" / "about".
-    { id: "cb-01", cat: "khihau", source: "Climate Box · UNDP", url: "https://www.uncclearn.org/resources/library/climate-box-an-interactive-learning-toolkit-on-climate-change/",
-      vi: "Khí nhà kính như CO₂, mê-tan, N₂O là nguyên nhân chính của biến đổi khí hậu hiện nay. Chúng tăng lên chủ yếu vì đốt nhiên liệu hoá thạch, giao thông và phá rừng.",
-      en: "Greenhouse gases such as CO₂, methane and N₂O are the main cause of climate change today. They have risen mostly from burning fossil fuels, transport and deforestation." },
-    { id: "cb-02", cat: "khihau", source: "Climate Box · UNDP", url: "https://www.uncclearn.org/resources/library/climate-box-an-interactive-learning-toolkit-on-climate-change/",
+    // climate, today: UNDP's Climate Box, South-East Asia edition (2024; read in
+    // the Vietnamese translation draft of 13/06/2025 that Gem has, parts 1–2)
+    { id: "cs-01", cat: "khihau", source: "Climate Box Đông Nam Á · UNDP", source_en: "Climate Box South-East Asia · UNDP", url: "https://www.undp.org/thailand/publications/climate-box-English",
+      vi: "Từ khi con người bắt đầu đốt than, Trái Đất đã ấm lên khoảng 1,2°C. Theo Tổ chức Khí tượng Thế giới, 2015–2024 là mười năm ấm nhất từng ghi nhận.",
+      en: "Since people began burning coal, the Earth has warmed by about 1.2°C. The World Meteorological Organization finds 2015–2024 the warmest ten years on record." },
+    { id: "cs-02", cat: "khihau", source: "Climate Box Đông Nam Á · UNDP", source_en: "Climate Box South-East Asia · UNDP", url: "https://www.undp.org/thailand/publications/climate-box-English",
+      vi: "Ở Đông Nam Á, nhiệt độ trung bình năm tăng 0,14–0,20°C mỗi thập kỷ từ những năm 1960. Ngày nóng và đêm ấm nhiều lên, ngày và đêm lạnh ít đi.",
+      en: "In South-East Asia the yearly average temperature has risen 0.14–0.20°C a decade since the 1960s. Hot days and warm nights are more common, cold ones fewer." },
+    { id: "cs-03", cat: "khihau", source: "Climate Box Đông Nam Á · UNDP", source_en: "Climate Box South-East Asia · UNDP", url: "https://www.undp.org/thailand/publications/climate-box-English",
+      vi: "Năm 2023, Việt Nam ghi nhận mức nhiệt kỷ lục 44,2°C. Cùng mùa nóng ấy, Thái Lan lên tới 45,4°C và Lào 43,5°C.",
+      en: "In 2023 Vietnam recorded its highest temperature yet, 44.2°C. In the same hot season Thailand reached 45.4°C and Laos 43.5°C." },
+    { id: "cs-04", cat: "khihau", source: "Climate Box Đông Nam Á · UNDP", source_en: "Climate Box South-East Asia · UNDP", url: "https://www.undp.org/thailand/publications/climate-box-English",
+      vi: "Philippines và Việt Nam đang ghi nhận bão ngày càng mạnh. Năm 2020, miền Trung hứng chín cơn bão và áp thấp nhiệt đới liên tiếp chỉ trong vài tuần.",
+      en: "The Philippines and Vietnam are seeing ever stronger storms. In 2020 central Vietnam was hit by nine storms and tropical depressions in a row within a few weeks." },
+    { id: "cs-05", cat: "khihau", source: "Climate Box Đông Nam Á · UNDP", source_en: "Climate Box South-East Asia · UNDP", url: "https://www.undp.org/thailand/publications/climate-box-English",
+      vi: "Đại dương, rừng và đất hút giúp khoảng một nửa lượng CO₂ con người thải ra; nửa còn lại đọng trong khí quyển. Mất rừng là mất bớt chỗ hút CO₂.",
+      en: "Oceans, forests and soil take up about half the CO₂ people give off; the other half builds up in the air. Losing forests means less to take it up." },
+    { id: "cs-06", cat: "khihau", source: "Climate Box Đông Nam Á · UNDP", source_en: "Climate Box South-East Asia · UNDP", url: "https://www.undp.org/thailand/publications/climate-box-English",
+      vi: "Đại dương giữ hơn 90% năng lượng của hệ thống khí hậu. Vì vậy một mùa đông lạnh không có nghĩa là Trái Đất thôi nóng lên: phần lớn nhiệt dồn vào lòng biển.",
+      en: "The ocean holds over 90% of the climate system's energy. So a cold winter doesn't mean the Earth has stopped warming: most of the extra heat goes into the sea." },
+    { id: "cs-07", cat: "khihau", source: "Climate Box Đông Nam Á · UNDP", source_en: "Climate Box South-East Asia · UNDP", url: "https://www.undp.org/thailand/publications/climate-box-English",
+      vi: "Không có hiệu ứng nhà kính, nhiệt độ trung bình bề mặt Trái Đất sẽ là −19°C chứ không phải +14°C như bây giờ. Điều đáng lo là con người đang làm nó mạnh thêm, chủ yếu do đốt than, dầu, khí.",
+      en: "Without the greenhouse effect the Earth's surface would average −19°C instead of today's +14°C. The worry is that people are making it stronger, mostly by burning coal, oil and gas." },
+
+    // practical tips: Climate Box textbook, first edition (2015), via the UN
+    // CC:Learn library. Part 3 (carbon footprint, saving energy) is not in
+    // the South-East Asia draft Gem has, so these stay with the 2015 book;
+    // its figures are the book's own examples, kept with "khoảng" / "about".
+    { id: "cb-02", cat: "khihau", source: "Climate Box · UNDP (2015)", url: "https://www.uncclearn.org/resources/library/climate-box-an-interactive-learning-toolkit-on-climate-change/",
       vi: "Dấu chân carbon theo ví dụ của Climate Box: một túi nilon ở cửa hàng khoảng 10 g CO₂, một chai nước 0,5 lít sản xuất trong vùng khoảng 110 g, một chiếc quần jeans khoảng 6 kg.",
       en: "Carbon footprints, from Climate Box's examples: a shop's plastic bag about 10 g of CO₂, a locally made 0.5-litre bottle of water about 110 g, a pair of jeans about 6 kg." },
-    { id: "cb-03", cat: "khihau", source: "Climate Box · UNDP", url: "https://www.uncclearn.org/resources/library/climate-box-an-interactive-learning-toolkit-on-climate-change/",
+    { id: "cb-03", cat: "khihau", source: "Climate Box · UNDP (2015)", url: "https://www.uncclearn.org/resources/library/climate-box-an-interactive-learning-toolkit-on-climate-change/",
       vi: "Một quả táo hái ăn ngay dưới gốc: 0 g CO₂. Táo trồng trong vùng, đúng mùa: khoảng 10 g. Táo nhập khẩu từ xa: khoảng 150 g. Đồ địa phương, đúng mùa nhẹ cho khí hậu hơn.",
       en: "An apple eaten under the tree it grew on: 0 g of CO₂. A local apple in season: about 10 g. One shipped from far away: about 150 g. Local and in season is lighter on the climate." },
-    { id: "cb-04", cat: "khihau", source: "Climate Box · UNDP", url: "https://www.uncclearn.org/resources/library/climate-box-an-interactive-learning-toolkit-on-climate-change/",
+    { id: "cb-04", cat: "khihau", source: "Climate Box · UNDP (2015)", url: "https://www.uncclearn.org/resources/library/climate-box-an-interactive-learning-toolkit-on-climate-change/",
       vi: "Làm từ vật liệu tái chế tốn ít năng lượng hơn làm mới: nhôm bớt khoảng 95%, nhựa 80–88%, thuỷ tinh 68%, giấy 64%.",
       en: "Making things from recycled material takes less energy than from new: about 95% less for aluminium, 80–88% for plastic, 68% for glass, 64% for paper." },
-    { id: "cb-05", cat: "khihau", source: "Climate Box · UNDP", url: "https://www.uncclearn.org/resources/library/climate-box-an-interactive-learning-toolkit-on-climate-change/",
+    { id: "cb-05", cat: "khihau", source: "Climate Box · UNDP (2015)", url: "https://www.uncclearn.org/resources/library/climate-box-an-interactive-learning-toolkit-on-climate-change/",
       vi: "Đồ chỉ hơi bẩn thì giặt chế độ tiết kiệm: tốn ít điện hơn gần 10 lần so với giặt nửa tiếng ở 90°C. Đợi đủ một mẻ rồi mới giặt; món nào treo móc là phẳng thì khỏi là.",
       en: "Lightly soiled clothes only need an economy cycle: it uses nearly 10 times less power than half an hour at 90°C. Wait for a full load, and skip ironing what hangs smooth on a hanger." },
-    { id: "cb-06", cat: "khihau", source: "Climate Box · UNDP", url: "https://www.uncclearn.org/resources/library/climate-box-an-interactive-learning-toolkit-on-climate-change/",
+    { id: "cb-06", cat: "khihau", source: "Climate Box · UNDP (2015)", url: "https://www.uncclearn.org/resources/library/climate-box-an-interactive-learning-toolkit-on-climate-change/",
       vi: "Tắt hẳn thiết bị khi không dùng: chế độ chờ vẫn tốn điện. Sạc điện thoại xong thì rút ra, đừng để cắm suốt.",
       en: "Switch devices right off when you're not using them: standby still uses power. Unplug the phone charger when it's done." },
-    { id: "cb-07", cat: "khihau", source: "Climate Box · UNDP", url: "https://www.uncclearn.org/resources/library/climate-box-an-interactive-learning-toolkit-on-climate-change/",
-      vi: "Ngày nào cũng đi học, đi làm bằng xe đạp thay vì ô tô thì mỗi năm bớt được khoảng một tấn khí nhà kính.",
-      en: "Cycling to school or work every day instead of going by car saves about a tonne of greenhouse gas emissions a year." },
-    { id: "cb-08", cat: "docu", source: "Climate Box · UNDP", url: "https://www.uncclearn.org/resources/library/climate-box-an-interactive-learning-toolkit-on-climate-change/",
+    { id: "cb-08", cat: "docu", source: "Climate Box · UNDP (2015)", url: "https://www.uncclearn.org/resources/library/climate-box-an-interactive-learning-toolkit-on-climate-change/",
       vi: "Trước khi mua món mới, hỏi mình có thật cần không. Chỉ dùng ít lâu thì mượn. Giữ gìn đồ đang có để dùng được lâu hơn.",
       en: "Before buying something new, ask whether you really need it. If it's only for a short time, borrow it. Look after what you have so it lasts longer." },
 
@@ -411,7 +430,7 @@ window.GemRacRoi = (function () {
       }
       paintBar();
 
-      var udon = null, tug = null, tugT = 0;
+      var udon = null, tug = null, tugT = 0, won = 0;   // won: a badge earned on any piece of this fall
       var tick = setInterval(function () {
         if (!ctx.out()) { end(false); return; }
         if (done || late || !ctx.calm()) return;
@@ -431,10 +450,10 @@ window.GemRacRoi = (function () {
         var s = load();
         s.n += 1;
         var badge = BADGES.filter(function (b) { return s.n >= b && s.badges.indexOf(b) < 0; })[0];
-        if (badge) s.badges.push(badge);
+        if (badge) { s.badges.push(badge); won = badge; }
         save(s);
         paintBar();
-        if (pieces.every(function (q) { return q.up; })) finish(badge);
+        if (pieces.every(function (q) { return q.up; })) finish(won);
       }
 
       // too slow: Udon runs in from the litter's side, tugs a hem, and the
