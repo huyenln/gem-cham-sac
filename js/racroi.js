@@ -43,7 +43,7 @@ window.GemRacRoi = (function () {
     'rr.cat.vai':      { vi: `Vải và tái chế`, en: `Fabric and recycling` },
     'rr.cat.docu':     { vi: `Đồ cũ`, en: `Old things` },
     'rr.cat.bot':      { vi: `Bớt rác`, en: `Less waste` },
-    'rr.cat.luat':     { vi: `Quy định`, en: `The rules in Vietnam` },
+    'rr.cat.khihau':   { vi: `Khí hậu`, en: `Climate` },
     // Udon's lines when he pulls the visitor back: light, a little meme-ish,
     // never about death, illness or calling anyone names (Anna 05/11)
     'rr.l1': { vi: `Một bước chân qua, {mon} ở lại.`, en: `One step past, {mon} left behind.` },
@@ -124,22 +124,6 @@ window.GemRacRoi = (function () {
       vi: "Nilon mềm thì kéo dãn được, chỉ một chất liệu, bề mặt mềm: túi nilon quai xách, màng quấn hàng, túi bóng khí.",
       en: "Soft nylon stretches, is a single material and feels soft: carrier bags, stretch wrap, bubble-wrap mailers." },
 
-    // Vietnam's rules, as the Government's news site reported them (25/08/2022).
-    // Decree 45/2022 is still in force (11/2026), but an amendment was out
-    // for comment in 04/2026: check lu-03 again when it is issued.
-    { id: "lu-01", cat: "luat", source: "Báo điện tử Chính phủ", source_en: "Vietnam Government news portal",
-      url: "https://xaydungchinhsach.chinhphu.vn/xu-phat-cac-truong-hop-khong-phan-loai-rac-tai-nguon-se-thuc-hien-theo-lo-trinh-119220825183404254.htm",
-      vi: "Theo Điều 75 Luật Bảo vệ môi trường 2020, rác sinh hoạt ở nhà chia làm ba nhóm: loại dùng lại, tái chế được; rác thực phẩm; và rác sinh hoạt khác.",
-      en: "Under Article 75 of Vietnam's 2020 Law on Environmental Protection, household waste is sorted into three groups: what can be reused or recycled, food waste, and other household waste." },
-    { id: "lu-02", cat: "luat", source: "Báo điện tử Chính phủ", source_en: "Vietnam Government news portal",
-      url: "https://xaydungchinhsach.chinhphu.vn/xu-phat-cac-truong-hop-khong-phan-loai-rac-tai-nguon-se-thuc-hien-theo-lo-trinh-119220825183404254.htm",
-      vi: "Luật cho ba năm để chuẩn bị: việc phân loại rác tại nguồn phải thực hiện chậm nhất ngày 31/12/2024. Mỗi tỉnh, thành phố quy định chi tiết theo điều kiện của mình.",
-      en: "The law gave three years to get ready: sorting waste at source had to start by 31/12/2024 at the latest. Each province and city sets the details for its own conditions." },
-    { id: "lu-03", cat: "luat", source: "Báo điện tử Chính phủ", source_en: "Vietnam Government news portal",
-      url: "https://xaydungchinhsach.chinhphu.vn/xu-phat-cac-truong-hop-khong-phan-loai-rac-tai-nguon-se-thuc-hien-theo-lo-trinh-119220825183404254.htm",
-      vi: "Điều 26 Nghị định 45/2022: hộ gia đình, cá nhân không phân loại rác sinh hoạt, hoặc không dùng bao bì đựng rác theo quy định, có thể bị phạt 500.000 – 1.000.000 đồng.",
-      en: "Article 26 of Decree 45/2022: a household or person who doesn't sort household waste, or doesn't use the required waste bags, can be fined 500,000 – 1,000,000 VND." },
-
     // US EPA: litter, batteries, old electronics
     { id: "ep-01", cat: "rac", source: "US EPA · What You Can Do", url: "https://www.epa.gov/recycle/what-you-can-do",
       vi: "Đi công viên, ra biển: mang theo gì thì mang về nấy, để chỗ mình vừa ghé không còn rác.",
@@ -188,6 +172,34 @@ window.GemRacRoi = (function () {
     { id: "ep-15", cat: "bot", source: "US EPA · Composting At Home", url: "https://www.epa.gov/recycle/composting-home",
       vi: "Đống ủ ở nhà không nên có thịt, cá, xương, đồ sữa, dầu mỡ, phân thú cưng, giấy bóng hay tem dán trên trái cây.",
       en: "Keep meat, fish, bones, dairy, fats and oils, pet waste, glossy paper and fruit stickers out of a home compost pile." },
+
+    // climate: UNDP's Climate Box textbook (2015), via the UN CC:Learn library
+    // (the climate-box.com site refuses automated access). Its figures are
+    // the textbook's own examples, kept with "khoảng" / "about".
+    { id: "cb-01", cat: "khihau", source: "Climate Box · UNDP", url: "https://www.uncclearn.org/resources/library/climate-box-an-interactive-learning-toolkit-on-climate-change/",
+      vi: "Khí nhà kính như CO₂, mê-tan, N₂O là nguyên nhân chính của biến đổi khí hậu hiện nay. Chúng tăng lên chủ yếu vì đốt nhiên liệu hoá thạch, giao thông và phá rừng.",
+      en: "Greenhouse gases such as CO₂, methane and N₂O are the main cause of climate change today. They have risen mostly from burning fossil fuels, transport and deforestation." },
+    { id: "cb-02", cat: "khihau", source: "Climate Box · UNDP", url: "https://www.uncclearn.org/resources/library/climate-box-an-interactive-learning-toolkit-on-climate-change/",
+      vi: "Dấu chân carbon theo ví dụ của Climate Box: một túi nilon ở cửa hàng khoảng 10 g CO₂, một chai nước 0,5 lít sản xuất trong vùng khoảng 110 g, một chiếc quần jeans khoảng 6 kg.",
+      en: "Carbon footprints, from Climate Box's examples: a shop's plastic bag about 10 g of CO₂, a locally made 0.5-litre bottle of water about 110 g, a pair of jeans about 6 kg." },
+    { id: "cb-03", cat: "khihau", source: "Climate Box · UNDP", url: "https://www.uncclearn.org/resources/library/climate-box-an-interactive-learning-toolkit-on-climate-change/",
+      vi: "Một quả táo hái ăn ngay dưới gốc: 0 g CO₂. Táo trồng trong vùng, đúng mùa: khoảng 10 g. Táo nhập khẩu từ xa: khoảng 150 g. Đồ địa phương, đúng mùa nhẹ cho khí hậu hơn.",
+      en: "An apple eaten under the tree it grew on: 0 g of CO₂. A local apple in season: about 10 g. One shipped from far away: about 150 g. Local and in season is lighter on the climate." },
+    { id: "cb-04", cat: "khihau", source: "Climate Box · UNDP", url: "https://www.uncclearn.org/resources/library/climate-box-an-interactive-learning-toolkit-on-climate-change/",
+      vi: "Làm từ vật liệu tái chế tốn ít năng lượng hơn làm mới: nhôm bớt khoảng 95%, nhựa 80–88%, thuỷ tinh 68%, giấy 64%.",
+      en: "Making things from recycled material takes less energy than from new: about 95% less for aluminium, 80–88% for plastic, 68% for glass, 64% for paper." },
+    { id: "cb-05", cat: "khihau", source: "Climate Box · UNDP", url: "https://www.uncclearn.org/resources/library/climate-box-an-interactive-learning-toolkit-on-climate-change/",
+      vi: "Đồ chỉ hơi bẩn thì giặt chế độ tiết kiệm: tốn ít điện hơn gần 10 lần so với giặt nửa tiếng ở 90°C. Đợi đủ một mẻ rồi mới giặt; món nào treo móc là phẳng thì khỏi là.",
+      en: "Lightly soiled clothes only need an economy cycle: it uses nearly 10 times less power than half an hour at 90°C. Wait for a full load, and skip ironing what hangs smooth on a hanger." },
+    { id: "cb-06", cat: "khihau", source: "Climate Box · UNDP", url: "https://www.uncclearn.org/resources/library/climate-box-an-interactive-learning-toolkit-on-climate-change/",
+      vi: "Tắt hẳn thiết bị khi không dùng: chế độ chờ vẫn tốn điện. Sạc điện thoại xong thì rút ra, đừng để cắm suốt.",
+      en: "Switch devices right off when you're not using them: standby still uses power. Unplug the phone charger when it's done." },
+    { id: "cb-07", cat: "khihau", source: "Climate Box · UNDP", url: "https://www.uncclearn.org/resources/library/climate-box-an-interactive-learning-toolkit-on-climate-change/",
+      vi: "Ngày nào cũng đi học, đi làm bằng xe đạp thay vì ô tô thì mỗi năm bớt được khoảng một tấn khí nhà kính.",
+      en: "Cycling to school or work every day instead of going by car saves about a tonne of greenhouse gas emissions a year." },
+    { id: "cb-08", cat: "docu", source: "Climate Box · UNDP", url: "https://www.uncclearn.org/resources/library/climate-box-an-interactive-learning-toolkit-on-climate-change/",
+      vi: "Trước khi mua món mới, hỏi mình có thật cần không. Chỉ dùng ít lâu thì mượn. Giữ gìn đồ đang có để dùng được lâu hơn.",
+      en: "Before buying something new, ask whether you really need it. If it's only for a short time, borrow it. Look after what you have so it lasts longer." },
 
     // fabric: European Environment Agency, European Commission, Ellen MacArthur Foundation
     { id: "ee-01", cat: "vai", source: "Cơ quan Môi trường châu Âu (EEA)", source_en: "European Environment Agency (EEA)",
