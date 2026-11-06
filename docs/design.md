@@ -2624,7 +2624,7 @@ Ngoài phố thỉnh thoảng có rác rơi cạnh chân nhân vật; khách ch�
 nút bật / tắt ở cuối `js/studio.js` (`bn*`, "Bất ngờ ngoài phố").
 
 - **Khi nào rơi:** chỉ ngoài phố. Lần 1 sau 15–20 giây, lần 2 sau 1–2 phút, từ lần 3 cách nhau
-  3–5 phút, tối đa 6 lần một lượt ghé (`BN_MAX`, `bnGap`). Đồng hồ chỉ chạy khi đang ở ngoài phố,
+  3–5 phút, tối đa 10–15 lần một lượt ghé (bốc ngẫu nhiên một lần khi mở trang, Anna 06/11; `bnMax`, `bnGap`). Đồng hồ chỉ chạy khi đang ở ngoài phố,
   không mở bảng nào, không có thẻ hướng dẫn, tab đang mở (sessionStorage `gem-bn` = {n, left}:
   tải lại trang không đếm lại từ đầu). Vào studio khi rác đang nằm đó: rác biến mất, không đếm,
   lát nữa rơi lại.
