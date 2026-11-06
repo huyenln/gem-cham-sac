@@ -241,7 +241,7 @@
     'studio.help_go':      { vi: `Đi tới`, en: `Go` },
     'studio.help_replay':  { vi: `Xem lại hướng dẫn từ đầu`, en: `Show the tips again` },
     'studio.bn_h':         { vi: `Bất ngờ ngoài phố`, en: `Street surprises` },
-    'studio.bn_p':         { vi: `Thỉnh thoảng ngoài phố có chuyện bất ngờ, như rác rơi cần nhặt.`, en: `Now and then something happens out on the street, like litter that wants picking up.` },
+    'studio.bn_p':         { vi: `Thỉnh thoảng ngoài phố có chuyện bất ngờ, hãy nán lại chút để khám phá.`, en: `Now and then something happens out on the street: linger a little and find out.` },
     'studio.bn_on':        { vi: `Đang bật`, en: `On` },
     'studio.bn_off':       { vi: `Đang tắt`, en: `Off` },
     'studio.tu_rac_h':     { vi: `Nhặt rác ngoài phố`, en: `Litter picked up on the street` },
