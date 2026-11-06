@@ -5486,11 +5486,12 @@
      Out on the street, now and then, something happens: for now litter falls
      and wants picking up. The clock runs only while the visitor is on the
      street with nothing open (no sheet, no tip, the tab in view): the first
-     15–20 s in, the next 1–2 min later, then every 3–5 min, at most 6 a visit
+     15–20 s in, the next 1–2 min later, then every 3–5 min, at most 10–15 a
+     visit (drawn once per visit)
      (Anna 05/11; sessionStorage gem-bn). "Bất ngờ ngoài phố" in the "?" sheet
      turns them off (localStorage gem-batngo); later surprises go under it. */
-  var BN_MAX = 6;
-  var bn = { n: 0, left: 0, busy: false };
+  var bn = { n: 0, left: 0, max: 10, busy: false };
+  function bnMax() { return 10 + Math.floor(Math.random() * 6); }   // 10–15 (Anna 06/11)
   function bnOn() {
     try { return localStorage.getItem('gem-batngo') !== '0'; } catch (e) { return true; }
   }
@@ -5499,17 +5500,18 @@
     return n === 0 ? r(15, 20) : n === 1 ? r(60, 120) : r(180, 300);
   }
   function bnSave() {
-    try { sessionStorage.setItem('gem-bn', JSON.stringify({ n: bn.n, left: Math.max(0, Math.round(bn.left)) })); } catch (e) { /* private mode */ }
+    try { sessionStorage.setItem('gem-bn', JSON.stringify({ n: bn.n, left: Math.max(0, Math.round(bn.left)), max: bn.max })); } catch (e) { /* private mode */ }
   }
   function bnStart() {
     var s = null;
     try { s = JSON.parse(sessionStorage.getItem('gem-bn') || 'null'); } catch (e) { /* private mode */ }
-    bn.n = s && +s.n >= 0 ? Math.min(BN_MAX, Math.floor(+s.n)) : 0;
+    bn.max = s && +s.max >= 10 && +s.max <= 15 ? Math.floor(+s.max) : bnMax();
+    bn.n = s && +s.n >= 0 ? Math.min(bn.max, Math.floor(+s.n)) : 0;
     bn.left = s && +s.left >= 0 ? +s.left : bnGap(bn.n);
     setInterval(bnTick, 1000);
   }
   function bnTick() {
-    if (bn.busy || bn.n >= BN_MAX || !bnOn() || sceneName !== 'out' || !modal.hidden || document.hidden || guide.cur ||
+    if (bn.busy || bn.n >= bn.max || !bnOn() || sceneName !== 'out' || !modal.hidden || document.hidden || guide.cur ||
         document.documentElement.classList.contains('st-wait')) return;
     bn.left -= 1;
     bnSave();

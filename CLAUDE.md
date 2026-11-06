@@ -442,7 +442,7 @@ Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
   trong Lắp studio), gợi ý ngoài cửa nhắc góc phân loại rác, màn cuối chỉ
   Trạm Tagom + Gem (chỉ nhận xốp tấm phẳng nguyên, đĩa CD nguyên). `js/phanloai.js` tải khi mở. Chi tiết: `docs/design.md` → "Phân loại rác cùng GemxTagom".
 - 🗑️ Bất ngờ ngoài phố: rác rơi (05/11, `js/racroi.js`): chỉ ngoài phố, lần 1 sau 15–20 giây, lần 2 sau
-  1–2 phút, sau đó 3–5 phút, tối đa 6 lần; nhặt → thẻ thông điệp **luôn có nguồn link**; không kịp → Udon cắn
+  1–2 phút, sau đó 3–5 phút, tối đa 10–15 lần (ngẫu nhiên mỗi lượt ghé); nhặt → thẻ thông điệp **luôn có nguồn link**; không kịp → Udon cắn
   ống quần kéo lại (câu vui `rr.l*`); huy hiệu 100/200/500 chỉ để vui; Sổ thông điệp trong Tủ sưu tầm; tắt ở
   bảng "?" (`gem-batngo`). 55 thông điệp (Tagom, US EPA, EEA, Ủy ban châu Âu, Ellen MacArthur, Climate Box
   của UNDP — bản Đông Nam Á cho khí hậu, sách 2015 cho mẹo) — câu mới chỉ thêm khi đã mở trang nguồn kiểm; không dùng Báo điện tử Chính phủ / mức phạt (Anna 06/11). Chi tiết: `docs/design.md` → "Bất ngờ ngoài phố: rác rơi". Test: `check-studio.py racroi`.

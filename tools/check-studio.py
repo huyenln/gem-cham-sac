@@ -4914,6 +4914,7 @@ async def racroi(browser, db):
     rac, bnst = await pg.evaluate(STORE)
     check(rac and rac['n'] == len(boxes) and len(rac['seen']) == 1 and bnst['n'] == 1 and 50 <= bnst['left'] <= 120,
           f'phone: the count is kept; the next one is 1–2 min away ({rac}, {bnst})')
+    check(10 <= bnst.get('max', 0) <= 15, f'phone: this visit has room for 10–15 falls ({bnst})')
     await pg.screenshot(path=OUT / 'racroi-phone-card.png')
     await js_click(pg, '.rr-close')
     await pg.wait_for_timeout(300)
