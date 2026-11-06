@@ -194,8 +194,8 @@ window.GemRacRoi = (function () {
       vi: "Đại dương giữ hơn 90% năng lượng của hệ thống khí hậu. Vì vậy một mùa đông lạnh không có nghĩa là Trái Đất thôi nóng lên: phần lớn nhiệt dồn vào lòng biển.",
       en: "The ocean holds over 90% of the climate system's energy. So a cold winter doesn't mean the Earth has stopped warming: most of the extra heat goes into the sea." },
     { id: "cs-07", cat: "khihau", source: "Climate Box Đông Nam Á · UNDP", source_en: "Climate Box South-East Asia · UNDP", url: "https://www.undp.org/thailand/publications/climate-box-English",
-      vi: "Không có hiệu ứng nhà kính, nhiệt độ trung bình bề mặt Trái Đất sẽ là −19°C chứ không phải +14°C như bây giờ. Điều đáng lo là con người đang làm nó mạnh thêm, chủ yếu do đốt than, dầu, khí.",
-      en: "Without the greenhouse effect the Earth's surface would average −19°C instead of today's +14°C. The worry is that people are making it stronger, mostly by burning coal, oil and gas." },
+      vi: "Không có hiệu ứng nhà kính, nhiệt độ trung bình bề mặt Trái Đất sẽ là −19°C.",
+      en: "Without the greenhouse effect, the Earth's surface would average −19°C." },
 
     // practical tips: Climate Box textbook, first edition (2015), via the UN
     // CC:Learn library. Part 3 (carbon footprint, saving energy) is not in
@@ -204,11 +204,8 @@ window.GemRacRoi = (function () {
     { id: "cb-02", cat: "khihau", source: "Climate Box · UNDP (2015)", url: "https://www.uncclearn.org/resources/library/climate-box-an-interactive-learning-toolkit-on-climate-change/",
       vi: "Dấu chân carbon theo ví dụ của Climate Box: một túi nilon ở cửa hàng khoảng 10 g CO₂, một chai nước 0,5 lít sản xuất trong vùng khoảng 110 g, một chiếc quần jeans khoảng 6 kg.",
       en: "Carbon footprints, from Climate Box's examples: a shop's plastic bag about 10 g of CO₂, a locally made 0.5-litre bottle of water about 110 g, a pair of jeans about 6 kg." },
-    { id: "cb-03", cat: "khihau", source: "Climate Box · UNDP (2015)", url: "https://www.uncclearn.org/resources/library/climate-box-an-interactive-learning-toolkit-on-climate-change/",
-      vi: "Một quả táo hái ăn ngay dưới gốc: 0 g CO₂. Táo trồng trong vùng, đúng mùa: khoảng 10 g. Táo nhập khẩu từ xa: khoảng 150 g. Đồ địa phương, đúng mùa nhẹ cho khí hậu hơn.",
-      en: "An apple eaten under the tree it grew on: 0 g of CO₂. A local apple in season: about 10 g. One shipped from far away: about 150 g. Local and in season is lighter on the climate." },
     { id: "cb-04", cat: "khihau", source: "Climate Box · UNDP (2015)", url: "https://www.uncclearn.org/resources/library/climate-box-an-interactive-learning-toolkit-on-climate-change/",
-      vi: "Làm từ vật liệu tái chế tốn ít năng lượng hơn làm mới: nhôm bớt khoảng 95%, nhựa 80–88%, thuỷ tinh 68%, giấy 64%.",
+      vi: "Làm từ vật liệu tái chế (recycled materials) tốn ít năng lượng hơn làm mới: nhôm bớt khoảng 95%, nhựa 80–88%, thuỷ tinh 68%, giấy 64%.",
       en: "Making things from recycled material takes less energy than from new: about 95% less for aluminium, 80–88% for plastic, 68% for glass, 64% for paper." },
     { id: "cb-05", cat: "khihau", source: "Climate Box · UNDP (2015)", url: "https://www.uncclearn.org/resources/library/climate-box-an-interactive-learning-toolkit-on-climate-change/",
       vi: "Đồ chỉ hơi bẩn thì giặt chế độ tiết kiệm: tốn ít điện hơn gần 10 lần so với giặt nửa tiếng ở 90°C. Đợi đủ một mẻ rồi mới giặt; món nào treo móc là phẳng thì khỏi là.",

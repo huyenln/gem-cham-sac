@@ -444,7 +444,7 @@ Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
 - 🗑️ Bất ngờ ngoài phố: rác rơi (05/11, `js/racroi.js`): chỉ ngoài phố, lần 1 sau 15–20 giây, lần 2 sau
   1–2 phút, sau đó 3–5 phút, tối đa 6 lần; nhặt → thẻ thông điệp **luôn có nguồn link**; không kịp → Udon cắn
   ống quần kéo lại (câu vui `rr.l*`); huy hiệu 100/200/500 chỉ để vui; Sổ thông điệp trong Tủ sưu tầm; tắt ở
-  bảng "?" (`gem-batngo`). 56 thông điệp (Tagom, US EPA, EEA, Ủy ban châu Âu, Ellen MacArthur, Climate Box
+  bảng "?" (`gem-batngo`). 55 thông điệp (Tagom, US EPA, EEA, Ủy ban châu Âu, Ellen MacArthur, Climate Box
   của UNDP — bản Đông Nam Á cho khí hậu, sách 2015 cho mẹo) — câu mới chỉ thêm khi đã mở trang nguồn kiểm; không dùng Báo điện tử Chính phủ / mức phạt (Anna 06/11). Chi tiết: `docs/design.md` → "Bất ngờ ngoài phố: rác rơi". Test: `check-studio.py racroi`.
 - Ngoài studio: chưa gắn Studio lên menu (chờ Anna); Gmail secrets cho mail báo đơn
   (các bước: `docs/design.md` → "Bật gửi mail thật").
