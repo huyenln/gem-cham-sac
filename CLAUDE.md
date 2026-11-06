@@ -47,6 +47,7 @@ Static website cho cửa hàng **Gem Chạm Sắc** — pop-up store sustainabil
 ├── js/patch.js               Bàn thiết kế (v2): món + kiểu ghép + tông + họa tiết + chất vải + hình vẽ + ghi chú → mã thiết kế, vẽ SVG (dùng chung với giỏ, tủ)
 ├── js/collection.js         Tủ sưu tầm: thiết kế đã lưu + món đã mua (localStorage gem-tu, rpc claim_collection)
 ├── js/phanloai.js           Trò "Phân loại rác" theo 6 poster Tagom (5 màn mở lần lượt: dụng cụ → 10 món → 60 giây → dọn bàn tiệc → tiệc chưa tàn; mang đi đâu); studio.js chỉ tải khi mở
+├── js/racroi.js             "Bất ngờ ngoài phố": rác rơi ngoài phố, nhặt → thông điệp có nguồn, không kịp → Udon kéo lại; Sổ thông điệp trong Tủ sưu tầm (studio.js tải khi cần)
 ├── js/studio-layout.js        Định dạng + kiểm tra bố cục studio (dùng chung studio.html / admin.html)
 ├── js/wear.js                 Góc thử đồ: điểm tay / gáy từng khung nhân vật, cách đeo (products.wear), túi tự thiết kế (dùng chung studio.html / admin.html)
 ├── js/studio-editor.js        Tab "Lắp studio" trong admin (chỉ owner): kéo, đổi cỡ, xoay asset — cả trong studio lẫn ngoài cửa
@@ -440,6 +441,11 @@ Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
   tạo bằng code (nút "Nhạc: bật / tắt"), poster đặt sát nhau chung một nhãn (Khu vực nào cũng vậy; ô "Ẩn nhãn"
   trong Lắp studio), gợi ý ngoài cửa nhắc góc phân loại rác, màn cuối chỉ
   Trạm Tagom + Gem (chỉ nhận xốp tấm phẳng nguyên, đĩa CD nguyên). `js/phanloai.js` tải khi mở. Chi tiết: `docs/design.md` → "Phân loại rác cùng GemxTagom".
+- 🗑️ Bất ngờ ngoài phố: rác rơi (05/11, `js/racroi.js`): chỉ ngoài phố, lần 1 sau 15–20 giây, lần 2 sau
+  1–2 phút, sau đó 3–5 phút, tối đa 6 lần; nhặt → thẻ thông điệp **luôn có nguồn link**; không kịp → Udon cắn
+  ống quần kéo lại (câu vui `rr.l*`); huy hiệu 100/200/500 chỉ để vui; Sổ thông điệp trong Tủ sưu tầm; tắt ở
+  bảng "?" (`gem-batngo`). 55 thông điệp (Tagom, US EPA, EEA, Ủy ban châu Âu, Ellen MacArthur, Climate Box
+  của UNDP — bản Đông Nam Á cho khí hậu, sách 2015 cho mẹo) — câu mới chỉ thêm khi đã mở trang nguồn kiểm; không dùng Báo điện tử Chính phủ / mức phạt (Anna 06/11). Chi tiết: `docs/design.md` → "Bất ngờ ngoài phố: rác rơi". Test: `check-studio.py racroi`.
 - Ngoài studio: chưa gắn Studio lên menu (chờ Anna); Gmail secrets cho mail báo đơn
   (các bước: `docs/design.md` → "Bật gửi mail thật").
 

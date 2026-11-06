@@ -2617,6 +2617,67 @@ tường là lối vào. Bỏ "nhặt rác ngoài phố có đếm giờ": nặn
   chuột thật: nhặt, thấy hình đi theo, thả đúng bao. Firefox: không cài được (mạng chặn).
 - **Kiểm tra:** `python3 tools/check-studio.py phanloai` (màn 1–2) và `phanloai_lv` (màn 3–5).
 
+### Bất ngờ ngoài phố: rác rơi (05/11/2026, Anna)
+
+Ngoài phố thỉnh thoảng có rác rơi cạnh chân nhân vật; khách chạm để nhặt. Chỉ để vui: không
+điểm, không phạt. Code: `js/racroi.js` (`window.GemRacRoi`, tải khi lần đầu cần), lịch hẹn giờ +
+nút bật / tắt ở cuối `js/studio.js` (`bn*`, "Bất ngờ ngoài phố").
+
+- **Khi nào rơi:** chỉ ngoài phố. Lần 1 sau 15–20 giây, lần 2 sau 1–2 phút, từ lần 3 cách nhau
+  3–5 phút, tối đa 6 lần một lượt ghé (`BN_MAX`, `bnGap`). Đồng hồ chỉ chạy khi đang ở ngoài phố,
+  không mở bảng nào, không có thẻ hướng dẫn, tab đang mở (sessionStorage `gem-bn` = {n, left}:
+  tải lại trang không đếm lại từ đầu). Vào studio khi rác đang nằm đó: rác biến mất, không đếm,
+  lát nữa rơi lại.
+- **Một lần rơi:** 80% là 1 món, còn lại 2–3 món (10 giây, thêm 3 giây mỗi món). Món lấy trong
+  `images/studio/rac/` (chai, ly trà sữa, gói snack… dùng chung tranh với Phân loại rác). Rác nằm
+  giữa khung nhìn (hai góc dưới có giỏ hàng và nút "?"), cạnh chân nhưng không đè lên nhân vật,
+  không chồng lên nhau, cao ít nhất 44 px trên màn hình (điện thoại xoay ngang). Dải trên cùng
+  báo "Ơ, có rác rơi!" + vòng đếm ngược. Chạm vào rác không làm nhân vật đi.
+- **Không nhặt kịp:** Udon chạy vào từ phía có rác, cảnh cận Udon cắn ống quần (~3 giây, một câu
+  ngẫu nhiên `rr.l1`–`rr.l8`, kiểu "Một bước chân qua, một cái chai ở lại." — vui, không bi kịch),
+  nhân vật bị kéo lùi về chỗ rác, Udon ngồi chờ cạnh đó tới khi nhặt ("Udon chờ bạn nhặt nè").
+  Kéo lùi dùng `dragTo` trong `js/studio.js` (vuốt / chạm chỗ khác thì thôi kéo).
+- **Nhặt xong:** thẻ quà là **một thông điệp** (mẹo về rác, phân loại…), luôn kèm **nguồn có
+  link** (mở tab mới). Thông điệp chưa xem ra trước, xem hết thì ngẫu nhiên. Số rác đã nhặt + các
+  thông điệp đã mở lưu ở localStorage `gem-rac` = {n, seen, badges}. Huy hiệu khi đủ 100 / 200 / 500
+  món ("Lá non", "Cây xanh", "Rừng nhỏ") — chỉ để vui. Đếm ngay khi nhặt món cuối, không đợi đóng thẻ.
+- **Tủ sưu tầm:** mục "Nhặt rác ngoài phố" (số món) + nút "Mở Sổ thông điệp" (huy hiệu + các
+  thông điệp đã mở, kèm nguồn).
+- **Tắt:** bảng "?" → "Bất ngờ ngoài phố" (công tắc, localStorage `gem-batngo` = '0'). Tên chung để
+  sau này thêm trò ngẫu nhiên khác vào cùng công tắc.
+- **Thông điệp (`MSGS`, 55 câu, soạn 05–06/11/2026):** mỗi câu phải có **nguồn mở được, đã đọc
+  trang kiểm** — không viết theo trí nhớ, không suy diễn quá lời nguồn. Sáu nhóm (`rr.cat.*`):
+  - *Phân loại rác* + *Bỏ rác đúng* (`tg-*`, 14 câu): 6 poster Tagom (fanpage Tagom).
+  - *Bỏ rác đúng / Đồ cũ / Bớt rác* (`ep-*`): US EPA — What You Can Do, Used Lithium-Ion Batteries,
+    Electronics Donation and Recycling, Preventing Wasted Food At Home, Composting At Home.
+  - *Vải và tái chế / Đồ cũ* (`ee-*`, `ec-01`, `em-01`): Cơ quan Môi trường châu Âu (EEA: trang
+    Textiles, FAQ, hai báo cáo "role of design" và "management of used and waste textiles"), Ủy ban
+    châu Âu (Textiles Strategy), Ellen MacArthur Foundation.
+  - *Khí hậu* (11 câu) — Climate Box của UNDP:
+    - `cs-*` (7 câu): **bản Đông Nam Á** (2024), đọc qua bản thảo dịch tiếng Việt 13/06/2025 (YPWG + Live &
+      Learn) Gem gửi trên Drive, thư mục "Climate Box" (bản thảo chỉ có Phần 1–2). Link: trang UNDP Thái Lan của
+      bản Đông Nam Á (undp.org chặn truy cập tự động, mở bằng trình duyệt thì được). Bản in tiếng Anh
+      `Final_ClimateBox2024PRINT_SEA.pdf` (29 MB) công cụ Drive không đọc được.
+    - `cb-*` (4 câu + 1 câu Đồ cũ): mẹo thực hành từ **sách 2015** (Phần 3: dấu chân carbon, tiết kiệm
+      năng lượng — bản thảo Đông Nam Á không có phần này), link trang thư viện UN CC:Learn; số liệu là ví
+      dụ của sách, ghi "khoảng". Bỏ câu "xe đạp thay ô tô" (không hợp cách đi lại ở Hà Nội) và câu quả táo (Anna 06/11). Khi có Phần 3 bản
+      Đông Nam Á thì thay `cb-*`.
+  - **Bỏ nhóm "Quy định"** (Anna 06/11): không dùng Báo điện tử Chính phủ; mức phạt không phân loại
+    rác trên thực tế gần như chưa áp dụng nên không nhắc.
+  - Không dùng được: unep.org, loveyourclothes.org.uk, thuvienphapluat.vn, climate-box.com
+    (Cloudflare chặn truy cập tự động), hanoi.gov.vn (máy chủ ngắt kết nối), vbpl.vn (đường dẫn văn
+    bản cũ chuyển về trang chủ). Số liệu WRAP về "kéo dài đời quần áo 9 tháng" khác nhau giữa các
+    báo cáo (4–10%, 5–10%, 20–30%) nên không đưa vào.
+  - Nguồn hiện theo ngôn ngữ (`source` / `source_en`). Thêm câu: một dòng trong `MSGS` (`id`, `cat`,
+    `vi`, `en`, `source`, `source_en` nếu cần, `url`); `id` không đổi về sau (Sổ thông điệp nhớ theo
+    `id`; id đã bỏ thì tự lọc khỏi sổ). Nhóm mới thì thêm chữ `rr.cat.<nhóm>`.
+- **Chữ:** `rr.*` trong `js/racroi.js`; `studio.bn_*`, `studio.tu_rac_*`, `studio.tu_book` trong
+  `js/studio.js`.
+- **Kiểm tra:** `python3 tools/check-studio.py racroi` (điện thoại: rơi trong khung, nhặt, thẻ có
+  nguồn, đếm; máy tính: hết giờ → Udon kéo, ngồi chờ; vào trong thì dọn; công tắc tắt; huy hiệu
+  100 + Sổ thông điệp). Các phần kiểm khác tắt sẵn trò này (`BN_OFF`) cho rác khỏi đè lên chỗ
+  chúng chạm.
+
 ### Studio hiện cảnh mặc định thay cho bố cục đã lắp (sửa 13/10/2026)
 
 **Triệu chứng:** mở `studio.html` thấy mặt phố mặc định (monstera, bình tưới, ghế gỗ,
