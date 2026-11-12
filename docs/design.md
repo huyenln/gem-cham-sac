@@ -3406,6 +3406,11 @@ GRANT-vs-policy vẫn 3 dòng cố ý như cũ. Đã kiểm 3 vai: `anon` ghi �
 
 **Ảnh bìa workshop:** `supabase/migrations/20261012b_workshop_covers.sql` —
 **chạy SAU khi PR lên `main`** (ảnh nằm trong repo, chạy trước là ảnh vỡ).
+**Đã chạy 12/11/2026** (migration `workshop_covers`; chỉ sửa dữ liệu, câu kiểm
+GRANT-vs-policy vẫn 3 dòng cố ý như cũ): `bia-so-vai-vun` có ảnh bìa + 2 ảnh,
+`kinusaiga` có ảnh bìa. 13 loại còn lại chưa có ảnh — thêm ở Quản trị → Đặt lịch →
+Loại workshop. Chưa sửa: ảnh bìa dọc hiện nguyên chiều cao ở trang giới thiệu
+(`.ws-page-cover`), nên trên máy tính ảnh cao hơn màn hình và tên workshop nằm dưới mép.
 
 **Trang:**
 - `workshop.html`: dải Chạm Mùa đầu trang → thẻ workshop (thời lượng · tuổi ·
