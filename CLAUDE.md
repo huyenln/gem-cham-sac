@@ -25,7 +25,7 @@ Static website cho cửa hàng **Gem Chạm Sắc** — pop-up store sustainabil
 ├── workshop.html             Đặt lịch workshop (đọc từ Supabase)
 ├── ban-tin.html              Bản tin — bài viết đọc từ Supabase
 ├── admin.html                Trang quản trị cho Anna + nhân viên (noindex, không có link từ nav); tab Kho vải
-├── studio.html               Studio Gem 2D — bản thử, tranh tạm từ ChatGPT (noindex, chưa có trên nav)
+├── studio.html               Gem Studio 2D — công bố 14/11/2026: có trên menu + khối ở trang chủ; tranh vẫn là bản tạm từ ChatGPT (chữ KHÔNG ghi "vẽ tay")
 ├── 404.html                  Fallback page (Udon lạc đường)
 ├── CNAME                     gemchamsac.com (cho GitHub Pages custom domain)
 ├── css/style.css             Single CSS file, design tokens ở đầu
@@ -58,6 +58,7 @@ Static website cho cửa hàng **Gem Chạm Sắc** — pop-up store sustainabil
 ├── tools/design-assets.py    Chạy tay khi có tranh bàn thiết kế mới: cắt vải, khuôn mảnh, rổ, món → images/studio/vai/
 ├── tools/bag-assets.py       Chạy tay khi có tranh túi mới: dáng túi (tranh của Gem + dáng vẽ đứng thẳng), phần quai/lót/đáy → images/studio/vai/mon-*; `--pencil` cho tranh vẽ chì nền trong (ChatGPT, 10/2026)
 ├── tools/check-studio.py     Kiểm tra studio + trình lắp bằng Playwright (Supabase giả lập)
+├── tools/studio-preview.py   Chạy tay khi cảnh ngoài phố đổi: chụp ảnh chia sẻ link (og-studio.jpg) + ảnh khối Studio ở trang chủ
 ├── tools/kv-swatches.py      Chạy tay khi làm lại ảnh các tấm vải nhập sẵn (ảnh gốc trên Drive) → images/studio/vai-that/
 ├── tools/rac-assets.py       Chạy tay khi có tranh Phân loại rác mới (ChatGPT) / poster Tagom → images/studio/rac/, tagom/
 ├── tools/wear-cuts.py        Tách túi từng Mẫu ra khỏi poster sản phẩm → images/studio/wear/<sku>-<mẫu>.webp (Góc thử đồ)
@@ -138,7 +139,7 @@ Quick reference:
 ## Decisions đã chốt (ĐỪNG hỏi lại)
 
 **Scope & content:**
-- 5 trang chính trên nav ("Về Gem" gồm Câu chuyện / Mô hình / Đối tác) + các trang phụ: `season-02.html` (không nằm trong nav), `workshop.html`, `ban-tin.html`, `admin.html` (nhân sự), `studio.html` (bản thử, chưa lên nav). Không tạo thêm trang mới trừ khi user yêu cầu rõ.
+- Menu 7 mục: Trang chủ, "Về Gem" (Câu chuyện / Mô hình / Đối tác), Sản phẩm, **Studio 2D** (`studio.html`, từ 11/2026), Workshop, Bản tin, Ghé thăm. Bảy mục không vừa một hàng dưới 1100px nên ở 960–1099px mục "Trang chủ" ẩn đi (`.nav-home`, logo vẫn về trang chủ). Trang phụ: `season-02.html` (không nằm trong nav), `admin.html` (nhân sự). Không tạo thêm trang mới trừ khi user yêu cầu rõ.
 - **Có hiện giá** (quyết định D3 trong `docs/design.md`, đảo lại "không hiện giá" cũ). Giá đọc từ bảng `products`; món chưa có giá ghi "Liên hệ".
 - Email signup: **Mailerlite đã tích hợp** (account `2380127`, form `41774242`). `js/mailerlite.js` submit bằng `fetch` mode `no-cors` rồi hiện success inline (`.ml-success`) — KHÔNG load script Mailerlite, KHÔNG redirect. Form ở `index.html`, `ghe-tham.html` và `ban-tin.html`. `action` phải là `…/forms/188507892064716532/subscribe` (mã dài) kèm hai ô ẩn `ml-submit`, `anticsrf`: `…/forms/41774242/subscribe` trả 404, mà `no-cors` không thấy lỗi nên trang vẫn báo thành công (lỗi ở `ban-tin.html`, sửa 12/11/2026).
 - **Có giỏ hàng + đặt đơn** (`js/basket.js`): trả khi nhận (COD) hoặc chuyển khoản VietQR (D14). KHÔNG có cổng thẻ, KHÔNG có tài khoản khách — đăng nhập chỉ dành cho nhân sự (`admin.html`). Khách xem lại món đã mua qua "Tủ sưu tầm" bằng mã đơn + SĐT.
@@ -371,10 +372,16 @@ the testing before bothering the user.
 - ✅ Trang quản trị: Hôm nay / Đơn hàng / Đặt lịch / Sản phẩm / Bản tin
 - ✅ UX đợt 2: bỏ lặp, căn trái đoạn dài, badge Season thành dải, vùng bấm 44px, lazy-load
 
-**Studio Gem (`studio.html`, bản thử, chưa lên nav):** mặt tiền → vào studio, 4
+**Gem Studio 2D (`studio.html`, công bố 14/11/2026 — trên menu, có khối ở trang chủ):** mặt tiền → vào studio, 4
 nhân vật, phụ kiện đeo thử, bàn thiết kế, tủ sưu tầm, bảng lời nhắn; owner lắp
 bố cục ở tab "Lắp studio". Chi tiết + cách đưa tranh mới vào: `docs/design.md`.
 Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
+Công bố (Anna 12/11/2026, chi tiết: `docs/design.md` → "Studio: công bố"):
+- Tranh vẫn là bản tạm, chưa có ngày thay: chữ cho khách không ghi "vẽ tay", không gắn nhãn "bản thử"; đã bỏ `noindex`.
+- Ảnh khi chia sẻ link: thẻ `og:*` trong `studio.html`, ảnh `images/studio/og-studio.jpg` (URL tuyệt đối). **Không thêm `og:url` / `rel=canonical`**: Facebook sẽ dẫn về địa chỉ đó và làm rơi `?d=` (thiết kế được chia sẻ) lẫn `?src=`. Cảnh ngoài phố đổi thì chạy `tools/studio-preview.py` rồi bấm "Scrape again" ở Facebook Sharing Debugger.
+- `?src=` trong link (`studio.html?src=fb`, `?src=qr`…): `js/basket.js` giữ trong `sessionStorage gem-src`, đơn đặt trong lượt ghé đó ghi `[nguồn: fb]` vào ghi chú. Không đếm gì khác.
+- Lần tải đầu (`html.st-boot`): Udon + "Đang mở cửa studio…", thanh nút / "?" / giỏ ẩn cho tới khi bố cục về.
+- Khu chỉ có tên tiếng Việt (Lắp studio) thì bản tiếng Anh dùng tên có sẵn của khu đó (`enName` trong `js/studio.js`); muốn tên riêng thì điền "Tên tiếng Anh".
 
 **Studio — làm tiếp (ghi 10/2026, xem chi tiết ở `docs/design.md`):**
 - ✅ Udon giáo viên ở Bàn thiết kế (xong 10/2026): `udon/ud-gv-1..4`, `ui/udgv-bang`.
@@ -446,8 +453,9 @@ Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
   ống quần kéo lại (câu vui `rr.l*`); huy hiệu 100/200/500 chỉ để vui; Sổ thông điệp trong Tủ sưu tầm; tắt ở
   bảng "?" (`gem-batngo`). 55 thông điệp (Tagom, US EPA, EEA, Ủy ban châu Âu, Ellen MacArthur, Climate Box
   của UNDP — bản Đông Nam Á cho khí hậu, sách 2015 cho mẹo) — câu mới chỉ thêm khi đã mở trang nguồn kiểm; không dùng Báo điện tử Chính phủ / mức phạt (Anna 06/11). Chi tiết: `docs/design.md` → "Bất ngờ ngoài phố: rác rơi". Test: `check-studio.py racroi`.
-- Ngoài studio: chưa gắn Studio lên menu (chờ Anna); Gmail secrets cho mail báo đơn
-  (các bước: `docs/design.md` → "Bật gửi mail thật").
+- Mail báo nhân sự: `notify_log` có hai dòng lời nhắn (04/10, 01/11), theo code thì chỉ ghi khi Gmail đã
+  cấu hình và gửi không lỗi; chưa có đơn / giữ chỗ thật nào đi qua. Nên đặt thử một đơn thật rồi huỷ
+  (các bước bật mail: `docs/design.md` → "Bật gửi mail thật").
 
 **Còn lại:**
 - 📸 **Buổi chụp ảnh** — việc chặn nhiều thứ nhất. 8/19 ảnh hiện tại là poster

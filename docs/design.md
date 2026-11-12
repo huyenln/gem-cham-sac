@@ -2678,6 +2678,58 @@ nút bật / tắt ở cuối `js/studio.js` (`bn*`, "Bất ngờ ngoài phố")
   100 + Sổ thông điệp). Các phần kiểm khác tắt sẵn trò này (`BN_OFF`) cho rác khỏi đè lên chỗ
   chúng chạm.
 
+### Studio: công bố (14/11/2026)
+
+Anna chốt 12/11/2026, sau một lượt kiểm toàn bộ web (11/11):
+
+- **Lối vào:** mục "Studio 2D" trên menu (sau Sản phẩm, cả menu điện thoại) + khối "Studio 2D"
+  ở trang chủ, giữa Sản phẩm và Workshop. Ảnh của khối là bản tĩnh
+  (`images/studio/xem-truoc-mat-tien.webp`), **không nhúng studio thật**: studio tải khoảng 3 MB
+  tranh, và vuốt để đi dạo sẽ tranh với cuộn trang. PR #47 (ra mắt thử 12/10, chưa merge) được
+  thay bằng đợt này.
+- **Menu 7 mục** không vừa một hàng dưới 1100px (nút ngôn ngữ rớt xuống hàng hai, đo ở cả hai
+  ngôn ngữ). Ở 960–1099px mục "Trang chủ" ẩn đi (`.nav-menu > .nav-home`); logo vẫn về trang chủ.
+- **Tranh vẫn là bản tạm (ChatGPT), chưa có ngày thay.** Vì vậy chữ cho khách không ghi "vẽ
+  tay" (câu mô tả cũ của `studio.html` có ghi), và cũng không gắn nhãn "bản thử" hay hứa "đang
+  vẽ lại". Đã bỏ `noindex`.
+- **Ảnh khi chia sẻ link:** `studio.html` có `og:title` / `og:description` / `og:image`
+  (1200×630, `images/studio/og-studio.jpg`, URL tuyệt đối — Facebook và Zalo không nhận đường
+  dẫn tương đối; `index.html` và `season-02.html` cũng sửa thành tuyệt đối). **Cố ý không có
+  `og:url` và `rel=canonical`:** Facebook lấy địa chỉ đó làm đích của bài đăng, nên link thiết kế
+  (`?d=…`) và link có nguồn (`?src=…`) sẽ rơi mất phần sau dấu hỏi.
+  Hai ảnh chụp từ chính trang thật bằng `python3 tools/studio-preview.py` (trang đọc bố cục đã
+  phát hành từ Supabase, công cụ giấu thanh nút và nhãn rồi chụp). Chạy lại khi cảnh ngoài phố
+  đổi, commit hai file, rồi vào Facebook Sharing Debugger bấm "Scrape again" — Facebook giữ ảnh
+  cũ rất lâu.
+- **Nguồn của đơn:** `js/basket.js` đọc `?src=` (chữ thường / số / gạch, tối đa 24 ký tự) vào
+  `sessionStorage gem-src`; đơn đặt trong lượt ghé đó ghi `[nguồn: …]` vào ghi chú. Bài đăng
+  dùng `…/studio.html?src=fb`, thẻ QR ở quầy `?src=qr`… Không có link thì nguồn là trang đặt
+  (`studio` / `web`), link thiết kế được chia sẻ là `link-chia-se`. Không đếm lượt xem, không
+  gửi đi đâu.
+- **Lần tải đầu:** trước đây trong lúc chờ bố cục (khoảng 2 giây trên 4G tốt, 5 giây trên 4G
+  chậm) màn hình trống, bên dưới là thanh nút của bên trong studio, bấm không ăn. Giờ `<html>`
+  mang thêm lớp `st-boot` cho riêng lần chờ này (`st-wait` còn dùng cho mỗi lần qua cửa): Udon
+  và dòng "Đang mở cửa studio…" hiện sau 0,6 giây, thanh nút / "?" / giỏ ẩn tới khi cảnh dựng
+  xong. Thêm `preconnect` tới Supabase.
+- **Tên tiếng Anh của các khu:** khu chủ đặt tên tiếng Việt mà để trống "Tên tiếng Anh" thì bản
+  tiếng Anh từng hiện tên Việt ("Góc thử đồ", "Quầy thu ngân"…). Giờ dùng tên tiếng Anh có sẵn
+  của việc khu đó làm (`enName` → `ACT_NAME`); khu loại "link" giữ chữ của chủ vì không có tên
+  sẵn. Muốn tên riêng thì điền "Tên tiếng Anh" trong Lắp studio.
+- **Kiểm tra:** `python3 tools/check-studio.py launch` (tên khu hai ngôn ngữ, `?src=`, thẻ chia
+  sẻ) và `slow` (dòng chờ, thanh nút ẩn).
+
+**Deploy kẹt 06/11 — đáng nhớ.** Lượt Pages #121 (PR #91): bước "Deploy to GitHub Pages" đứng ở
+`updating_pages` 10 phút rồi `Timeout reached, aborting!`. Bấm chạy lại thì lượt đó nằm mãi ở
+"Queued" mà không tạo job nào (huỷ qua API cũng bị từ chối: `Cannot cancel a workflow re-run
+that has not yet queued`), nên bản live chậm hơn `main` một lần merge suốt 6 ngày mà không ai
+biết. Gỡ bằng **một commit mới trên `main`** (PR #92): lượt #122 chạy 51 giây. Sau mỗi lần merge
+nên nhìn bản live (`?v=` trong `studio.html`), đừng chỉ tin là đã lên.
+
+**Còn lại sau đợt này** (đã báo Anna): mã QR điền sẵn số tiền khi giá chưa chốt, form đặt hàng
+chưa kiểm số điện thoại, trò Phân loại rác trên điện thoại (bao nằm dưới mép màn hình) — làm ở
+PR kế tiếp; ảnh bài Bản tin nặng (trình tải bài chưa thu nhỏ ảnh), trang Workshop không còn buổi
+nào sắp tới — sau công bố.
+
 ### Studio hiện cảnh mặc định thay cho bố cục đã lắp (sửa 13/10/2026)
 
 **Triệu chứng:** mở `studio.html` thấy mặt phố mặc định (monstera, bình tưới, ghế gỗ,
