@@ -3479,7 +3479,9 @@ Loại workshop. Chưa sửa: ảnh bìa dọc hiện nguyên chiều cao ở tr
 (`.ws-page-cover`), nên trên máy tính ảnh cao hơn màn hình và tên workshop nằm dưới mép.
 
 **Ảnh bìa từ bản in (12/11/2026):** `supabase/migrations/20261112_workshop_covers_pdf.sql`
-— cũng **chạy SAU khi PR lên `main`**. 12 loại còn trống lấy ảnh bìa từ trang 4–5 của
+— cũng **chạy SAU khi PR lên `main`**. **Đã chạy 12/11/2026** (migration
+`workshop_covers_pdf`, sau khi #96 deploy xong và 15 ảnh trả 200 trên gemchamsac.com;
+chỉ sửa dữ liệu, không đụng GRANT / policy). Trang thật: 14/15 thẻ có ảnh. 12 loại còn trống lấy ảnh bìa từ trang 4–5 của
 "Thông tin Workshop Chạm Mùa": mỗi thẻ trong bản in có một ảnh, khớp loại theo tên + giá +
 nguyên liệu in cạnh ảnh (không đoán theo hình). Thêm 3 ảnh phụ: kinusaiga (cắt vải), tô mặt
 nạ (ảnh trang 2), sổ còng (đục lỗ). "Giấy tái chế" không có trong bản in nên vẫn trống.
