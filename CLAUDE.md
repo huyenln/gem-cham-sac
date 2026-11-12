@@ -379,7 +379,7 @@ bố cục ở tab "Lắp studio". Chi tiết + cách đưa tranh mới vào: `d
 Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
 Công bố (Anna 12/11/2026, chi tiết: `docs/design.md` → "Studio: công bố"):
 - Tranh vẫn là bản tạm, chưa có ngày thay: chữ cho khách không ghi "vẽ tay", không gắn nhãn "bản thử"; đã bỏ `noindex`.
-- Ảnh khi chia sẻ link: thẻ `og:*` trong `studio.html`, ảnh `images/studio/og-studio.jpg` (URL tuyệt đối). **Không thêm `og:url` / `rel=canonical`**: Facebook sẽ dẫn về địa chỉ đó và làm rơi `?d=` (thiết kế được chia sẻ) lẫn `?src=`. Cảnh ngoài phố đổi thì chạy `tools/studio-preview.py` rồi bấm "Scrape again" ở Facebook Sharing Debugger.
+- Ảnh khi chia sẻ link: thẻ `og:*` trong `studio.html`, ảnh `images/studio/og-studio.jpg` (URL tuyệt đối). **Không thêm `og:url` / `rel=canonical`**: Facebook sẽ dẫn về địa chỉ đó và làm rơi `?d=` (thiết kế được chia sẻ) lẫn `?src=`. Cảnh ngoài phố đổi thì chạy `tools/studio-preview.py`, **mở hai ảnh xem ở kích thước thật**, đổi số sau `og-studio.jpg?v=` trong `studio.html` (địa chỉ mới thì Facebook / Zalo mới lấy ảnh mới), rồi bấm "Scrape again" ở Facebook Sharing Debugger. Công cụ chạy trình duyệt `vi-VN` và dừng nếu có gì đè lên cảnh (ảnh đầu tiên từng dính thanh "This site is also available in English").
 - `?src=` trong link (`studio.html?src=fb`, `?src=qr`…): `js/basket.js` giữ trong `sessionStorage gem-src`, đơn đặt trong lượt ghé đó ghi `[nguồn: fb]` vào ghi chú. Không đếm gì khác.
 - Lần tải đầu (`html.st-boot`): Udon + "Đang mở cửa studio…", thanh nút / "?" / giỏ ẩn cho tới khi bố cục về.
 - Khu chỉ có tên tiếng Việt (Lắp studio) thì bản tiếng Anh dùng tên có sẵn của khu đó (`enName` trong `js/studio.js`); muốn tên riêng thì điền "Tên tiếng Anh".

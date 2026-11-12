@@ -2699,8 +2699,15 @@ Anna chốt 12/11/2026, sau một lượt kiểm toàn bộ web (11/11):
   (`?d=…`) và link có nguồn (`?src=…`) sẽ rơi mất phần sau dấu hỏi.
   Hai ảnh chụp từ chính trang thật bằng `python3 tools/studio-preview.py` (trang đọc bố cục đã
   phát hành từ Supabase, công cụ giấu thanh nút và nhãn rồi chụp). Chạy lại khi cảnh ngoài phố
-  đổi, commit hai file, rồi vào Facebook Sharing Debugger bấm "Scrape again" — Facebook giữ ảnh
-  cũ rất lâu.
+  đổi, commit hai file, **đổi số sau `og-studio.jpg?v=` trong `studio.html`** (Facebook và Zalo
+  giữ ảnh theo địa chỉ, địa chỉ mới thì mới lấy ảnh mới), rồi vào Facebook Sharing Debugger bấm
+  "Scrape again" — Facebook giữ ảnh cũ rất lâu.
+  **Lỗi đã gặp (12/11/2026):** hai ảnh đầu tiên lên `main` có dính thanh "This site is also
+  available in English" ở góc dưới trái. Công cụ chụp chạy trình duyệt tiếng Anh nên trang hiện
+  thanh mời đổi ngôn ngữ (`.lang-hint` trong `js/i18n.js`), và ảnh chỉ được xem ở cỡ thu nhỏ nên
+  không ai thấy. Phát hiện khi kiểm bản live sau merge, chụp lại ngay trong ngày. Công cụ giờ
+  chạy trình duyệt `vi-VN`, giấu `.lang-hint`, và **dừng lại không lưu ảnh** nếu còn thứ gì nằm
+  đè lên cảnh (dò từng điểm cách nhau 24px). Ảnh tạo ra thì mở xem ở kích thước thật.
 - **Nguồn của đơn:** `js/basket.js` đọc `?src=` (chữ thường / số / gạch, tối đa 24 ký tự) vào
   `sessionStorage gem-src`; đơn đặt trong lượt ghé đó ghi `[nguồn: …]` vào ghi chú. Bài đăng
   dùng `…/studio.html?src=fb`, thẻ QR ở quầy `?src=qr`… Không có link thì nguồn là trang đặt
@@ -3011,6 +3018,14 @@ Luật chạm (điện thoại và máy tính như nhau; `tap()` trong `js/studi
 - **Điểm dừng lạc:** khung bấm có điểm dừng cách khung quá max(bề rộng khung, 400px)
   → dừng giữa khung (`standNear`). Bố cục đang chạy có một chỗ như vậy: khung "Gối, thảm
   & quà" (cabinet) trên tủ kệ x 3249–4054, điểm dừng ở x 6078. Nên kéo lại trong trình lắp.
+  **Nguyên nhân (tìm ra 12/10/2026 trong PR #47, PR đó đã đóng; chưa sửa, kiểm lại 12/11 vẫn
+  vậy):** kéo cả khung trong trình lắp chỉ dời `box`, không dời `stand` (`move()` trong
+  `js/studio-editor.js`, nhánh `kind === 'hot'`). Khung này từng ở x 5487–6179 (bố cục
+  vintage), bị kéo sang trái, điểm dừng ở lại. Bản `live`, `draft`, `p-202610-interior-kyo0`
+  và `p-ban-truoc` đều mang 6078. Khách không bị ảnh hưởng (đã có `standNear`). Khi sửa: cộng
+  `dx` vào `stand` lúc kéo cả khung, và đặt lại 6078 → giữa khung trong cả 4 dòng — **làm lúc
+  không ai mở trình lắp** (trình lắp giữ bố cục trong bộ nhớ và tự lưu đè `draft` 2 giây sau
+  mỗi thay đổi).
 - Câu chào của Udon và dòng hướng dẫn cho trình đọc màn hình đổi theo: "Chạm vào nhãn tên
   để mở từng góc, chạm chỗ khác để đi dạo nhé."
 
