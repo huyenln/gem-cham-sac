@@ -2182,7 +2182,7 @@
     if (modal.hidden) lastFocus = document.activeElement;
     sheetEl.classList.toggle('is-full', !!full);
     modal.classList.toggle('is-full', !!full);
-    document.documentElement.classList.remove('zt-open');
+    document.documentElement.classList.remove('zt-open', 'pl-open');
     sheetBody.innerHTML = html;
     sheetEl.scrollTop = 0;
     if (modal.hidden && !sheetInHistory) {
@@ -2196,7 +2196,7 @@
   function closeSheet(fromHistory) {
     if (modal.hidden) return;
     modal.hidden = true;
-    document.documentElement.classList.remove('zt-open');
+    document.documentElement.classList.remove('zt-open', 'pl-open');
     if (pendingLayout) { var pl = pendingLayout; pendingLayout = null; setTimeout(function () { lateLayout(pl.L, pl.raw); }, 0); }
     sheetBody.innerHTML = '';
     sheetEl.classList.remove('is-full');

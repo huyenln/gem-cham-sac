@@ -496,6 +496,7 @@
     api = a;
     if (window.GemI18n && window.GemI18n.add) window.GemI18n.add(STR);
     api.openSheet('<div class="pl" data-pl-view="hub"></div>', true);
+    document.documentElement.classList.add('pl-open');   // js/studio.js takes it off when the sheet closes
     root = api.body().querySelector('.pl');
     root.addEventListener('click', onClick);
     root.addEventListener('pointerdown', onDown);
@@ -514,6 +515,17 @@
     root.innerHTML = html;
     var sh = root.closest('.st-sheet');
     if (sh) sh.scrollTop = 0;
+  }
+
+  // A phone: the tools and the bags are pinned to the bottom of the sheet
+  // (css .pl-dock). A level then starts with its clock at the top and the
+  // table right above them, not with the title over a table half hidden.
+  function settle() {
+    var sh = root && root.closest('.st-sheet'), dock = root && root.querySelector('.pl-dock');
+    var top = root && root.querySelector('.pl-hud, .pl-count'), stage = root && root.querySelector('.pl-stage');
+    if (!sh || !dock || !top || !stage || getComputedStyle(dock).position !== 'sticky') return;
+    if (stage.getBoundingClientRect().bottom <= dock.getBoundingClientRect().top) return;   // all of it shows already
+    sh.scrollTop += top.getBoundingClientRect().top - sh.getBoundingClientRect().top - 8;
   }
 
   // how far this visitor has come (the highest level done), and the best rounds
@@ -598,6 +610,7 @@
     // the next ones in the background (each about 12 KB)
     S.items.forEach(function (it) { var im = new Image(); im.src = R + it.id + '.webp'; });
     renderSort();
+    settle();
     guideFirst('sort');
     musicStart();
   }
@@ -609,11 +622,11 @@
       head('pl.sort_h') + tr('p', 'pl.sort_p', ' class="st-lead pl-lead"') +
       '<p class="pl-count pt-small" aria-live="polite"></p>' +
       '<div class="pl-stage pl-stage-sort"><div class="pl-one"></div>' + udon() + '</div>' +
-      '<p class="pl-say" aria-live="polite"></p>' +
+      '<div class="pl-dock"><p class="pl-say" aria-live="polite"></p>' +
       '<div class="pl-acts pl-next-row" hidden>' +
         '<button type="button" class="pt-tool" data-pl-see hidden>' + esc(t('pl.see')) + '</button>' +
         '<button type="button" class="st-btn" data-pl-go="next">' + esc(t('pl.next')) + '</button></div>' +
-      bins(ALL_BINS) +
+      bins(ALL_BINS) + '</div>' +
       guideHtml('sort', 'pl.sort_h', 'pl.g2_p', [
         '<span class="pl-gi">' + S.items.slice(0, 3).map(function (it, k) { return img(it.id, 'pl-gi-' + k, ''); }).join('') + '</span>',
         '<span class="pl-gi">' + img('bao', 'pl-gi-d', '') + '<span class="pl-gi-code">' + codeMark(6) + '</span></span>',
@@ -812,14 +825,15 @@
     view('nhanh',
       head('pl.fast_h') + tr('p', 'pl.fast_p', ' class="st-lead pl-lead"') + hud() +
       '<div class="pl-stage pl-stage-sort"><div class="pl-one"></div>' + ready() + '</div>' +
-      '<p class="pl-say" aria-live="polite"></p>' +
-      bins(ALL_BINS) +
+      '<div class="pl-dock"><p class="pl-say" aria-live="polite"></p>' +
+      bins(ALL_BINS) + '</div>' +
       guideHtml('nhanh', 'pl.fast_h', 'pl.g3_p', [
         '<span class="pl-gi">' + S.deck.slice(0, 3).map(function (it, k) { return img(it.id, 'pl-gi-' + k, ''); }).join('') + '</span>',
         '<span class="pl-gi"><b class="pl-gi-num is-red">−3</b></span>',
         '<span class="pl-gi"><b class="pl-gi-num">10</b></span>']));
     clockSet(60000);
     fastNext();
+    settle();
     S.answered = true;   // not before "Bắt đầu!"
     guideFirst('nhanh');
     musicStart();
@@ -908,17 +922,18 @@
     view(level,
       head(cfg.h) + tr('p', cfg.p, ' class="st-lead pl-lead"') + hud(intro ? 'intro' : five ? 'bin' : '') +
       '<div class="pl-stage pl-stage-ban"><div class="pl-table" role="group"></div>' + (intro ? '' : ready()) + '</div>' +
-      '<div class="pl-tools" role="group" aria-label="' + esc(t('pl.tools')) + '">' + TOOLS.map(function (k) {
+      '<div class="pl-dock"><div class="pl-tools" role="group" aria-label="' + esc(t('pl.tools')) + '">' + TOOLS.map(function (k) {
         return '<button type="button" class="pl-tool" data-pl-tool="' + k + '">' + toolSvg(k) + '<span>' + esc(t('pl.t.' + k)) + '</span></button>';
       }).join('') + '</div>' +
       '<p class="pl-say" aria-live="polite"></p>' +
       (intro ? '<div class="pl-acts pl-done" hidden><button type="button" class="st-btn" data-pl-go="sort">' + esc(t('pl.go_lv').replace('{n}', 2)) + '</button></div>' : '') +
-      bins(intro ? BIN_IDS : ALL_BINS) +
+      bins(intro ? BIN_IDS : ALL_BINS) + '</div>' +
       guideHtml(level, cfg.h, cfg.g, guideIlls(level)));
     if (!intro) clockSet(cfg.ms);
     if (intro) S.sel = S.table[0].k;
     drawTable();
     if (five) binDraw();
+    settle();
     guideFirst(level);
     musicStart();
     if (intro) { S.go = true; say(t('pl.intro_start')); }
