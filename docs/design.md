@@ -3493,6 +3493,13 @@ nạ (ảnh trang 2), sổ còng (đục lỗ). "Giấy tái chế" không có t
 - Máy này không có thư viện PDF: ảnh được tách bằng cách đọc thẳng luồng JPEG
   (`/DCTDecode`) trong file, vị trí ảnh / chữ lấy từ content stream của từng trang.
 
+**Xốp Kinusaiga là tái sử dụng, không phải tái chế (13/11/2026):** Gem chỉ dùng lại tấm xốp
+EPS, không tái chế. Mọi chữ về bộ kit / tấm xốp ghi "xốp tái sử dụng" / "reused foam board",
+**không** ghi "tái chế" / "recycled" (bản PDF hướng dẫn Kinusaiga cũ vẫn ghi sai, đừng chép).
+Dòng `kinusaiga` trong `workshop_types` sửa bằng
+`supabase/migrations/20261113_kinusaiga_xop_tai_su_dung.sql` (chỉ đổi đúng cụm chữ trong
+`desc_vi/en`, `long_vi/en` bằng `replace()`). Chưa chạy: chạy sau khi chủ shop duyệt chữ.
+
 **Trang:**
 - `workshop.html`: dải Chạm Mùa đầu trang → thẻ workshop (thời lượng · tuổi ·
   giá) → lịch → hành trình Ra Đồng / Vào Hội / Du Uyển, ưu đãi, gửi xe. Chữ
