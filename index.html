@@ -9,7 +9,7 @@
   <meta property="og:title" content="Gem Chạm Sắc · Chạm Xanh · Gửi Sắc">
   <meta property="og:description" content="Hành trình của những điều tử tế và bền vững.">
   <meta property="og:type" content="website">
-  <meta property="og:image" content="images/logo/gem_logo_full.png">
+  <meta property="og:image" content="https://gemchamsac.com/images/logo/gem_logo_full.png">
 
   <link rel="icon" type="image/png" href="images/logo/gem_logo_icon_120.png">
 
@@ -34,7 +34,7 @@
       </a>
 
       <ul class="nav-menu">
-        <li><a href="index.html" class="active" data-i18n="nav.home">Trang chủ</a></li>
+        <li class="nav-home"><a href="index.html" class="active" data-i18n="nav.home">Trang chủ</a></li>
         <li class="has-sub">
           <button type="button" class="nav-sub-toggle" aria-expanded="false"
                   aria-controls="nav-sub-about" data-i18n-attr="aria-label:nav.about_aria">
@@ -47,6 +47,7 @@
           </ul>
         </li>
         <li><a href="san-pham.html" data-i18n="nav.products">Sản phẩm</a></li>
+        <li><a href="studio.html" data-i18n="nav.studio">Studio 2D</a></li>
         <li><a href="workshop.html" data-i18n="nav.workshop">Workshop</a></li>
         <li><a href="ban-tin.html" data-i18n="nav.news">Bản tin</a></li>
         <li><a href="ghe-tham.html" data-i18n="nav.visit">Ghé thăm</a></li>
@@ -74,6 +75,7 @@
       <a href="mo-hinh.html" class="nav-mobile-sub" data-i18n="nav.model">Mô hình</a>
       <a href="doi-tac.html" class="nav-mobile-sub" data-i18n="nav.partners">Đối tác</a>
       <a href="san-pham.html" data-i18n="nav.products">Sản phẩm</a>
+      <a href="studio.html" data-i18n="nav.studio">Studio 2D</a>
       <a href="workshop.html" data-i18n="nav.workshop">Workshop</a>
       <a href="ban-tin.html" data-i18n="nav.news">Bản tin</a>
       <a href="ghe-tham.html" data-i18n="nav.visit">Ghé thăm</a>
@@ -266,6 +268,32 @@
         <a href="san-pham.html" class="btn btn-ghost">
           <span data-i18n="home.products_more">Khám phá tất cả sản phẩm</span>
           <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- STUDIO 2D TEASER. Ảnh là bản tĩnh chụp từ cảnh ngoài phố của studio
+       (tools/studio-preview.py), không nhúng studio thật: studio tải khoảng
+       3 MB tranh, và vuốt để đi dạo sẽ tranh với cuộn trang. -->
+  <section class="section">
+    <div class="container">
+      <div class="studio-teaser">
+        <div class="studio-teaser-text">
+          <span class="hand" data-i18n="home.studio_eyebrow">Studio 2D,</span>
+          <h2 data-i18n="home.studio_title">Dạo một vòng studio, ngay trên màn hình.</h2>
+          <p data-i18n="home.studio_desc">
+            Chọn một nhân vật rồi đi dạo: thử phụ kiện, ghép vải vụn thành món của riêng bạn ở Bàn thiết kế,
+            chơi phân loại rác cùng Udon và chọn quà ngay trên kệ.
+          </p>
+          <a href="studio.html" class="btn btn-primary">
+            <span data-i18n="home.studio_cta">Vào Studio 2D</span>
+            <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+        <!-- the picture repeats the button's link: one stop for the keyboard and for screen readers -->
+        <a href="studio.html" class="studio-teaser-img" tabindex="-1" aria-hidden="true">
+          <img src="images/studio/xem-truoc-mat-tien.webp" alt="" width="720" height="900" loading="lazy">
         </a>
       </div>
     </div>

@@ -192,12 +192,14 @@
     'basket.f_pickup':      { vi: `Mình sẽ tự đến cửa hàng lấy`, en: `I'll pick it up at the store` },
     'basket.send':          { vi: `Gửi đơn cho Gem`, en: `Send order to Gem` },
     'basket.sending':       { vi: `Đang gửi...`, en: `Sending...` },
-    'basket.required':      { vi: `Bạn điền giúp chúng mình tên và số điện thoại nhé.`, en: `Please fill in your name and phone number.` },
+    'basket.err_name':      { vi: `Bạn cho chúng mình xin tên nhé.`, en: `Please tell us your name.` },
+    'basket.err_phone':     { vi: `Số điện thoại chưa đúng. Bạn xem lại giúp chúng mình nhé.`, en: `That phone number doesn't look right. Please check it.` },
+    'basket.err_addr':      { vi: `Bạn điền địa chỉ nhận hàng, hoặc chọn tự đến cửa hàng lấy nhé.`, en: `Please give a delivery address, or tick that you'll pick it up at the shop.` },
 
     'basket.chat_h':        { vi: `Bạn muốn nhắn qua đâu?`, en: `Where would you like to message us?` },
     'basket.chat_p':        { vi: `Chúng mình đã copy nội dung giỏ hàng — bạn chỉ cần dán vào cửa sổ chat là xong.`, en: `We've copied your basket — just paste it into the chat window.` },
     'basket.chat_email':    { vi: `Email`, en: `Email` },
-    'basket.copied':        { vi: `Đã copy nội dung giỏ hàng.`, en: `Basket contents copied.` },
+    'basket.copied_all':    { vi: `Đã copy nội dung giỏ hàng.`, en: `Basket contents copied.` },   // own key: 'basket.copied' is the copy buttons' "Đã chép"
 
     'basket.done_h':        { vi: `Chúng mình nhận được rồi.`, en: `We've got it.` },
     'basket.custom':        { vi: `Thiết kế riêng`, en: `Your own design` },
@@ -214,8 +216,10 @@
     'basket.pay_h':         { vi: `Cách trả tiền`, en: `How you'll pay` },
     'basket.pay_cod':       { vi: `Trả khi nhận hàng`, en: `Pay on delivery` },
     'basket.pay_cod_p':     { vi: `Đưa tiền cho người giao.`, en: `Hand the cash to the courier.` },
+    'basket.pay_cod_pick_p': { vi: `Trả tại cửa hàng khi bạn đến lấy.`, en: `Pay at the shop when you pick it up.` },
     'basket.pay_qr':        { vi: `Chuyển khoản QR`, en: `Bank transfer (QR)` },
     'basket.pay_qr_p':      { vi: `Quét mã, số tiền và mã đơn điền sẵn.`, en: `Scan the code — amount and order code are filled in.` },
+    'basket.pay_qr_open_p': { vi: `Gem nhắn bạn tổng tiền kèm mã QR sau khi chốt giá.`, en: `Gem will message you the total and a QR code once the price is settled.` },
     'basket.prepay_required': { vi: `Đơn này cần chuyển khoản trước. Bạn chọn “Chuyển khoản QR” giúp chúng mình nhé.`, en: `This order needs a transfer up front. Please choose “Bank transfer (QR)”.` },
     'basket.copy':          { vi: `Chép`, en: `Copy` },
     'basket.copied':        { vi: `Đã chép`, en: `Copied` },
@@ -229,6 +233,8 @@
     'basket.qr_save_failed':{ vi: `Chưa lưu được ảnh. Bạn chụp màn hình cũng được nhé.`, en: `Could not save the image — a screenshot works too.` },
     'basket.qr_hint':       { vi: `Đang xem trên chính điện thoại này? Bấm “Lưu ảnh QR” rồi mở app ngân hàng, chọn quét từ ảnh — hoặc bấm “Chép” rồi nhập tay.`, en: `Reading this on the same phone? Tap “Save QR image”, then open your banking app and scan from your photos — or tap “Copy” and type it in.` },
     'basket.done_qr_p':     { vi: `Chuyển xong bạn không cần báo lại — chúng mình thấy tiền về là nhắn cho bạn ngay.`, en: `No need to tell us once you've sent it — we'll message you as soon as the transfer lands.` },
+    'basket.done_qr_open_p': { vi: `Đơn có món giá tuỳ từng chiếc, nên chúng mình chưa đưa mã QR ngay. Gem sẽ nhắn bạn tổng tiền kèm mã QR trong hôm nay. Cảm ơn bạn đã chọn đồ của chúng mình.`, en: `Some pieces in this order are priced one by one, so there is no QR code yet. Gem will message you the total and a QR code today. Thank you for choosing our pieces.` },
+    'basket.qr_ship':       { vi: `Số tiền trên chưa gồm phí giao hàng. Gem báo phí giao khi nhắn lại cho bạn.`, en: `The amount above does not include shipping. Gem will tell you the shipping fee when we message you.` },
     'basket.order_failed':  { vi: `Chưa gửi được đơn. Bạn nhắn Zalo cho chúng mình nhé.`, en: `We could not send the order. Please message us on Zalo.` },
     'basket.done_mail_p':   { vi: `Chúng mình vừa mở sẵn email cho bạn — bạn bấm Gửi trong app email là đơn về tới Gem nhé.`, en: `We've opened a pre-filled email for you — hit Send in your mail app and the order reaches Gem.` },
     'basket.done_btn':      { vi: `Xem tiếp sản phẩm`, en: `Keep browsing` },
@@ -261,6 +267,16 @@
   var items = [];   // [{ sku, qty, spec?, opt?, pics? }]  spec = design code from js/patch.js,
                     // opt = key of the scent / size picked (products.options)
   var liveSkus = null;   // skus the database sells, in its order; null until it answers
+
+  // Where this visit came from, when the link says so: studio.html?src=fb in a
+  // Facebook post, ?src=qr on a card at the counter. Kept for this tab's
+  // visit and written into the order note as [nguồn: …], the one word Gem
+  // already reads there. Nothing is counted or sent anywhere else. Only a
+  // short lowercase tag gets in: the note is free text.
+  try {
+    var srcTag = new URLSearchParams(location.search).get('src');
+    if (srcTag && /^[a-z0-9-]{1,24}$/.test(srcTag)) sessionStorage.setItem('gem-src', srcTag);
+  } catch (e) { /* old browser / private mode */ }
   // Lines read back for products only the database knows (added in admin:
   // consignment, the bags a design is ordered as). Held, not dropped, until
   // it answers; still written back meanwhile so nothing is lost.
@@ -610,11 +626,20 @@
   var orderPay = null;   // 'cod' | 'qr' — quyết định màn cảm ơn hiện gì
   var orderSum = 0;      // tổng đã chốt, để sinh QR đúng số tiền
   var orderCustom = false; // đơn có món thiết kế riêng: chưa thu tiền, chờ duyệt ảnh vải
+  var orderOpen = false;   // giá chưa chốt (món "Liên hệ" / khoảng giá): chưa đưa mã QR, Gem nhắn tổng tiền sau
+  var orderShip = false;   // giao tận nơi: số tiền trên mã QR chưa gồm phí giao
   var PAY = null;        // cấu hình thanh toán đọc từ Supabase
 
   /* ---------- chọn cách trả tiền ----------
      Chỉ hiện khi đọc được cấu hình. Không đọc được thì bỏ qua phần này và
      đơn vẫn gửi được — em gái hỏi lại cách trả tiền qua Zalo như trước. */
+  // Is what the customer owes still open? Yes when a piece is "Liên hệ" or
+  // priced as a range (each one of a kind, "giá tuỳ từng chiếc"): Gem settles
+  // the price when it messages back. Until 11/2026 the QR screen filled in the
+  // sum of the lowest prices anyway (a 80.000–300.000đ bag: 80.000đ) and said
+  // "no need to tell us once you've sent it".
+  function priceOpen() { return hasRange() || hasUnpriced(); }
+
   function payChoiceHTML() {
     // Custom pieces are confirmed by photo first, so nobody pays up front for
     // fabric they haven't seen. The order goes in with no payment method.
@@ -638,8 +663,11 @@
       '<legend data-i18n="basket.pay_h">Cách trả tiền</legend>' +
       (cod ? opt('cod', 'basket.pay_cod', 'Trả khi nhận hàng',
                  'basket.pay_cod_p', 'Đưa tiền cho người giao.', qr ? true : true) : '') +
-      (qr  ? opt('qr', 'basket.pay_qr', 'Chuyển khoản QR',
-                 'basket.pay_qr_p', 'Quét mã, số tiền và mã đơn điền sẵn.', !cod) : '') +
+      (qr  ? (priceOpen()
+                ? opt('qr', 'basket.pay_qr', 'Chuyển khoản QR',
+                      'basket.pay_qr_open_p', 'Gem nhắn bạn tổng tiền kèm mã QR sau khi chốt giá.', !cod)
+                : opt('qr', 'basket.pay_qr', 'Chuyển khoản QR',
+                      'basket.pay_qr_p', 'Quét mã, số tiền và mã đơn điền sẵn.', !cod)) : '') +
     '</fieldset>';
   }
 
@@ -949,15 +977,31 @@
           '<span data-i18n="basket.subtotal">Tổng</span>' +
           '<strong>' + subtotalLabel() + '</strong>' +
         '</div>' +
+        // above the button: under it the line sat below the fold on a phone
+        '<p class="gb-err" role="alert" hidden></p>' +
         '<button type="submit" class="btn btn-primary gb-submit" data-i18n="basket.send">Gửi đơn cho Gem</button>' +
-        '<p class="gb-err" hidden></p>' +
       '</form>';
 
     var form = panelBody.querySelector('.gb-form');
     var pickup = form.querySelector('[name="pickup"]');
     var addrField = form.querySelector('.gb-addr');
 
-    function syncAddr() { addrField.hidden = pickup.checked; }
+    // picked up at the shop: no address to give, and nobody to hand the cash to
+    var codHint = form.querySelector('.gb-pay-opt input[value="cod"]');
+    codHint = codHint && codHint.closest('.gb-pay-opt').querySelector('small');
+    function syncAddr() {
+      addrField.hidden = pickup.checked;
+      if (pickup.checked) fieldError(form, 'address', null);
+      if (codHint) {
+        var key = pickup.checked ? 'basket.pay_cod_pick_p' : 'basket.pay_cod_p';
+        codHint.setAttribute('data-i18n', key);
+        codHint.textContent = t(key, pickup.checked ? 'Trả tại cửa hàng khi bạn đến lấy.' : 'Đưa tiền cho người giao.');
+      }
+    }
+    // a field's complaint goes as soon as it is typed in again
+    form.addEventListener('input', function (e) {
+      if (e.target && e.target.name) fieldError(form, e.target.name, null);
+    });
     pickup.addEventListener('change', syncAddr);
     syncAddr();
 
@@ -1010,7 +1054,7 @@
             '<path d="M22 6l-10 7L2 6"/></svg>' +
           '</span><span data-i18n="basket.chat_email">Email</span></a>' +
       '</div>' +
-      '<p class="gb-copied" hidden data-i18n="basket.copied"></p>';
+      '<p class="gb-copied" hidden data-i18n="basket.copied_all"></p>';
 
     panelBody.querySelector('.gb-back').addEventListener('click', function () {
       view = 'basket'; renderPanel();
@@ -1077,6 +1121,7 @@
           : '') +
         copyRow(t('basket.qr_ref', 'Nội dung'), orderCode, orderCode, true) +
       '</div>' +
+      (orderShip ? '<p class="gb-qr-hint gb-qr-ship" data-i18n="basket.qr_ship"></p>' : '') +
       '<p class="gb-qr-hint" data-i18n="basket.qr_hint"></p>' +
     '</div>';
   }
@@ -1092,11 +1137,12 @@
           ? '<p class="gb-code-label" data-i18n="basket.code_label"></p>' +
             '<p class="gb-code">' + esc(orderCode) + '</p>'
           : '') +
-        (orderPay === 'qr' && PAY && orderCode ? renderQrPay() : '') +
+        // a price still open: no code and no amount yet, Gem sends both once it is settled
+        (orderPay === 'qr' && PAY && orderCode && !orderOpen ? renderQrPay() : '') +
         '<p class="gb-empty-p" data-i18n="' +
           (doneMode === 'mailto' ? 'basket.done_mail_p'
             : orderCustom ? 'basket.done_custom_p'
-            : orderPay === 'qr' ? 'basket.done_qr_p' : 'basket.done_p') + '"></p>' +
+            : orderPay === 'qr' ? (orderOpen ? 'basket.done_qr_open_p' : 'basket.done_qr_p') : 'basket.done_p') + '"></p>' +
         '<button type="button" class="btn btn-primary gb-done-btn" data-i18n="basket.done_btn"></button>' +
       '</div>';
 
@@ -1222,6 +1268,25 @@
     document.body.removeChild(ta);
   }
 
+  // One field's complaint, under the field itself (a phone shows one field at
+  // a time: a line at the end of the form was not seen). key null: clear it.
+  function fieldError(form, name, key, fallback) {
+    var input = form.elements[name];
+    // the two "pay" radios come back as a list, a checkbox has no .gb-field: neither has a complaint to show
+    var box = input && input.closest ? input.closest('.gb-field') : null;
+    if (!box) return;
+    var old = box.querySelector('.gb-field-err');
+    if (old) old.remove();
+    input.removeAttribute('aria-invalid');
+    if (!key) return;
+    input.setAttribute('aria-invalid', 'true');
+    var msg = document.createElement('small');
+    msg.className = 'gb-field-err';
+    msg.setAttribute('data-i18n', key);
+    msg.textContent = t(key, fallback);
+    box.appendChild(msg);
+  }
+
   function submitOrder(form) {
     // form.elements[...] rather than form[...] — HTMLFormElement has its own
     // `name` property, which would shadow the input named "name".
@@ -1234,13 +1299,27 @@
       pickup: f['pickup'].checked
     };
     var err = panelBody.querySelector('.gb-err');
+    err.hidden = true;
 
-    if (!customer.name || !customer.phone) {
-      err.textContent = t('basket.required', '');
-      err.hidden = false;
+    // A number someone can call: spaces, dots, dashes and brackets are how
+    // people write one; what is left is 9–15 digits (a Vietnamese mobile is 10,
+    // +84… is 11, a foreign one up to 15). "abc" used to go through, and the
+    // phone is the only way Gem reaches the customer.
+    var phone = customer.phone.replace(/[\s.\-()]/g, '');
+    var bad = [];
+    if (!customer.name) bad.push(['name', 'basket.err_name', 'Bạn cho chúng mình xin tên nhé.']);
+    if (!/^\+?\d{9,15}$/.test(phone)) bad.push(['phone', 'basket.err_phone', 'Số điện thoại chưa đúng. Bạn xem lại giúp chúng mình nhé.']);
+    if (!customer.pickup && !customer.address) bad.push(['address', 'basket.err_addr', 'Bạn điền địa chỉ nhận hàng, hoặc chọn tự đến cửa hàng lấy nhé.']);
+    ['name', 'phone', 'address'].forEach(function (n) { fieldError(form, n, null); });
+    bad.forEach(function (b) { fieldError(form, b[0], b[1], b[2]); });
+    if (bad.length) {
+      var first = form.elements[bad[0][0]];
+      first.focus({ preventScroll: true });
+      first.closest('.gb-field').scrollIntoView({ block: 'center' });
       return;
     }
-    err.hidden = true;
+    customer.phone = phone;
+    var open = priceOpen();   // asked now: the basket is emptied once the order is in
 
     var body = orderText({ customer: customer });
     var subject = t('basket.order_subject', 'Đơn hàng mới từ website') +
@@ -1314,6 +1393,8 @@
           orderCode = res.code;
           orderPay = res.payment_method;
           orderSum = res.subtotal || 0;
+          orderOpen = open || !!res.has_unpriced;
+          orderShip = !customer.pickup;
           finish('sent');
           return;
         }

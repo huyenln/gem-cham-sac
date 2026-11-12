@@ -164,6 +164,10 @@ p:last-child { margin-bottom: 0; }
 @media (min-width: 1200px) { .nav-menu { gap: var(--space-5); } }
 /* Sáu mục rồi — không mục nào được xuống dòng, kẻo thanh nav cao gấp đôi */
 .nav-menu > li > a { white-space: nowrap; }
+/* Bảy mục (thêm Studio 2D, 11/2026) không vừa một hàng dưới 1100px: nút ngôn
+   ngữ rớt xuống hàng hai. Trong khoảng đó bỏ mục "Trang chủ" — logo bên
+   trái vẫn dẫn về trang chủ. */
+@media (min-width: 960px) and (max-width: 1099px) { .nav-menu > .nav-home { display: none; } }
 
 .nav-menu a {
   font-size: var(--text-sm);
@@ -907,6 +911,36 @@ p:last-child { margin-bottom: 0; }
 .ws-teaser-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .ws-teaser h2 { margin-bottom: var(--space-4); }
 .ws-teaser p { color: var(--ink-body); margin-bottom: var(--space-6); line-height: 1.75; }
+
+/* HOME STUDIO 2D TEASER — the workshop teaser mirrored (text left, picture
+   right), so the two cards in a row don't read as one block repeated */
+.studio-teaser {
+  display: grid;
+  gap: var(--space-8);
+  align-items: center;
+  background: var(--paper-white);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+  box-shadow: var(--shadow-paper);
+}
+@media (min-width: 800px) {
+  .studio-teaser { grid-template-columns: 1.1fr 1fr; gap: var(--space-12); padding: var(--space-12); }
+}
+/* phone: the picture above the text, cut to the door, the character and Udon */
+.studio-teaser-img {
+  order: -1;
+  display: block;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  background: var(--paper-cream);
+}
+@media (min-width: 800px) {
+  .studio-teaser-img { order: 0; aspect-ratio: 4 / 5; max-height: 520px; justify-self: center; }
+}
+.studio-teaser-img img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 72%; display: block; }
+.studio-teaser h2 { margin-bottom: var(--space-4); }
+.studio-teaser-text > p { color: var(--ink-body); margin-bottom: var(--space-6); line-height: 1.75; }
 
 /* LANGUAGE HINT — offered to non-Vietnamese browsers, never auto-applied */
 .lang-hint {
@@ -2450,6 +2484,11 @@ body.gb-lock { overflow: hidden; }
   color: #A6503C;
   line-height: 1.5;
 }
+/* a field's own complaint, right under it */
+.gb-field-err { font-size: var(--text-xs); color: #A6503C; line-height: 1.4; }
+.gb-field input[aria-invalid="true"] { border-color: #A6503C; background: var(--paper-white); }
+/* the QR screen: what the amount leaves out */
+.gb-qr-ship { color: var(--ink-body); font-weight: 500; }
 
 /* ---------- CHAT CHANNELS ---------- */
 .gb-channels {

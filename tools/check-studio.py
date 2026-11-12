@@ -58,6 +58,16 @@ and walks through what broke before:
   slow     the published layout on a slow connection: waited for (no built-in
            scene first), kept for the next visit and shown at once, a newer one
            swapped in when it comes, a very late one swapped in too
+  launch   what the public launch added: while the layout is still coming Udon
+           says the door is opening (in "slow"); a place named in Vietnamese
+           only goes by its built-in English name in English; ?src= in the
+           link is kept for the order note; a shared link has its picture
+  plphone  Phân loại rác on a phone's own screen (390 x 664, 360 x 640, held
+           sideways): the tools and the bags stay on screen in every level, the
+           basket steps out, a thing is dragged into its bag without scrolling
+  order    the order form: each field's complaint under the field, a phone
+           number that can be called, an address unless picked up; the QR code
+           and its amount only when the price is settled
   topbar   the top bar fits a phone (320px up), in Vietnamese and English
   motion   a device asking for less motion: no walking, "Hiệu ứng" turns it on
   phone    held sideways the studio fits (one bar, the scene to the bottom);
@@ -241,6 +251,8 @@ class FakeDB:
         self.pricing = None       # settings 'design_pricing' (None: no row)
         self.pricing_saved = []   # what admin wrote there
         self.order_calls = []     # create_order bodies
+        self.order_reply = None   # over the default answer of create_order (the order check)
+        self.payment = None       # settings 'payment' (None: no row, so no payment choice in the form)
 
     async def route(self, r):
         u, m = r.request.url, r.request.method
@@ -311,10 +323,12 @@ class FakeDB:
             if 'design_pricing' in u:
                 rows = [{'value': self.pricing}] if self.pricing else []
                 return await r.fulfill(status=200, content_type='application/json', body=json.dumps(rows))
+            if 'eq.payment' in u and self.payment:
+                return await r.fulfill(status=200, content_type='application/json', body=json.dumps([{'value': self.payment}]))
         if '/rpc/create_order' in u:
             self.order_calls.append(json.loads(r.request.post_data))
-            return await r.fulfill(status=200, content_type='application/json',
-                                   body='{"ok": true, "code": "GEM-TEST1", "subtotal": 0, "has_unpriced": false, "payment_method": "cod"}')
+            reply = dict({'ok': True, 'code': 'GEM-TEST1', 'subtotal': 0, 'has_unpriced': False, 'payment_method': 'cod'}, **(self.order_reply or {}))
+            return await r.fulfill(status=200, content_type='application/json', body=json.dumps(reply))
         if '/rest/v1/orders' in u and m == 'GET':
             return await r.fulfill(status=200, content_type='application/json', body=json.dumps(self.orders))
         if '/rest/v1/studio_info' in u:
@@ -2379,7 +2393,8 @@ async def zither(browser, db):
         await pg.wait_for_timeout(400)
         await pg.evaluate("window.GemI18n.setLang('en')")
         got = await pg.evaluate(shown)
-        check(got == ['Chơi đàn tranh', 'Go in', 'See the map'], f'{name}: English, the owner\'s own names where set ({got})')
+        # no English name on the đàn's box: what it does, in English (11/2026; it used to stay "Chơi đàn tranh")
+        check(got == ['Đàn tranh zither', 'Go in', 'See the map'], f'{name}: English, the owner\'s English name where set, else what the place does ({got})')
         await pg.evaluate("window.GemI18n.setLang('vi')")
         await pg.click('.st-nav .st-go-in')
         await pg.wait_for_timeout(2500)
@@ -2544,9 +2559,19 @@ async def slow(browser, db):
     await pg.goto(f'{BASE}/studio.html')
     await pg.wait_for_timeout(3000)
     hidden = await pg.evaluate("document.documentElement.classList.contains('st-wait')")
+    # the first wait: Udon says the door is opening; the nav, "?" and the basket are not there to tap yet
+    boot = "(() => { const l = document.querySelector('.st-loading'), v = s => { const e = document.querySelector(s); return e ? getComputedStyle(e).visibility : null; };" \
+           " return [document.documentElement.classList.contains('st-boot'), getComputedStyle(l).display, +getComputedStyle(l).opacity, l.textContent.trim(), v('.st-nav'), v('.st-help-b'), v('.gb-widget')]; })()"
+    wait = await pg.evaluate(boot)
     await pg.wait_for_timeout(2500)
     got = await pg.evaluate(pieces)
     check(hidden and got == ['xe.webp'], f'a layout 4 s late: the scene waits for it, then shows the owner\'s street ({got})')
+    after = await pg.evaluate(boot)
+    nav = await pg.evaluate("[...document.querySelectorAll('.st-nav button')].filter(b => b.offsetParent).map(b => b.textContent)")
+    check(wait[0] and wait[1] == 'flex' and wait[2] > 0.9 and wait[3] == 'Đang mở cửa studio…' and wait[4:] == ['hidden', 'hidden', 'hidden'],
+          f'while it waits: "Đang mở cửa studio…" over the empty wall, no nav / "?" / basket to tap ({wait})')
+    check(not after[0] and after[1] == 'none' and after[4:] == ['visible', 'visible', 'visible'] and nav == ['Vào studio'],
+          f'the scene up: the line gone, the street\'s own nav ({after[:2]}, {nav})')
 
     # 2. next visit: the kept layout at once; a newer one swaps in when it comes
     db.rows['live'] = street('images/studio/vn/vn-41.webp')
@@ -2572,6 +2597,231 @@ async def slow(browser, db):
     check(not errs, f'no script errors {errs}')
     db.layout_delay = 0
     await ctx.close()
+
+
+async def launch_bits(browser, db):
+    """What went in for the public launch (11/2026): places named in
+    Vietnamese only go by their built-in English name in English; ?src= in the
+    link is kept for the order note; the page can be shared (a picture, no
+    noindex)."""
+    print('launch')
+    db.rows.clear(); db.info.clear()
+    item = lambda src, x, zone: dict(src=src, x=x, y=820, w=312, h=200, rot=0, flip=False, layer='back', frame=False, kind='zone', zone=zone)
+    db.rows['live'] = {
+        'v': 1, 'bg': {'src': 'images/studio/bg/strip-tron.webp', 'w': 5792, 'h': 1024}, 'items': [],
+        'udon': {'x': 5200, 'y': 560, 'w': 128, 'h': 140}, 'start': 700,
+        'outside': {'bg': {'src': 'images/studio/bg/ngoai.webp', 'w': 2686, 'h': 1024}, 'start': 1300,
+                    'items': [item('images/studio/vn/vn-36.webp', 560, {'vi': 'Chơi đàn tranh', 'act': 'dantranh'}),
+                              item('images/studio/vn/vn-41.webp', 2300, {'vi': 'Kho vải của Gem', 'en': 'Gem\'s fabric store', 'act': 'khovai'})],
+                    'boxes': [{'id': 'k-test1', 'vi': 'Góc Phân Loại', 'act': 'phanloai', 'box': [1750, 100, 2000, 700], 'stand': 1850}]},
+    }
+    names = "[...document.querySelectorAll('.st-nav .st-go-out')].map(b => b.textContent)"
+    tags = "[...document.querySelectorAll('#st-world .st-hot-label')].map(l => l.textContent).filter(Boolean).sort()"
+    pg = await page(browser, db, 1280, 800, "sessionStorage.removeItem('gem-scene');")
+    await pg.goto(f'{BASE}/studio.html?src=fb')
+    await pg.wait_for_timeout(2500)
+    await pg.add_style_tag(content='.lang-hint{display:none!important}')
+    vi = [await pg.evaluate(names), await pg.evaluate(tags)]
+    check(vi[0] == ['Chơi đàn tranh', 'Góc Phân Loại', 'Kho vải của Gem'] and 'Góc Phân Loại' in vi[1] and 'Chơi đàn tranh' in vi[1],
+          f'Vietnamese: the owner\'s names, in the nav and on the tags ({vi})')
+    await pg.click('.lang-btn[data-lang="en"]')
+    await pg.wait_for_timeout(500)
+    en = [await pg.evaluate(names), await pg.evaluate(tags)]
+    check(en[0] == ['Đàn tranh zither', 'Sort the waste', "Gem's fabric store"] and 'Sort the waste' in en[1] and 'Đàn tranh zither' in en[1]
+          and not any('Góc' in x or 'Chơi' in x for x in en[0] + en[1]),
+          f'English: no English name set = what the place does; one set = that one ({en})')
+    await pg.click('.lang-btn[data-lang="vi"]')
+    await pg.wait_for_timeout(300)
+    back = await pg.evaluate(names)
+    check(back == vi[0], f'back to Vietnamese: the owner\'s names again ({back})')
+    src = await pg.evaluate("sessionStorage.getItem('gem-src')")
+    await pg.evaluate("sessionStorage.removeItem('gem-src')")
+    await pg.goto(f'{BASE}/studio.html?src=Not%20a%20tag!')
+    await pg.wait_for_timeout(800)
+    bad = await pg.evaluate("sessionStorage.getItem('gem-src')")
+    check(src == 'fb' and bad is None, f'?src=fb is kept for the order note, a malformed one is not ({src!r}, {bad!r})')
+    check(not pg.errors, f'no script errors {pg.errors}')
+    await pg.context.close()
+    html = (ROOT / 'studio.html').read_text(encoding='utf-8')
+    img = re.search(r'<meta property="og:image" content="([^"]+)"', html)
+    check(bool(img) and img[1].startswith('https://gemchamsac.com/') and (ROOT / img[1].replace('https://gemchamsac.com/', '')).exists()
+          and 'noindex' not in html and 'property="og:url"' not in html and 'rel="canonical"' not in html,
+          f'studio.html shares with a picture that exists (absolute URL), is not noindex, names no canonical address ({img and img[1]})')
+    for f in ('index.html', 'season-02.html'):
+        m = re.search(r'<meta property="og:image" content="([^"]+)"', (ROOT / f).read_text(encoding='utf-8'))
+        check(bool(m) and m[1].startswith('https://gemchamsac.com/') and (ROOT / m[1].replace('https://gemchamsac.com/', '')).exists(),
+              f'{f}: og:image is an absolute URL to a file that exists ({m and m[1]})')
+
+
+async def order_form(browser, db):
+    """The order form and what follows it (11/2026). Each field's complaint
+    sits under the field (the one line after the button was below the fold on
+    a phone); a phone number is one that can be called ("abc" went through); an
+    address unless the order is picked up. The QR code and its amount only when
+    the price is settled: with a piece priced as a range or "Liên hệ" the screen
+    used to fill in the sum of the lowest prices and say there was no need to
+    tell Gem; now Gem sends the total and the code later."""
+    print('order')
+    db.rows.clear(); db.info.clear()
+    db.payment = {'bank_bin': '970407', 'bank_name': 'Techcombank', 'account_no': '1234567890', 'account_name': 'GEM THU',
+                  'qr_enabled': True, 'cod_enabled': True, 'prepay_threshold': 0}
+    db.extra = [{'id': 'px1', 'sku': 'tui-thu', 'category': 'vai-vun', 'name_vi': 'Túi thử', 'name_en': 'Test bag', 'desc_vi': 'Mỗi chiếc một giá',
+                 'desc_en': None, 'price': 80000, 'price_max': 300000, 'in_stock': True, 'is_published': True,
+                 'image': 'images/products/vai-vun-tui-9.jpg', 'gallery': [], 'sort_order': 900, 'shelf': None, 'cutout': None, 'sprite': None}]
+    bad = "[...document.querySelectorAll('.gb-field-err')].map(e => e.closest('.gb-field').querySelector('input').name)"
+    hints = "[...document.querySelectorAll('.gb-pay-opt small')].map(e => e.textContent)"
+    after = ("[!!document.querySelector('.gb-qr svg'), document.querySelectorAll('.gb-pay-row').length, !!document.querySelector('.gb-qr-ship'),"
+             " document.querySelector('.gb-empty-p').textContent, (document.querySelector('.gb-code') || {}).textContent]")
+
+    async def form(basket):
+        pg = await page(browser, db, 390, 664, f"localStorage.setItem('gem-basket', {json.dumps(json.dumps(basket))});")
+        await pg.goto(f'{BASE}/san-pham.html')
+        await pg.wait_for_timeout(1500)
+        await pg.add_style_tag(content='.lang-hint{display:none!important}')
+        await js_click(pg, '.gb-widget')
+        await pg.wait_for_timeout(400)
+        await js_click(pg, '.gb-go-form')
+        await pg.wait_for_timeout(400)
+        return pg
+
+    async def send(pg, name, phone, pay='qr'):
+        await pg.fill('.gb-form [name="name"]', name)
+        await pg.fill('.gb-form [name="phone"]', phone)
+        await js_click(pg, f'.gb-form [name="pay"][value="{pay}"]')
+        await js_click(pg, '.gb-form .gb-submit')
+        await pg.wait_for_timeout(700)
+
+    # 1. a fixed price, delivered
+    db.order_calls.clear()
+    db.order_reply = {'payment_method': 'qr', 'subtotal': 100000}
+    pg = await form([{'sku': 'origami', 'qty': 2}])
+    kids = await pg.evaluate("[...document.querySelector('.gb-form').children].map(c => c.className.split(' ').pop())")
+    check(kids.index('gb-err') < kids.index('gb-submit'), f'the form\'s own error line is above the button ({kids[-3:]})')
+    await js_click(pg, '.gb-form .gb-submit')
+    await pg.wait_for_timeout(300)
+    e = await pg.evaluate(bad)
+    at = await pg.evaluate("[document.activeElement.name, (() => { const r = document.querySelector('.gb-field-err').getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; })()]")
+    check(e == ['name', 'phone', 'address'] and at == ['name', True] and not db.order_calls,
+          f'nothing filled in: each field says so under itself, the first is in view and has the cursor, nothing is sent ({e}, {at})')
+    await pg.fill('.gb-form [name="name"]', 'Khách thử')
+    await pg.fill('.gb-form [name="phone"]', 'abc')
+    await js_click(pg, '.gb-form .gb-submit')
+    await pg.wait_for_timeout(300)
+    e2 = await pg.evaluate(bad)
+    await pg.fill('.gb-form [name="phone"]', '090 000.00-00')
+    e3 = await pg.evaluate(bad)
+    check(e2 == ['phone', 'address'] and e3 == ['address'] and not db.order_calls,
+          f'"abc" is not a phone number ({e2}); typing in a field clears its complaint ({e3})')
+    await pg.fill('.gb-form [name="address"]', '12 Hàng Bông')
+    await send(pg, 'Khách thử', '090 000.00-00')
+    call = db.order_calls[-1] if db.order_calls else {}
+    got = await pg.evaluate(after)
+    check(call.get('p_phone') == '0900000000' and call.get('p_address') == '12 Hàng Bông' and call.get('p_payment') == 'qr',
+          f'sent with the number as digits ({call.get("p_phone")!r}, {call.get("p_address")!r}, {call.get("p_payment")!r})')
+    check(got[0] and got[1] == 5 and got[2] and 'không cần báo lại' in got[3],
+          f'a fixed price, delivered: the QR code with its amount, and a line that shipping is not in it ({got[:3]})')
+    check(not pg.errors, f'no script errors {pg.errors}')
+    await pg.context.close()
+
+    # 2. picked up at the shop
+    db.order_calls.clear()
+    pg = await form([{'sku': 'origami', 'qty': 1}])
+    await js_click(pg, '.gb-form [name="pickup"]')
+    h = await pg.evaluate(hints)
+    gone = await pg.evaluate("document.querySelector('.gb-addr').hidden")
+    await send(pg, 'Khách thử', '+84 90 000 0000')
+    call = db.order_calls[-1] if db.order_calls else {}
+    got = await pg.evaluate(after)
+    check(gone and h[0] == 'Trả tại cửa hàng khi bạn đến lấy.' and call.get('p_phone') == '+84900000000' and got[0] and not got[2],
+          f'picked up: no address asked, "pay at the shop", +84… accepted, the QR code without the shipping line ({h[0]!r}, {call.get("p_phone")!r}, {got[:3]})')
+    await pg.context.close()
+
+    # 3. a piece priced as a range: nothing to pay yet
+    db.order_calls.clear()
+    db.order_reply = {'payment_method': 'qr', 'subtotal': 80000}
+    pg = await form([{'sku': 'tui-thu', 'qty': 1}])
+    h = await pg.evaluate(hints)
+    await js_click(pg, '.gb-form [name="pickup"]')
+    await send(pg, 'Khách thử', '0900000000')
+    got = await pg.evaluate(after)
+    await pg.evaluate("window.GemI18n.setLang('en')")
+    en = await pg.evaluate("document.querySelector('.gb-empty-p').textContent")
+    check(h[1] == 'Gem nhắn bạn tổng tiền kèm mã QR sau khi chốt giá.' and db.order_calls and db.order_calls[-1].get('p_payment') == 'qr'
+          and not got[0] and got[1] == 0 and 'chưa đưa mã QR' in got[3] and got[4] == 'GEM-TEST1' and 'no QR code yet' in en,
+          f'80.000–300.000đ by QR: the form says the code comes later, the order still goes in as QR, no code and no amount on the screen ({h[1]!r}, {got[:2]}, {en[:40]!r})')
+    check(not pg.errors, f'no script errors {pg.errors}')
+    await pg.context.close()
+
+    # 4. the database says a piece has no price yet
+    db.order_reply = {'payment_method': 'qr', 'subtotal': 50000, 'has_unpriced': True}
+    pg = await form([{'sku': 'origami', 'qty': 1}])
+    await js_click(pg, '.gb-form [name="pickup"]')
+    await send(pg, 'Khách thử', '0900000000')
+    got = await pg.evaluate(after)
+    check(not got[0] and 'chưa đưa mã QR' in got[3], f'has_unpriced from the database: no code either ({got[:2]})')
+    await pg.context.close()
+    db.order_reply = None; db.payment = None; db.extra = []
+
+
+async def plphone(browser, db):
+    """Phân loại rác on a phone's own screen (11/2026). Safari on an iPhone
+    shows about 390 x 664 and a small Android 360 x 640: every bag of levels 1
+    and 4 sat under the fold there, with the clock running and nothing
+    scrolling by itself. The tools and the bags are now pinned to the bottom of
+    the sheet (.pl-dock), a level starts with its clock at the top, and the
+    basket steps out while the game is open."""
+    print('plphone')
+    db.rows.clear(); db.info.clear()
+    db.rows['live'] = {
+        'v': 1, 'bg': {'src': 'images/studio/bg/strip-tron.webp', 'w': 5792, 'h': 1024},
+        'items': [dict(src='images/studio/tagom/nhua-245.webp', x=900, y=420, w=180, h=256, rot=0, flip=False,
+                       layer='back', frame=False, kind='zone', zone={'act': 'phanloai'})],
+        'udon': {'x': 5200, 'y': 560, 'w': 128, 'h': 140}, 'start': 700,
+    }
+    geo = """(() => { const vh = innerHeight, r = e => e.getBoundingClientRect();
+        const out = [...document.querySelectorAll('[data-pl-bin], [data-pl-tool]')].filter(b => r(b).bottom > vh + 1 || r(b).top < 0).length;
+        const dock = document.querySelector('.pl-dock'), stage = document.querySelector('.pl-stage'), top = document.querySelector('.pl-hud, .pl-count');
+        return [getComputedStyle(dock).position, out, Math.round(r(top).top), Math.round(r(dock).top - r(stage).top),
+                getComputedStyle(document.querySelector('.gb-widget')).display, document.querySelectorAll('[data-pl-bin]').length]; })()"""
+    for name, w, h in (('iphone', 390, 664), ('small android', 360, 640), ('sideways', 844, 390)):
+        pg = await page(browser, db, w, h, GUIDE_OFF + "localStorage.setItem('gem-studio-intro','1');localStorage.setItem('gem-studio-intro-touch','1');sessionStorage.setItem('gem-scene','in');"
+                        "localStorage.setItem('gem-pl', JSON.stringify({lv: 5}));")
+        await pg.goto(f'{BASE}/studio.html')
+        await pg.wait_for_timeout(2500)
+        for lv, bags in (('chai', 6), ('sort', 7), ('nhanh', 7), ('ban', 7), ('tiec', 7)):
+            await js_click(pg, '[data-thing-label]')
+            await pg.wait_for_timeout(1200)
+            await js_click(pg, '.pl-back[data-pl-go="hub"]')
+            await pg.wait_for_timeout(200)
+            await js_click(pg, f'[data-pl-go="{lv}"]')
+            await pg.wait_for_timeout(400)
+            if await pg.evaluate("!!document.querySelector('.pl-guide') && !document.querySelector('.pl-guide').hidden"):
+                await js_click(pg, '.pl-g-go')
+            await pg.wait_for_timeout(3400 if lv in ('nhanh', 'ban', 'tiec') else 400)   # 3, 2, 1
+            g = await pg.evaluate(geo)
+            await pg.screenshot(path=str(OUT / f'plphone-{name.split()[0]}-{lv}.png'))
+            # the clock (or the count) is on screen, at least a row of the table shows above the bags
+            check(g[0] == 'sticky' and g[1] == 0 and g[2] >= 0 and g[3] >= 100 and g[4] == 'none' and g[5] == bags,
+                  f'{name}, level "{lv}": every tool and bag on screen, the table above them, the basket out of the way ({g})')
+            if lv == 'sort' and name == 'iphone':
+                # dragged from the table to its bag: both are on screen, nothing to scroll
+                bag = await pg.evaluate("(() => { const id = document.querySelector('.pl-one [data-pl-item]').dataset.plItem; return GemPhanLoai.ITEMS.filter(x => x.id === id)[0].bin; })()")
+                a = await center(pg, '.pl-one [data-pl-item] img')
+                b = await center(pg, f'[data-pl-bin="{bag}"]')
+                await pg.mouse.move(*a)
+                await pg.mouse.down()
+                await pg.mouse.move(a[0] + 10, a[1] + 20, steps=3)
+                await pg.mouse.move(*b, steps=10)
+                await pg.mouse.up()
+                await pg.wait_for_timeout(300)
+                n = await pg.evaluate("document.querySelector('.pl-count').textContent")
+                check('đúng 1' in n, f'{name}: a thing dragged straight into its bag ({n!r})')
+            await js_click(pg, '.st-close')
+            await pg.wait_for_timeout(300)
+        back = await pg.evaluate("[getComputedStyle(document.querySelector('.gb-widget')).display, document.documentElement.classList.contains('pl-open')]")
+        check(back[0] != 'none' and not back[1], f'{name}: the game closed, the basket is back ({back})')
+        check(not pg.errors, f'{name}: no script errors {pg.errors}')
+        await pg.context.close()
 
 
 async def topbar(browser, db):
@@ -4762,7 +5012,7 @@ async def phanloai_lv(browser, db):
         # a drag onto a tool: a thing that needs one (a cup, a cushion, a bag)
         one = await pg.evaluate("""(() => { const T = {'Còn trà': 'rua', 'Còn vụn bánh': 'rua', 'Còn thức ăn': 'rua', 'Còn hơi': 'xep', 'Chưa gấp': 'gap'};
             const b = [...document.querySelectorAll('.pl-thing')].find(b => b.querySelector('.pl-chips i') && T[b.querySelector('.pl-chips i').textContent]);
-            return [b.dataset.plItem, T[b.querySelector('.pl-chips i').textContent]]; })()""")
+            return [b.dataset.plItem, T[b.querySelector('.pl-chips i').textContent], b.querySelectorAll('.pl-chips i').length]; })()""")
         a = await center(pg, f'.pl-thing[data-pl-item="{one[0]}"] img')
         b = await center(pg, f'[data-pl-tool="{one[1]}"]')
         await pg.mouse.move(*a)
@@ -4772,7 +5022,8 @@ async def phanloai_lv(browser, db):
         await pg.mouse.up()
         await pg.wait_for_timeout(200)
         done1 = await pg.evaluate(f"document.querySelectorAll('.pl-thing[data-pl-item=\"{one[0]}\"] .pl-chips i').length")
-        check(done1 == 0, f'{name}: a thing dragged onto its tool ({one}): done ({done1})')
+        # one step done per tool: the snack bag is cleaned first and still has to be folded
+        check(done1 == one[2] - 1, f'{name}: a thing dragged onto its tool ({one}): that step done ({done1} left)')
         if name == 'mobile':
             await pg.screenshot(path=OUT / 'phanloai-ban-mobile.png')
         # the rest done right (the bottle's own steps: a tap on it)
@@ -5027,7 +5278,7 @@ async def main(which):
         browser = await launch(p)
         for name, fn in (('street', street), ('wear', wear), ('shop', shop), ('spots', spots), ('editor', editor),
                          ('library', library), ('product', product), ('prodlib', prodlib), ('workshop', workshop), ('design', design), ('catalog', catalog), ('kinds', kinds),
-                         ('layers', layers), ('zones', zones), ('cart', cart), ('choices', choices), ('zither', zither), ('guide', guide), ('vai', vai), ('tui', tui), ('kho', kho), ('guidance', guidance), ('onefab', onefab), ('mau', mau), ('phoi', phoi), ('thudo', thudo), ('taggroup', taggroup), ('phanloai', phanloai), ('phanloai_lv', phanloai_lv), ('racroi', racroi), ('slow', slow), ('topbar', topbar), ('motion', motion),
+                         ('layers', layers), ('zones', zones), ('cart', cart), ('choices', choices), ('zither', zither), ('guide', guide), ('vai', vai), ('tui', tui), ('kho', kho), ('guidance', guidance), ('onefab', onefab), ('mau', mau), ('phoi', phoi), ('thudo', thudo), ('taggroup', taggroup), ('phanloai', phanloai), ('phanloai_lv', phanloai_lv), ('racroi', racroi), ('plphone', plphone), ('order', order_form), ('slow', slow), ('launch', launch_bits), ('topbar', topbar), ('motion', motion),
                          ('phone', phone), ('taps', taps)):
             if which in (None, name):
                 await fn(browser, db)

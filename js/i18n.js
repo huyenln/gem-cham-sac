@@ -23,6 +23,7 @@
     'nav.model':      { vi: `Mô hình`, en: `Our Model` },
     'nav.partners':   { vi: `Đối tác`, en: `Partners` },
     'nav.products':   { vi: `Sản phẩm`, en: `Products` },
+    'nav.studio':     { vi: `Studio 2D`, en: `Studio 2D` },
     'nav.workshop':   { vi: `Workshop`, en: `Workshops` },
     'nav.visit':      { vi: `Ghé thăm`, en: `Visit` },
     'nav.news':       { vi: `Bản tin`, en: `Newsletter` },   /* trước chỉ có trong ban-tin.js nên trang khác không dịch */
@@ -92,6 +93,12 @@
     'home.ws_desc':    { vi: `Thiệp và sổ từ vải vụn, tranh kinusaiga, khắc gỗ, tô mặt nạ giấy bồi… Mỗi cuối tuần đến 27/12 còn có Chạm Mùa: ghé làm một món, chụp ảnh với mặt nạ giấy bồi, rồi ngồi lại uống trà.`, en: `Fabric-scrap cards and notebooks, kinusaiga, woodblock carving, papier-mâché masks… And every weekend until 27 Dec it's Chạm Mùa: drop in, make something, take photos with the masks and stay for tea.` },
     'home.ws_cta':     { vi: `Xem workshop & lịch`, en: `See workshops & dates` },
     'home.ws_img_alt': { vi: `Tranh kinusaiga đầu ngựa ghép từ vải vụn`, en: `A kinusaiga horse's head pieced from fabric scraps` },
+
+    /* HOME: Studio 2D teaser (ảnh tĩnh từ tools/studio-preview.py) */
+    'home.studio_eyebrow': { vi: `Studio 2D,`, en: `Studio 2D,` },
+    'home.studio_title':   { vi: `Dạo một vòng studio, ngay trên màn hình.`, en: `Walk around the studio, right on your screen.` },
+    'home.studio_desc':    { vi: `Chọn một nhân vật rồi đi dạo: thử phụ kiện, ghép vải vụn thành món của riêng bạn ở Bàn thiết kế, chơi phân loại rác cùng Udon và chọn quà ngay trên kệ.`, en: `Pick a character and wander: try on accessories, piece fabric scraps into something of your own at the Design table, play the waste-sorting game with Udon, and choose gifts straight off the shelves.` },
+    'home.studio_cta':     { vi: `Vào Studio 2D`, en: `Enter Studio 2D` },
 
     'home.products_eyebrow': { vi: `Sản phẩm,`, en: `Products,` },
     'home.products_title':   { vi: `Đa dạng các sắc màu từ Gem.`, en: `A spectrum of colors from Gem.` },

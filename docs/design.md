@@ -2678,6 +2678,85 @@ nút bật / tắt ở cuối `js/studio.js` (`bn*`, "Bất ngờ ngoài phố")
   100 + Sổ thông điệp). Các phần kiểm khác tắt sẵn trò này (`BN_OFF`) cho rác khỏi đè lên chỗ
   chúng chạm.
 
+### Studio: công bố (14/11/2026)
+
+Anna chốt 12/11/2026, sau một lượt kiểm toàn bộ web (11/11):
+
+- **Lối vào:** mục "Studio 2D" trên menu (sau Sản phẩm, cả menu điện thoại) + khối "Studio 2D"
+  ở trang chủ, giữa Sản phẩm và Workshop. Ảnh của khối là bản tĩnh
+  (`images/studio/xem-truoc-mat-tien.webp`), **không nhúng studio thật**: studio tải khoảng 3 MB
+  tranh, và vuốt để đi dạo sẽ tranh với cuộn trang. PR #47 (ra mắt thử 12/10, chưa merge) được
+  thay bằng đợt này.
+- **Menu 7 mục** không vừa một hàng dưới 1100px (nút ngôn ngữ rớt xuống hàng hai, đo ở cả hai
+  ngôn ngữ). Ở 960–1099px mục "Trang chủ" ẩn đi (`.nav-menu > .nav-home`); logo vẫn về trang chủ.
+- **Tranh vẫn là bản tạm (ChatGPT), chưa có ngày thay.** Vì vậy chữ cho khách không ghi "vẽ
+  tay" (câu mô tả cũ của `studio.html` có ghi), và cũng không gắn nhãn "bản thử" hay hứa "đang
+  vẽ lại". Đã bỏ `noindex`.
+- **Ảnh khi chia sẻ link:** `studio.html` có `og:title` / `og:description` / `og:image`
+  (1200×630, `images/studio/og-studio.jpg`, URL tuyệt đối — Facebook và Zalo không nhận đường
+  dẫn tương đối; `index.html` và `season-02.html` cũng sửa thành tuyệt đối). **Cố ý không có
+  `og:url` và `rel=canonical`:** Facebook lấy địa chỉ đó làm đích của bài đăng, nên link thiết kế
+  (`?d=…`) và link có nguồn (`?src=…`) sẽ rơi mất phần sau dấu hỏi.
+  Hai ảnh chụp từ chính trang thật bằng `python3 tools/studio-preview.py` (trang đọc bố cục đã
+  phát hành từ Supabase, công cụ giấu thanh nút và nhãn rồi chụp). Chạy lại khi cảnh ngoài phố
+  đổi, commit hai file, rồi vào Facebook Sharing Debugger bấm "Scrape again" — Facebook giữ ảnh
+  cũ rất lâu.
+- **Nguồn của đơn:** `js/basket.js` đọc `?src=` (chữ thường / số / gạch, tối đa 24 ký tự) vào
+  `sessionStorage gem-src`; đơn đặt trong lượt ghé đó ghi `[nguồn: …]` vào ghi chú. Bài đăng
+  dùng `…/studio.html?src=fb`, thẻ QR ở quầy `?src=qr`… Không có link thì nguồn là trang đặt
+  (`studio` / `web`), link thiết kế được chia sẻ là `link-chia-se`. Không đếm lượt xem, không
+  gửi đi đâu.
+- **Lần tải đầu:** trước đây trong lúc chờ bố cục (khoảng 2 giây trên 4G tốt, 5 giây trên 4G
+  chậm) màn hình trống, bên dưới là thanh nút của bên trong studio, bấm không ăn. Giờ `<html>`
+  mang thêm lớp `st-boot` cho riêng lần chờ này (`st-wait` còn dùng cho mỗi lần qua cửa): Udon
+  và dòng "Đang mở cửa studio…" hiện sau 0,6 giây, thanh nút / "?" / giỏ ẩn tới khi cảnh dựng
+  xong. Thêm `preconnect` tới Supabase.
+- **Tên tiếng Anh của các khu:** khu chủ đặt tên tiếng Việt mà để trống "Tên tiếng Anh" thì bản
+  tiếng Anh từng hiện tên Việt ("Góc thử đồ", "Quầy thu ngân"…). Giờ dùng tên tiếng Anh có sẵn
+  của việc khu đó làm (`enName` → `ACT_NAME`); khu loại "link" giữ chữ của chủ vì không có tên
+  sẵn. Muốn tên riêng thì điền "Tên tiếng Anh" trong Lắp studio.
+- **Kiểm tra:** `python3 tools/check-studio.py launch` (tên khu hai ngôn ngữ, `?src=`, thẻ chia
+  sẻ) và `slow` (dòng chờ, thanh nút ẩn).
+
+**Deploy kẹt 06/11 — đáng nhớ.** Lượt Pages #121 (PR #91): bước "Deploy to GitHub Pages" đứng ở
+`updating_pages` 10 phút rồi `Timeout reached, aborting!`. Bấm chạy lại thì lượt đó nằm mãi ở
+"Queued" mà không tạo job nào (huỷ qua API cũng bị từ chối: `Cannot cancel a workflow re-run
+that has not yet queued`), nên bản live chậm hơn `main` một lần merge suốt 6 ngày mà không ai
+biết. Gỡ bằng **một commit mới trên `main`** (PR #92): lượt #122 chạy 51 giây. Sau mỗi lần merge
+nên nhìn bản live (`?v=` trong `studio.html`), đừng chỉ tin là đã lên.
+
+**Đợt hai (cùng tuần công bố): điện thoại và đơn hàng.**
+
+- **Mã QR chỉ hiện khi giá đã chốt.** Giỏ có món khoảng giá (túi 80.000–300.000đ, "giá tuỳ từng
+  chiếc") hoặc món "Liên hệ" mà chọn chuyển khoản thì màn cảm ơn từng điền sẵn tổng các giá
+  thấp nhất vào mã QR và ghi "Chuyển xong bạn không cần báo lại". Giờ (`priceOpen()` trong
+  `js/basket.js`): form ghi "Gem nhắn bạn tổng tiền kèm mã QR sau khi chốt giá", màn cảm ơn chỉ
+  có mã đơn và câu hẹn, không mã QR, không số tiền. Đơn vẫn lưu `payment_method = 'qr'`, nên
+  **nhân sự thấy đơn chuyển khoản chưa trả thì nhắn tổng tiền kèm mã QR** (từ app ngân hàng;
+  admin chưa có nút tạo QR). Database không đổi. Giá đã chốt mà giao tận nơi thì dưới mã QR có
+  thêm dòng "Số tiền trên chưa gồm phí giao hàng"; tự đến lấy thì lựa chọn trả khi nhận ghi
+  "Trả tại cửa hàng khi bạn đến lấy".
+- **Form đặt hàng.** Số điện thoại: bỏ dấu cách / chấm / gạch / ngoặc rồi phải còn 9–15 chữ số
+  (nhận `+84…` và số nước ngoài); trước đây gõ "abc" vẫn gửi được, mà số điện thoại là cách duy
+  nhất Gem liên lạc với khách. Số gửi lên database là dạng đã bỏ dấu. Địa chỉ bắt buộc, trừ khi
+  chọn tự đến lấy. Lỗi hiện ngay dưới ô sai (`fieldError`), ô đầu tiên được đưa vào giữa màn
+  hình; dòng lỗi chung của form nằm trên nút gửi (trước nằm dưới nút, khuất trên điện thoại).
+  Mới kiểm ở trình duyệt; `create_order()` vẫn chỉ kiểm "không rỗng" — thêm kiểm ở database
+  khi có dịp sửa hàm đó.
+- **Phân loại rác trên điện thoại.** Vùng nhìn thật của iPhone trong Safari khoảng 390×664, máy
+  Android nhỏ 360×640: ở màn 1 và 4 toàn bộ bao (màn 4 cả dụng cụ) nằm dưới mép màn hình, đồng
+  hồ thì đang chạy, và kéo một món không làm bảng cuộn. Giờ dụng cụ, dòng trả lời và bao nằm
+  chung trong `.pl-dock`, ghim ở đáy bảng trên điện thoại (dọc, và cả khi xoay ngang); bàn đồ
+  cuộn phía trên. Màn bắt đầu thì bảng tự cuộn cho đồng hồ lên đầu (`settle()` trong
+  `js/phanloai.js`). Giỏ nổi từng đè lên bao cuối: ẩn khi trò chơi mở (`html.pl-open`, gỡ trong
+  `openSheet` / `closeSheet` của `js/studio.js`). Máy tính không đổi.
+- **Kiểm tra:** `python3 tools/check-studio.py order` và `plphone`.
+
+**Để sau công bố:** ảnh bài Bản tin nặng 6–8 MB (trình tải bài trong admin chưa thu nhỏ ảnh như
+các chỗ khác; 5 bài cũ cần nén lại), trang Workshop không còn buổi nào sắp tới mà đầu trang vẫn
+mời "chọn buổi", kiểm số điện thoại ở database, nút tạo QR trong admin, bố cục hai cột cho trò
+chơi khi xoay ngang.
+
 ### Studio hiện cảnh mặc định thay cho bố cục đã lắp (sửa 13/10/2026)
 
 **Triệu chứng:** mở `studio.html` thấy mặt phố mặc định (monstera, bình tưới, ghế gỗ,
@@ -3327,6 +3406,11 @@ GRANT-vs-policy vẫn 3 dòng cố ý như cũ. Đã kiểm 3 vai: `anon` ghi �
 
 **Ảnh bìa workshop:** `supabase/migrations/20261012b_workshop_covers.sql` —
 **chạy SAU khi PR lên `main`** (ảnh nằm trong repo, chạy trước là ảnh vỡ).
+**Đã chạy 12/11/2026** (migration `workshop_covers`; chỉ sửa dữ liệu, câu kiểm
+GRANT-vs-policy vẫn 3 dòng cố ý như cũ): `bia-so-vai-vun` có ảnh bìa + 2 ảnh,
+`kinusaiga` có ảnh bìa. 13 loại còn lại chưa có ảnh — thêm ở Quản trị → Đặt lịch →
+Loại workshop. Chưa sửa: ảnh bìa dọc hiện nguyên chiều cao ở trang giới thiệu
+(`.ws-page-cover`), nên trên máy tính ảnh cao hơn màn hình và tên workshop nằm dưới mép.
 
 **Trang:**
 - `workshop.html`: dải Chạm Mùa đầu trang → thẻ workshop (thời lượng · tuổi ·
