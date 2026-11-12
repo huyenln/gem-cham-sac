@@ -39,6 +39,7 @@
     'ws.f_seats':       { vi: `Mấy người?`, en: `How many people?` },
     'ws.f_email':       { vi: `Email (không bắt buộc)`, en: `Email (optional)` },
     'ws.f_note':        { vi: `Ghi chú (không bắt buộc)`, en: `Note (optional)` },
+    'ws.legal':         { vi: `Gem dùng thông tin này chỉ để giữ chỗ và nhắn xác nhận cho bạn. Bấm “Giữ chỗ” là bạn đồng ý với <a href="chinh-sach.html" target="_blank" rel="noopener">cách Gem dùng thông tin của bạn</a>.`, en: `Gem uses these details only to hold your seat and to confirm it with you. By pressing “Reserve” you agree to <a href="chinh-sach.html" target="_blank" rel="noopener">how Gem uses your information</a>.` },
     'ws.f_note_ph':     { vi: `Lần đầu thử, đi cùng trẻ nhỏ, cần về sớm…`, en: `First time, bringing a child, need to leave early…` },
     'ws.submit':        { vi: `Giữ chỗ`, en: `Reserve` },
     'ws.sending':       { vi: `Đang giữ chỗ...`, en: `Reserving...` },
@@ -97,7 +98,7 @@
     'cm.offers_h':      { vi: `Ưu đãi`, en: `Offers` },
     'cm.off1':          { vi: `<b>−10%</b> khi đăng ký từ 2 workshop`, en: `<b>−10%</b> when you sign up for 2 workshops` },
     'cm.off2':          { vi: `<b>−15%</b> cho nhóm từ 4 người`, en: `<b>−15%</b> for groups of 4 or more` },
-    'cm.off3':          { vi: `Chia sẻ trải nghiệm Chạm Mùa lên mạng xã hội hoặc Google Maps, tặng bạn 01 lượt làm thiệp từ vải vụn (39K): làm ngay trong buổi, hoặc để dành lúc nào ghé cũng được.`, en: `Share your Chạm Mùa experience on social media or Google Maps and get one free fabric-scrap card session (39K): use it on the spot, or save it for any later visit.` },
+    'cm.off3':          { vi: `Chia sẻ trải nghiệm Chạm Mùa lên mạng xã hội, tặng bạn 01 lượt làm thiệp từ vải vụn (39K): làm ngay trong buổi, hoặc để dành lúc nào ghé cũng được.`, en: `Share your Chạm Mùa experience on social media and get one free fabric-scrap card session (39K): use it on the spot, or save it for any later visit.` },
     'cm.off4':          { vi: `Chụp ảnh miễn phí với mặt nạ giấy bồi và không gian studio.`, en: `Free photos with papier-mâché masks and the studio space.` },
     'cm.off_note':      { vi: `Ưu đãi được trừ khi bạn thanh toán tại studio.`, en: `Discounts are applied when you pay at the studio.` },
 
@@ -608,6 +609,7 @@
             '<input type="email" name="email" autocomplete="email"></label>' +
           '<label class="ws-field"><span data-i18n="ws.f_note"></span>' +
             '<textarea name="note" rows="2" data-i18n-attr="placeholder:ws.f_note_ph"></textarea></label>' +
+          '<p class="ws-legal" data-i18n-html="ws.legal"></p>' +
           '<button type="submit" class="btn btn-primary ws-submit" data-i18n="ws.submit"></button>' +
           '<p class="ws-err" hidden></p>' +
         '</form>' +
