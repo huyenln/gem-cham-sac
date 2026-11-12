@@ -15,7 +15,10 @@
 
 (function () {
   'use strict';
-  document.documentElement.classList.add('st-wait');   // until the layout is known
+  // until the layout is known. st-boot is this first wait alone (st-wait also
+  // covers every walk through the door): the nav stays out and Udon says the
+  // door is opening, instead of an empty wall over buttons that do nothing yet.
+  document.documentElement.classList.add('st-wait', 'st-boot');
 
   /* ======================================================================
      SCENE — numbers come from tools/studio-assets.py (the STRIP line)
@@ -157,6 +160,7 @@
      ====================================================================== */
   var STRINGS = {
     'title.studio':        { vi: `Gem Studio 2D · Gem Chạm Sắc`, en: `Gem Studio 2D · Gem Chạm Sắc` },
+    'studio.loading':      { vi: `Đang mở cửa studio…`, en: `Opening the studio door…` },
     'studio.list_view':    { vi: `Xem dạng danh sách`, en: `List view` },
     'studio.list_short':   { vi: `Danh sách`, en: `List` },
     'studio.nav_aria':     { vi: `Đi tới khu`, en: `Go to` },
@@ -499,7 +503,7 @@
     'studio.memo_fail':    { vi: `Chưa gửi được. Bạn thử lại sau chút nhé.`, en: `Couldn't send. Please try again in a bit.` },
     'studio.memo_anon':    { vi: `Một người ghé qua`, en: `A visitor` },
     'studio.tu_designs':   { vi: `Đã thiết kế`, en: `Designed` },
-    'studio.tu_designs_0': { vi: `Chưa có thiết kế nào. Ghé bàn chắp vải thử một tấm nhé.`, en: `No designs yet. Try one at the patchwork table.` },
+    'studio.tu_designs_0': { vi: `Chưa có thiết kế nào. Ghé Bàn thiết kế thử một món nhé.`, en: `No designs yet. Try one at the Design table.` },
     'studio.tu_to_table':  { vi: `Tới bàn thiết kế`, en: `Go to the table` },
     'studio.tu_open':      { vi: `Mở`, en: `Open` },
     'studio.tu_remove':    { vi: `Bỏ`, en: `Remove` },
@@ -1051,7 +1055,11 @@
     memo: 'studio.hot_memo', enter: 'studio.hot_enter', link: 'studio.tag_link', dantranh: 'studio.hot_dantranh',
     khovai: 'studio.hot_khovai', phanloai: 'studio.hot_phanloai' };
   function actName(act) { return ACT_NAME[act] ? t(ACT_NAME[act]) : ''; }
-  function zoneName(it) { return it.zone[lng()] || it.zone.vi || actName(it.zone.act); }
+  // A place the owner named in Vietnamese only: in English it goes by what it
+  // does ("Fitting corner"), not by a Vietnamese name among English words. A
+  // link has no name of its own, so the owner's words stay.
+  function enName(o) { return lng() === 'en' && !o.en && o.act !== 'link' ? actName(o.act) : ''; }
+  function zoneName(it) { return it.zone[lng()] || enName(it.zone) || it.zone.vi || actName(it.zone.act); }
 
   // Pieces that do the same thing and stand together (Tagom's six posters on
   // one wall) share one tag over the lot (Anna 23/10: a tag on each was a
@@ -1385,7 +1393,7 @@
   function spotOff(id) { return !!spotSet(id).off; }
   function spotName(h) {
     var c = spotSet(h.id);
-    return c[lng()] || (h.label ? t(h.label) : c.vi || actName(c.act));   // no English set: the built-in English / the Vietnamese / what it does
+    return c[lng()] || (h.label ? t(h.label) : enName(c) || c.vi || actName(c.act));   // no English set: the built-in English / what it does / the Vietnamese
   }
 
   function addHot(h) {
@@ -6079,7 +6087,7 @@
     loadLayout().then(function (L) {
       if (L) applyLayout(L);
       start();
-      document.documentElement.classList.remove('st-wait');
+      document.documentElement.classList.remove('st-wait', 'st-boot');
     });
   });
 

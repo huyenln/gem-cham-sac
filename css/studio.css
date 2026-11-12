@@ -255,6 +255,25 @@
 .st-wait .st-world { opacity: 0; }
 .st-world { transition: opacity 0.25s ease; }
 
+/* First load (html.st-boot, js/studio.js): the published layout is not in
+   yet, so there is no scene to show. Udon says the door is opening instead
+   of an empty wall, shown only when the wait is long enough to notice; the
+   nav, "?" and the basket wait too, as none of them does anything yet. */
+.st-loading { display: none; }
+.st-boot .st-loading {
+  position: absolute; inset: 0; z-index: 8; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: var(--space-3); padding: var(--space-6); text-align: center; pointer-events: none;
+  font-family: var(--font-display); font-weight: 700; color: var(--ink-soft);
+  opacity: 0; animation: st-loading-in 0.4s ease-out 0.6s forwards;
+}
+.st-loading img { width: 72px; height: auto; }
+.st-loading p { margin: 0; }
+@keyframes st-loading-in { to { opacity: 1; } }
+.st-boot .st-nav, .st-boot .st-help-b, .st-boot .gb-widget { visibility: hidden; }
+@media (prefers-reduced-motion: reduce) {
+  .st-boot .st-loading { animation: none; opacity: 1; }
+}
+
 /* Real product photos standing on the empty cabinet's shelves, in a thin
    wooden frame, like prints propped up for sale. */
 .st-shelf-item {

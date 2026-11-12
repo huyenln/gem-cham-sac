@@ -58,6 +58,10 @@ and walks through what broke before:
   slow     the published layout on a slow connection: waited for (no built-in
            scene first), kept for the next visit and shown at once, a newer one
            swapped in when it comes, a very late one swapped in too
+  launch   what the public launch added: while the layout is still coming Udon
+           says the door is opening (in "slow"); a place named in Vietnamese
+           only goes by its built-in English name in English; ?src= in the
+           link is kept for the order note; a shared link has its picture
   topbar   the top bar fits a phone (320px up), in Vietnamese and English
   motion   a device asking for less motion: no walking, "Hiệu ứng" turns it on
   phone    held sideways the studio fits (one bar, the scene to the bottom);
@@ -2379,7 +2383,8 @@ async def zither(browser, db):
         await pg.wait_for_timeout(400)
         await pg.evaluate("window.GemI18n.setLang('en')")
         got = await pg.evaluate(shown)
-        check(got == ['Chơi đàn tranh', 'Go in', 'See the map'], f'{name}: English, the owner\'s own names where set ({got})')
+        # no English name on the đàn's box: what it does, in English (11/2026; it used to stay "Chơi đàn tranh")
+        check(got == ['Đàn tranh zither', 'Go in', 'See the map'], f'{name}: English, the owner\'s English name where set, else what the place does ({got})')
         await pg.evaluate("window.GemI18n.setLang('vi')")
         await pg.click('.st-nav .st-go-in')
         await pg.wait_for_timeout(2500)
@@ -2544,9 +2549,19 @@ async def slow(browser, db):
     await pg.goto(f'{BASE}/studio.html')
     await pg.wait_for_timeout(3000)
     hidden = await pg.evaluate("document.documentElement.classList.contains('st-wait')")
+    # the first wait: Udon says the door is opening; the nav, "?" and the basket are not there to tap yet
+    boot = "(() => { const l = document.querySelector('.st-loading'), v = s => { const e = document.querySelector(s); return e ? getComputedStyle(e).visibility : null; };" \
+           " return [document.documentElement.classList.contains('st-boot'), getComputedStyle(l).display, +getComputedStyle(l).opacity, l.textContent.trim(), v('.st-nav'), v('.st-help-b'), v('.gb-widget')]; })()"
+    wait = await pg.evaluate(boot)
     await pg.wait_for_timeout(2500)
     got = await pg.evaluate(pieces)
     check(hidden and got == ['xe.webp'], f'a layout 4 s late: the scene waits for it, then shows the owner\'s street ({got})')
+    after = await pg.evaluate(boot)
+    nav = await pg.evaluate("[...document.querySelectorAll('.st-nav button')].filter(b => b.offsetParent).map(b => b.textContent)")
+    check(wait[0] and wait[1] == 'flex' and wait[2] > 0.9 and wait[3] == 'Đang mở cửa studio…' and wait[4:] == ['hidden', 'hidden', 'hidden'],
+          f'while it waits: "Đang mở cửa studio…" over the empty wall, no nav / "?" / basket to tap ({wait})')
+    check(not after[0] and after[1] == 'none' and after[4:] == ['visible', 'visible', 'visible'] and nav == ['Vào studio'],
+          f'the scene up: the line gone, the street\'s own nav ({after[:2]}, {nav})')
 
     # 2. next visit: the kept layout at once; a newer one swaps in when it comes
     db.rows['live'] = street('images/studio/vn/vn-41.webp')
@@ -2572,6 +2587,60 @@ async def slow(browser, db):
     check(not errs, f'no script errors {errs}')
     db.layout_delay = 0
     await ctx.close()
+
+
+async def launch_bits(browser, db):
+    """What went in for the public launch (11/2026): places named in
+    Vietnamese only go by their built-in English name in English; ?src= in the
+    link is kept for the order note; the page can be shared (a picture, no
+    noindex)."""
+    print('launch')
+    db.rows.clear(); db.info.clear()
+    item = lambda src, x, zone: dict(src=src, x=x, y=820, w=312, h=200, rot=0, flip=False, layer='back', frame=False, kind='zone', zone=zone)
+    db.rows['live'] = {
+        'v': 1, 'bg': {'src': 'images/studio/bg/strip-tron.webp', 'w': 5792, 'h': 1024}, 'items': [],
+        'udon': {'x': 5200, 'y': 560, 'w': 128, 'h': 140}, 'start': 700,
+        'outside': {'bg': {'src': 'images/studio/bg/ngoai.webp', 'w': 2686, 'h': 1024}, 'start': 1300,
+                    'items': [item('images/studio/vn/vn-36.webp', 560, {'vi': 'Chơi đàn tranh', 'act': 'dantranh'}),
+                              item('images/studio/vn/vn-41.webp', 2300, {'vi': 'Kho vải của Gem', 'en': 'Gem\'s fabric store', 'act': 'khovai'})],
+                    'boxes': [{'id': 'k-test1', 'vi': 'Góc Phân Loại', 'act': 'phanloai', 'box': [1750, 100, 2000, 700], 'stand': 1850}]},
+    }
+    names = "[...document.querySelectorAll('.st-nav .st-go-out')].map(b => b.textContent)"
+    tags = "[...document.querySelectorAll('#st-world .st-hot-label')].map(l => l.textContent).filter(Boolean).sort()"
+    pg = await page(browser, db, 1280, 800, "sessionStorage.removeItem('gem-scene');")
+    await pg.goto(f'{BASE}/studio.html?src=fb')
+    await pg.wait_for_timeout(2500)
+    await pg.add_style_tag(content='.lang-hint{display:none!important}')
+    vi = [await pg.evaluate(names), await pg.evaluate(tags)]
+    check(vi[0] == ['Chơi đàn tranh', 'Góc Phân Loại', 'Kho vải của Gem'] and 'Góc Phân Loại' in vi[1] and 'Chơi đàn tranh' in vi[1],
+          f'Vietnamese: the owner\'s names, in the nav and on the tags ({vi})')
+    await pg.click('.lang-btn[data-lang="en"]')
+    await pg.wait_for_timeout(500)
+    en = [await pg.evaluate(names), await pg.evaluate(tags)]
+    check(en[0] == ['Đàn tranh zither', 'Sort the waste', "Gem's fabric store"] and 'Sort the waste' in en[1] and 'Đàn tranh zither' in en[1]
+          and not any('Góc' in x or 'Chơi' in x for x in en[0] + en[1]),
+          f'English: no English name set = what the place does; one set = that one ({en})')
+    await pg.click('.lang-btn[data-lang="vi"]')
+    await pg.wait_for_timeout(300)
+    back = await pg.evaluate(names)
+    check(back == vi[0], f'back to Vietnamese: the owner\'s names again ({back})')
+    src = await pg.evaluate("sessionStorage.getItem('gem-src')")
+    await pg.evaluate("sessionStorage.removeItem('gem-src')")
+    await pg.goto(f'{BASE}/studio.html?src=Not%20a%20tag!')
+    await pg.wait_for_timeout(800)
+    bad = await pg.evaluate("sessionStorage.getItem('gem-src')")
+    check(src == 'fb' and bad is None, f'?src=fb is kept for the order note, a malformed one is not ({src!r}, {bad!r})')
+    check(not pg.errors, f'no script errors {pg.errors}')
+    await pg.context.close()
+    html = (ROOT / 'studio.html').read_text(encoding='utf-8')
+    img = re.search(r'<meta property="og:image" content="([^"]+)"', html)
+    check(bool(img) and img[1].startswith('https://gemchamsac.com/') and (ROOT / img[1].replace('https://gemchamsac.com/', '')).exists()
+          and 'noindex' not in html and 'property="og:url"' not in html and 'rel="canonical"' not in html,
+          f'studio.html shares with a picture that exists (absolute URL), is not noindex, names no canonical address ({img and img[1]})')
+    for f in ('index.html', 'season-02.html'):
+        m = re.search(r'<meta property="og:image" content="([^"]+)"', (ROOT / f).read_text(encoding='utf-8'))
+        check(bool(m) and m[1].startswith('https://gemchamsac.com/') and (ROOT / m[1].replace('https://gemchamsac.com/', '')).exists(),
+              f'{f}: og:image is an absolute URL to a file that exists ({m and m[1]})')
 
 
 async def topbar(browser, db):
@@ -4762,7 +4831,7 @@ async def phanloai_lv(browser, db):
         # a drag onto a tool: a thing that needs one (a cup, a cushion, a bag)
         one = await pg.evaluate("""(() => { const T = {'Còn trà': 'rua', 'Còn vụn bánh': 'rua', 'Còn thức ăn': 'rua', 'Còn hơi': 'xep', 'Chưa gấp': 'gap'};
             const b = [...document.querySelectorAll('.pl-thing')].find(b => b.querySelector('.pl-chips i') && T[b.querySelector('.pl-chips i').textContent]);
-            return [b.dataset.plItem, T[b.querySelector('.pl-chips i').textContent]]; })()""")
+            return [b.dataset.plItem, T[b.querySelector('.pl-chips i').textContent], b.querySelectorAll('.pl-chips i').length]; })()""")
         a = await center(pg, f'.pl-thing[data-pl-item="{one[0]}"] img')
         b = await center(pg, f'[data-pl-tool="{one[1]}"]')
         await pg.mouse.move(*a)
@@ -4772,7 +4841,8 @@ async def phanloai_lv(browser, db):
         await pg.mouse.up()
         await pg.wait_for_timeout(200)
         done1 = await pg.evaluate(f"document.querySelectorAll('.pl-thing[data-pl-item=\"{one[0]}\"] .pl-chips i').length")
-        check(done1 == 0, f'{name}: a thing dragged onto its tool ({one}): done ({done1})')
+        # one step done per tool: the snack bag is cleaned first and still has to be folded
+        check(done1 == one[2] - 1, f'{name}: a thing dragged onto its tool ({one}): that step done ({done1} left)')
         if name == 'mobile':
             await pg.screenshot(path=OUT / 'phanloai-ban-mobile.png')
         # the rest done right (the bottle's own steps: a tap on it)
@@ -5027,7 +5097,7 @@ async def main(which):
         browser = await launch(p)
         for name, fn in (('street', street), ('wear', wear), ('shop', shop), ('spots', spots), ('editor', editor),
                          ('library', library), ('product', product), ('prodlib', prodlib), ('workshop', workshop), ('design', design), ('catalog', catalog), ('kinds', kinds),
-                         ('layers', layers), ('zones', zones), ('cart', cart), ('choices', choices), ('zither', zither), ('guide', guide), ('vai', vai), ('tui', tui), ('kho', kho), ('guidance', guidance), ('onefab', onefab), ('mau', mau), ('phoi', phoi), ('thudo', thudo), ('taggroup', taggroup), ('phanloai', phanloai), ('phanloai_lv', phanloai_lv), ('racroi', racroi), ('slow', slow), ('topbar', topbar), ('motion', motion),
+                         ('layers', layers), ('zones', zones), ('cart', cart), ('choices', choices), ('zither', zither), ('guide', guide), ('vai', vai), ('tui', tui), ('kho', kho), ('guidance', guidance), ('onefab', onefab), ('mau', mau), ('phoi', phoi), ('thudo', thudo), ('taggroup', taggroup), ('phanloai', phanloai), ('phanloai_lv', phanloai_lv), ('racroi', racroi), ('slow', slow), ('launch', launch_bits), ('topbar', topbar), ('motion', motion),
                          ('phone', phone), ('taps', taps)):
             if which in (None, name):
                 await fn(browser, db)

@@ -197,7 +197,7 @@
     'basket.chat_h':        { vi: `Bạn muốn nhắn qua đâu?`, en: `Where would you like to message us?` },
     'basket.chat_p':        { vi: `Chúng mình đã copy nội dung giỏ hàng — bạn chỉ cần dán vào cửa sổ chat là xong.`, en: `We've copied your basket — just paste it into the chat window.` },
     'basket.chat_email':    { vi: `Email`, en: `Email` },
-    'basket.copied':        { vi: `Đã copy nội dung giỏ hàng.`, en: `Basket contents copied.` },
+    'basket.copied_all':    { vi: `Đã copy nội dung giỏ hàng.`, en: `Basket contents copied.` },   // own key: 'basket.copied' is the copy buttons' "Đã chép"
 
     'basket.done_h':        { vi: `Chúng mình nhận được rồi.`, en: `We've got it.` },
     'basket.custom':        { vi: `Thiết kế riêng`, en: `Your own design` },
@@ -261,6 +261,16 @@
   var items = [];   // [{ sku, qty, spec?, opt?, pics? }]  spec = design code from js/patch.js,
                     // opt = key of the scent / size picked (products.options)
   var liveSkus = null;   // skus the database sells, in its order; null until it answers
+
+  // Where this visit came from, when the link says so: studio.html?src=fb in a
+  // Facebook post, ?src=qr on a card at the counter. Kept for this tab's
+  // visit and written into the order note as [nguồn: …], the one word Gem
+  // already reads there. Nothing is counted or sent anywhere else. Only a
+  // short lowercase tag gets in: the note is free text.
+  try {
+    var srcTag = new URLSearchParams(location.search).get('src');
+    if (srcTag && /^[a-z0-9-]{1,24}$/.test(srcTag)) sessionStorage.setItem('gem-src', srcTag);
+  } catch (e) { /* old browser / private mode */ }
   // Lines read back for products only the database knows (added in admin:
   // consignment, the bags a design is ordered as). Held, not dropped, until
   // it answers; still written back meanwhile so nothing is lost.
@@ -1010,7 +1020,7 @@
             '<path d="M22 6l-10 7L2 6"/></svg>' +
           '</span><span data-i18n="basket.chat_email">Email</span></a>' +
       '</div>' +
-      '<p class="gb-copied" hidden data-i18n="basket.copied"></p>';
+      '<p class="gb-copied" hidden data-i18n="basket.copied_all"></p>';
 
     panelBody.querySelector('.gb-back').addEventListener('click', function () {
       view = 'basket'; renderPanel();
