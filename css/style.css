@@ -2484,6 +2484,11 @@ body.gb-lock { overflow: hidden; }
   color: #A6503C;
   line-height: 1.5;
 }
+/* a field's own complaint, right under it */
+.gb-field-err { font-size: var(--text-xs); color: #A6503C; line-height: 1.4; }
+.gb-field input[aria-invalid="true"] { border-color: #A6503C; background: var(--paper-white); }
+/* the QR screen: what the amount leaves out */
+.gb-qr-ship { color: var(--ink-body); font-weight: 500; }
 
 /* ---------- CHAT CHANNELS ---------- */
 .gb-channels {
