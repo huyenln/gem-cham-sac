@@ -234,6 +234,11 @@
     'basket.qr_hint':       { vi: `Đang xem trên chính điện thoại này? Bấm “Lưu ảnh QR” rồi mở app ngân hàng, chọn quét từ ảnh — hoặc bấm “Chép” rồi nhập tay.`, en: `Reading this on the same phone? Tap “Save QR image”, then open your banking app and scan from your photos — or tap “Copy” and type it in.` },
     'basket.done_qr_p':     { vi: `Chuyển xong bạn không cần báo lại — chúng mình thấy tiền về là nhắn cho bạn ngay.`, en: `No need to tell us once you've sent it — we'll message you as soon as the transfer lands.` },
     'basket.done_qr_open_p': { vi: `Đơn có món giá tuỳ từng chiếc, nên chúng mình chưa đưa mã QR ngay. Gem sẽ nhắn bạn tổng tiền kèm mã QR trong hôm nay. Cảm ơn bạn đã chọn đồ của chúng mình.`, en: `Some pieces in this order are priced one by one, so there is no QR code yet. Gem will message you the total and a QR code today. Thank you for choosing our pieces.` },
+    // over the send button. What the law asks: docs/design.md, "Pháp lý"
+    'basket.legal':         { vi: `Gem dùng thông tin này chỉ để xử lý đơn và liên lạc với bạn về đơn. Bấm “Gửi đơn cho Gem” là bạn đồng ý với <a href="chinh-sach.html" target="_blank" rel="noopener">điều kiện mua hàng và cách Gem dùng thông tin của bạn</a>.`, en: `Gem uses these details only to handle your order and to contact you about it. By pressing “Send order to Gem” you agree to <a href="chinh-sach.html" target="_blank" rel="noopener">the terms of purchase and how Gem uses your information</a>.` },
+    'basket.done_order':    { vi: `Nội dung đơn`, en: `Your order` },
+    'basket.txt_code':      { vi: `Mã đơn`, en: `Order code` },
+    'basket.txt_pay':       { vi: `Cách trả tiền`, en: `Payment` },
     'basket.qr_ship':       { vi: `Số tiền trên chưa gồm phí giao hàng. Gem báo phí giao khi nhắn lại cho bạn.`, en: `The amount above does not include shipping. Gem will tell you the shipping fee when we message you.` },
     'basket.order_failed':  { vi: `Chưa gửi được đơn. Bạn nhắn Zalo cho chúng mình nhé.`, en: `We could not send the order. Please message us on Zalo.` },
     'basket.done_mail_p':   { vi: `Chúng mình vừa mở sẵn email cho bạn — bạn bấm Gửi trong app email là đơn về tới Gem nhé.`, en: `We've opened a pre-filled email for you — hit Send in your mail app and the order reaches Gem.` },
@@ -628,6 +633,8 @@
   var orderCustom = false; // đơn có món thiết kế riêng: chưa thu tiền, chờ duyệt ảnh vải
   var orderOpen = false;   // giá chưa chốt (món "Liên hệ" / khoảng giá): chưa đưa mã QR, Gem nhắn tổng tiền sau
   var orderShip = false;   // giao tận nơi: số tiền trên mã QR chưa gồm phí giao
+  var orderBody = '';      // what was ordered, as text: the thank-you screen keeps it to read again and to copy
+                           // (the basket is empty by then). A buyer has no account here to find the order in.
   var PAY = null;        // cấu hình thanh toán đọc từ Supabase
 
   /* ---------- chọn cách trả tiền ----------
@@ -977,6 +984,9 @@
           '<span data-i18n="basket.subtotal">Tổng</span>' +
           '<strong>' + subtotalLabel() + '</strong>' +
         '</div>' +
+        // what the details are for, and what sending the order agrees to
+        '<p class="gb-legal" data-i18n-html="basket.legal">Gem dùng thông tin này chỉ để xử lý đơn và liên lạc với bạn về đơn. ' +
+          'Bấm “Gửi đơn cho Gem” là bạn đồng ý với <a href="chinh-sach.html" target="_blank" rel="noopener">điều kiện mua hàng và cách Gem dùng thông tin của bạn</a>.</p>' +
         // above the button: under it the line sat below the fold on a phone
         '<p class="gb-err" role="alert" hidden></p>' +
         '<button type="submit" class="btn btn-primary gb-submit" data-i18n="basket.send">Gửi đơn cho Gem</button>' +
@@ -1143,6 +1153,14 @@
           (doneMode === 'mailto' ? 'basket.done_mail_p'
             : orderCustom ? 'basket.done_custom_p'
             : orderPay === 'qr' ? (orderOpen ? 'basket.done_qr_open_p' : 'basket.done_qr_p') : 'basket.done_p') + '"></p>' +
+        // what was ordered: the customer's own words go through esc()
+        (orderBody
+          ? '<div class="gb-order">' +
+              '<div class="gb-order-head"><span data-i18n="basket.done_order">Nội dung đơn</span>' +
+                '<button type="button" class="gb-copy" data-copy="' + esc(orderBody) + '" data-i18n="basket.copy">Chép</button></div>' +
+              '<pre class="gb-order-text">' + esc(orderBody) + '</pre>' +
+            '</div>'
+          : '') +
         '<button type="button" class="btn btn-primary gb-done-btn" data-i18n="basket.done_btn"></button>' +
       '</div>';
 
@@ -1222,6 +1240,7 @@
     opts = opts || {};
     var lines = [];
     lines.push(opts.enquiry ? t('basket.txt_enquiry', '') : t('basket.txt_order', ''));
+    if (opts.code) lines.push(t('basket.txt_code', 'Mã đơn') + ': ' + opts.code);
     lines.push('———');
     items.forEach(function (it, i) {
       var p = bySku(it.sku);
@@ -1246,6 +1265,7 @@
         ? t('basket.txt_pickup', '')
         : t('basket.txt_addr', 'Địa chỉ') + ': ' + (c.address || '—'));
       if (c.note) lines.push(t('basket.txt_note', 'Ghi chú') + ': ' + c.note);
+      if (opts.pay) lines.push(t('basket.txt_pay', 'Cách trả tiền') + ': ' + opts.pay);
     }
 
     lines.push('');
@@ -1322,6 +1342,7 @@
     var open = priceOpen();   // asked now: the basket is emptied once the order is in
 
     var body = orderText({ customer: customer });
+    orderBody = body;   // the thank-you screen shows it; with the order code once the database has given one
     var subject = t('basket.order_subject', 'Đơn hàng mới từ website') +
       ' — ' + count() + ' món';
     var submitBtn = form.querySelector('.gb-submit');
@@ -1395,6 +1416,9 @@
           orderSum = res.subtotal || 0;
           orderOpen = open || !!res.has_unpriced;
           orderShip = !customer.pickup;
+          orderBody = orderText({ customer: customer, code: res.code,
+            pay: res.payment_method === 'qr' ? t('basket.pay_qr', 'Chuyển khoản QR')
+               : res.payment_method === 'cod' ? t('basket.pay_cod', 'Trả khi nhận hàng') : '' });
           finish('sent');
           return;
         }

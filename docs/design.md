@@ -2764,6 +2764,57 @@ các chỗ khác; 5 bài cũ cần nén lại), trang Workshop không còn buổ
 mời "chọn buổi", kiểm số điện thoại ở database, nút tạo QR trong admin, bố cục hai cột cho trò
 chơi khi xoay ngang.
 
+### Pháp lý: trang chính sách, thông báo ở form (12/11/2026)
+
+Rà website theo luật đang có hiệu lực (11/2026) trước ngày công bố Studio. Website là một
+"nền tảng thương mại điện tử kinh doanh trực tiếp có chức năng đặt hàng trực tuyến" (shop tự bán,
+có giỏ và form gửi đơn). Văn bản chính:
+
+| Việc | Văn bản |
+|---|---|
+| Nội dung phải công khai, quy trình đặt hàng, thông báo website | Luật Thương mại điện tử 122/2025/QH15 (từ 1/7/2026), Điều 11, 12, 14, 16; Nghị định 248/2026/NĐ-CP Điều 4–14, 22–24. Nghị định 52/2013 và 85/2021 đã hết hiệu lực |
+| Thông tin cho người tiêu dùng khi mua từ xa | Luật Bảo vệ quyền lợi người tiêu dùng 19/2023/QH15 Điều 15–17, 37–38 |
+| Dữ liệu cá nhân | Luật Bảo vệ dữ liệu cá nhân 91/2025/QH15 (từ 1/1/2026), Nghị định 356/2025/NĐ-CP; xử phạt: Nghị định 330/2026/NĐ-CP |
+| Thư quảng cáo | Nghị định 91/2020/NĐ-CP (nhãn "[QC]", cách từ chối, tối đa 3 thư / 24 giờ) |
+| Nhãn hàng hoá (nội dung phải có trên trang bán) | Nghị định 37/2026/NĐ-CP Điều 41–42; hàng đã qua sử dụng được miễn (Điều 35) |
+| Trang thông tin, tên miền, trò chơi trên mạng | Nghị định 147/2024/NĐ-CP |
+| Quảng cáo | Luật Quảng cáo (sửa 2025, Luật 75/2025/QH15); Thông tư 12/2026/TT-BVHTTDL về từ ngữ "nhất", "duy nhất" và từ khẳng định "tính độc bản" |
+| Nội dung do AI tạo | Luật Trí tuệ nhân tạo 134/2025/QH15 Điều 11: chỉ phải ghi chú khi dễ gây nhầm là thật. Vì vậy chữ trên web **không gọi tranh Studio là "vẽ tay"** |
+
+**Đã làm trên web (đợt này):**
+
+- **`chinh-sach.html`**: ai đứng sau trang, giá, đặt hàng và giữ chỗ, thanh toán, nhận hàng, góp ý và
+  khiếu nại, thông tin cá nhân (thu gì, để làm gì, ai xem được, dữ liệu nằm ở máy chủ ngoài Việt Nam,
+  lưu bao lâu, quyền của khách). Chữ là khoá `policy.*` trong `js/i18n.js`. **Mỗi câu nói đúng việc web
+  và shop đang làm**; không viết điều chưa được chốt. Đổi cách làm thì sửa câu tương ứng và
+  `policy.updated`.
+- **Đường tới trang đó**: footer của 9 trang (`.footer-policy`, dưới câu tagline), form đặt hàng, form
+  giữ chỗ, ba form bản tin, bảng "?" của Studio (Studio không có footer).
+- **Dòng thông báo ở form** (Luật BVDLCN Điều 9, 19; Luật BVQLNTD Điều 17): `basket.legal` trên nút
+  "Gửi đơn cho Gem", `ws.legal` trên nút "Giữ chỗ", `common.ml_note` dưới ba form bản tin,
+  `studio.memo_note` ở Bảng lời nhắn. Thông tin cần để làm đúng việc khách nhờ thì không phải xin
+  đồng ý riêng, nhưng vẫn phải nói rõ dùng để làm gì; bấm nút gửi sau khi đọc dòng đó là hành động
+  đồng ý (luật không nhận im lặng hay ô đánh dấu sẵn).
+- **Nội dung đơn trên màn cảm ơn** (Luật TMĐT Điều 12.3; Luật BVQLNTD Điều 38): khách không có tài
+  khoản để xem lại đơn, nên màn cảm ơn giữ nguyên nội dung đơn (mã đơn, món, tổng, tên, số điện thoại,
+  địa chỉ, cách trả tiền) kèm nút "Chép" (`orderBody` trong `js/basket.js`, lấy từ `orderText()` trước
+  khi giỏ bị xoá; chữ khách gõ đi qua `esc()`).
+- **Ưu đãi chia sẻ của Chạm Mùa**: bỏ "Google Maps" (Google cấm đổi quà lấy đánh giá).
+
+**Chưa viết được vì chờ chủ shop chốt** (đừng tự điền): thông tin pháp lý của hộ kinh doanh (tên, mã
+số thuế, số giấy đăng ký, người chịu trách nhiệm nội dung: đưa vào footer và mục `#ve-gem`); biểu phí,
+khu vực và thời gian giao hàng (luật muốn số tiền phải trả hiện đủ **trước** khi gửi đơn, nên phí giao
+cần hiện trong giỏ; món "Liên hệ" / khoảng giá cũng vướng điểm này); điều kiện, thời hạn đổi trả và
+hoàn tiền; thời hạn trả lời khiếu nại; nội dung nhãn của từng sản phẩm (bên chịu trách nhiệm, xuất xứ,
+thành phần, cách bảo quản: nhập ở ghi chú sản phẩm trong admin).
+
+Các thủ tục với cơ quan nhà nước và các điểm cần hỏi luật sư nằm trong danh sách riêng của chủ shop,
+**không ghi trong repo**: repo và GitHub Pages đều công khai.
+
+Kiểm tra: `python3 tools/check-studio.py order` (trang chính sách đủ 7 mục, mọi khoá có hai ngôn ngữ,
+footer 10 trang có link, dòng thông báo trên nút gửi, nội dung đơn ở màn cảm ơn) và `guide` (link trong
+bảng "?").
+
 ### Studio hiện cảnh mặc định thay cho bố cục đã lắp (sửa 13/10/2026)
 
 **Triệu chứng:** mở `studio.html` thấy mặt phố mặc định (monstera, bình tưới, ghế gỗ,

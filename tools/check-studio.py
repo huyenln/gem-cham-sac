@@ -2478,6 +2478,8 @@ async def guide(browser, db):
         getComputedStyle(document.querySelector('.st-help-b')).display, document.getElementById('st-tip').hidden]""")
     check(sheet[0] == 'Cách chơi' and 'Bàn thiết kế' in sheet[1] and len(sheet[1]) >= 5 and sheet[2] == 'none' and sheet[3],
           f'"?" opens "Cách chơi": how to walk and open, what is here; the tip and the "?" step aside ({sheet[1]})')
+    pol = await pg.evaluate("(() => { const a = document.querySelector('.st-help-again a'); return a ? [a.getAttribute('href'), a.target, a.textContent] : null; })()")
+    check(pol == ['chinh-sach.html', '_blank', 'Chính sách mua hàng & bảo mật'], f'the Studio has no footer: the policy page is linked from "?" ({pol})')
     idx = sheet[1].index('Bàn thiết kế')
     w0 = (await pg.evaluate(ST))['world']
     await pg.click(f'[data-help-go="{idx}"]')
@@ -2654,6 +2656,27 @@ async def launch_bits(browser, db):
               f'{f}: og:image is an absolute URL to a file that exists ({m and m[1]})')
 
 
+def policy_bits():
+    """The policy page (11/2026) and the ways to it. A sales site has to publish
+    who runs it, its prices, payment, delivery, complaints and what it does
+    with personal details, one tap from every page (docs/design.md, "Pháp lý")."""
+    read = lambda f: (ROOT / f).read_text(encoding='utf-8')
+    pages = ['index.html', 'cau-chuyen.html', 'mo-hinh.html', 'doi-tac.html', 'san-pham.html', 'ghe-tham.html',
+             'season-02.html', 'workshop.html', 'ban-tin.html', 'chinh-sach.html']
+    pol = read('chinh-sach.html')
+    ids = [i for i in ('ve-gem', 'gia', 'dat-hang', 'thanh-toan', 'nhan-hang', 'gop-y', 'thong-tin-ca-nhan') if f'id="{i}"' not in pol]
+    check(not ids, f'chinh-sach.html has its seven parts ({ids})')
+    keys = set(re.findall(r'data-i18n(?:-html)?="(policy\.[a-z0-9_]+)"', pol))
+    lost = sorted(k for k in keys if f"'{k}':" not in read('js/i18n.js'))
+    check(len(keys) > 40 and not lost, f'every policy sentence has its text in both languages ({len(keys)} keys, missing {lost})')
+    nolink = [f for f in pages if 'href="chinh-sach.html" class="footer-policy"' not in read(f)]
+    check(not nolink, f'the footer of every page links to it ({nolink})')
+    nonote = [f for f in ('index.html', 'ghe-tham.html', 'ban-tin.html') if 'class="ml-note"' not in read(f)]
+    check(not nonote, f'each newsletter form says what the address is used for ({nonote})')
+    check('class="ws-legal"' in read('js/workshop.js') and "'studio.memo_note'" in read('js/studio.js'),
+          'the reservation form and the message board carry their own line')
+
+
 async def order_form(browser, db):
     """The order form and what follows it (11/2026). Each field's complaint
     sits under the field (the one line after the button was below the fold on
@@ -2663,6 +2686,7 @@ async def order_form(browser, db):
     used to fill in the sum of the lowest prices and say there was no need to
     tell Gem; now Gem sends the total and the code later."""
     print('order')
+    policy_bits()
     db.rows.clear(); db.info.clear()
     db.payment = {'bank_bin': '970407', 'bank_name': 'Techcombank', 'account_no': '1234567890', 'account_name': 'GEM THU',
                   'qr_enabled': True, 'cod_enabled': True, 'prepay_threshold': 0}
@@ -2698,6 +2722,11 @@ async def order_form(browser, db):
     pg = await form([{'sku': 'origami', 'qty': 2}])
     kids = await pg.evaluate("[...document.querySelector('.gb-form').children].map(c => c.className.split(' ').pop())")
     check(kids.index('gb-err') < kids.index('gb-submit'), f'the form\'s own error line is above the button ({kids[-3:]})')
+    legal = await pg.evaluate("(() => { const p = document.querySelector('.gb-legal'), a = p && p.querySelector('a');"
+                              " return [p ? p.textContent.trim() : '', a ? a.getAttribute('href') : null, a ? a.target : null]; })()")
+    check('chỉ để xử lý đơn' in legal[0] and 'đồng ý' in legal[0] and legal[1] == 'chinh-sach.html' and legal[2] == '_blank'
+          and kids.index('gb-legal') < kids.index('gb-submit'),
+          f'over the button: what the details are used for and what sending agrees to, with the policy page a tap away ({legal[1:]})')
     await js_click(pg, '.gb-form .gb-submit')
     await pg.wait_for_timeout(300)
     e = await pg.evaluate(bad)
@@ -2721,6 +2750,12 @@ async def order_form(browser, db):
           f'sent with the number as digits ({call.get("p_phone")!r}, {call.get("p_address")!r}, {call.get("p_payment")!r})')
     check(got[0] and got[1] == 5 and got[2] and 'không cần báo lại' in got[3],
           f'a fixed price, delivered: the QR code with its amount, and a line that shipping is not in it ({got[:3]})')
+    kept = await pg.evaluate("(() => { const t = document.querySelector('.gb-order-text'), b = document.querySelector('.gb-order .gb-copy');"
+                             " return [t ? t.textContent : '', b ? b.getAttribute('data-copy') : null,"
+                             " (document.querySelector('.st-basket-items, .gb-list') || {}).childElementCount || 0]; })()")
+    need = [got[4] or '?', 'Origami Pouch', '× 2', 'Khách thử', '0900000000', '12 Hàng Bông', 'Chuyển khoản QR']
+    check(all(w in kept[0] for w in need) and kept[1] == kept[0],
+          f'the thank-you screen keeps the order to read again and to copy: code, pieces, name, phone, address, payment ({[w for w in need if w not in kept[0]]})')
     check(not pg.errors, f'no script errors {pg.errors}')
     await pg.context.close()
 

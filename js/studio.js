@@ -243,6 +243,7 @@
     'studio.help_edge':    { vi: `Nhãn ở mép màn hình chỉ chỗ đang khuất; chạm vào để đi tới.`, en: `The tags at the screen's edges point to places out of view; tap one to go there.` },
     'studio.help_here':    { vi: `Ở đây có gì`, en: `What's here` },
     'studio.help_go':      { vi: `Đi tới`, en: `Go` },
+    'studio.help_policy':  { vi: `Chính sách mua hàng & bảo mật`, en: `Shopping & privacy policy` },
     'studio.help_replay':  { vi: `Xem lại hướng dẫn từ đầu`, en: `Show the tips again` },
     'studio.bn_h':         { vi: `Bất ngờ ngoài phố`, en: `Street surprises` },
     'studio.bn_p':         { vi: `Thỉnh thoảng ngoài phố có chuyện bất ngờ, hãy nán lại chút để khám phá.`, en: `Now and then something happens out on the street: linger a little and find out.` },
@@ -501,6 +502,7 @@
     'studio.memo_bad':     { vi: `Viết vài chữ (tối đa 280) rồi gửi nhé.`, en: `Write a few words (280 max) and send.` },
     'studio.memo_busy':    { vi: `Bảng đang nhiều lời chờ đọc quá. Bạn thử lại sau ít phút nhé.`, en: `Lots of notes waiting to be read. Try again in a few minutes.` },
     'studio.memo_fail':    { vi: `Chưa gửi được. Bạn thử lại sau chút nhé.`, en: `Couldn't send. Please try again in a bit.` },
+    'studio.memo_note':    { vi: `Lời nhắn hiện công khai sau khi Gem đọc, nên đừng ghi số điện thoại hay địa chỉ nhé. Muốn gỡ, bạn nhắn Gem.`, en: `Notes appear publicly once Gem has read them, so leave out phone numbers and addresses. To have one taken down, message Gem.` },
     'studio.memo_anon':    { vi: `Một người ghé qua`, en: `A visitor` },
     'studio.tu_designs':   { vi: `Đã thiết kế`, en: `Designed` },
     'studio.tu_designs_0': { vi: `Chưa có thiết kế nào. Ghé Bàn thiết kế thử một món nhé.`, en: `No designs yet. Try one at the Design table.` },
@@ -2121,7 +2123,9 @@
       // surprises out on the street (falling litter now, more later)
       '<div class="st-bn"><div><b data-i18n="studio.bn_h">' + esc(t('studio.bn_h')) + '</b>' + tr('p', 'studio.bn_p', ' class="st-bn-p"') + '</div>' +
         '<button type="button" class="st-bn-sw" role="switch" aria-checked="' + bnOn() + '" data-bn-toggle>' + esc(t(bnOn() ? 'studio.bn_on' : 'studio.bn_off')) + '</button></div>' +
-      '<p class="st-help-again"><button type="button" class="st-link" data-help-replay data-i18n="studio.help_replay">' + esc(t('studio.help_replay')) + '</button></p>'
+      '<p class="st-help-again"><button type="button" class="st-link" data-help-replay data-i18n="studio.help_replay">' + esc(t('studio.help_replay')) + '</button>' +
+        // the Studio has no footer: the policy page is one tap from here (and from the order form)
+        '<a class="st-link" href="chinh-sach.html" target="_blank" rel="noopener" data-i18n="studio.help_policy">' + esc(t('studio.help_policy')) + '</a></p>'
     );
     sheetBody.querySelector('[data-bn-toggle]').addEventListener('click', function (e) {
       var on = !bnOn();
@@ -5389,6 +5393,7 @@
             '<input name="name" maxlength="40" autocomplete="nickname"></label>' +
           // Honeypot: people never see it, form-filling bots do.
           '<input name="website" class="mb-hp" tabindex="-1" autocomplete="off" aria-hidden="true">' +
+          tr('p', 'studio.memo_note', ' class="mb-note"') +
           '<button type="submit" class="st-btn" data-i18n="studio.memo_send">' + esc(t('studio.memo_send')) + '</button>' +
           '<p class="mb-msg" role="status" aria-live="polite"></p>' +
         '</form>' +

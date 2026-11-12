@@ -555,6 +555,7 @@
 .st-help-places li { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-1) 0; border-bottom: 1px solid var(--paper-cream-warm); }
 .st-help-places span { font-weight: 600; color: var(--ink-dark); }
 .st-help-again { margin: var(--space-3) 0 72px; text-align: center; }   /* room to scroll past the basket button */
+.st-help-again .st-link { display: inline-block; margin: 0 var(--space-2); }
 
 @keyframes st-pop {
   from { opacity: 0; transform: translateY(-6px); }
@@ -1470,6 +1471,7 @@ html:has(.studio-page) { overscroll-behavior: none; }   /* own rule: a Safari wi
 .mb-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
 .mb-form .st-btn { justify-self: start; }
 .mb-msg { margin: 0; min-height: 1.4em; font-size: var(--text-sm); }
+.mb-note { margin: 0; font-size: var(--text-xs); line-height: 1.5; color: var(--ink-soft); }
 
 .mb-list {
   list-style: none;
@@ -1591,6 +1593,7 @@ html:has(.studio-page) { overscroll-behavior: none; }   /* own rule: a Safari wi
   font: inherit; font-size: var(--text-sm); color: var(--ink-dark);
   text-decoration: underline; text-underline-offset: 3px;
 }
+a.st-link { display: inline-block; line-height: 44px; }   /* a link written as text, same 44px to tap */
 .st-btn-sm { min-height: 40px; padding: 0 var(--space-3); font-size: var(--text-xs); }
 @media (min-width: 768px) {
   .fit { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); align-items: start; }

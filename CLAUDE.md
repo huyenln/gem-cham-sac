@@ -22,6 +22,7 @@ Static website cho cửa hàng **Gem Chạm Sắc** — pop-up store sustainabil
 ├── san-pham.html             Sản phẩm (4 categories + dịch vụ đặc biệt)
 ├── ghe-tham.html             Ghé thăm (địa chỉ + map + email signup)
 ├── season-02.html            Câu chuyện Season 02 (A Space To Stay + link FB reel)
+├── chinh-sach.html           Chính sách mua hàng & bảo mật (giá, đặt hàng, thanh toán, nhận hàng, khiếu nại, thông tin cá nhân): link ở footer mọi trang + các form; luật yêu cầu, xem docs/design.md → "Pháp lý"
 ├── workshop.html             Đặt lịch workshop (đọc từ Supabase)
 ├── ban-tin.html              Bản tin — bài viết đọc từ Supabase
 ├── admin.html                Trang quản trị cho Anna + nhân viên (noindex, không có link từ nav); tab Kho vải
@@ -100,6 +101,10 @@ Postgres 17). Bảng: `products`, `orders`, `order_items`, `sessions`, `bookings
 > 3. **KHÔNG đưa chữ người dùng nhập vào `innerHTML`.** Nội dung bài Bản tin,
 >    tên khách, ghi chú đơn — tất cả đều là chữ người khác gõ. Dùng
 >    `textContent`, hoặc `esc()` có sẵn trong từng file JS.
+> 4. **Form nào thu thông tin khách** (đơn hàng, giữ chỗ, bản tin, lời nhắn…) phải có một dòng nói
+>    thông tin dùng để làm gì, kèm link `chinh-sach.html`. Đổi cách làm (cách trả tiền, giao hàng,
+>    dịch vụ lưu dữ liệu, thêm chỗ thu thông tin) thì sửa `chinh-sach.html` và ngày ở `policy.updated`
+>    cùng lúc: trang đó phải nói đúng việc web đang làm. Căn cứ: `docs/design.md` → "Pháp lý".
 
 **Naming conventions:**
 - Files: lowercase kebab-case (`cau-chuyen.html`, `vai-vun-tui-deo-cheo.jpg`)
@@ -139,7 +144,7 @@ Quick reference:
 ## Decisions đã chốt (ĐỪNG hỏi lại)
 
 **Scope & content:**
-- Menu 7 mục: Trang chủ, "Về Gem" (Câu chuyện / Mô hình / Đối tác), Sản phẩm, **Studio 2D** (`studio.html`, từ 11/2026), Workshop, Bản tin, Ghé thăm. Bảy mục không vừa một hàng dưới 1100px nên ở 960–1099px mục "Trang chủ" ẩn đi (`.nav-home`, logo vẫn về trang chủ). Trang phụ: `season-02.html` (không nằm trong nav), `admin.html` (nhân sự). Không tạo thêm trang mới trừ khi user yêu cầu rõ.
+- Menu 7 mục: Trang chủ, "Về Gem" (Câu chuyện / Mô hình / Đối tác), Sản phẩm, **Studio 2D** (`studio.html`, từ 11/2026), Workshop, Bản tin, Ghé thăm. Bảy mục không vừa một hàng dưới 1100px nên ở 960–1099px mục "Trang chủ" ẩn đi (`.nav-home`, logo vẫn về trang chủ). Trang phụ: `season-02.html` (không nằm trong nav), `chinh-sach.html` (không nằm trong nav: link ở footer mọi trang, ở form đặt hàng / giữ chỗ / bản tin và bảng "?" của Studio), `admin.html` (nhân sự). Không tạo thêm trang mới trừ khi user yêu cầu rõ.
 - **Có hiện giá** (quyết định D3 trong `docs/design.md`, đảo lại "không hiện giá" cũ). Giá đọc từ bảng `products`; món chưa có giá ghi "Liên hệ".
 - Email signup: **Mailerlite đã tích hợp** (account `2380127`, form `41774242`). `js/mailerlite.js` submit bằng `fetch` mode `no-cors` rồi hiện success inline (`.ml-success`) — KHÔNG load script Mailerlite, KHÔNG redirect. Form ở `index.html`, `ghe-tham.html` và `ban-tin.html`. `action` phải là `…/forms/188507892064716532/subscribe` (mã dài) kèm hai ô ẩn `ml-submit`, `anticsrf`: `…/forms/41774242/subscribe` trả 404, mà `no-cors` không thấy lỗi nên trang vẫn báo thành công (lỗi ở `ban-tin.html`, sửa 12/11/2026).
 - **Có giỏ hàng + đặt đơn** (`js/basket.js`): trả khi nhận (COD) hoặc chuyển khoản VietQR (D14). KHÔNG có cổng thẻ, KHÔNG có tài khoản khách — đăng nhập chỉ dành cho nhân sự (`admin.html`). Khách xem lại món đã mua qua "Tủ sưu tầm" bằng mã đơn + SĐT.
@@ -165,7 +170,7 @@ Quick reference:
 - Địa điểm hiện tại: Tầng 3, Trung tâm Văn hóa - Thông tin và Thể thao Phường Hai Bà Trưng, 114 Lê Gia Đỉnh, Hà Nội. (Season 01 pop-up ở Nguyễn Văn Huyên đã kết thúc.)
 - Season 02 được kiến tạo bởi: Gem Chạm Sắc × Cool Vietnam × Âm Nhạc Vân Long. Trang `season-02.html` link tới FB reel `https://web.facebook.com/reel/1935073537146672`.
 - "CLB Nghệ Uyển" (tên trong Portfolio) chỉ là tên hợp tác — **không** dùng làm tên không gian trên web.
-- **Chạm Mùa** — chuỗi workshop cuối tuần 25/09 – 27/12/2026 (`workshop.html`, khoá `cm.*` trong `js/workshop.js`). Hết mùa thì gỡ — xem `docs/design.md` → "Portfolio 2026 + Chạm Mùa". Trải nghiệm âm nhạc / trang phục của Vân Long chỉ nhắc, không ghi giá.
+- **Chạm Mùa** — chuỗi workshop cuối tuần 25/09 – 27/12/2026 (`workshop.html`, khoá `cm.*` trong `js/workshop.js`). Hết mùa thì gỡ — xem `docs/design.md` → "Portfolio 2026 + Chạm Mùa". Trải nghiệm âm nhạc / trang phục của Vân Long chỉ nhắc, không ghi giá. Ưu đãi "chia sẻ trải nghiệm" chỉ tính bài trên mạng xã hội, **không ghi Google Maps** (Google cấm đổi quà lấy đánh giá).
 - Roadmap ở `mo-hinh.html`: card `.active` = Season đang diễn ra, card `.done` = season đã qua (badge "✓ đã qua"). Card Season 02 là `<a>` link sang `season-02.html`.
 - 4 seasons total: 01 Pop-up, 02 A Space To Stay, 03 Circular Creative Community, 04 Social Enterprise & Learning Space.
 - Địa chỉ/giờ mở cửa là chữ dịch trong `js/i18n.js` (`footer.address`, `home.season_addr`, `visit.addr_value`, `visit.hours_value`, `s2.*`…) — sửa ở đó, nhớ cập nhật cả fallback HTML + link Google Maps trong các trang.
@@ -454,6 +459,11 @@ Công bố (Anna 12/11/2026, chi tiết: `docs/design.md` → "Studio: công b�
   ống quần kéo lại (câu vui `rr.l*`); huy hiệu 100/200/500 chỉ để vui; Sổ thông điệp trong Tủ sưu tầm; tắt ở
   bảng "?" (`gem-batngo`). 55 thông điệp (Tagom, US EPA, EEA, Ủy ban châu Âu, Ellen MacArthur, Climate Box
   của UNDP — bản Đông Nam Á cho khí hậu, sách 2015 cho mẹo) — câu mới chỉ thêm khi đã mở trang nguồn kiểm; không dùng Báo điện tử Chính phủ / mức phạt (Anna 06/11). Chi tiết: `docs/design.md` → "Bất ngờ ngoài phố: rác rơi". Test: `check-studio.py racroi`.
+- ⚖️ Pháp lý (12/11/2026, rà theo luật đang có hiệu lực): đã có `chinh-sach.html`, dòng thông báo ở các form, nội dung đơn
+  trên màn cảm ơn (khách không có tài khoản để xem lại đơn). Còn chờ chủ shop: thông tin pháp lý của hộ kinh doanh
+  (footer + mục "Ai đứng sau trang này"), biểu phí và thời gian giao, điều kiện đổi trả, thời hạn trả lời khiếu nại,
+  cùng các thủ tục với cơ quan nhà nước. Danh sách chi tiết nằm ở tài liệu riêng của chủ shop, **không để trong repo**
+  (repo và GitHub Pages đều công khai). Chi tiết: `docs/design.md` → "Pháp lý".
 - Mail báo nhân sự: `notify_log` có hai dòng lời nhắn (04/10, 01/11), theo code thì chỉ ghi khi Gmail đã
   cấu hình và gửi không lỗi; chưa có đơn / giữ chỗ thật nào đi qua. Nên đặt thử một đơn thật rồi huỷ
   (các bước bật mail: `docs/design.md` → "Bật gửi mail thật").
