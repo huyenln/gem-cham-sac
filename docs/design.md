@@ -3498,7 +3498,9 @@ EPS, không tái chế. Mọi chữ về bộ kit / tấm xốp ghi "xốp tái 
 **không** ghi "tái chế" / "recycled" (bản PDF hướng dẫn Kinusaiga cũ vẫn ghi sai, đừng chép).
 Dòng `kinusaiga` trong `workshop_types` sửa bằng
 `supabase/migrations/20261113_kinusaiga_xop_tai_su_dung.sql` (chỉ đổi đúng cụm chữ trong
-`desc_vi/en`, `long_vi/en` bằng `replace()`). Chưa chạy: chạy sau khi chủ shop duyệt chữ.
+`desc_vi/en`, `long_vi/en` bằng `replace()`). **Đã chạy 13/11/2026** (migration
+`kinusaiga_xop_tai_su_dung`, chủ shop đã duyệt chữ; chỉ sửa dữ liệu, câu kiểm GRANT-vs-policy
+vẫn 3 dòng cố ý như cũ). Đọc bằng vai `anon` qua REST: còn 0 chữ "tái chế" / "recycled".
 
 **Trang:**
 - `workshop.html`: dải Chạm Mùa đầu trang → thẻ workshop (thời lượng · tuổi ·

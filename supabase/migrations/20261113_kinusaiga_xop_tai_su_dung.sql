@@ -6,6 +6,7 @@
 -- File này chỉ đổi đúng cụm chữ đó trong 4 ô (desc_vi/en, long_vi/en) bằng
 -- replace(): phần chữ còn lại giữ nguyên, kể cả nếu đã sửa trong Quản trị.
 -- Chạy lại lần hai không đổi gì thêm.
+-- ĐÃ CHẠY 13/11/2026 (migration kinusaiga_xop_tai_su_dung).
 --
 -- Chỉ sửa dữ liệu, không đụng GRANT / policy. Vẫn chạy câu kiểm
 -- GRANT-vs-policy trong docs/design.md sau khi chạy.
