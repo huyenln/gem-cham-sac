@@ -3427,6 +3427,19 @@ GRANT-vs-policy vẫn 3 dòng cố ý như cũ): `bia-so-vai-vun` có ảnh bìa
 Loại workshop. Chưa sửa: ảnh bìa dọc hiện nguyên chiều cao ở trang giới thiệu
 (`.ws-page-cover`), nên trên máy tính ảnh cao hơn màn hình và tên workshop nằm dưới mép.
 
+**Ảnh bìa từ bản in (12/11/2026):** `supabase/migrations/20261112_workshop_covers_pdf.sql`
+— cũng **chạy SAU khi PR lên `main`**. 12 loại còn trống lấy ảnh bìa từ trang 4–5 của
+"Thông tin Workshop Chạm Mùa": mỗi thẻ trong bản in có một ảnh, khớp loại theo tên + giá +
+nguyên liệu in cạnh ảnh (không đoán theo hình). Thêm 3 ảnh phụ: kinusaiga (cắt vải), tô mặt
+nạ (ảnh trang 2), sổ còng (đục lỗ). "Giấy tái chế" không có trong bản in nên vẫn trống.
+- Ảnh trong PDF đã bị Canva thu nhỏ (khoảng 384×512), không có bản lớn hơn. Ảnh bìa được
+  **cắt sẵn 4:3** (chọn khung tay cho từng ảnh) nên thẻ và trang giới thiệu hiện đúng phần
+  muốn khoe, và không còn ảnh dọc cao hơn màn hình. Ảnh phụ để nguyên khung.
+- Ảnh hơi mờ ở trang giới thiệu (rộng 42rem). Có ảnh gốc thì thay ở Quản trị → Đặt lịch →
+  Loại workshop; ảnh tải lên đó đè lên đường dẫn trong repo.
+- Máy này không có thư viện PDF: ảnh được tách bằng cách đọc thẳng luồng JPEG
+  (`/DCTDecode`) trong file, vị trí ảnh / chữ lấy từ content stream của từng trang.
+
 **Trang:**
 - `workshop.html`: dải Chạm Mùa đầu trang → thẻ workshop (thời lượng · tuổi ·
   giá) → lịch → hành trình Ra Đồng / Vào Hội / Du Uyển, ưu đãi, gửi xe. Chữ
