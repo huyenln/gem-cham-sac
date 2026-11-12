@@ -140,7 +140,7 @@ Quick reference:
 **Scope & content:**
 - 5 trang chính trên nav ("Về Gem" gồm Câu chuyện / Mô hình / Đối tác) + các trang phụ: `season-02.html` (không nằm trong nav), `workshop.html`, `ban-tin.html`, `admin.html` (nhân sự), `studio.html` (bản thử, chưa lên nav). Không tạo thêm trang mới trừ khi user yêu cầu rõ.
 - **Có hiện giá** (quyết định D3 trong `docs/design.md`, đảo lại "không hiện giá" cũ). Giá đọc từ bảng `products`; món chưa có giá ghi "Liên hệ".
-- Email signup: **Mailerlite đã tích hợp** (account `2380127`, form `41774242`). `js/mailerlite.js` submit bằng `fetch` mode `no-cors` rồi hiện success inline (`.ml-success`) — KHÔNG load script Mailerlite, KHÔNG redirect. Form ở `index.html` và `ghe-tham.html`.
+- Email signup: **Mailerlite đã tích hợp** (account `2380127`, form `41774242`). `js/mailerlite.js` submit bằng `fetch` mode `no-cors` rồi hiện success inline (`.ml-success`) — KHÔNG load script Mailerlite, KHÔNG redirect. Form ở `index.html`, `ghe-tham.html` và `ban-tin.html`. `action` phải là `…/forms/188507892064716532/subscribe` (mã dài) kèm hai ô ẩn `ml-submit`, `anticsrf`: `…/forms/41774242/subscribe` trả 404, mà `no-cors` không thấy lỗi nên trang vẫn báo thành công (lỗi ở `ban-tin.html`, sửa 12/11/2026).
 - **Có giỏ hàng + đặt đơn** (`js/basket.js`): trả khi nhận (COD) hoặc chuyển khoản VietQR (D14). KHÔNG có cổng thẻ, KHÔNG có tài khoản khách — đăng nhập chỉ dành cho nhân sự (`admin.html`). Khách xem lại món đã mua qua "Tủ sưu tầm" bằng mã đơn + SĐT.
 
 **Products (6 categories):**
