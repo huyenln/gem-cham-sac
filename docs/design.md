@@ -2725,10 +2725,37 @@ that has not yet queued`), nên bản live chậm hơn `main` một lần merge 
 biết. Gỡ bằng **một commit mới trên `main`** (PR #92): lượt #122 chạy 51 giây. Sau mỗi lần merge
 nên nhìn bản live (`?v=` trong `studio.html`), đừng chỉ tin là đã lên.
 
-**Còn lại sau đợt này** (đã báo Anna): mã QR điền sẵn số tiền khi giá chưa chốt, form đặt hàng
-chưa kiểm số điện thoại, trò Phân loại rác trên điện thoại (bao nằm dưới mép màn hình) — làm ở
-PR kế tiếp; ảnh bài Bản tin nặng (trình tải bài chưa thu nhỏ ảnh), trang Workshop không còn buổi
-nào sắp tới — sau công bố.
+**Đợt hai (cùng tuần công bố): điện thoại và đơn hàng.**
+
+- **Mã QR chỉ hiện khi giá đã chốt.** Giỏ có món khoảng giá (túi 80.000–300.000đ, "giá tuỳ từng
+  chiếc") hoặc món "Liên hệ" mà chọn chuyển khoản thì màn cảm ơn từng điền sẵn tổng các giá
+  thấp nhất vào mã QR và ghi "Chuyển xong bạn không cần báo lại". Giờ (`priceOpen()` trong
+  `js/basket.js`): form ghi "Gem nhắn bạn tổng tiền kèm mã QR sau khi chốt giá", màn cảm ơn chỉ
+  có mã đơn và câu hẹn, không mã QR, không số tiền. Đơn vẫn lưu `payment_method = 'qr'`, nên
+  **nhân sự thấy đơn chuyển khoản chưa trả thì nhắn tổng tiền kèm mã QR** (từ app ngân hàng;
+  admin chưa có nút tạo QR). Database không đổi. Giá đã chốt mà giao tận nơi thì dưới mã QR có
+  thêm dòng "Số tiền trên chưa gồm phí giao hàng"; tự đến lấy thì lựa chọn trả khi nhận ghi
+  "Trả tại cửa hàng khi bạn đến lấy".
+- **Form đặt hàng.** Số điện thoại: bỏ dấu cách / chấm / gạch / ngoặc rồi phải còn 9–15 chữ số
+  (nhận `+84…` và số nước ngoài); trước đây gõ "abc" vẫn gửi được, mà số điện thoại là cách duy
+  nhất Gem liên lạc với khách. Số gửi lên database là dạng đã bỏ dấu. Địa chỉ bắt buộc, trừ khi
+  chọn tự đến lấy. Lỗi hiện ngay dưới ô sai (`fieldError`), ô đầu tiên được đưa vào giữa màn
+  hình; dòng lỗi chung của form nằm trên nút gửi (trước nằm dưới nút, khuất trên điện thoại).
+  Mới kiểm ở trình duyệt; `create_order()` vẫn chỉ kiểm "không rỗng" — thêm kiểm ở database
+  khi có dịp sửa hàm đó.
+- **Phân loại rác trên điện thoại.** Vùng nhìn thật của iPhone trong Safari khoảng 390×664, máy
+  Android nhỏ 360×640: ở màn 1 và 4 toàn bộ bao (màn 4 cả dụng cụ) nằm dưới mép màn hình, đồng
+  hồ thì đang chạy, và kéo một món không làm bảng cuộn. Giờ dụng cụ, dòng trả lời và bao nằm
+  chung trong `.pl-dock`, ghim ở đáy bảng trên điện thoại (dọc, và cả khi xoay ngang); bàn đồ
+  cuộn phía trên. Màn bắt đầu thì bảng tự cuộn cho đồng hồ lên đầu (`settle()` trong
+  `js/phanloai.js`). Giỏ nổi từng đè lên bao cuối: ẩn khi trò chơi mở (`html.pl-open`, gỡ trong
+  `openSheet` / `closeSheet` của `js/studio.js`). Máy tính không đổi.
+- **Kiểm tra:** `python3 tools/check-studio.py order` và `plphone`.
+
+**Để sau công bố:** ảnh bài Bản tin nặng 6–8 MB (trình tải bài trong admin chưa thu nhỏ ảnh như
+các chỗ khác; 5 bài cũ cần nén lại), trang Workshop không còn buổi nào sắp tới mà đầu trang vẫn
+mời "chọn buổi", kiểm số điện thoại ở database, nút tạo QR trong admin, bố cục hai cột cho trò
+chơi khi xoay ngang.
 
 ### Studio hiện cảnh mặc định thay cho bố cục đã lắp (sửa 13/10/2026)
 

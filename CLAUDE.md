@@ -143,6 +143,7 @@ Quick reference:
 - **Có hiện giá** (quyết định D3 trong `docs/design.md`, đảo lại "không hiện giá" cũ). Giá đọc từ bảng `products`; món chưa có giá ghi "Liên hệ".
 - Email signup: **Mailerlite đã tích hợp** (account `2380127`, form `41774242`). `js/mailerlite.js` submit bằng `fetch` mode `no-cors` rồi hiện success inline (`.ml-success`) — KHÔNG load script Mailerlite, KHÔNG redirect. Form ở `index.html`, `ghe-tham.html` và `ban-tin.html`. `action` phải là `…/forms/188507892064716532/subscribe` (mã dài) kèm hai ô ẩn `ml-submit`, `anticsrf`: `…/forms/41774242/subscribe` trả 404, mà `no-cors` không thấy lỗi nên trang vẫn báo thành công (lỗi ở `ban-tin.html`, sửa 12/11/2026).
 - **Có giỏ hàng + đặt đơn** (`js/basket.js`): trả khi nhận (COD) hoặc chuyển khoản VietQR (D14). KHÔNG có cổng thẻ, KHÔNG có tài khoản khách — đăng nhập chỉ dành cho nhân sự (`admin.html`). Khách xem lại món đã mua qua "Tủ sưu tầm" bằng mã đơn + SĐT.
+- Chuyển khoản QR (11/2026): mã QR kèm số tiền **chỉ hiện khi giá đã chốt**. Giỏ có món khoảng giá hoặc "Liên hệ" thì màn cảm ơn chỉ có mã đơn + câu hẹn; nhân sự nhắn tổng tiền kèm mã QR sau (đơn vẫn lưu `payment_method = 'qr'`). Form đặt hàng: số điện thoại 9–15 chữ số, địa chỉ bắt buộc trừ khi tự đến lấy, lỗi hiện dưới từng ô. Chi tiết: `docs/design.md` → "Studio: công bố" → Đợt hai.
 
 **Products (6 categories):**
 1. Phụ kiện vải vụn (14 sản phẩm — tên thương hiệu in sẵn trên ảnh: Origami Pouch, Oxford Shirt, Reimagine the Denim, Bloom Charm, Túi bút kẹp sổ, Thảm/Gối Chắp Sắc, Lót Cốc, Túi đeo chéo, Bookmark, Ví & thẻ vải ghép, Bìa sổ, Dây đeo cổ tay, Dây buộc tóc). Túi tái chế (13/10/2026): Túi đi chơi (6 mẫu), Túi đi chợ (2 mẫu), Túi đựng laptop — mỗi túi một chiếc, là một "Mẫu" trong thẻ, bán thì bấm Hết
@@ -447,7 +448,7 @@ Công bố (Anna 12/11/2026, chi tiết: `docs/design.md` → "Studio: công b�
   Udon kéo ống quần lần sai đầu (có lời thoại), thẻ "Cách chơi" lần đầu mỗi màn + nút "?", nhạc ngũ cung
   tạo bằng code (nút "Nhạc: bật / tắt"), poster đặt sát nhau chung một nhãn (Khu vực nào cũng vậy; ô "Ẩn nhãn"
   trong Lắp studio), gợi ý ngoài cửa nhắc góc phân loại rác, màn cuối chỉ
-  Trạm Tagom + Gem (chỉ nhận xốp tấm phẳng nguyên, đĩa CD nguyên). `js/phanloai.js` tải khi mở. Chi tiết: `docs/design.md` → "Phân loại rác cùng GemxTagom".
+  Trạm Tagom + Gem (chỉ nhận xốp tấm phẳng nguyên, đĩa CD nguyên). `js/phanloai.js` tải khi mở. Chi tiết: `docs/design.md` → "Phân loại rác cùng GemxTagom". Trên điện thoại dụng cụ + bao ghim ở đáy bảng (`.pl-dock`), giỏ nổi ẩn khi trò chơi mở (`html.pl-open`); kiểm: `check-studio.py plphone`.
 - 🗑️ Bất ngờ ngoài phố: rác rơi (05/11, `js/racroi.js`): chỉ ngoài phố, lần 1 sau 15–20 giây, lần 2 sau
   1–2 phút, sau đó 3–5 phút, tối đa 10–15 lần (ngẫu nhiên mỗi lượt ghé); nhặt → thẻ thông điệp **luôn có nguồn link**; không kịp → Udon cắn
   ống quần kéo lại (câu vui `rr.l*`); huy hiệu 100/200/500 chỉ để vui; Sổ thông điệp trong Tủ sưu tầm; tắt ở
