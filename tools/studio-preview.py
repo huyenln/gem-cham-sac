@@ -15,7 +15,14 @@ It opens studio.html from a local server and lets the page read the published
 layout from Supabase as any visitor does (reads only, so it needs the network),
 hides the bars and labels, and takes the two pictures with the character
 standing at the door. Facebook and Zalo keep a link's picture for a long time:
-after it changes, ask Facebook's Sharing Debugger to "Scrape again".
+after it changes, change the number after og-studio.jpg?v= in studio.html (a new
+address makes them fetch it again) and ask Facebook's Sharing Debugger to
+"Scrape again".
+
+The browser is a Vietnamese one, and nothing may lie over the street when the
+picture is taken: the first pictures (11/2026) were taken by an English-language
+browser and carried the page's "This site is also available in English" bar in
+their corner. The script now stops instead of saving such a picture.
 
 Needs: pip install playwright pillow. Chromium: PLAYWRIGHT_BROWSERS_PATH or
 CHROMIUM=/path/to/chrome (the cloud sessions have /opt/pw-browsers/chromium).
@@ -37,12 +44,24 @@ SHOTS = [
     ('images/studio/og-studio.jpg', 1200, 630),
     ('images/studio/xem-truoc-mat-tien.webp', 720, 900),
 ]
-# No first-visit tips, no litter falling into the picture.
+# No first-visit tips, no litter falling into the picture, no offer of English.
 QUIET = ("localStorage.setItem('gem-guide', JSON.stringify({seen: {}, off: true}));"
-         "localStorage.setItem('gem-batngo', '0');")
+         "localStorage.setItem('gem-batngo', '0');"
+         "localStorage.setItem('gem-lang-hint', 'dismissed');")
 # The street alone: no bars, no labels, no tap boxes.
-HIDE = ('.st-top, .st-nav, .st-help-b, .gb-widget, .st-tip, .st-edge, .st-hot-label, .st-bubble, .st-loading'
+HIDE = ('.st-top, .st-nav, .st-help-b, .gb-widget, .st-tip, .st-edge, .st-hot-label, .st-bubble, .st-loading, .lang-hint'
         ' { display: none !important; }')
+# What lies on top of the street, sampled every 24px: anything that is not the
+# street itself (a bar, a toast, a hint added to the page later) would be in the picture.
+COVER = """() => {
+  const found = new Set();
+  for (let x = 8; x < innerWidth; x += 24) for (let y = 8; y < innerHeight; y += 24) {
+    const el = document.elementFromPoint(x, y);
+    if (!el || el.closest('#st-world') || el.matches('html, body, main.st, .st-stage')) continue;
+    found.add(el.tagName.toLowerCase() + (typeof el.className === 'string' && el.className.trim() ? '.' + el.className.trim().split(/\\s+/).join('.') : ''));
+  }
+  return [...found];
+}"""
 
 
 class Quiet(http.server.SimpleHTTPRequestHandler):
@@ -51,7 +70,8 @@ class Quiet(http.server.SimpleHTTPRequestHandler):
 
 
 async def shot(browser, w, h):
-    ctx = await browser.new_context(viewport={'width': w, 'height': h}, device_scale_factor=1, reduced_motion='reduce')
+    ctx = await browser.new_context(viewport={'width': w, 'height': h}, device_scale_factor=1, reduced_motion='reduce',
+                                    locale='vi-VN')
     await ctx.add_init_script(QUIET)
     page = await ctx.new_page()
     await page.goto(f'http://localhost:{PORT}/studio.html', wait_until='load')
@@ -62,6 +82,9 @@ async def shot(browser, w, h):
     await page.evaluate("window.dispatchEvent(new Event('resize'))")
     await page.wait_for_function("[...document.querySelectorAll('#st-world img')].every(i => i.complete && i.naturalWidth)", timeout=20000)
     await page.wait_for_timeout(800)
+    cover = await page.evaluate(COVER)
+    if cover:
+        raise SystemExit(f'{w} x {h}: something lies over the street and would be in the picture: {", ".join(cover)}')
     png = await page.screenshot()
     await ctx.close()
     return Image.open(io.BytesIO(png)).convert('RGB')

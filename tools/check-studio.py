@@ -2644,7 +2644,8 @@ async def launch_bits(browser, db):
     await pg.context.close()
     html = (ROOT / 'studio.html').read_text(encoding='utf-8')
     img = re.search(r'<meta property="og:image" content="([^"]+)"', html)
-    check(bool(img) and img[1].startswith('https://gemchamsac.com/') and (ROOT / img[1].replace('https://gemchamsac.com/', '')).exists()
+    # the address may end in ?v=…: a new number makes Facebook and Zalo fetch a changed picture
+    check(bool(img) and img[1].startswith('https://gemchamsac.com/') and (ROOT / img[1].replace('https://gemchamsac.com/', '').split('?')[0]).exists()
           and 'noindex' not in html and 'property="og:url"' not in html and 'rel="canonical"' not in html,
           f'studio.html shares with a picture that exists (absolute URL), is not noindex, names no canonical address ({img and img[1]})')
     for f in ('index.html', 'season-02.html'):
