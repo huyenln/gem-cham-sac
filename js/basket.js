@@ -1527,6 +1527,11 @@
       var slot = card.querySelector('.gb-slot');
       if (!p || !slot) return;
 
+      // A card written in the page for a product only the database knows
+      // (kit-kinusaiga is not in CATALOG): bindCard skipped it at load, so its
+      // price line and button go in now. bindCard calls back here once filled.
+      if (!slot.querySelector('.gb-add')) { bindCard(card); return; }
+
       // Món bị gỡ khỏi bảng, hoặc bị ẩn đi: giấu luôn thẻ, đừng để khách
       // đặt thứ cửa hàng không còn bán.
       if (liveSkus.indexOf(sku) < 0) { card.hidden = true; return; }
