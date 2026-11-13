@@ -1473,6 +1473,7 @@ html[lang="en"] .season-card.done::before { content: '✓ wrapped'; }
 }
 
 /* Scroll offset for sections to account for sticky header + TOC */
+#kit-kinusaiga,
 #phu-kien-vai-vun,
 #van-phong-pham,
 #quan-ao-2hand,
@@ -1483,6 +1484,7 @@ html[lang="en"] .season-card.done::before { content: '✓ wrapped'; }
 }
 
 @media (min-width: 768px) {
+  #kit-kinusaiga,
   #phu-kien-vai-vun,
   #van-phong-pham,
   #quan-ao-2hand,
@@ -1491,6 +1493,99 @@ html[lang="en"] .season-card.done::before { content: '✓ wrapped'; }
   #dich-vu {
     scroll-margin-top: 90px; /* Desktop: header ~72px only (sidebar doesn't cover content) */
   }
+}
+
+/* KIT DIY KINUSAIGA (san-pham.html): intro, vertical tutorial video, what's in the box */
+.kit-lead {
+  max-width: 720px;
+  margin-bottom: var(--space-6);
+}
+.kit-intro {
+  display: grid;
+  gap: var(--space-6);
+  margin-bottom: var(--space-10);
+}
+.kit-video { margin: 0; }
+.kit-video video {
+  display: block;
+  width: 100%;
+  max-width: 360px;
+  height: auto;
+  aspect-ratio: 9 / 16;
+  max-height: 78vh;
+  margin: 0 auto;
+  border-radius: var(--radius-lg);
+  background: var(--ink-dark);
+  box-shadow: var(--shadow-paper);
+}
+.kit-video figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-1) var(--space-4);
+  margin-top: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+  text-align: center;
+}
+.kit-video figcaption a {
+  display: inline-block;
+  padding: var(--space-2) 0;
+  color: var(--sage-deep);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.kit-box {
+  align-self: start;
+  padding: var(--space-6);
+  background: var(--paper-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+}
+.kit-box h3 { margin: 0 0 var(--space-4); }
+.kit-list {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.kit-list li {
+  position: relative;
+  padding-left: 24px;
+  line-height: 1.5;
+  color: var(--ink-body);
+}
+.kit-list li::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 0.55em;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--sage-deep);
+}
+.kit-list strong { color: var(--ink-dark); font-weight: 600; }
+.kit-safety {
+  margin: var(--space-5) 0 0;
+  padding: var(--space-3) var(--space-4);
+  border-left: 3px solid var(--kraft);
+  border-radius: var(--radius-sm);
+  background: var(--paper-cream);
+  font-size: var(--text-sm);
+  color: var(--ink-dark);
+}
+.kit-buy-h { margin: 0 0 var(--space-4); }
+
+/* two columns only when the content column is wide enough (the TOC sidebar takes room from 768px) */
+@media (min-width: 1100px) {
+  .kit-intro {
+    grid-template-columns: minmax(240px, 340px) 1fr;
+    align-items: start;
+  }
+  .kit-video video { margin: 0; }
 }
 
 /* Mobile TOC: Horizontal sticky pills */

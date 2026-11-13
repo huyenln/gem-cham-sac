@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title data-i18n="title.products">Sản phẩm · Gem Chạm Sắc</title>
-  <meta name="description" content="Catalog sản phẩm Gem Chạm Sắc - phụ kiện vải vụn, văn phòng phẩm bền vững, quần áo 2hand, gốm sứ Nhật, và hàng ký gửi từ những người bạn.">
+  <meta name="description" content="Catalog sản phẩm Gem Chạm Sắc - kit DIY Kinusaiga kèm video hướng dẫn, phụ kiện vải vụn, quần áo 2hand, set quà và hàng ký gửi từ những người bạn.">
 
   <link rel="icon" type="image/png" href="images/logo/gem_logo_icon_120.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -74,6 +74,7 @@
   <!-- Mobile: Horizontal pills -->
   <div class="product-toc-mobile">
     <div class="product-toc-scroll">
+      <a href="#kit-kinusaiga" class="toc-item" data-i18n="products.toc_kit">Kit DIY Kinusaiga</a>
       <a href="#phu-kien-vai-vun" class="toc-item" data-i18n="products.toc_fabric">Phụ kiện vải vụn</a>
       <a href="#hang-ky-gui" class="toc-item" data-i18n="products.toc_consign" hidden>Hàng ký gửi</a>
       <a href="#set-qua" class="toc-item" data-i18n="products.toc_setqua">Set quà</a>
@@ -88,6 +89,7 @@
     <aside class="product-toc-sidebar">
       <h3 class="toc-title" data-i18n="products.toc_title">Danh mục</h3>
       <ul class="toc-list">
+        <li><a href="#kit-kinusaiga" class="toc-item" data-i18n="products.toc_kit">Kit DIY Kinusaiga</a></li>
         <li><a href="#phu-kien-vai-vun" class="toc-item" data-i18n="products.toc_fabric">Phụ kiện vải vụn</a></li>
         <li hidden><a href="#hang-ky-gui" class="toc-item" data-i18n="products.toc_consign">Hàng ký gửi</a></li>
         <li><a href="#set-qua" class="toc-item" data-i18n="products.toc_setqua">Set quà</a></li>
@@ -97,6 +99,64 @@
     </aside>
 
     <main class="products-content">
+      <!-- KIT DIY KINUSAIGA (13/11/2026): intro + tutorial video + kit card.
+           The video sits outside .category-block on purpose: catalog.js hides a
+           block whose cards aren't in the database, and the video must stay.
+           The printed guide's QR code points here: san-pham.html#kit-kinusaiga -->
+      <section class="section-sm kit-section" id="kit-kinusaiga">
+        <div class="container">
+          <div class="category-header">
+            <h2 data-i18n="products.kit_h">Kit DIY Kinusaiga</h2>
+            <span class="hand" data-i18n="products.kit_tag">— tự tay làm tranh từ vải vụn</span>
+          </div>
+          <p class="lead kit-lead" data-i18n="products.kit_lead">
+            Kinusaiga tái chế là sáng tạo của Gem từ nghệ thuật làm tranh nhét vải, không cần khâu, nguyên bản của Nhật Bản. Bộ kit có sẵn nền xốp tái sử dụng đã tạo rãnh, phủ keo, vải vụn cắt sẵn và dụng cụ: bạn chọn màu, dán vải rồi nhét mép vải vào rãnh.
+          </p>
+
+          <div class="kit-intro">
+            <figure class="kit-video" id="kit-video">
+              <video controls playsinline preload="metadata" width="720" height="1280"
+                     poster="images/products/kit-kinusaiga-video-poster.jpg"
+                     data-i18n-attr="aria-label:products.kit_video_aria" aria-label="Video hướng dẫn làm tranh Kinusaiga với bộ kit của Gem">
+                <source src="video/kit-kinusaiga-huong-dan.mp4" type="video/mp4">
+                <span data-i18n="products.kit_video_fallback">Trình duyệt chưa phát được video.</span>
+              </video>
+              <figcaption>
+                <span data-i18n="products.kit_video_cap">Video hướng dẫn · 3 phút · chữ Việt và Anh</span>
+                <a href="video/kit-kinusaiga-huong-dan.mp4" download data-i18n="products.kit_video_dl">Tải video về máy</a>
+              </figcaption>
+            </figure>
+
+            <div class="kit-box">
+              <h3 data-i18n="products.kit_box_h">Trong bộ kit</h3>
+              <ul class="kit-list">
+                <li data-i18n-html="products.kit_i1"><strong>Nền xốp tái sử dụng</strong> đã bọc viền vải bò, tạo rãnh, phủ keo</li>
+                <li data-i18n-html="products.kit_i2"><strong>Vải vụn nhiều màu</strong> Gem cắt sẵn</li>
+                <li data-i18n-html="products.kit_i3"><strong>Dụng cụ thùa khuyết</strong> để nhét mép vải vào rãnh</li>
+                <li data-i18n-html="products.kit_i4"><strong>Kéo cắt vải</strong> để cắt, tỉa vải</li>
+                <li data-i18n-html="products.kit_i5"><strong>Miếng dán dự phòng</strong> gia cố chỗ xốp bở, thay keo</li>
+                <li data-i18n-html="products.kit_i6"><strong>Băng urgo</strong> phòng khi lỡ tay</li>
+              </ul>
+              <p class="kit-safety" data-i18n="products.kit_safety">Dụng cụ có đầu nhọn, lưỡi sắc. Trẻ em làm tranh cần có người lớn đồng hành.</p>
+            </div>
+          </div>
+
+          <div class="category-block" id="kit-mua">
+            <h3 class="kit-buy-h" data-i18n="products.kit_buy_h">Chọn mẫu tranh</h3>
+            <div class="product-grid" data-cat="kit">
+              <div class="product-card" data-sku="kit-kinusaiga" data-gallery="kit-kinusaiga-ghe-nhua.jpg,kit-kinusaiga-non-la.jpg,kit-kinusaiga-hoa-hong.jpg,kit-kinusaiga-huong-duong.jpg">
+                <div class="product-card-image">
+                  <img src="images/products/kit-kinusaiga-thumb.jpg" data-i18n-attr="alt:products.kit_card_h" alt="Kit DIY Kinusaiga" loading="lazy">
+                </div>
+                <h4 data-i18n="products.kit_card_h">Kit DIY Kinusaiga</h4>
+                <p data-i18n="products.kit_card_p">4 mẫu: ghế nhựa &amp; cà phê · nón lá · hoa hồng · hướng dương</p>
+                <div class="gb-slot"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- CATEGORY 1: VẢI VỤN -->
       <section class="section-sm" id="phu-kien-vai-vun">
     <div class="container">

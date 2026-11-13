@@ -35,6 +35,7 @@
   var OD_OPEN = ['new', 'confirmed', 'packing', 'shipped'];
 
   var CATEGORIES = {
+    'kit':     'Kit DIY Kinusaiga',
     'vai-vun': 'Phụ kiện vải vụn',
     'vpp':     'Văn phòng phẩm',
     'gom':     'Gốm sứ Nhật',

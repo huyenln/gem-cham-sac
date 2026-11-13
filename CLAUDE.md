@@ -72,6 +72,7 @@ Static website cho cửa hàng **Gem Chạm Sắc** — pop-up store sustainabil
 │   ├── space/                Ảnh studio + sự kiện (WebP, từ Portfolio 2026)
 │   ├── workshop/             Ảnh workshop / Chạm Mùa (WebP)
 │   └── partners/             Logo đối tác (mo-hinh.html)
+├── video/                    Video hướng dẫn kit Kinusaiga (bản nén cho web; bản gốc 1080p không vào repo)
 ├── docs/
 │   ├── design.md             Nguồn sự thật: quyết định, sprint, cấu hình, bảo mật
 │   └── prompts.md            Ghi chú prompt
@@ -150,7 +151,8 @@ Quick reference:
 - **Có giỏ hàng + đặt đơn** (`js/basket.js`): trả khi nhận (COD) hoặc chuyển khoản VietQR (D14). KHÔNG có cổng thẻ, KHÔNG có tài khoản khách — đăng nhập chỉ dành cho nhân sự (`admin.html`). Khách xem lại món đã mua qua "Tủ sưu tầm" bằng mã đơn + SĐT.
 - Chuyển khoản QR (11/2026): mã QR kèm số tiền **chỉ hiện khi giá đã chốt**. Giỏ có món khoảng giá hoặc "Liên hệ" thì màn cảm ơn chỉ có mã đơn + câu hẹn; nhân sự nhắn tổng tiền kèm mã QR sau (đơn vẫn lưu `payment_method = 'qr'`). Form đặt hàng: số điện thoại 9–15 chữ số, địa chỉ bắt buộc trừ khi tự đến lấy, lỗi hiện dưới từng ô. Chi tiết: `docs/design.md` → "Studio: công bố" → Đợt hai.
 
-**Products (6 categories):**
+**Products (7 categories):**
+0. Kit DIY Kinusaiga (`kit`, 13/11/2026): khối `#kit-kinusaiga` đầu `san-pham.html` = giới thiệu + video hướng dẫn (`video/kit-kinusaiga-huong-dan.mp4`, bản nén 720×1280) + "Trong bộ kit" + một thẻ `kit-kinusaiga` có 4 Mẫu (ghế nhựa & cà phê, nón lá, hoa hồng, hướng dương), giá "Liên hệ" đến khi nhân sự nhập giá. Video nằm ngoài `.category-block` để không bị ẩn cùng thẻ. **Mã QR trên tờ hướng dẫn trỏ tới `https://gemchamsac.com/san-pham.html#kit-kinusaiga` — đừng đổi id này.** Xốp EPS là "tái sử dụng", không viết "tái chế".
 1. Phụ kiện vải vụn (14 sản phẩm — tên thương hiệu in sẵn trên ảnh: Origami Pouch, Oxford Shirt, Reimagine the Denim, Bloom Charm, Túi bút kẹp sổ, Thảm/Gối Chắp Sắc, Lót Cốc, Túi đeo chéo, Bookmark, Ví & thẻ vải ghép, Bìa sổ, Dây đeo cổ tay, Dây buộc tóc). Túi tái chế (13/10/2026): Túi đi chơi (6 mẫu), Túi đi chợ (2 mẫu), Túi đựng laptop — mỗi túi một chiếc, là một "Mẫu" trong thẻ, bán thì bấm Hết
 2. Văn phòng phẩm bền vững (Sổ kraft spiral)
 3. Quần áo 2hand (1 card → gallery 23 ảnh, mỗi ảnh tự ghi tên món)
@@ -160,7 +162,7 @@ Quick reference:
 
 Ảnh sản phẩm mới là full-size (1080px+), KHÔNG kèm `-thumb`. Thumbnail card 600×600 được tạo bằng Pillow (center-crop). `.heic` (vd `gom-2`) KHÔNG hiển thị trên browser — convert sang `.jpg` trước khi dùng.
 
-**Thứ tự trên `san-pham.html`** (Anna 14/10/2026): Phụ kiện vải vụn → Hàng ký gửi → Set quà → Quần áo 2hand → Dịch vụ đặc biệt. **Văn phòng phẩm và Gốm sứ Nhật tạm ẩn**: khối `#van-phong-pham` / `#gom-su-nhat` có `hidden data-off` (catalog.js giữ ẩn), không có trong danh mục; mở lại thì bỏ hai thuộc tính đó và thêm lại mục danh mục.
+**Thứ tự trên `san-pham.html`** (Anna 14/10/2026; Kit thêm 13/11/2026): Kit DIY Kinusaiga → Phụ kiện vải vụn → Hàng ký gửi → Set quà → Quần áo 2hand → Dịch vụ đặc biệt. **Văn phòng phẩm và Gốm sứ Nhật tạm ẩn**: khối `#van-phong-pham` / `#gom-su-nhat` có `hidden data-off` (catalog.js giữ ẩn), không có trong danh mục; mở lại thì bỏ hai thuộc tính đó và thêm lại mục danh mục.
 
 **Loại trừ:**
 - Generic pens (bút bi nhập), sticky notes, tiger cartoon bookmarks — **KHÔNG đăng lên web** dù có bán tại cửa hàng. Lý do: clash với brand vintage/sustainable.

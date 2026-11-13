@@ -3519,6 +3519,31 @@ vẫn 3 dòng cố ý như cũ). Đọc bằng vai `anon` qua REST: còn 0 chữ
 - Ảnh mới: `images/space/`, `images/workshop/`, `images/partners/` — WebP,
   ảnh ≤1280px. Bản gốc không vào repo.
 
+### Kit DIY Kinusaiga (13/11/2026)
+
+Chủ shop chốt: một thẻ, 4 Mẫu (ghế nhựa & cà phê · nón lá · hoa hồng · hướng dương),
+giá **"Liên hệ"** đến khi nhân sự nhập giá trong admin → Sản phẩm; video lưu ngay trên
+web; khối Kit đứng **đầu** `san-pham.html`.
+
+- **Trang:** `section#kit-kinusaiga` trước "Phụ kiện vải vụn" (section riêng, để mục lục
+  "Phụ kiện vải vụn" vẫn nhảy đúng chỗ): giới thiệu ("Kinusaiga tái chế là sáng tạo của
+  Gem…"), `<video>` dọc + "Trong bộ kit" (6 món theo tờ hướng dẫn PDF) + lưu ý an toàn,
+  rồi `.category-block#kit-mua` chứa lưới `data-cat="kit"`. Video và giới thiệu nằm
+  **ngoài** `.category-block`: `catalog.js` ẩn khối khi thẻ không có trong database, mà
+  video phải luôn hiện. Chữ: khoá `products.kit_*` trong `js/i18n.js`. Mục lục có thêm
+  "Kit DIY Kinusaiga". Admin: danh mục `kit` trong `CATEGORIES`.
+- **Video:** `video/kit-kinusaiga-huong-dan.mp4` — bản nén 720×1280, ~1.5 Mbps, 36 MB
+  (bản gốc 1080×1920 161 MB vượt giới hạn 100 MB của GitHub, nằm ở Drive của Gem). Chữ
+  VI/EN in sẵn trong hình nên không có track phụ đề. Poster:
+  `images/products/kit-kinusaiga-video-poster.jpg`. Không nhúng YouTube: không cookie.
+- **Dữ liệu:** `supabase/migrations/20261113b_kit_kinusaiga.sql` — **chạy sau khi merge**
+  (ảnh `images/products/kit-kinusaiga-*.jpg` phải có trên web trước). Chỉ thêm 1 dòng
+  `products` (sku `kit-kinusaiga`, `price` null, `options` 4 Mẫu), không đổi bảng / quyền.
+- **Mã QR** trên tờ hướng dẫn trỏ tới `https://gemchamsac.com/san-pham.html#kit-kinusaiga`:
+  đừng đổi id `kit-kinusaiga` hay tên file video.
+- Xốp EPS của Gem là **tái sử dụng**, không viết "tái chế" (câu "Kinusaiga tái chế" là tên
+  sáng tạo của Gem, chủ shop duyệt).
+
 ---
 
 ## 14. Còn phải chốt
