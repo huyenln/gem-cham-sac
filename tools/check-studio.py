@@ -2780,7 +2780,7 @@ async def order_form(browser, db):
     await send(pg, 'Khách thử', '+84 90 000 0000')
     call = db.order_calls[-1] if db.order_calls else {}
     got = await pg.evaluate(after)
-    check(gone and h[0] == 'Trả tại cửa hàng khi bạn đến lấy.' and call.get('p_phone') == '+84900000000' and got[0] and not got[2],
+    check(gone and h[0] == 'Trả tại cửa hàng khi bạn đến lấy: tiền mặt hoặc chuyển khoản, không nhận thẻ.' and call.get('p_phone') == '+84900000000' and got[0] and not got[2],
           f'picked up: no address asked, "pay at the shop", +84… accepted, the QR code without the shipping line ({h[0]!r}, {call.get("p_phone")!r}, {got[:3]})')
     await pg.context.close()
 
