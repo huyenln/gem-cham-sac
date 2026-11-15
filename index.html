@@ -79,6 +79,16 @@
       <a href="workshop.html" data-i18n="nav.workshop">Workshop</a>
       <a href="ban-tin.html" data-i18n="nav.news">Bản tin</a>
       <a href="ghe-tham.html" data-i18n="nav.visit">Ghé thăm</a>
+      <div class="nav-mobile-msg">
+        <span class="nav-mobile-group" data-i18n="msg.label">Nhắn cho Gem</span>
+        <div class="msg-links">
+          <a class="msg-zalo" href="https://zalo.me/84824964996" target="_blank" rel="noopener">Zalo</a>
+          <a class="msg-messenger" href="https://m.me/gemchamsac" target="_blank" rel="noopener">Messenger</a>
+          <a class="msg-instagram" href="https://ig.me/m/gemchamsac_studio" target="_blank" rel="noopener">Instagram</a>
+          <a class="msg-threads" href="https://www.threads.com/@gemchamsac_studio" target="_blank" rel="noopener">Threads</a>
+          <a class="msg-email" href="mailto:gemchamsac@gmail.com">Email</a>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -171,6 +181,68 @@
             </a>
           </div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WORKSHOP TEASER — right under Season 02 (14/11/2026): workshops are what a
+       visitor can book, so they no longer wait at the bottom of the page. Picture
+       on the right (is-flip) so it doesn't repeat the Season card's layout. -->
+  <section class="section">
+    <div class="container">
+      <div class="ws-teaser is-flip">
+        <div class="ws-teaser-img">
+          <img src="images/workshop/kinusaiga-ngua-sq.webp" data-i18n-attr="alt:home.ws_img_alt" alt="Tranh kinusaiga đầu ngựa ghép từ vải vụn" width="800" height="800" loading="lazy">
+        </div>
+        <div>
+          <span class="hand" data-i18n="home.ws_eyebrow">Workshop,</span>
+          <h2 data-i18n="home.ws_title">Tự tay làm một món đồ.</h2>
+          <p data-i18n="home.ws_desc">
+            Thiệp và sổ từ vải vụn, tranh kinusaiga, khắc gỗ, tô mặt nạ giấy bồi…
+            Mỗi cuối tuần đến 27/12 còn có Chạm Mùa: ghé làm một món, chụp ảnh với mặt nạ giấy bồi, rồi ngồi lại uống trà.
+          </p>
+          <ul class="ws-teaser-facts">
+            <li data-i18n="home.ws_fact1">Đặt lúc nào cũng được, chỉ cần nhắn trước</li>
+            <li data-i18n="home.ws_fact2">Hướng dẫn bằng tiếng Việt hoặc tiếng Anh</li>
+          </ul>
+          <a href="workshop.html" class="btn btn-primary">
+            <span data-i18n="home.ws_cta">Xem workshop &amp; đặt lịch</span>
+            <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STUDIO 2D TEASER — right under the workshop block (Anna 15/11/2026), with a
+       line saying the 2D studio is modelled on the real one. Picture on the left
+       (is-flip): the cards above alternate Season (left) / Workshop (right).
+       Ảnh là bản tĩnh chụp từ cảnh ngoài phố của studio (tools/studio-preview.py),
+       không nhúng studio thật: studio tải khoảng 3 MB tranh, và vuốt để đi dạo sẽ
+       tranh với cuộn trang. -->
+  <section class="section">
+    <div class="container">
+      <div class="studio-teaser is-flip">
+        <div class="studio-teaser-text">
+          <span class="hand" data-i18n="home.studio_eyebrow">Studio 2D,</span>
+          <h2 data-i18n="home.studio_title">Dạo một vòng studio, ngay trên màn hình.</h2>
+          <p class="studio-teaser-real">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span data-i18n="home.studio_real">Studio 2D mô phỏng studio thật của Gem ở 114 Lê Gia Đỉnh. Dạo một vòng trên màn hình, rồi ghé chơi tận nơi nhé.</span>
+          </p>
+          <p data-i18n="home.studio_desc">
+            Chọn một nhân vật rồi đi dạo: thử phụ kiện, ghép vải vụn thành món của riêng bạn ở Bàn thiết kế,
+            chơi phân loại rác cùng Udon và chọn quà ngay trên kệ.
+          </p>
+          <a href="studio.html" class="btn btn-primary">
+            <span data-i18n="home.studio_cta">Vào Studio 2D</span>
+            <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+        <!-- the picture repeats the button's link: one stop for the keyboard and for screen readers -->
+        <a href="studio.html" class="studio-teaser-img" tabindex="-1" aria-hidden="true">
+          <img src="images/studio/xem-truoc-mat-tien.webp" alt="" width="720" height="900" loading="lazy">
+        </a>
       </div>
     </div>
   </section>
@@ -273,55 +345,6 @@
     </div>
   </section>
 
-  <!-- STUDIO 2D TEASER. Ảnh là bản tĩnh chụp từ cảnh ngoài phố của studio
-       (tools/studio-preview.py), không nhúng studio thật: studio tải khoảng
-       3 MB tranh, và vuốt để đi dạo sẽ tranh với cuộn trang. -->
-  <section class="section">
-    <div class="container">
-      <div class="studio-teaser">
-        <div class="studio-teaser-text">
-          <span class="hand" data-i18n="home.studio_eyebrow">Studio 2D,</span>
-          <h2 data-i18n="home.studio_title">Dạo một vòng studio, ngay trên màn hình.</h2>
-          <p data-i18n="home.studio_desc">
-            Chọn một nhân vật rồi đi dạo: thử phụ kiện, ghép vải vụn thành món của riêng bạn ở Bàn thiết kế,
-            chơi phân loại rác cùng Udon và chọn quà ngay trên kệ.
-          </p>
-          <a href="studio.html" class="btn btn-primary">
-            <span data-i18n="home.studio_cta">Vào Studio 2D</span>
-            <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-          </a>
-        </div>
-        <!-- the picture repeats the button's link: one stop for the keyboard and for screen readers -->
-        <a href="studio.html" class="studio-teaser-img" tabindex="-1" aria-hidden="true">
-          <img src="images/studio/xem-truoc-mat-tien.webp" alt="" width="720" height="900" loading="lazy">
-        </a>
-      </div>
-    </div>
-  </section>
-
-  <!-- WORKSHOP TEASER -->
-  <section class="section">
-    <div class="container">
-      <div class="ws-teaser">
-        <div class="ws-teaser-img">
-          <img src="images/workshop/kinusaiga-ngua-sq.webp" data-i18n-attr="alt:home.ws_img_alt" alt="Tranh kinusaiga đầu ngựa ghép từ vải vụn" width="800" height="800" loading="lazy">
-        </div>
-        <div>
-          <span class="hand" data-i18n="home.ws_eyebrow">Workshop,</span>
-          <h2 data-i18n="home.ws_title">Tự tay làm một món đồ.</h2>
-          <p data-i18n="home.ws_desc">
-            Thiệp và sổ từ vải vụn, tranh kinusaiga, khắc gỗ, tô mặt nạ giấy bồi…
-            Mỗi cuối tuần đến 27/12 còn có Chạm Mùa: ghé làm một món, chụp ảnh với mặt nạ giấy bồi, rồi ngồi lại uống trà.
-          </p>
-          <a href="workshop.html" class="btn btn-primary">
-            <span data-i18n="home.ws_cta">Xem workshop &amp; lịch</span>
-            <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-          </a>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <!-- EMAIL -->
   <section class="section">
     <div class="container-narrow">
@@ -376,6 +399,14 @@
 
         <div>
           <h4 data-i18n="footer.contact">Liên hệ</h4>
+          <!-- chat links (14/11/2026): order follows the language, see .msg-links in style.css -->
+          <p class="footer-msg-label" data-i18n="msg.label">Nhắn cho Gem</p>
+          <div class="msg-links">
+            <a class="msg-zalo" href="https://zalo.me/84824964996" target="_blank" rel="noopener">Zalo</a>
+            <a class="msg-messenger" href="https://m.me/gemchamsac" target="_blank" rel="noopener">Messenger</a>
+            <a class="msg-instagram" href="https://ig.me/m/gemchamsac_studio" target="_blank" rel="noopener">Instagram</a>
+            <a class="msg-threads" href="https://www.threads.com/@gemchamsac_studio" target="_blank" rel="noopener">Threads</a>
+          </div>
           <a href="tel:+84824964996">(84) 82 496 4996</a>
           <a href="mailto:gemchamsac@gmail.com">gemchamsac@gmail.com</a>
           <a href="https://www.google.com/maps/search/?api=1&query=114+Lê+Gia+Đỉnh+Hai+Bà+Trưng+Hà+Nội" target="_blank" rel="noopener" data-i18n="footer.address">Tầng 3, Trung tâm Văn hóa - Thông tin và Thể thao Phường Hai Bà Trưng, 114 Lê Gia Đỉnh, Hà Nội</a>

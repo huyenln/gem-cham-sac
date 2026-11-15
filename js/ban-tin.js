@@ -72,7 +72,11 @@
   var root, posts = [], current = null;
 
   function translate() {
-    if (window.GemI18n) window.GemI18n.setLang(window.GemI18n.getLang());
+    if (window.GemI18n) {
+      // refresh() re-translates without saving a language choice (see i18n.js)
+      if (window.GemI18n.refresh) window.GemI18n.refresh();
+      else window.GemI18n.setLang(window.GemI18n.getLang());
+    }
   }
 
   function renderList() {

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title data-i18n="title.workshop">Workshop · Gem Chạm Sắc</title>
-  <meta name="description" content="Workshop thủ công tái chế tại Gem Chạm Sắc, Hà Nội: thiệp và sổ từ vải vụn, tranh kinusaiga, khắc gỗ, tô mặt nạ giấy bồi… Chạm Mùa mỗi cuối tuần đến 27/12/2026. Đặt chỗ trực tuyến.">
+  <meta name="description" content="Workshop thủ công tái chế tại Gem Chạm Sắc, Hà Nội: thiệp và sổ từ vải vụn, tranh kinusaiga, khắc gỗ, tô mặt nạ giấy bồi… Chạm Mùa mỗi cuối tuần đến 27/12/2026. Đặt lịch lúc nào cũng được, chỉ cần nhắn trước; hướng dẫn bằng tiếng Việt hoặc tiếng Anh.">
 
   <link rel="icon" type="image/png" href="images/logo/gem_logo_icon_120.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -58,15 +58,41 @@
       <a href="workshop.html" data-i18n="nav.workshop">Workshop</a>
       <a href="ban-tin.html" data-i18n="nav.news">Bản tin</a>
       <a href="ghe-tham.html" data-i18n="nav.visit">Ghé thăm</a>
+      <div class="nav-mobile-msg">
+        <span class="nav-mobile-group" data-i18n="msg.label">Nhắn cho Gem</span>
+        <div class="msg-links">
+          <a class="msg-zalo" href="https://zalo.me/84824964996" target="_blank" rel="noopener">Zalo</a>
+          <a class="msg-messenger" href="https://m.me/gemchamsac" target="_blank" rel="noopener">Messenger</a>
+          <a class="msg-instagram" href="https://ig.me/m/gemchamsac_studio" target="_blank" rel="noopener">Instagram</a>
+          <a class="msg-threads" href="https://www.threads.com/@gemchamsac_studio" target="_blank" rel="noopener">Threads</a>
+          <a class="msg-email" href="mailto:gemchamsac@gmail.com">Email</a>
+        </div>
+      </div>
     </div>
   </header>
 
-  <!-- PAGE HERO -->
-  <section class="page-hero">
+  <!-- PAGE HERO + ĐẶT LỊCH (14/11/2026). Nhắn Gem để đặt là lối chính: khách
+       đặt lúc nào cũng được, còn lịch cố định không phải lúc nào cũng có (mùa
+       hội chợ). Trước đây trang mời "chọn buổi" mà không có buổi nào, 15 thẻ ghi
+       "chưa có lịch", nên khách hiểu là không đặt được. Nút kênh do
+       js/workshop.js dựng vào [data-ws-ch] (thứ tự theo ngôn ngữ, lời nhắn soạn sẵn). -->
+  <section class="page-hero ws-hero">
     <div class="container">
       <p class="eyebrow" data-i18n="ws.eyebrow">Workshop</p>
       <h1 data-i18n="ws.hero_title">Tự tay làm một món đồ.</h1>
-      <p data-i18n="ws.hero_sub">Mỗi buổi chỉ nhận một nhóm nhỏ để ai cũng được chỉ tận tay. Chọn buổi bạn đi được, để lại tên và số điện thoại — chúng mình nhắn lại trước một ngày.</p>
+      <p data-i18n="ws.hero_sub">Đặt lúc nào cũng được, chỉ cần nhắn Gem trước. Nhóm nhỏ, hướng dẫn tận tay bằng tiếng Việt hoặc tiếng Anh.</p>
+
+      <div class="ws-book" id="dat-lich">
+        <h2 class="ws-book-h" data-i18n="ws.book_h">Đặt lịch</h2>
+        <ol class="ws-book-steps">
+          <li data-i18n-html="ws.book_s1"><strong>Chọn món</strong> ở <a href="#ws-list-head">danh sách bên dưới</a>.</li>
+          <li data-i18n-html="ws.book_s2"><strong>Nhắn Gem</strong> món muốn làm, ngày giờ và số người.</li>
+          <li data-i18n-html="ws.book_s3"><strong>Gem xác nhận.</strong> Bạn trả tại studio khi đến: tiền mặt hoặc chuyển khoản, không nhận thẻ.</li>
+        </ol>
+        <div class="ws-ch" data-ws-ch></div>
+        <p class="ws-ch-note" data-i18n="ws.ch_note" aria-live="polite">Bấm một kênh: lời nhắn soạn sẵn được chép lại, bạn chỉ cần dán vào khung chat.</p>
+        <p class="ws-book-or" data-i18n-html="ws.book_or" hidden>Hoặc giữ chỗ ở <a href="#ws-sched-h">một buổi đã lên lịch</a>.</p>
+      </div>
     </div>
   </section>
 
@@ -81,9 +107,10 @@
             <h2>Chạm Mùa</h2>
             <p class="lead" data-i18n="cm.lead">Mỗi cuối tuần, mời bạn và người thương ghé chơi: chọn một chất liệu quen thuộc, học một cách làm mới và tự tay làm nên một món đồ.</p>
             <p class="cm-by">Gem Chạm Sắc × Cool Vietnam × Âm Nhạc Vân Long</p>
+            <!-- Đặt chỗ nằm ở khung "Đặt lịch" ngay trên; nhóm Zalo (chữ Việt) thành nút phụ -->
             <div class="cm-actions">
-              <a href="https://zalo.me/g/wqbhta2x1fpqnm4wix9l" target="_blank" rel="noopener" class="btn btn-primary" data-i18n="cm.zalo_btn">Xem lịch trên Zalo</a>
-              <a href="#cham-mua" class="btn btn-ghost" data-i18n="cm.info_btn">Ưu đãi &amp; đường đi</a>
+              <a href="#cham-mua" class="btn btn-primary" data-i18n="cm.info_btn">Ưu đãi &amp; đường đi</a>
+              <a href="https://zalo.me/g/wqbhta2x1fpqnm4wix9l" target="_blank" rel="noopener" class="btn btn-ghost" data-i18n="cm.zalo_btn">Xem lịch trên Zalo</a>
             </div>
           </div>
           <div class="season-image">
@@ -141,7 +168,7 @@
           <ul class="cm-offers">
             <li data-i18n-html="cm.off1"><b>−10%</b> khi đăng ký từ 2 workshop</li>
             <li data-i18n-html="cm.off2"><b>−15%</b> cho nhóm từ 4 người</li>
-            <li data-i18n="cm.off3">Chia sẻ trải nghiệm Chạm Mùa lên mạng xã hội hoặc Google Maps, tặng bạn 01 lượt làm thiệp từ vải vụn (39K): làm ngay trong buổi, hoặc để dành lúc nào ghé cũng được.</li>
+            <li data-i18n="cm.off3">Chia sẻ trải nghiệm Chạm Mùa lên mạng xã hội, tặng bạn 01 lượt làm thiệp từ vải vụn (39K): làm ngay trong buổi, hoặc để dành lúc nào ghé cũng được.</li>
             <li data-i18n="cm.off4">Chụp ảnh miễn phí với mặt nạ giấy bồi và không gian studio.</li>
           </ul>
           <p class="cm-note" data-i18n="cm.off_note">Ưu đãi được trừ khi bạn thanh toán tại studio.</p>
@@ -149,8 +176,11 @@
 
         <div class="cm-box">
           <h3 data-i18n="cm.go_h">Lịch &amp; đường đi</h3>
-          <p data-i18n="cm.go_sched">Lịch từng cuối tuần được cập nhật trong nhóm Zalo “Thông tin workshop Chạm Mùa”.</p>
-          <a href="https://zalo.me/g/wqbhta2x1fpqnm4wix9l" target="_blank" rel="noopener" class="btn btn-primary" data-i18n="cm.zalo_btn">Xem lịch trên Zalo</a>
+          <p data-i18n="cm.go_sched">Muốn đến cuối tuần nào, bạn nhắn Gem để giữ chỗ. Lịch từng cuối tuần cũng có trong nhóm Zalo “Thông tin workshop Chạm Mùa”.</p>
+          <div class="cm-actions">
+            <a href="#dat-lich" class="btn btn-primary" data-i18n="ws.book_h">Đặt lịch</a>
+            <a href="https://zalo.me/g/wqbhta2x1fpqnm4wix9l" target="_blank" rel="noopener" class="btn btn-ghost" data-i18n="cm.zalo_btn">Xem lịch trên Zalo</a>
+          </div>
           <dl class="cm-facts">
             <dt data-i18n="cm.go_addr">Địa chỉ</dt>
             <dd><a href="https://www.google.com/maps/search/?api=1&query=114+Lê+Gia+Đỉnh+Hai+Bà+Trưng+Hà+Nội" target="_blank" rel="noopener" data-i18n-html="home.season_addr">Tầng 3, Trung tâm Văn hóa - Thông tin và Thể thao Phường Hai Bà Trưng<br>114 Lê Gia Đỉnh, Hà Nội</a></dd>
@@ -164,19 +194,16 @@
     </div>
   </section>
 
-  <!-- HẸN GIỜ KHÁC -->
+  <!-- NHẮC ĐẶT LỊCH cuối trang: đọc hết danh sách rồi thì nút nhắn nằm ngay đây -->
   <section class="section-sm">
     <div class="container">
       <div class="ws-other">
         <img src="images/mascot/udon_lying_smile.png" alt="Udon" class="ws-other-udon" loading="lazy">
         <div>
-          <h2 data-i18n="ws.other_h">Muốn giờ khác?</h2>
-          <p data-i18n="ws.other_p">Gem Chạm Sắc Studio nhận hẹn buổi riêng từ thứ Hai đến thứ Bảy, kể cả chỉ một người — nhắn cho chúng mình là xếp được. Chủ Nhật thì cần hẹn trước.</p>
-          <div class="ws-other-act">
-            <a href="https://zalo.me/84824964996" target="_blank" rel="noopener" class="btn btn-primary" data-i18n="ws.other_zalo">Nhắn Zalo</a>
-            <a href="https://m.me/gemchamsac" target="_blank" rel="noopener" class="btn btn-ghost">Messenger</a>
-            <a href="ghe-tham.html" class="btn btn-ghost" data-i18n="nav.visit">Ghé thăm</a>
-          </div>
+          <h2 data-i18n="ws.other_h">Chọn được món rồi?</h2>
+          <p data-i18n="ws.other_p">Nhắn Gem món muốn làm, ngày giờ và số người. Một người cũng xếp được.</p>
+          <div class="ws-ch" data-ws-ch></div>
+          <p class="ws-ch-note" data-i18n="ws.ch_note" aria-live="polite">Bấm một kênh: lời nhắn soạn sẵn được chép lại, bạn chỉ cần dán vào khung chat.</p>
         </div>
       </div>
     </div>
@@ -196,6 +223,14 @@
         </div>
         <div>
           <h4 data-i18n="footer.contact">Liên hệ</h4>
+          <!-- chat links (14/11/2026): order follows the language, see .msg-links in style.css -->
+          <p class="footer-msg-label" data-i18n="msg.label">Nhắn cho Gem</p>
+          <div class="msg-links">
+            <a class="msg-zalo" href="https://zalo.me/84824964996" target="_blank" rel="noopener">Zalo</a>
+            <a class="msg-messenger" href="https://m.me/gemchamsac" target="_blank" rel="noopener">Messenger</a>
+            <a class="msg-instagram" href="https://ig.me/m/gemchamsac_studio" target="_blank" rel="noopener">Instagram</a>
+            <a class="msg-threads" href="https://www.threads.com/@gemchamsac_studio" target="_blank" rel="noopener">Threads</a>
+          </div>
           <a href="tel:+84824964996">(84) 82 496 4996</a>
           <a href="mailto:gemchamsac@gmail.com">gemchamsac@gmail.com</a>
           <a href="https://www.google.com/maps/search/?api=1&query=114+Lê+Gia+Đỉnh+Hai+Bà+Trưng+Hà+Nội" target="_blank" rel="noopener" data-i18n="footer.address">Tầng 3, Trung tâm Văn hóa - Thông tin và Thể thao Phường Hai Bà Trưng, 114 Lê Gia Đỉnh, Hà Nội</a>

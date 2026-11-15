@@ -37,7 +37,12 @@
   --radius-sm: 4px; --radius-md: 8px; --radius-lg: 16px;
   --shadow-soft: 0 2px 12px rgba(61, 74, 46, 0.06);
   --shadow-paper: 0 4px 24px rgba(61, 74, 46, 0.08);
+
+  /* height of the sticky header: js/main.js measures the real one and sets it
+     on <html>; these are only what applies before it runs */
+  --header-h: 110px;
 }
+@media (min-width: 600px) { :root { --header-h: 122px; } }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
@@ -312,6 +317,10 @@ p:last-child { margin-bottom: 0; }
   border-bottom: 1px solid rgba(135, 150, 90, 0.15);
 }
 .nav-mobile.open { display: flex; }
+/* js/main.js caps the open menu at the screen height; past that it scrolls itself */
+.nav-mobile { overflow-y: auto; overscroll-behavior: contain; }
+/* while the phone menu is open the floating basket would cover its chat links */
+html.nav-open .gb-widget { visibility: hidden; }
 .nav-mobile a { font-size: var(--text-base); color: var(--ink-body); font-weight: 500; padding: var(--space-2) 0; }
 
 .nav-mobile-group {
@@ -322,6 +331,14 @@ p:last-child { margin-bottom: 0; }
   padding-top: var(--space-2);
 }
 .nav-mobile a.nav-mobile-sub { padding-left: var(--space-4); }
+/* chat links at the bottom of the phone menu: one tap from any page */
+.nav-mobile-msg {
+  margin-top: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid rgba(135, 150, 90, 0.18);
+}
+.nav-mobile-msg .msg-links { margin-top: var(--space-2); }
+.nav-mobile .msg-links a { padding: 0 var(--space-4); font-size: var(--text-sm); }
 
 /* SUB-NAV on the two "Về Gem" pages, so you know which one you're on */
 .subnav {
@@ -911,9 +928,22 @@ p:last-child { margin-bottom: 0; }
 .ws-teaser-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .ws-teaser h2 { margin-bottom: var(--space-4); }
 .ws-teaser p { color: var(--ink-body); margin-bottom: var(--space-6); line-height: 1.75; }
+/* two facts a visitor asks first: can I book, and in what language */
+.ws-teaser-facts { list-style: none; display: grid; gap: var(--space-2); margin: calc(-1 * var(--space-2)) 0 var(--space-6); }
+.ws-teaser-facts li { position: relative; padding-left: 1.2em; font-size: var(--text-sm); color: var(--ink-dark); font-weight: 500; line-height: 1.55; }
+.ws-teaser-facts li::before {
+  content: ""; position: absolute; left: 0; top: 0.55em;
+  width: 7px; height: 7px; border-radius: 50%; background: var(--sage-deep);
+}
+/* Right under the Season 02 card (picture on the left), so this one puts its
+   picture on the right: two cards in a row with the same layout read as one. */
+@media (min-width: 800px) {
+  .ws-teaser.is-flip { grid-template-columns: 1.1fr 1fr; }
+  .ws-teaser.is-flip .ws-teaser-img { order: 1; }
+}
 
-/* HOME STUDIO 2D TEASER — the workshop teaser mirrored (text left, picture
-   right), so the two cards in a row don't read as one block repeated */
+/* HOME STUDIO 2D TEASER — text left, picture right; on the home page it sits
+   under the workshop teaser and is flipped (.is-flip, picture left) */
 .studio-teaser {
   display: grid;
   gap: var(--space-8);
@@ -941,6 +971,28 @@ p:last-child { margin-bottom: 0; }
 .studio-teaser-img img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 72%; display: block; }
 .studio-teaser h2 { margin-bottom: var(--space-4); }
 .studio-teaser-text > p { color: var(--ink-body); margin-bottom: var(--space-6); line-height: 1.75; }
+/* Right under the workshop block (picture on the right), so this one puts its
+   picture on the left */
+@media (min-width: 800px) {
+  .studio-teaser.is-flip { grid-template-columns: 1fr 1.1fr; }
+  .studio-teaser.is-flip .studio-teaser-img { order: -1; }
+}
+/* "a model of the real studio" (Anna 15/11/2026): ties the 2D studio to the
+   place you can visit */
+.studio-teaser-text > .studio-teaser-real {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  margin-bottom: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background: var(--paper-cream);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  color: var(--ink-dark);
+  font-weight: 500;
+  line-height: 1.55;
+}
+.studio-teaser-real svg { width: 18px; height: 18px; flex-shrink: 0; color: var(--sage-deep); margin-top: 0.15em; }
 
 /* LANGUAGE HINT — offered to non-Vietnamese browsers, never auto-applied */
 .lang-hint {
@@ -990,6 +1042,19 @@ p:last-child { margin-bottom: 0; }
 .lang-hint-x:focus-visible { outline: 2px solid var(--sage-light); outline-offset: 2px; }
 @media (max-width: 520px) {
   .lang-hint { font-size: var(--text-xs); gap: var(--space-2); }
+}
+/* Pages with the site header carry it as a strip at the bottom of the sticky
+   header (js/i18n.js): on the first screen wherever a link lands, and over
+   nothing. The floating pill above stays for studio.html. */
+.site-header .lang-hint {
+  position: static;
+  transform: none;
+  max-width: none;
+  width: 100%;
+  justify-content: center;
+  border-radius: 0;
+  box-shadow: none;
+  padding: var(--space-2) var(--space-4);
 }
 
 .product-featured {
@@ -1105,6 +1170,41 @@ p:last-child { margin-bottom: 0; }
   margin: 0;
 }
 .footer-socials svg { width: 16px; height: 16px; }
+
+/* "Nhắn cho Gem": the same chat links in the footer, the phone menu and on
+   Ghé thăm. Vietnamese order: Zalo · Messenger · Instagram · Threads (· Email).
+   In English Instagram leads and Zalo goes last: few visitors from abroad use
+   Zalo, and they write on Instagram, Messenger, Threads or by email. */
+.msg-links { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+html[lang="en"] .msg-links .msg-instagram { order: -1; }
+html[lang="en"] .msg-links .msg-zalo { order: 9; }
+.msg-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--sage-light);
+  border-radius: 999px;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--ink-dark);
+  background: var(--paper-white);
+}
+.msg-links a:hover { border-color: var(--sage-deep); color: var(--sage-deep); }
+.msg-reply { font-size: var(--text-sm); color: var(--sage-deep); margin-top: var(--space-2); }
+.msg-reply:empty { display: none; }
+
+.footer-msg-label { font-size: var(--text-sm); color: var(--sage-light); margin-bottom: var(--space-2); }
+.site-footer .msg-links { margin-bottom: var(--space-4); }
+.site-footer .msg-links a {
+  display: inline-flex;
+  margin: 0;
+  opacity: 1;
+  color: var(--paper-cream);
+  background: transparent;
+  border-color: rgba(195, 195, 165, 0.5);
+}
+.site-footer .msg-links a:hover { color: var(--ink-dark); background: var(--sage-light); }
 
 .footer-mascot {
   position: absolute;
@@ -1472,26 +1572,33 @@ html[lang="en"] .season-card.done::before { content: '✓ wrapped'; }
   }
 }
 
-/* Scroll offset for sections to account for sticky header + TOC */
+/* Scroll offset for sections to account for sticky header + TOC.
+   --header-h is the measured header (js/main.js); the fixed 150px / 90px here
+   were from when the header was 72px tall, and the kit's QR code lands on
+   #kit-kinusaiga. */
 #kit-kinusaiga,
+#kit-mua,
+#hang-ky-gui,
 #phu-kien-vai-vun,
 #van-phong-pham,
 #quan-ao-2hand,
 #gom-su-nhat,
 #set-qua,
 #dich-vu {
-  scroll-margin-top: 150px; /* Mobile: header ~72px + TOC pills ~67px */
+  scroll-margin-top: calc(var(--header-h) + 72px); /* Mobile: header + TOC pills (~65px) */
 }
 
 @media (min-width: 768px) {
   #kit-kinusaiga,
+  #kit-mua,
+  #hang-ky-gui,
   #phu-kien-vai-vun,
   #van-phong-pham,
   #quan-ao-2hand,
   #gom-su-nhat,
   #set-qua,
   #dich-vu {
-    scroll-margin-top: 90px; /* Desktop: header ~72px only (sidebar doesn't cover content) */
+    scroll-margin-top: calc(var(--header-h) + var(--space-4)); /* Desktop: header only (sidebar doesn't cover content) */
   }
 }
 
@@ -1579,6 +1686,23 @@ html[lang="en"] .season-card.done::before { content: '✓ wrapped'; }
 }
 .kit-buy-h { margin: 0 0 var(--space-4); }
 
+/* "Làm xong tranh rồi?" — what comes after the video (the kit's QR code lands
+   on this section): share it, make one with Gem, give one away */
+.kit-next { margin-top: var(--space-4); }
+.kit-next > h3 { font-size: var(--text-xl); margin-bottom: var(--space-5); }
+.kit-next-list { list-style: none; display: grid; gap: var(--space-4); }
+@media (min-width: 1100px) { .kit-next-list { grid-template-columns: repeat(3, 1fr); } }
+.kit-next-list li {
+  display: flex; flex-direction: column; gap: var(--space-2);
+  background: var(--paper-white);
+  border: 1px solid rgba(135, 150, 90, 0.18);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5) var(--space-6);
+}
+.kit-next-list h4 { font-size: var(--text-base); color: var(--ink-dark); }
+.kit-next-list p { font-size: var(--text-sm); color: var(--ink-body); line-height: 1.6; margin-bottom: var(--space-2); }
+.kit-next-list .btn { align-self: flex-start; margin-top: auto; padding: var(--space-2) var(--space-5); min-height: 44px; }
+
 /* two columns only when the content column is wide enough (the TOC sidebar takes room from 768px) */
 @media (min-width: 1100px) {
   .kit-intro {
@@ -1592,7 +1716,9 @@ html[lang="en"] .season-card.done::before { content: '✓ wrapped'; }
 .product-toc-mobile {
   display: block;
   position: sticky;
-  top: 72px;
+  /* right under the header: 72px left the pills half under the header's
+     "Season 02" strip (14/11/2026) */
+  top: var(--header-h);
   z-index: 50;
   background: var(--paper-cream);
   border-bottom: 1px solid rgba(135, 150, 90, 0.15);
@@ -1647,7 +1773,7 @@ html[lang="en"] .season-card.done::before { content: '✓ wrapped'; }
   .product-toc-sidebar {
     display: block;
     position: sticky;
-    top: 100px;
+    top: calc(var(--header-h) + var(--space-6));
     align-self: start;
     z-index: 40;
   }
@@ -2647,6 +2773,9 @@ body.gb-lock { overflow: hidden; }
 }
 
 .gb-channel-mark svg { width: 22px; height: 22px; }
+/* in English Instagram leads and Zalo goes last (js/basket.js, renderChat) */
+html[lang="en"] .gb-channels .gb-ch-ig { order: -1; }
+html[lang="en"] .gb-channels .gb-ch-zalo { order: 9; }
 
 .gb-copied {
   margin-top: var(--space-4);
@@ -2940,6 +3069,8 @@ body.gb-lock { overflow: hidden; }
 .ws-other h2 { font-size: var(--text-xl); margin-bottom: var(--space-3); }
 .ws-other p { color: var(--ink-body); line-height: 1.7; margin-bottom: var(--space-6); }
 .ws-other-act { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.ws-other .ws-ch-note { color: var(--ink-soft); margin-bottom: 0; line-height: 1.55; }
+.ws-other .ws-ch-note.is-done { color: var(--sage-deep); }
 
 /* ---------- Chạm Mùa: dải đầu trang + hành trình, ưu đãi, đường đi ---------- */
 .cm-by { font-family: var(--font-hand); font-size: var(--text-lg); color: var(--kraft); margin-bottom: var(--space-6); }
@@ -3070,16 +3201,94 @@ body.gb-lock { overflow: hidden; }
 }
 
 /* ---------- trang giới thiệu một loại workshop ---------- */
-.ws-type a {
+/* The card: the picture and text link to the workshop's page; under them a
+   row with "Đặt lịch" (to the page's booking box) and "Xem chi tiết". */
+.ws-type { display: flex; flex-direction: column; }
+.ws-type-link {
   display: flex; flex-direction: column; gap: var(--space-2);
-  height: 100%; text-decoration: none; color: inherit;
+  flex: 1 1 auto; text-decoration: none; color: inherit;
 }
-.ws-type a:hover h3 { color: var(--sage-deep); }
+.ws-type-link:hover h3 { color: var(--sage-deep); }
+.ws-type-act {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--space-3); flex-wrap: wrap;
+  margin-top: var(--space-4); padding-top: var(--space-4);
+  border-top: 1px dashed rgba(135, 150, 90, 0.28);
+}
+.ws-type-book { padding: var(--space-2) var(--space-5); min-height: 44px; }
 .ws-type-more {
   font-size: var(--text-sm); color: var(--sage-deep); font-weight: 600;
-  margin-top: auto; padding-top: var(--space-2);
+  display: inline-flex; align-items: center; min-height: 44px;
 }
-.ws-type-more::after { content: " →"; }
+.ws-type-more::after { content: " →"; white-space: pre; }
+
+/* ---------- đặt lịch bằng tin nhắn (14/11/2026) ----------
+   The main way to book: any day, by messaging Gem. The calendar of fixed
+   sessions only shows when there are some. Box in the page hero (#dat-lich),
+   the same box on each workshop's page (#dat-mon), and a closing reminder. */
+.ws-hero { padding-block: var(--space-12) var(--space-10); }
+@media (min-width: 768px) { .ws-hero { padding-block: var(--space-20) var(--space-12); } }
+.ws-book {
+  max-width: 40rem;   /* wide enough for the five English channel buttons in one row on a computer */
+  margin: var(--space-8) auto 0;
+  text-align: left;
+  background: var(--paper-white);
+  border: 1px solid rgba(135, 150, 90, 0.22);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-paper);
+  scroll-margin-top: calc(var(--header-h) + var(--space-4));
+}
+.ws-book-h { font-size: var(--text-xl); margin-bottom: var(--space-4); }
+.ws-book-steps { list-style: none; counter-reset: wsstep; display: grid; gap: var(--space-3); margin-bottom: var(--space-6); }
+.ws-book-steps li {
+  counter-increment: wsstep;
+  position: relative;
+  padding-left: 2.5em;
+  font-size: var(--text-base);
+  color: var(--ink-body);
+  line-height: 1.55;
+}
+.ws-book-steps li::before {
+  content: counter(wsstep);
+  position: absolute; left: 0; top: 0;
+  width: 1.7em; height: 1.7em;
+  border-radius: 50%;
+  background: var(--sage-deep); color: var(--paper-white);
+  font-family: var(--font-display); font-weight: 700; font-size: var(--text-sm);
+  display: flex; align-items: center; justify-content: center;
+}
+.ws-book-steps strong { color: var(--ink-dark); }
+.ws-book-steps a { color: var(--sage-deep); text-decoration: underline; text-underline-offset: 3px; }
+
+/* channel buttons: the first one (Zalo in Vietnamese, Instagram in English) is the primary */
+.ws-ch { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.ws-ch .btn { padding: var(--space-2) var(--space-4); min-height: 44px; }
+.ws-ch svg { width: 16px; height: 16px; flex-shrink: 0; }
+.page-hero .ws-book p,
+.ws-ch-note { max-width: none; margin-inline: 0; }
+.ws-ch-note { font-size: var(--text-xs); color: var(--ink-soft); margin-top: var(--space-3); line-height: 1.55; }
+.page-hero .ws-ch-note { font-size: var(--text-xs); }
+.ws-ch-note.is-done { color: var(--sage-deep); font-weight: 600; }
+.ws-book-or {
+  margin-top: var(--space-4); padding-top: var(--space-3);
+  border-top: 1px dashed rgba(135, 150, 90, 0.28);
+}
+.page-hero .ws-book-or { font-size: var(--text-sm); }
+.ws-book-or a { color: var(--sage-deep); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+
+.ws-sched-h { font-size: var(--text-lg); margin: var(--space-4) 0 var(--space-5); }
+
+.ws-page-book {
+  background: var(--paper-white);
+  border: 1px solid rgba(135, 150, 90, 0.22);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  scroll-margin-top: calc(var(--header-h) + var(--space-4));
+}
+.ws-page-slots + .ws-page-book { margin-top: var(--space-8); }
+.ws-page-book h3 { font-size: var(--text-lg); margin-bottom: var(--space-2); }
+.ws-page-book > p { font-size: var(--text-sm); color: var(--ink-body); line-height: 1.65; margin-bottom: var(--space-4); }
 
 .ws-page { max-width: 42rem; margin-inline: auto; }
 .ws-back-list {

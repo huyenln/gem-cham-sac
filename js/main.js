@@ -1,11 +1,41 @@
+// The sticky header's real height, as --header-h on <html>: the product TOC
+// sticks right under it and anchors (#kit-kinusaiga from the kit's QR code,
+// #dat-lich) land below it. A fixed 72px went stale when the "Season 02" strip
+// moved under the nav (the TOC then hid under the header on phones), and the
+// English hint inside the header changes the height again when it closes.
+(function () {
+  var header = document.querySelector('.site-header');
+  if (!header) return;
+  function setH() {
+    // the open phone menu is inside the header but covers the page: not counted
+    var menu = header.querySelector('.nav-mobile.open');
+    var h = header.offsetHeight - (menu ? menu.offsetHeight : 0);
+    document.documentElement.style.setProperty('--header-h', h + 'px');
+  }
+  setH();
+  if (window.ResizeObserver) new ResizeObserver(setH).observe(header);
+  else window.addEventListener('resize', setH);
+})();
+
 // Mobile menu toggle
 document.addEventListener('DOMContentLoaded', function() {
   const toggle = document.querySelector('.nav-toggle');
   const menu = document.querySelector('.nav-mobile');
   if (toggle && menu) {
+    // The open menu lives in the sticky header, so scrolling the page never
+    // reaches its bottom: cap it at the screen and let it scroll by itself
+    // (the "Nhắn cho Gem" links at the end sat below the fold on a 640px phone).
+    const fitMenu = function () {
+      if (!menu.classList.contains('open')) { menu.style.maxHeight = ''; return; }
+      menu.style.maxHeight = Math.max(160, window.innerHeight - menu.getBoundingClientRect().top) + 'px';
+    };
     toggle.addEventListener('click', function() {
       menu.classList.toggle('open');
+      // the floating basket (js/basket.js) would sit on the menu's last links
+      document.documentElement.classList.toggle('nav-open', menu.classList.contains('open'));
+      fitMenu();
     });
+    window.addEventListener('resize', fitMenu);
   }
 
   // "Về Gem" dropdown (desktop). The mobile drawer lists the sub-pages

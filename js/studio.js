@@ -4207,7 +4207,7 @@
     // charged), what it is made of underneath
     var sku = P.PRODUCTS[d.product].sku;
     var info = window.GemBasket ? window.GemBasket.info(sku) : null;
-    var pr = P.price(d), l = lng(), mny = function (n) { return n.toLocaleString('vi-VN') + 'đ'; };
+    var pr = P.price(d), l = lng(), mny = function (n) { return P.priceRange(n, n); };   // "39,000₫" in English
     root.querySelectorAll('.pt-price').forEach(function (el) {
       el.textContent = !pr ? (info ? info.price : '') : pr.quote ? t('studio.pt_from') + ' ' + mny(pr.total) : P.priceRange(pr.total, pr.max);
     });
