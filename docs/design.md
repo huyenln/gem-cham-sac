@@ -3600,6 +3600,11 @@ thẻ**; khách nước ngoài liên hệ qua **email, Threads, Instagram, Faceb
     hàng nổi ẩn khi menu mở (`html.nav-open`).
   - Link thẳng `?loai=<slug>#dat-mon`: ảnh bìa / ảnh workshop tải xong sau cú nhảy và đẩy khung đặt
     xuống. `scrollToBook()` nhảy lại theo khung mỗi khi một ảnh tải xong, trừ khi khách đã tự cuộn.
+  - Studio 2D (điện thoại dọc): viên "View in English" nằm đúng chỗ nút "?" (cùng góc trái, cùng độ
+    cao), che mất nút. Trước chỉ gặp ở lượt ghé đầu; sau khi sửa lỗi lưu "vi" thì viên này hiện tới
+    khi khách bấm, nên giờ nó nằm bên phải "?" và dưới 480px chỉ còn nút (`css/studio.css`).
+  - `tools/check-studio.py workshop` kiểm theo cách mới: thẻ nào cũng có "Đặt lịch", không còn
+    "Chưa có lịch", dòng buổi gần nhất chỉ ở loại có buổi, khung đặt có nút kênh (Zalo trước).
 - **Còn mở:** giá workshop Kinusaiga (Anna: 60k cỡ nhỏ / 100k cỡ vừa / 200k cỡ to — chờ xác nhận
   là của Kinusaiga hay mọi workshop; database vẫn 199.000đ); `?lang=en` trên link (Anna: chưa).
 
