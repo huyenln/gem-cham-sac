@@ -3605,8 +3605,11 @@ thẻ**; khách nước ngoài liên hệ qua **email, Threads, Instagram, Faceb
     khi khách bấm, nên giờ nó nằm bên phải "?" và dưới 480px chỉ còn nút (`css/studio.css`).
   - `tools/check-studio.py workshop` kiểm theo cách mới: thẻ nào cũng có "Đặt lịch", không còn
     "Chưa có lịch", dòng buổi gần nhất chỉ ở loại có buổi, khung đặt có nút kênh (Zalo trước).
-- **Còn mở:** giá workshop Kinusaiga (Anna: 60k cỡ nhỏ / 100k cỡ vừa / 200k cỡ to — chờ xác nhận
-  là của Kinusaiga hay mọi workshop; database vẫn 199.000đ); `?lang=en` trên link (Anna: chưa).
+- **Giá workshop Kinusaiga theo cỡ tranh** (Anna 17/11/2026): nhỏ 59.000đ · vừa 99.000đ · to
+  199.000đ. Database (đã chạy): `price = 59000`, `price_from = true` → thẻ ghi "Từ 59.000đ"; dòng
+  giá theo cỡ là dòng đầu của "Cần biết trước" (`note_vi` / `note_en`). Đổi giá thì sửa cả hai chỗ
+  trong admin → Đặt lịch → loại workshop.
+- **Còn mở:** `?lang=en` trên link (Anna: chưa).
 
 ---
 
