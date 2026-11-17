@@ -1114,14 +1114,16 @@ html:has(.studio-page) { overscroll-behavior: none; }   /* own rule: a Safari wi
 .st-calm .st-tap { animation: st-tap-calm 0.5s linear forwards; }   /* a still dot that fades */
 @keyframes st-tap-calm { from { opacity: 1; } to { opacity: 0; } }
 
-/* The site-wide "View in English" pill: above the bottom nav, left of the
-   basket. */
+/* The site-wide "View in English" pill: above the bottom nav, between the "?"
+   button (48px, same corner) and the basket. It used to sit right on top of
+   "?" (15/11/2026); on a phone it keeps only its button, which says it all. */
 .studio-page .lang-hint {
-  left: var(--space-4);
+  left: calc(var(--space-4) + 48px + var(--space-2));
   transform: none;
   bottom: calc(72px + env(safe-area-inset-bottom));
-  max-width: calc(100vw - 2 * var(--space-4) - 72px);
+  max-width: calc(100vw - 2 * var(--space-4) - 72px - 48px - var(--space-2));
 }
+@media (max-width: 480px) { .studio-page .lang-hint span { display: none; } }
 
 /* Basket sits above the bottom nav, smaller, so it never covers a chip. */
 .studio-page .gb-widget {

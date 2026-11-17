@@ -31,6 +31,12 @@
     'nav.menu_aria':  { vi: `Mở menu`, en: `Open menu` },
     'lang.aria':      { vi: `Ngôn ngữ`, en: `Language` },
 
+    /* ---------- SHARED: MESSAGE US (footer, mobile menu, Ghé thăm) ----------
+       Kênh nhắn tin xếp theo ngôn ngữ bằng CSS (html[lang="en"]): khách Việt
+       dùng Zalo trước, khách nước ngoài dùng Instagram / Messenger / email. */
+    'msg.label':        { vi: `Nhắn cho Gem`, en: `Message us` },
+    'msg.reply_en':     { vi: ``, en: `We reply in English.` },
+
     /* ---------- SHARED: FOOTER ---------- */
     'footer.contact':   { vi: `Liên hệ`, en: `Contact` },
     'footer.follow':    { vi: `Theo dõi`, en: `Follow` },
@@ -91,13 +97,16 @@
     'home.ws_eyebrow': { vi: `Workshop,`, en: `Workshops,` },
     'home.ws_title':   { vi: `Tự tay làm một món đồ.`, en: `Make something with your own hands.` },
     'home.ws_desc':    { vi: `Thiệp và sổ từ vải vụn, tranh kinusaiga, khắc gỗ, tô mặt nạ giấy bồi… Mỗi cuối tuần đến 27/12 còn có Chạm Mùa: ghé làm một món, chụp ảnh với mặt nạ giấy bồi, rồi ngồi lại uống trà.`, en: `Fabric-scrap cards and notebooks, kinusaiga, woodblock carving, papier-mâché masks… And every weekend until 27 Dec it's Chạm Mùa: drop in, make something, take photos with the masks and stay for tea.` },
-    'home.ws_cta':     { vi: `Xem workshop & lịch`, en: `See workshops & dates` },
+    'home.ws_fact1':   { vi: `Đặt lúc nào cũng được, chỉ cần nhắn trước`, en: `Book any time — just message us ahead` },
+    'home.ws_fact2':   { vi: `Hướng dẫn bằng tiếng Việt hoặc tiếng Anh`, en: `Taught in English or Vietnamese` },
+    'home.ws_cta':     { vi: `Xem workshop & đặt lịch`, en: `See workshops & book` },
     'home.ws_img_alt': { vi: `Tranh kinusaiga đầu ngựa ghép từ vải vụn`, en: `A kinusaiga horse's head pieced from fabric scraps` },
 
     /* HOME: Studio 2D teaser (ảnh tĩnh từ tools/studio-preview.py) */
     'home.studio_eyebrow': { vi: `Studio 2D,`, en: `Studio 2D,` },
     'home.studio_title':   { vi: `Dạo một vòng studio, ngay trên màn hình.`, en: `Walk around the studio, right on your screen.` },
     'home.studio_desc':    { vi: `Chọn một nhân vật rồi đi dạo: thử phụ kiện, ghép vải vụn thành món của riêng bạn ở Bàn thiết kế, chơi phân loại rác cùng Udon và chọn quà ngay trên kệ.`, en: `Pick a character and wander: try on accessories, piece fabric scraps into something of your own at the Design table, play the waste-sorting game with Udon, and choose gifts straight off the shelves.` },
+    'home.studio_real':  { vi: `Studio 2D mô phỏng studio thật của Gem ở 114 Lê Gia Đỉnh. Dạo một vòng trên màn hình, rồi ghé chơi tận nơi nhé.`, en: `Studio 2D is modelled on our real studio at 114 Le Gia Dinh, Hanoi. Look around on screen, then come and see it for real.` },
     'home.studio_cta':     { vi: `Vào Studio 2D`, en: `Enter Studio 2D` },
 
     'home.products_eyebrow': { vi: `Sản phẩm,`, en: `Products,` },
@@ -330,6 +339,16 @@
     'products.kit_i6':       { vi: `<strong>Băng urgo</strong> phòng khi lỡ tay`, en: `<strong>Plasters</strong>, just in case` },
     'products.kit_safety':   { vi: `Dụng cụ có đầu nhọn, lưỡi sắc. Trẻ em làm tranh cần có người lớn đồng hành.`, en: `The tools are sharp. Children should craft with an adult.` },
     'products.kit_buy_h':    { vi: `Chọn mẫu tranh`, en: `Choose a design` },
+    'products.kit_next_h':   { vi: `Làm xong tranh rồi?`, en: `Finished your picture?` },
+    'products.kit_next1_h':  { vi: `Khoe với Gem`, en: `Show us` },
+    'products.kit_next1_p':  { vi: `Đăng ảnh tranh lên Instagram và gắn thẻ <strong>@gemchamsac_studio</strong>. Gem rất muốn được xem.`, en: `Post it on Instagram and tag <strong>@gemchamsac_studio</strong>. We'd love to see it.` },
+    'products.kit_next1_btn':{ vi: `Mở Instagram`, en: `Open Instagram` },
+    'products.kit_next2_h':  { vi: `Làm cùng Gem`, en: `Make one with us` },
+    'products.kit_next2_p':  { vi: `Workshop Kinusaiga tại studio, có người hướng dẫn tận tay bằng tiếng Việt hoặc tiếng Anh.`, en: `A Kinusaiga workshop at the studio, taught hands-on in English or Vietnamese.` },
+    'products.kit_next2_btn':{ vi: `Xem workshop & đặt lịch`, en: `See the workshop & book` },
+    'products.kit_next3_h':  { vi: `Tặng thêm một bộ`, en: `Give one as a gift` },
+    'products.kit_next3_p':  { vi: `Bốn mẫu: ghế nhựa & cà phê, nón lá, hoa hồng, hướng dương.`, en: `Four designs: plastic stool & coffee, conical hat, rose, sunflower.` },
+    'products.kit_next3_btn':{ vi: `Chọn mẫu`, en: `Choose a design` },
     'products.kit_card_h':   { vi: `Kit DIY Kinusaiga`, en: `DIY Kinusaiga kit` },
     'products.kit_card_p':   { vi: `4 mẫu: ghế nhựa & cà phê · nón lá · hoa hồng · hướng dương`, en: `4 designs: plastic stool & coffee · conical hat · rose · sunflower` },
     'products.cat1_h':   { vi: `Phụ kiện vải vụn`, en: `Fabric-scrap accessories` },
@@ -350,8 +369,8 @@
     'products.serv_eyebrow': { vi: `Dịch vụ đặc biệt,`, en: `Special services,` },
     'products.serv_title':   { vi: `Khi bạn cần thêm một chút.`, en: `When you need a little more.` },
     'products.serv1_h':  { vi: `Workshop trải nghiệm`, en: `Experience workshops` },
-    'products.serv1_p':  { vi: `Thử làm các phụ kiện như bìa sổ từ vải vụn/quần áo 2hand, làm giấy tái chế... Đăng ký và chọn workshop bạn muốn trải nghiệm trước qua liên hệ trực tiếp, để mọi niềm vui được trọn vẹn.`, en: `Try making accessories like notebook covers from fabric scraps or 2hand clothes, making recycled paper... Register and choose the workshop you'd like to try by contacting us in advance, so the whole experience feels complete.` },
-    'products.serv1_cta':{ vi: `Xem lịch & đăng ký`, en: `See dates & sign up` },
+    'products.serv1_p':  { vi: `Thử làm các phụ kiện như bìa sổ từ vải vụn/quần áo 2hand, làm giấy tái chế... Đặt lúc nào cũng được, chỉ cần nhắn Gem trước; hướng dẫn bằng tiếng Việt hoặc tiếng Anh.`, en: `Try making accessories like notebook covers from fabric scraps or 2hand clothes, making recycled paper... Book any time, just message us ahead; taught in English or Vietnamese.` },
+    'products.serv1_cta':{ vi: `Xem workshop & đặt lịch`, en: `See workshops & book` },
     'products.serv2_h':  { vi: `Dịch vụ làm mới ký ức`, en: `Memory-renewal service` },
     'products.serv2_p':  { vi: `Nhận đặt hàng tái chế quần áo cũ của bạn thành những món đồ mới, giúp bạn lưu giữ mãi những kỷ niệm.`, en: `We take orders to recycle your old clothes into new items, helping you keep your memories forever.` },
     'products.serv2_li1':{ vi: `Chuẩn bị món đồ bạn cần sửa/làm mới`, en: `Prepare the item you want to repair or renew` },
@@ -446,6 +465,8 @@
     'visit.web_label':  { vi: `Website`, en: `Website` },
     'visit.social_label': { vi: `Mạng xã hội`, en: `Social media` },
     'visit.email_label':   { vi: `Email`, en: `Email` },
+    'visit.pay_label':     { vi: `Thanh toán`, en: `Payment` },
+    'visit.pay_value':     { vi: `Tiền mặt hoặc chuyển khoản. Studio không nhận thẻ.`, en: `Cash (VND) or Vietnamese bank transfer. We don't take cards.` },
     'visit.park_label':    { vi: `Gửi xe`, en: `Parking` },
     'visit.park_value':    { vi: `Xe máy: gửi tại Trung tâm Văn hóa, 114 Lê Gia Đỉnh<br>Ô tô: gửi vào Trường Tiểu học &amp; THCS Đoàn Kết`, en: `Motorbikes: at the Culture Centre, 114 Lê Gia Đỉnh<br>Cars: at Đoàn Kết Primary &amp; Secondary School` },
     'visit.email_eyebrow': { vi: `Mùa nào cũng cần bạn,`, en: `Every season needs you,` },
@@ -489,10 +510,11 @@
     'policy.eyebrow':       { vi: `Chính sách`, en: `Policies` },
     'policy.h1':            { vi: `Mua hàng ở Gem, và thông tin của bạn.`, en: `Buying from Gem, and your information.` },
     'policy.sub':           { vi: `Những điều chúng mình làm khi bạn đặt hàng, giữ chỗ workshop hay để lại thông tin trên trang này.`, en: `What we do when you order, reserve a workshop seat or leave your details on this site.` },
-    'policy.updated':       { vi: `Cập nhật ngày 12/11/2026.`, en: `Updated 12 November 2026.` },
+    'policy.updated':       { vi: `Cập nhật ngày 14/11/2026.`, en: `Updated 14 November 2026.` },
     'policy.who_h':         { vi: `Ai đứng sau trang này`, en: `Who runs this site` },
     'policy.who_p':         { vi: `Trang gemchamsac.com do Gem Chạm Sắc vận hành.`, en: `gemchamsac.com is run by Gem Chạm Sắc.` },
     'policy.who_phone':     { vi: `Điện thoại, Zalo`, en: `Phone, Zalo` },
+    'policy.who_msg':       { vi: `Nhắn tin`, en: `Messages` },
     'policy.price_h':       { vi: `Giá`, en: `Prices` },
     'policy.price_1':       { vi: `Giá ghi trên trang tính bằng đồng Việt Nam. Đó là giá bạn trả cho món hàng, đã gồm thuế, chưa gồm phí giao hàng.`, en: `Prices on the site are in Vietnamese đồng. That is what you pay for the piece, tax included, shipping not included.` },
     'policy.price_2':       { vi: `Vài món có giá theo khoảng (mỗi chiếc một cỡ, một kiểu vải) hoặc ghi “Liên hệ”. Với những món này, Gem báo giá đúng cho bạn trước khi bạn trả tiền.`, en: `Some pieces show a price range (each one differs in size and fabric) or say “Ask us”. For those, Gem tells you the exact price before you pay.` },
@@ -501,17 +523,17 @@
     'policy.order_1':       { vi: `Bạn chọn món vào giỏ, xem lại giỏ rồi gửi đơn kèm tên, số điện thoại và địa chỉ nhận, hoặc chọn tự đến lấy.`, en: `You put pieces in the basket, check it, then send the order with your name, phone number and delivery address, or choose to pick it up.` },
     'policy.order_2':       { vi: `Gửi xong, trang hiện mã đơn và nội dung đơn để bạn lưu lại. Gem nhắn cho bạn trong ngày để xác nhận món, giá và phí giao.`, en: `Once sent, the site shows your order code and the order itself for you to keep. Gem messages you the same day to confirm the pieces, the price and the shipping fee.` },
     'policy.order_3':       { vi: `Món thiết kế riêng: Gem chọn vải vụn gần nhất với thiết kế, nhắn ảnh vải để bạn duyệt, rồi mới may.`, en: `Custom pieces: Gem picks the fabric scraps closest to your design, sends you a photo to approve, and only then sews.` },
-    'policy.order_4':       { vi: `Workshop: bạn giữ chỗ trên trang, Gem nhắn Zalo trước một ngày để xác nhận.`, en: `Workshops: you reserve a seat on the site, and Gem sends a Zalo message the day before to confirm.` },
+    'policy.order_4':       { vi: `Workshop: bạn nhắn Gem (Zalo, Messenger, Instagram, Threads hoặc email) món muốn làm, ngày giờ và số người, hoặc giữ chỗ ở một buổi đã có trên trang. Gem nhắn xác nhận trước một ngày, qua Zalo hoặc email.`, en: `Workshops: message Gem (Zalo, Messenger, Instagram, Threads or email) with the workshop, the day and time and how many of you, or reserve a seat in a session listed on the site. Gem confirms the day before, on Zalo or by email.` },
     'policy.pay_h':         { vi: `Thanh toán`, en: `Payment` },
     'policy.pay_1':         { vi: `Trả khi nhận hàng: đưa tiền cho người giao, hoặc trả tại studio khi bạn đến lấy.`, en: `Pay on delivery: hand the cash to the courier, or pay at the studio when you pick up.` },
     'policy.pay_2':         { vi: `Chuyển khoản: quét mã QR hiện sau khi đặt, hoặc mã Gem nhắn cho bạn. Tài khoản nhận tiền đứng tên HO KINH DOANH GEM CHAM SAC.`, en: `Bank transfer: scan the QR code shown after you order, or the one Gem sends you. The receiving account is in the name HO KINH DOANH GEM CHAM SAC.` },
-    'policy.pay_3':         { vi: `Workshop: trả tại studio khi bạn đến.`, en: `Workshops: pay at the studio when you arrive.` },
-    'policy.pay_4':         { vi: `Trang không nhận thẻ và không lưu thông tin thẻ hay tài khoản ngân hàng của bạn.`, en: `The site takes no cards and stores no card or bank details of yours.` },
+    'policy.pay_3':         { vi: `Workshop và mua tại studio: trả bằng tiền mặt hoặc chuyển khoản khi bạn đến.`, en: `Workshops and buying at the studio: pay in cash or by bank transfer when you come.` },
+    'policy.pay_4':         { vi: `Cả trang lẫn studio đều không nhận thẻ. Trang không lưu thông tin thẻ hay tài khoản ngân hàng của bạn.`, en: `Neither the site nor the studio takes cards. The site stores no card or bank details of yours.` },
     'policy.ship_h':        { vi: `Nhận hàng`, en: `Getting your order` },
     'policy.ship_1':        { vi: `Tự đến lấy tại studio, trong giờ mở cửa.`, en: `Pick it up at the studio during opening hours.` },
     'policy.ship_2':        { vi: `Gửi hàng tận nơi: Gem báo phí giao khi nhắn lại xác nhận đơn, trước khi bạn trả tiền.`, en: `Delivery: Gem tells you the shipping fee when confirming the order, before you pay.` },
     'policy.care_h':        { vi: `Góp ý và khiếu nại`, en: `Feedback and complaints` },
-    'policy.care_1':        { vi: `Món nhận được chưa đúng, hay có điều gì chưa ổn, bạn nhắn Gem qua điện thoại, Zalo hoặc email ở đầu trang, hoặc nói trực tiếp tại studio. Kèm mã đơn thì Gem tra nhanh hơn.`, en: `If a piece is not what you expected, or anything is not right, reach Gem by the phone, Zalo or email above, or in person at the studio. With your order code, Gem can look it up faster.` },
+    'policy.care_1':        { vi: `Món nhận được chưa đúng, hay có điều gì chưa ổn, bạn nhắn Gem qua điện thoại, Zalo, Messenger, Instagram, Threads hoặc email ở đầu trang, hoặc nói trực tiếp tại studio. Kèm mã đơn thì Gem tra nhanh hơn.`, en: `If a piece is not what you expected, or anything is not right, reach Gem by phone, Zalo, Messenger, Instagram, Threads or email (above), or in person at the studio. With your order code, Gem can look it up faster.` },
     'policy.care_2':        { vi: `Người phụ trách đơn của Gem đọc từng phản ánh và trả lời bạn qua đúng kênh bạn đã nhắn.`, en: `The person handling orders at Gem reads every message and answers you on the channel you used.` },
     'policy.data_h':        { vi: `Thông tin cá nhân của bạn`, en: `Your personal information` },
     'policy.data_lead':     { vi: `Gem chỉ xin những thông tin cần cho đúng việc bạn nhờ, và chỉ dùng cho việc đó.`, en: `Gem asks only for what the thing you asked for needs, and uses it only for that.` },
@@ -521,6 +543,7 @@
     'policy.data_w3':       { vi: `<strong>Bản tin:</strong> địa chỉ email. Để báo bạn khi có workshop mới, hoạt động ở studio hay dự án vì môi trường. Mỗi email đều có đường link huỷ đăng ký.`, en: `<strong>Newsletter:</strong> your email address. To tell you about new workshops, studio happenings and projects for the planet. Every email carries an unsubscribe link.` },
     'policy.data_w4':       { vi: `<strong>Bảng lời nhắn trong Studio 2D:</strong> lời nhắn và tên nếu bạn ghi. Lời nhắn hiện công khai sau khi Gem đọc; muốn gỡ, bạn nhắn Gem.`, en: `<strong>The message board in the Studio 2D:</strong> your note and a name if you give one. Notes appear publicly once Gem has read them; to have one taken down, message Gem.` },
     'policy.data_w5':       { vi: `<strong>Thiết kế riêng:</strong> hình bạn vẽ và ảnh tham khảo bạn tải lên. Chỉ nhân sự Gem xem, để may đúng món đó.`, en: `<strong>Custom designs:</strong> what you draw and any reference photo you upload. Seen only by Gem’s staff, to make that piece.` },
+    'policy.data_w7':       { vi: `<strong>Tin nhắn cho Gem</strong> (Zalo, Messenger, Instagram, Threads, email), kể cả lời nhắn soạn sẵn ở trang Workshop: tên tài khoản và nội dung bạn gửi. Chúng nằm trên dịch vụ nhắn tin đó; Gem chỉ dùng để trả lời và xếp lịch cho bạn.`, en: `<strong>Messages to Gem</strong> (Zalo, Messenger, Instagram, Threads, email), including the ready-made message on the Workshops page: your account name and what you write. They stay on that messaging service; Gem uses them only to reply and to arrange your booking.` },
     'policy.data_w6':       { vi: `<strong>Trên máy của bạn:</strong> giỏ hàng, thiết kế đã lưu, Tủ sưu tầm và lựa chọn ngôn ngữ nằm trong trình duyệt của bạn, không gửi về Gem. Trang không dùng cookie theo dõi, không đo lường hành vi, không chạy quảng cáo.`, en: `<strong>On your own device:</strong> the basket, saved designs, your Collection and your language choice stay in your browser and are not sent to Gem. The site uses no tracking cookies, no analytics and no advertising.` },
     'policy.data_who_h':    { vi: `Ai xem được`, en: `Who can see it` },
     'policy.data_who1':     { vi: `Nhân sự của Gem phụ trách đơn hàng và workshop.`, en: `Gem’s staff who handle orders and workshops.` },
@@ -598,6 +621,14 @@
     apply(lang);
   }
 
+  // Re-translate text a script has just built, WITHOUT recording a choice.
+  // Scripts used to call setLang(getLang()) for this, which saved "vi" for
+  // every first-time visitor: the English hint below then never came back
+  // after the first page (found 14/11/2026 on the live site).
+  function refresh() {
+    apply(getLang());
+  }
+
   // Offer English to visitors whose browser isn't Vietnamese — a hint, never an
   // automatic switch. Plenty of Vietnamese people run English-language phones,
   // and silently serving them English would be worse than the problem it solves.
@@ -622,10 +653,16 @@
     bar.setAttribute('role', 'region');
     bar.setAttribute('aria-label', 'Language');
     bar.innerHTML =
-      '<span>This site is also available in English.</span>' +
+      '<span>Prefer English?</span>' +
       '<button type="button" class="lang-hint-go">View in English</button>' +
       '<button type="button" class="lang-hint-x" aria-label="Dismiss">&times;</button>';
-    document.body.appendChild(bar);
+    // Inside the sticky header: seen on the first screen even when a QR code
+    // lands mid-page (san-pham.html#kit-kinusaiga), and it covers nothing. As a
+    // floating pill at the bottom it sat on the hero buttons and under the
+    // basket. Pages without the site header (studio.html) keep the pill.
+    var header = document.querySelector('.site-header');
+    if (header) header.appendChild(bar);
+    else document.body.appendChild(bar);
 
     function dismiss() {
       try { localStorage.setItem(HINT_KEY, 'dismissed'); } catch (e) { /* ignore */ }
@@ -663,6 +700,7 @@
   window.GemI18n = {
     setLang: setLang,
     getLang: getLang,
+    refresh: refresh,
     add: add,
     t: function (k) { return t(k, getLang()); }
   };

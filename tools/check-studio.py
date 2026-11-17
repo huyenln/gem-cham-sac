@@ -1075,13 +1075,25 @@ async def workshop(browser, db):
             await pg.wait_for_timeout(1200)
             n = await pg.evaluate("document.querySelectorAll('.ws-type').length")
             check(n == 2, f'{tag} {w}px: both workshop cards shown ({n})')
+            # the cards sit below the "Đặt lịch" box now: bring the lazy photo into view first
+            await pg.evaluate("document.querySelector('.ws-type-pic img').scrollIntoView({block: 'center'})")
+            await pg.wait_for_timeout(800)
             pic = await pg.evaluate("(() => { const i = document.querySelector('.ws-type-pic img'); return i && i.complete && i.naturalWidth })()")
             check(pic, f'{tag} {w}px: card photo loaded')
             cnt = await pg.evaluate("(document.querySelector('.ws-type-count') || {}).textContent")
             check(cnt == '+2 ảnh', f'{tag} {w}px: photo count ({cnt})')
+            # Booking by message is the way in (14/11/2026): every card has "Đặt lịch",
+            # no card says "Chưa có lịch", and only a type with a session gets a next-session line
             nxt = await pg.evaluate("[...document.querySelectorAll('.ws-type-next')].map(e => e.textContent)")
-            want = 'Buổi gần nhất' if sessions else 'Chưa có lịch'
-            check(len(nxt) == 2 and want in nxt[1], f'{tag} {w}px: next-session line ({nxt})')
+            ok_nxt = (len(nxt) == 1 and 'Buổi gần nhất' in nxt[0]) if sessions else nxt == []
+            check(ok_nxt, f'{tag} {w}px: next-session line only where there is a session ({nxt})')
+            books = await pg.evaluate("[...document.querySelectorAll('.ws-type-book')].map(a => [a.textContent, a.getAttribute('href')])")
+            check(len(books) == 2 and all(t == 'Đặt lịch' and h.endswith('#dat-mon') for t, h in books), f'{tag} {w}px: "Đặt lịch" on every card ({books})')
+            check(not await pg.evaluate("document.body.innerText.includes('Chưa có lịch')"), f'{tag} {w}px: no "Chưa có lịch" anywhere')
+            ch = await pg.evaluate("[...document.querySelectorAll('#dat-lich [data-ch]')].map(a => a.dataset.ch)")
+            check(ch[:1] == ['zalo'] and len(ch) == 4, f'{tag} {w}px: the booking box has its chat buttons, Zalo first in Vietnamese ({ch})')
+            sched = await pg.evaluate("[!document.querySelector('.ws-book-or').hidden, !!document.getElementById('ws-sched-h')]")
+            check(sched == ([True, True] if sessions else [False, False]), f'{tag} {w}px: calendar heading + "Hoặc giữ chỗ…" only with sessions ({sched})')
             await pg.locator('#ws-root').screenshot(path=OUT / f'workshop-{tag}-{w}.png')
             check(not pg.errors, f'no script errors {pg.errors}')
             await pg.context.close()
@@ -2768,7 +2780,7 @@ async def order_form(browser, db):
     await send(pg, 'Khách thử', '+84 90 000 0000')
     call = db.order_calls[-1] if db.order_calls else {}
     got = await pg.evaluate(after)
-    check(gone and h[0] == 'Trả tại cửa hàng khi bạn đến lấy.' and call.get('p_phone') == '+84900000000' and got[0] and not got[2],
+    check(gone and h[0] == 'Trả tại cửa hàng khi bạn đến lấy: tiền mặt hoặc chuyển khoản, không nhận thẻ.' and call.get('p_phone') == '+84900000000' and got[0] and not got[2],
           f'picked up: no address asked, "pay at the shop", +84… accepted, the QR code without the shipping line ({h[0]!r}, {call.get("p_phone")!r}, {got[:3]})')
     await pg.context.close()
 

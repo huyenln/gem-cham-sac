@@ -25,6 +25,7 @@
 
     zaloPhone: '84824964996',        // zalo.me/<số> — bỏ dấu +, giữ mã 84
     messengerHandle: 'gemchamsac',   // m.me/<handle>
+    instagramHandle: 'gemchamsac_studio',   // ig.me/m/<handle> mở thẳng khung nhắn tin
 
     // Để trống = đơn hàng mở sẵn trong app email của khách (mailto), không cần
     // đăng ký gì. Muốn đơn tự chạy về hộp thư mà khách không phải bấm Gửi thì
@@ -216,7 +217,7 @@
     'basket.pay_h':         { vi: `Cách trả tiền`, en: `How you'll pay` },
     'basket.pay_cod':       { vi: `Trả khi nhận hàng`, en: `Pay on delivery` },
     'basket.pay_cod_p':     { vi: `Đưa tiền cho người giao.`, en: `Hand the cash to the courier.` },
-    'basket.pay_cod_pick_p': { vi: `Trả tại cửa hàng khi bạn đến lấy.`, en: `Pay at the shop when you pick it up.` },
+    'basket.pay_cod_pick_p': { vi: `Trả tại cửa hàng khi bạn đến lấy: tiền mặt hoặc chuyển khoản, không nhận thẻ.`, en: `Pay at the shop when you pick it up: cash or bank transfer, no cards.` },
     'basket.pay_qr':        { vi: `Chuyển khoản QR`, en: `Bank transfer (QR)` },
     'basket.pay_qr_p':      { vi: `Quét mã, số tiền và mã đơn điền sẵn.`, en: `Scan the code — amount and order code are filled in.` },
     'basket.pay_qr_open_p': { vi: `Gem nhắn bạn tổng tiền kèm mã QR sau khi chốt giá.`, en: `Gem will message you the total and a QR code once the price is settled.` },
@@ -470,7 +471,7 @@
     var dp = designPrice(it), q = qty || 1;
     if (dp === undefined) return priceLabel(bySku(it.sku), qty);
     if (dp === null) return t('basket.price_quote', 'Báo giá sau');
-    return dp.b > dp.a ? (dp.a * q).toLocaleString('vi-VN') + '–' + money(dp.b * q) : money(dp.a * q);
+    return dp.b > dp.a ? num(dp.a * q) + '–' + money(dp.b * q) : money(dp.a * q);
   }
 
   // Chỉ cộng những món đã có giá — món chưa chốt giá không được đoán thành 0đ
@@ -492,8 +493,11 @@
     });
   }
 
+  // English: "39,000₫" — "39.000đ" reads as thirty-nine to an English reader
+  // (14/11/2026). num() is the bare number, for the first half of a range.
+  function num(n) { return n.toLocaleString(isEn() ? 'en-US' : 'vi-VN'); }
   function money(n) {
-    return n.toLocaleString('vi-VN') + 'đ';
+    return num(n) + (isEn() ? '₫' : 'đ');
   }
 
   // Nhiều món có giá theo khoảng (vd túi tái chế 120.000–200.000đ tuỳ mẫu),
@@ -514,7 +518,7 @@
     var q = qty || 1;
     if (isRange(p)) {
       // một ký hiệu đ ở cuối, không phải hai: "120.000–200.000đ"
-      return (p.price * q).toLocaleString('vi-VN') + '–' + money(p.priceMax * q);
+      return num(p.price * q) + '–' + money(p.priceMax * q);
     }
     return money(p.price * q);
   }
@@ -1041,22 +1045,31 @@
     translate();
   }
 
+  // Kênh chat: tiếng Việt Zalo · Messenger · Instagram · Email; tiếng Anh
+  // Instagram đứng đầu, Zalo cuối (thứ tự bằng CSS order, html[lang="en"]):
+  // khách nước ngoài nhắn qua Instagram / Messenger / email (14/11/2026).
   function renderChat() {
     var zalo = 'https://zalo.me/' + CONFIG.zaloPhone;
     var mess = 'https://m.me/' + CONFIG.messengerHandle;
+    var insta = 'https://ig.me/m/' + CONFIG.instagramHandle;
 
     panelBody.innerHTML =
       '<button type="button" class="gb-back" data-i18n="basket.back">Quay lại giỏ</button>' +
       '<p class="gb-form-h" data-i18n="basket.chat_h"></p>' +
       '<p class="gb-fine" data-i18n="basket.chat_p"></p>' +
       '<div class="gb-channels">' +
-        '<a class="gb-channel" href="' + zalo + '" target="_blank" rel="noopener" data-copy="1">' +
+        '<a class="gb-channel gb-ch-zalo" href="' + zalo + '" target="_blank" rel="noopener" data-copy="1">' +
           '<span class="gb-channel-mark">Zalo</span><span>Zalo</span></a>' +
         '<a class="gb-channel" href="' + mess + '" target="_blank" rel="noopener" data-copy="1">' +
           '<span class="gb-channel-mark">' +
             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
             '<path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>' +
           '</span><span>Messenger</span></a>' +
+        '<a class="gb-channel gb-ch-ig" href="' + insta + '" target="_blank" rel="noopener" data-copy="1">' +
+          '<span class="gb-channel-mark">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+            '<rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.4a4 4 0 11-8 0 4 4 0 018 0zM17.5 6.5h.01"/></svg>' +
+          '</span><span>Instagram</span></a>' +
         '<a class="gb-channel gb-channel-mail" href="#">' +
           '<span class="gb-channel-mark">' +
             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
@@ -1070,7 +1083,7 @@
       view = 'basket'; renderPanel();
     });
 
-    // Zalo and Messenger can't take a pre-filled message via URL, so the basket
+    // Zalo, Messenger and Instagram can't take a pre-filled message via URL, so the basket
     // goes to the clipboard and the customer pastes it into the chat.
     panelBody.querySelectorAll('.gb-channel[data-copy]').forEach(function (a) {
       a.addEventListener('click', function () {
@@ -1458,7 +1471,11 @@
 
   // Re-run the shared i18n pass over freshly injected markup
   function translate() {
-    if (window.GemI18n) window.GemI18n.setLang(window.GemI18n.getLang());
+    if (window.GemI18n) {
+      // refresh() re-translates without saving a language choice (see i18n.js)
+      if (window.GemI18n.refresh) window.GemI18n.refresh();
+      else window.GemI18n.setLang(window.GemI18n.getLang());
+    }
   }
 
   /* ======================================================================

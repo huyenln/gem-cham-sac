@@ -471,9 +471,12 @@
     if (x.k === 'embroider') return embName(x.n, l);
     return PRICE_NAMES[x.k][l].replace('{n}', x.n);
   }
-  // "10.000–40.000đ", or one amount
+  // "10.000–40.000đ", or one amount; in English "10,000–40,000₫" ("39.000đ"
+  // reads as thirty-nine to an English reader, 14/11/2026)
   function priceRange(a, b) {
-    return (b > a ? a.toLocaleString('vi-VN') + '–' : '') + (b > a ? b : a).toLocaleString('vi-VN') + 'đ';
+    var en = lang() === 'en';
+    var f = function (n) { return n.toLocaleString(en ? 'en-US' : 'vi-VN'); };
+    return (b > a ? f(a) + '–' : '') + f(b > a ? b : a) + (en ? '₫' : 'đ');
   }
 
   /* ---------- the fabric catalogue ----------

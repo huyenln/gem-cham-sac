@@ -83,7 +83,7 @@ stacking context · animation chạy lại toàn bộ pile mỗi lần thêm · 
 | # | Quyết định | Ghi chú |
 |---|---|---|
 | D14 | **Trên web: COD + chuyển khoản QR** | ⚠️ Đã đổi — trước đây là cổng thẻ quốc tế |
-| D15 | **Tại cửa hàng: tiền mặt + QR + thẻ qua máy POS** | Máy POS lo phần khách nước ngoài |
+| D15 | **Tại cửa hàng: tiền mặt + chuyển khoản QR, không nhận thẻ** (Anna 14/11/2026) | Trước đây định mở máy POS cho khách nước ngoài; chưa làm. Web nói rõ “không nhận thẻ” để khách mang tiền mặt |
 | D16 | **Vẫn thiết kế sẵn các trường thanh toán** cho thẻ online sau này | Gắn cổng sau là *thêm vào*, không phải *làm lại* |
 | D17 | Cân nhắc **đăng lên Klook / Airbnb Experiences** | Giải cả bài toán tìm khách, không chỉ thanh toán |
 
@@ -124,8 +124,9 @@ Thẻ “Workshop trải nghiệm” ở `san-pham.html#dich-vu` **giữ lại**
 
 **Quyết định: không, ít nhất là chưa.** Xem [§4](#4-thanh-toán) — COD + QR đều là
 cơ chế nội địa, nên khoảng trống “khách nước ngoài trả trước online” tạm để mở.
-Bù lại, **máy POS ở cửa hàng lo được phần lớn** khách du lịch (họ đến studio để
-học/mua, trả bằng thẻ tại chỗ).
+Kế hoạch cũ là máy POS ở cửa hàng cho khách du lịch trả thẻ tại chỗ; **14/11/2026
+studio vẫn không nhận thẻ**, nên web ghi rõ “tiền mặt hoặc chuyển khoản, không nhận thẻ”
+(xem “Khách nước ngoài: đặt lịch bằng tin nhắn…” ở cuối §13).
 
 Trường `require_prepay` và `card_online` vẫn giữ trong schema để bật sau.
 
@@ -167,13 +168,14 @@ thành ưu tiên: giữ tên/mô tả/ảnh trong HTML tĩnh, chỉ fetch giá v
 | Nơi | Hình thức | Phục vụ ai |
 |---|---|---|
 | **Trên web** | COD · chuyển khoản QR | Khách Việt |
-| **Tại cửa hàng** | Tiền mặt · QR · **thẻ qua máy POS** | Tất cả, kể cả khách nước ngoài |
+| **Tại cửa hàng** | Tiền mặt · QR (**không nhận thẻ**, 14/11/2026) | Tất cả; khách nước ngoài thường trả tiền mặt |
 | **Workshop** | Giữ chỗ miễn phí, trả tại studio | Tất cả |
 
 **Khoảng trống còn lại:** khách nước ngoài **trả trước online**. COD cần địa chỉ
 giao ở VN; QR cần app ngân hàng Việt — cả hai đều không dùng được từ nước ngoài.
-Chấp nhận tạm, vì khách du lịch dù sao cũng đến tận studio và trả bằng thẻ ở đó.
-**Máy POS vì thế là việc nên làm sớm, độc lập với web.**
+Chấp nhận tạm, vì khách du lịch dù sao cũng đến tận studio. Studio chưa có máy POS
+(14/11/2026), nên khách nước ngoài trả tiền mặt; trang Workshop, Ghé thăm và Chính
+sách đều nói trước điều này.
 
 ### COD — thanh toán khi nhận hàng
 
@@ -3544,6 +3546,71 @@ web; khối Kit đứng **đầu** `san-pham.html`.
 - Xốp EPS của Gem là **tái sử dụng**, không viết "tái chế" (câu "Kinusaiga tái chế" là tên
   sáng tạo của Gem, chủ shop duyệt).
 
+### Khách nước ngoài: đặt lịch bằng tin nhắn, kênh liên hệ, giá tiếng Anh (14/11/2026)
+
+Rà web theo góc nhìn khách nước ngoài quét QR (iPhone, trình duyệt tiếng Anh, bản live). Bản
+dịch đủ (29/29 sản phẩm, 15/15 workshop có tên EN), nhưng không hành động được: trang Workshop
+mời "chọn buổi" mà 0 buổi trên lịch (buổi cuối 03/10), 15 thẻ ghi "chưa có lịch", mọi lối
+liên hệ dẫn về Zalo. Anna 14/11: khách **đặt lúc nào cũng được, chỉ cần nhắn trước**; mùa hội
+chợ nên chưa có lịch cố định; **workshop hướng dẫn được bằng tiếng Anh**; **studio không nhận
+thẻ**; khách nước ngoài liên hệ qua **email, Threads, Instagram, Facebook**.
+
+- **Trang Workshop — đặt bằng tin nhắn là lối chính.** Khung "Đặt lịch" (`#dat-lich`) ngay
+  dưới tiêu đề: 3 bước + nút kênh. Mỗi thẻ có nút "Đặt lịch" mở trang của workshop đó ở khung
+  `#dat-mon` (link chia sẻ được: `workshop.html?loai=<slug>#dat-mon`). Lịch cố định và form giữ
+  chỗ vẫn chạy y như cũ, chỉ hiện khi có buổi (tiêu đề "Buổi đã lên lịch" + dòng "Hoặc giữ chỗ…"
+  trong khung). Không còn câu "chưa có lịch" nào.
+- **Nút kênh** (`CHANNELS` / `CH_ORDER` trong `js/workshop.js`): tiếng Việt Zalo · Messenger ·
+  Instagram · Email; tiếng Anh Instagram · Messenger · Email · Threads · Zalo. Bấm Zalo /
+  Messenger / Instagram / Threads thì **lời nhắn soạn sẵn được chép** (món, ngày giờ, số người;
+  bản Anh thêm "Language: English") — các app này không nhận lời nhắn qua link, giống giỏ hàng.
+  Email thì điền sẵn tiêu đề + nội dung. Instagram dùng `ig.me/m/gemchamsac_studio` (mở thẳng
+  khung nhắn); Threads không có link nhắn riêng nên trỏ về trang cá nhân.
+- **Liên hệ dễ tìm:** hàng "Nhắn cho Gem" ở cột Liên hệ của footer (10 trang), cuối menu điện
+  thoại, đầu khung Liên hệ ở `ghe-tham.html` (bản Anh thêm "We reply in English"). Thứ tự theo
+  ngôn ngữ bằng CSS (`.msg-links`, `html[lang="en"]`). Giỏ hàng → "Hỏi thêm qua chat" thêm
+  Instagram. Khi đổi tên tài khoản: sửa `CHANNELS` (workshop.js), `CONFIG` (basket.js) và các
+  link `.msg-links` trong HTML.
+- **Không nhận thẻ** ghi ở khung đặt lịch, trang từng workshop, màn giữ chỗ xong, Ghé thăm (dòng
+  "Thanh toán"), lựa chọn tự đến lấy trong giỏ, và Chính sách (`policy.pay_3/4`, ngày cập nhật
+  14/11). Chính sách cũng thêm cách đặt workshop mới (`policy.order_4`), các kênh nhắn
+  (`policy.who_msg`, `policy.care_1`) và dòng "Tin nhắn cho Gem" (`policy.data_w7`).
+- **Giá bản tiếng Anh: "39,000₫"** (bản Việt giữ "39.000đ"): "39.000" đọc theo kiểu Anh là
+  ba mươi chín. Sửa ở `money()` của `workshop.js` / `basket.js`, `priceRange()` của `patch.js`.
+- **Trang chủ:** thứ tự mới Hero → Season 02 → Workshop → Studio 2D → Ba điều → Sản phẩm → Bản tin.
+  Khối Workshop ảnh bên phải (`.ws-teaser.is-flip`), thêm hai dòng "Đặt lúc nào cũng được…" /
+  "Hướng dẫn bằng tiếng Việt hoặc tiếng Anh". Khối Studio 2D (Anna 15/11) ảnh bên trái
+  (`.studio-teaser.is-flip`) và có dòng "Studio 2D mô phỏng studio thật của Gem ở 114 Lê Gia Đỉnh…"
+  (`home.studio_real`) để nối studio trên màn hình với chỗ khách ghé được.
+- **Khối kit** (`san-pham.html`): thêm "Làm xong tranh rồi?" — tag Instagram, workshop
+  Kinusaiga, tặng thêm một bộ. Giá kit 250.000đ (database).
+- **Lỗi sửa kèm:**
+  - Thanh mời tiếng Anh đè nút hero và bị giỏ hàng che nửa nút "View in English" (ở trang đích
+    QR kit). Giờ nằm trong header dính (`.site-header .lang-hint`), chữ ngắn "Prefer English?".
+    Trang không có `.site-header` (studio.html) giữ kiểu cũ.
+  - Thanh mời chỉ hiện ở trang đầu tiên: `ban-tin.js`, `basket.js`, `gallery.js`, `workshop.js`
+    gọi `setLang(getLang())` để dịch phần mới dựng, việc này **lưu "vi"** như thể khách đã chọn.
+    Giờ gọi `GemI18n.refresh()` (dịch lại, không lưu).
+  - Thanh mục lục điện thoại ở `san-pham.html` dính ở 72px trong khi header cao ~110px (dải
+    Season 02 đã chuyển xuống dưới nav): chip bị header che. `js/main.js` đo header vào
+    `--header-h`; mục lục, mục lục bên (máy tính) và `scroll-margin-top` của các mục dùng biến này
+    (thêm `#kit-mua`, `#hang-ky-gui` vốn thiếu).
+  - Menu điện thoại nằm trong header dính nên cuộn trang không tới được cuối menu (hàng "Nhắn cho
+    Gem" khuất trên máy 640px): `main.js` giới hạn menu bằng chiều cao màn hình, menu tự cuộn; giỏ
+    hàng nổi ẩn khi menu mở (`html.nav-open`).
+  - Link thẳng `?loai=<slug>#dat-mon`: ảnh bìa / ảnh workshop tải xong sau cú nhảy và đẩy khung đặt
+    xuống. `scrollToBook()` nhảy lại theo khung mỗi khi một ảnh tải xong, trừ khi khách đã tự cuộn.
+  - Studio 2D (điện thoại dọc): viên "View in English" nằm đúng chỗ nút "?" (cùng góc trái, cùng độ
+    cao), che mất nút. Trước chỉ gặp ở lượt ghé đầu; sau khi sửa lỗi lưu "vi" thì viên này hiện tới
+    khi khách bấm, nên giờ nó nằm bên phải "?" và dưới 480px chỉ còn nút (`css/studio.css`).
+  - `tools/check-studio.py workshop` kiểm theo cách mới: thẻ nào cũng có "Đặt lịch", không còn
+    "Chưa có lịch", dòng buổi gần nhất chỉ ở loại có buổi, khung đặt có nút kênh (Zalo trước).
+- **Giá workshop Kinusaiga theo cỡ tranh** (Anna 17/11/2026): nhỏ 59.000đ · vừa 99.000đ · to
+  199.000đ. Database (đã chạy): `price = 59000`, `price_from = true` → thẻ ghi "Từ 59.000đ"; dòng
+  giá theo cỡ là dòng đầu của "Cần biết trước" (`note_vi` / `note_en`). Đổi giá thì sửa cả hai chỗ
+  trong admin → Đặt lịch → loại workshop.
+- **Còn mở:** `?lang=en` trên link (Anna: chưa).
+
 ---
 
 ## 14. Còn phải chốt
@@ -3578,7 +3645,7 @@ web; khối Kit đứng **đầu** `san-pham.html`.
 
 ### Việc ngoài web
 
-- [ ] **Mở máy POS ở ngân hàng** — nên làm sớm, đây là cách phục vụ khách nước ngoài
+- [ ] **Máy POS** — chưa làm: 14/11/2026 studio không nhận thẻ (web đã ghi rõ). Mở máy thì sửa chữ “không nhận thẻ” ở `ws.book_s3`, `ws.page_book_p`, `ws.done_p`, `visit.pay_value`, `basket.pay_cod_pick_p`, `policy.pay_4`
 - [ ] Có đăng lên Klook / Airbnb Experiences không
 - [ ] Tranh vẽ 16 sprite sản phẩm (không chặn gì — hình tạm vẫn chạy)
 
@@ -3588,8 +3655,8 @@ web; khối Kit đứng **đầu** `san-pham.html`.
 
 Ghi ra để khỏi bàn lại:
 
-- **Cổng thẻ quốc tế trên web** — hoãn (§4). Khách nước ngoài trả bằng thẻ **tại
-  studio qua máy POS**.
+- **Cổng thẻ quốc tế trên web** — hoãn (§4). Studio cũng chưa nhận thẻ (14/11/2026):
+  khách nước ngoài trả tiền mặt tại studio.
 - **Casso / SePay đối soát chuyển khoản tự động** — Anna kiểm tra tay trước (§4)
 - Email xác nhận & nhắc lịch **tự động** — Zalo tay trước (D13)
 - Khách tự huỷ đặt lịch trên web — nhắn Zalo là đủ ở lượng này

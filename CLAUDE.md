@@ -151,6 +151,8 @@ Quick reference:
 - **Có giỏ hàng + đặt đơn** (`js/basket.js`): trả khi nhận (COD) hoặc chuyển khoản VietQR (D14). KHÔNG có cổng thẻ, KHÔNG có tài khoản khách — đăng nhập chỉ dành cho nhân sự (`admin.html`). Khách xem lại món đã mua qua "Tủ sưu tầm" bằng mã đơn + SĐT.
 - Chuyển khoản QR (11/2026): mã QR kèm số tiền **chỉ hiện khi giá đã chốt**. Giỏ có món khoảng giá hoặc "Liên hệ" thì màn cảm ơn chỉ có mã đơn + câu hẹn; nhân sự nhắn tổng tiền kèm mã QR sau (đơn vẫn lưu `payment_method = 'qr'`). Form đặt hàng: số điện thoại 9–15 chữ số, địa chỉ bắt buộc trừ khi tự đến lấy, lỗi hiện dưới từng ô. Chi tiết: `docs/design.md` → "Studio: công bố" → Đợt hai.
 
+- **Workshop: đặt bằng tin nhắn là lối chính** (Anna 14/11/2026): khách đặt lúc nào cũng được, chỉ cần nhắn trước; hướng dẫn bằng tiếng Việt hoặc tiếng Anh. Khung "Đặt lịch" đầu `workshop.html` + nút "Đặt lịch" trên mọi thẻ (`?loai=<slug>#dat-mon`); lịch cố định + form giữ chỗ chỉ hiện khi có buổi. **Studio không nhận thẻ** (tiền mặt / chuyển khoản): chữ "không nhận thẻ" nằm ở nhiều chỗ, danh sách ở `docs/design.md` → §14 "Máy POS".
+
 **Products (7 categories):**
 0. Kit DIY Kinusaiga (`kit`, 13/11/2026): khối `#kit-kinusaiga` đầu `san-pham.html` = giới thiệu + video hướng dẫn (`video/kit-kinusaiga-huong-dan.mp4`, bản nén 720×1280) + "Trong bộ kit" + một thẻ `kit-kinusaiga` có 4 Mẫu (ghế nhựa & cà phê, nón lá, hoa hồng, hướng dương), giá "Liên hệ" đến khi nhân sự nhập giá. Video nằm ngoài `.category-block` để không bị ẩn cùng thẻ. **Mã QR trên tờ hướng dẫn trỏ tới `https://gemchamsac.com/san-pham.html#kit-kinusaiga` — đừng đổi id này.** Xốp EPS là "tái sử dụng", không viết "tái chế".
 1. Phụ kiện vải vụn (14 sản phẩm — tên thương hiệu in sẵn trên ảnh: Origami Pouch, Oxford Shirt, Reimagine the Denim, Bloom Charm, Túi bút kẹp sổ, Thảm/Gối Chắp Sắc, Lót Cốc, Túi đeo chéo, Bookmark, Ví & thẻ vải ghép, Bìa sổ, Dây đeo cổ tay, Dây buộc tóc). Túi tái chế (13/10/2026): Túi đi chơi (6 mẫu), Túi đi chợ (2 mẫu), Túi đựng laptop — mỗi túi một chiếc, là một "Mẫu" trong thẻ, bán thì bấm Hết
@@ -193,6 +195,8 @@ Quick reference:
   - `data-i18n-attr="placeholder:key|alt:key2"` → set attribute (placeholder, alt, aria-label, title…)
 - Thêm/sửa chữ: cập nhật `STRINGS` trong `js/i18n.js` + gắn `data-i18n` trên element. Nhớ nhúng `<script src="js/i18n.js" defer></script>` trong `<head>` mỗi trang.
 - Brand giữ nguyên, KHÔNG dịch: "Gem Chạm Sắc", "Chạm Xanh · Gửi Sắc", tên season (Pop-up Experience Store…).
+- Script dựng chữ mới rồi cần dịch lại thì gọi `GemI18n.refresh()`, **KHÔNG** `setLang(getLang())`: setLang lưu "vi" như thể khách đã chọn, và thanh "Prefer English?" (nằm trong header) không hiện lại nữa (lỗi sửa 14/11/2026).
+- Giá: bản Việt "39.000đ", bản Anh "39,000₫" (`money()` trong `workshop.js` / `basket.js`, `priceRange()` trong `patch.js`).
 
 **Carousel ảnh sản phẩm:**
 - Engine: `js/gallery.js` (chỉ nhúng ở `san-pham.html`). Mỗi `.product-card` có `data-gallery="base1,base2,…"` (tên file gốc trong `images/products/`, KHÔNG kèm path/đuôi) sẽ click mở được lightbox carousel.
@@ -207,6 +211,7 @@ Quick reference:
 - YouTube: `youtube.com/channel/UCupMv7SO3-XLMTfST1RufHw`
 - Footer (icon) trên 5 trang chính + danh sách text ở `ghe-tham.html`.
 - Email: `gemchamsac@gmail.com` (footer + `ghe-tham.html`). TikTok: chưa có link.
+- Nhắn tin (14/11/2026): hàng "Nhắn cho Gem" (`.msg-links`) ở footer, cuối menu điện thoại, `ghe-tham.html`: Zalo · Messenger (`m.me/gemchamsac`) · Instagram (`ig.me/m/gemchamsac_studio`, mở thẳng khung nhắn) · Threads. Bản tiếng Anh Instagram lên đầu, Zalo xuống cuối (CSS `html[lang="en"]`): khách nước ngoài nhắn qua Instagram, Messenger, Threads, email. Kênh của trang Workshop ở `CHANNELS` (`js/workshop.js`), của giỏ ở `CONFIG` (`js/basket.js`).
 - Không đưa tiểu sử / liên hệ riêng của founder lên web.
 
 ---
@@ -380,7 +385,7 @@ the testing before bothering the user.
 - ✅ Trang quản trị: Hôm nay / Đơn hàng / Đặt lịch / Sản phẩm / Bản tin
 - ✅ UX đợt 2: bỏ lặp, căn trái đoạn dài, badge Season thành dải, vùng bấm 44px, lazy-load
 
-**Gem Studio 2D (`studio.html`, công bố 14/11/2026 — trên menu, có khối ở trang chủ):** mặt tiền → vào studio, 4
+**Gem Studio 2D (`studio.html`, công bố 14/11/2026 — trên menu, có khối ở trang chủ ngay sau khối Workshop, ghi rõ là mô phỏng studio thật):** mặt tiền → vào studio, 4
 nhân vật, phụ kiện đeo thử, bàn thiết kế, tủ sưu tầm, bảng lời nhắn; owner lắp
 bố cục ở tab "Lắp studio". Chi tiết + cách đưa tranh mới vào: `docs/design.md`.
 Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
