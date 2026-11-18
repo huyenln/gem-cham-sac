@@ -5316,6 +5316,61 @@ async def racroi(browser, db):
     await pg.context.close()
 
 
+async def home_video(browser, db):
+    """The home page (18/11/2026): the Studio 2D block right under the hero, with
+    the preview video tools/studio-trailer.py makes. A phone gets the portrait one,
+    a computer the landscape one, in the page's language; it plays muted on screen,
+    pauses off it and on its button; asked for less motion: the first frame and a
+    play button, nothing fetched until the button."""
+    print('homevideo')
+    files = [f'video/studio-2d-{s}-{l}.mp4' for s in ('doc', 'ngang') for l in ('vi', 'en')]
+    files += [f'images/studio/studio-2d-{s}-{l}.webp' for s in ('doc', 'ngang') for l in ('vi', 'en')]
+    big = [f for f in files if not (ROOT / f).exists() or (ROOT / f).stat().st_size > 3_500_000]
+    check(not big, f'the four videos and their first frames are there, each video under 3.5 MB ({big})')
+    STATE = """() => { const b = document.querySelector('.studio-teaser-media'), v = b.querySelector('video');
+      return [v.getAttribute('src'), v.paused, b.classList.contains('is-on'), document.querySelector('.studio-teaser-play').getAttribute('aria-label')]; }"""
+    TO = "scrollTo({top: document.querySelector('.studio-teaser').getBoundingClientRect().top + scrollY - 80, behavior: 'instant'})"
+    for lang, w, h, shape in (('vi', 390, 844, 'doc'), ('en', 1440, 900, 'ngang')):
+        pg = await page(browser, db, w, h, f"localStorage.setItem('gem-lang','{lang}');localStorage.setItem('gem-lang-hint','dismissed');")
+        await pg.goto(f'{BASE}/index.html')
+        await pg.wait_for_timeout(500)
+        first = await pg.evaluate("[...document.querySelectorAll('main > section, body > section')].slice(0, 3).map(s => s.querySelector('.hero-grid, .studio-teaser, .season-banner') ? s.querySelector('.hero-grid, .studio-teaser, .season-banner').className : s.className)")
+        check(first[:3] == ['hero-grid', 'studio-teaser', 'season-banner'], f'{lang} {w}: the hero, then Studio 2D, then Season 02 ({first})')
+        before = await pg.evaluate(STATE)
+        check(before[0] is None, f'{lang} {w}: nothing fetched while the block is far below ({before[0]})')
+        await pg.evaluate(TO)
+        try:
+            await pg.wait_for_function("document.querySelector('.studio-teaser-media').classList.contains('is-on')", timeout=15000)
+        except Exception:
+            pass
+        on = await pg.evaluate(STATE)
+        check(on[0] == f'video/studio-2d-{shape}-{lang}.mp4' and not on[1] and on[2], f'{lang} {w}: on screen its own video plays ({on})')
+        await pg.screenshot(path=OUT / f'home-video-{lang}-{w}.png')
+        await pg.click('.studio-teaser-play')
+        await pg.wait_for_timeout(200)
+        paused = await pg.evaluate(STATE)
+        await pg.click('.studio-teaser-play')
+        await pg.wait_for_timeout(400)
+        again = await pg.evaluate(STATE)
+        check(paused[1] and paused[3] != on[3] and not again[1], f'{lang} {w}: the button pauses it and plays it again ({paused[3]!r})')
+        await pg.evaluate("scrollTo({top: document.body.scrollHeight, behavior: 'instant'})")
+        await pg.wait_for_timeout(500)
+        check((await pg.evaluate(STATE))[1], f'{lang} {w}: scrolled away, it pauses')
+        check(not pg.errors, f'{lang} {w}: no script errors {pg.errors}')
+        await pg.context.close()
+    ctx = await browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, reduced_motion='reduce')
+    await ctx.add_init_script("localStorage.setItem('gem-lang','vi');localStorage.setItem('gem-lang-hint','dismissed');")
+    pg = await ctx.new_page()
+    await pg.goto(f'{BASE}/index.html')
+    await pg.evaluate(TO)
+    await pg.wait_for_timeout(1200)
+    calm = await pg.evaluate(STATE)
+    shown = await pg.evaluate("document.querySelector('.studio-teaser-media img').currentSrc")
+    check(calm[0] is None and calm[1] and calm[3] == 'Phát video' and shown.endswith('studio-2d-doc-vi.webp'),
+          f'less motion: the first frame and a play button, no video fetched ({calm}, {shown})')
+    await ctx.close()
+
+
 async def main(which):
     if hasattr(sys.stdout, 'reconfigure'):
         sys.stdout.reconfigure(encoding='utf-8', errors='replace')   # a Windows console's code page has no Vietnamese
@@ -5327,7 +5382,7 @@ async def main(which):
         for name, fn in (('street', street), ('wear', wear), ('shop', shop), ('spots', spots), ('editor', editor),
                          ('library', library), ('product', product), ('prodlib', prodlib), ('workshop', workshop), ('design', design), ('catalog', catalog), ('kinds', kinds),
                          ('layers', layers), ('zones', zones), ('cart', cart), ('choices', choices), ('zither', zither), ('guide', guide), ('vai', vai), ('tui', tui), ('kho', kho), ('guidance', guidance), ('onefab', onefab), ('mau', mau), ('phoi', phoi), ('thudo', thudo), ('taggroup', taggroup), ('phanloai', phanloai), ('phanloai_lv', phanloai_lv), ('racroi', racroi), ('plphone', plphone), ('order', order_form), ('slow', slow), ('launch', launch_bits), ('topbar', topbar), ('motion', motion),
-                         ('phone', phone), ('taps', taps)):
+                         ('phone', phone), ('taps', taps), ('homevideo', home_video)):
             if which in (None, name):
                 await fn(browser, db)
         await browser.close()
