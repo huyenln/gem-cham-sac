@@ -2806,7 +2806,8 @@ có giỏ và form gửi đơn). Văn bản chính:
 
 **Thông tin người bán (18/11/2026, Anna):** HỘ KINH DOANH GEM CHẠM SẮC, mã số thuế, địa chỉ đăng ký
 kinh doanh (khác địa chỉ studio ở Lê Gia Đỉnh) — trong mục `#ve-gem` của `chinh-sach.html` (`policy.who_*`)
-và dòng `.footer-legal` (`footer.legal`) ở footer 10 trang. Lưu ý: từ 01/7/2025 mã số thuế của hộ kinh
+và dòng `.footer-legal` (`footer.legal`: tên + mã số thuế, **không** có địa chỉ đăng ký — Anna muốn địa chỉ
+đó chỉ ở trang Chính sách) ở footer 10 trang. Lưu ý: từ 01/7/2025 mã số thuế của hộ kinh
 doanh là số định danh cá nhân của chủ hộ (Thông tư 86/2024/TT-BTC); chủ shop đã biết và chọn đăng. Đổi
 địa chỉ đăng ký thì sửa cả hai chỗ.
 

@@ -470,7 +470,7 @@ Công bố (Anna 12/11/2026, chi tiết: `docs/design.md` → "Studio: công b�
   của UNDP — bản Đông Nam Á cho khí hậu, sách 2015 cho mẹo) — câu mới chỉ thêm khi đã mở trang nguồn kiểm; không dùng Báo điện tử Chính phủ / mức phạt (Anna 06/11). Chi tiết: `docs/design.md` → "Bất ngờ ngoài phố: rác rơi". Test: `check-studio.py racroi`.
 - ⚖️ Pháp lý (12/11/2026, rà theo luật đang có hiệu lực): đã có `chinh-sach.html`, dòng thông báo ở các form, nội dung đơn
   trên màn cảm ơn (khách không có tài khoản để xem lại đơn). 18/11: thêm người bán (HỘ KINH DOANH GEM CHẠM SẮC, mã số
-  thuế, địa chỉ đăng ký — khác địa chỉ studio) ở footer 10 trang (`footer.legal`) và mục "Ai đứng sau trang này"; mục
+  thuế ở footer 10 trang (`footer.legal`); địa chỉ đăng ký — khác địa chỉ studio — chỉ ở mục "Ai đứng sau trang này"; mục
   "Đổi hàng, hàng lỗi và huỷ đơn". Còn chờ chủ shop: số / ngày / nơi cấp giấy đăng ký nếu luật mới bắt, biểu phí và
   thời gian giao, thời hạn trả lời khiếu nại, cùng các thủ tục với cơ quan nhà nước. Danh sách chi tiết nằm ở tài liệu riêng của chủ shop, **không để trong repo**
   (repo và GitHub Pages đều công khai). Chi tiết: `docs/design.md` → "Pháp lý".

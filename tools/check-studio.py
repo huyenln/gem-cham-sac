@@ -2845,7 +2845,7 @@ async def order_form(browser, db):
     got = await pg.evaluate(after)
     check(call.get('p_phone') == '0900000000' and call.get('p_address') == '12 Hàng Bông' and call.get('p_payment') == 'qr',
           f'sent with the number as digits ({call.get("p_phone")!r}, {call.get("p_address")!r}, {call.get("p_payment")!r})')
-    check(got[0] and got[1] == 5 and got[2] and 'kiểm tiền về' in got[3] and call.get('p_pickup') is False,
+    check(got[0] and got[1] == 5 and got[2] and 'xác nhận đã nhận được tiền' in got[3] and call.get('p_pickup') is False,
           f'a fixed price, delivered: the QR code with its amount, and a line that shipping is not in it ({got[:3]}, pickup {call.get("p_pickup")!r})')
     # the receipt (Anna 18/11/2026): one tap copies a line with the code and the sum, then opens the chat
     await pg.evaluate("navigator.clipboard.writeText = (t) => { window.__copied = t; return Promise.resolve(); }")
@@ -2877,7 +2877,7 @@ async def order_form(browser, db):
     call = db.order_calls[-1] if db.order_calls else {}
     got = await pg.evaluate(after)
     check(gone and h[0] == 'Trả tại cửa hàng khi bạn đến lấy: tiền mặt hoặc chuyển khoản, không nhận thẻ.' and call.get('p_phone') == '+84900000000' and got[0] and not got[2]
-          and call.get('p_pickup') is True and 'hẹn ngày bạn đến lấy' in got[3],
+          and call.get('p_pickup') is True and 'hẹn ngày bạn đến nhận' in got[3],
           f'picked up: no address asked, "pay at the shop", +84… accepted, the QR code without the shipping line ({h[0]!r}, {call.get("p_phone")!r}, {got[:3]})')
     await pg.context.close()
 
@@ -2892,7 +2892,7 @@ async def order_form(browser, db):
     await pg.evaluate("window.GemI18n.setLang('en')")
     en = await pg.evaluate("document.querySelector('.gb-empty-p').textContent")
     check(h[1] == 'Gem nhắn bạn tổng tiền kèm mã QR sau khi chốt giá.' and db.order_calls and db.order_calls[-1].get('p_payment') == 'qr'
-          and not got[0] and got[1] == 0 and 'chưa đưa mã QR' in got[3] and got[4] == 'GEM-TEST1' and 'no QR code yet' in en,
+          and not got[0] and got[1] == 0 and 'chưa có mã QR' in got[3] and got[4] == 'GEM-TEST1' and 'no QR code yet' in en,
           f'80.000–300.000đ by QR: the form says the code comes later, the order still goes in as QR, no code and no amount on the screen ({h[1]!r}, {got[:2]}, {en[:40]!r})')
     check(not pg.errors, f'no script errors {pg.errors}')
     await pg.context.close()
@@ -2903,7 +2903,7 @@ async def order_form(browser, db):
     await js_click(pg, '.gb-form [name="recv"][value="pickup"]')
     await send(pg, 'Khách thử', '0900000000')
     got = await pg.evaluate(after)
-    check(not got[0] and 'chưa đưa mã QR' in got[3] and not await pg.evaluate("!!document.querySelector('.gb-bill')"),
+    check(not got[0] and 'chưa có mã QR' in got[3] and not await pg.evaluate("!!document.querySelector('.gb-bill')"),
           f'has_unpriced from the database: no code either, no receipt step yet ({got[:2]})')
     await pg.context.close()
 

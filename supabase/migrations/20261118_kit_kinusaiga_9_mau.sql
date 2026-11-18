@@ -101,21 +101,21 @@ values ('kit-kinusaiga-theo-yeu-cau',
         array['images/products/kit-kinusaiga-theo-yeu-cau.jpg','images/products/kit-kinusaiga-theo-yeu-cau-2.jpg','images/products/kit-kinusaiga-theo-yeu-cau-3.jpg']::text[],
         null,
         'Cách đặt:
-1. Gửi ảnh hoặc ý tưởng cho Gem qua Zalo, Messenger, Instagram hoặc email. Hoặc đặt ở đây rồi ghi ý tưởng vào ô ghi chú của đơn.
+1. Gửi ảnh hoặc ý tưởng cho Gem qua Zalo, Messenger, Instagram hoặc email; hoặc đặt hàng tại đây và ghi ý tưởng trong phần ghi chú của đơn.
 2. Gem báo giá theo độ chi tiết và độ khó của thiết kế, từ 300.000đ.
-3. Chốt giá thì bạn trả trước 30%: Gem nhắn thông tin chuyển khoản qua Zalo. Phần còn lại trả khi nhận kit.
-4. Gem làm kit trong 3–5 ngày, ngày cụ thể chốt khi trao đổi.
-Hàng đặt riêng không đổi trả, trừ khi lỗi do Gem.
-Huỷ sau khi đã trả trước: Gem giữ khoản trả trước. Gem trả lại khoản này nếu Gem không làm kịp ngày đã hẹn hoặc không làm được thiết kế đã chốt; trường hợp khác Gem xem lý do.
-Dụng cụ có đầu nhọn, lưỡi sắc: trẻ em làm tranh cần có người lớn đồng hành.',
+3. Sau khi chốt giá, bạn trả trước 30%; Gem gửi thông tin chuyển khoản qua Zalo. Phần còn lại thanh toán khi nhận kit.
+4. Gem hoàn thiện kit trong 3–5 ngày; ngày cụ thể được thống nhất khi trao đổi.
+Hàng đặt riêng không áp dụng đổi trả, trừ trường hợp lỗi do Gem.
+Huỷ đơn sau khi đã trả trước: Gem giữ khoản trả trước. Gem hoàn lại khoản này nếu Gem không hoàn thành đúng ngày đã hẹn hoặc không thực hiện được thiết kế đã chốt; các trường hợp khác, Gem xem xét theo lý do bạn đưa ra.
+Dụng cụ có đầu nhọn, lưỡi sắc: trẻ em cần có người lớn đi cùng khi làm tranh.',
         'How to order:
-1. Send Gem your photo or idea on Zalo, Messenger, Instagram or by email. Or order here and write your idea in the order note.
-2. Gem quotes a price by how detailed and how hard the design is, from 300,000₫.
-3. Once the price is agreed, you pay 30% up front: Gem messages you the bank details. The rest is paid when you receive the kit.
-4. Gem makes the kit in 3–5 days; the exact day is agreed when we talk.
-Made-to-order pieces cannot be exchanged or returned, unless Gem made a mistake.
-Cancelling after paying up front: Gem keeps the advance payment. Gem pays it back if Gem misses the agreed day or cannot make the agreed design; otherwise Gem looks at your reason.
-The tools are sharp: children should craft with an adult.',
+1. Send Gem your photo or idea by Zalo, Messenger, Instagram or email; or order here and describe your idea in the order note.
+2. Gem quotes a price according to the detail and difficulty of the design, from 300,000₫.
+3. Once the price is agreed, you pay 30% in advance; Gem sends the bank details by message. The balance is paid when you receive the kit.
+4. Gem completes the kit in 3–5 days; the exact date is agreed with you.
+Made-to-order pieces cannot be exchanged or returned, except for faults on Gem’s side.
+Cancelling after the advance payment: Gem retains the advance payment. Gem refunds it if Gem does not complete the work by the agreed date or cannot produce the agreed design; in other cases, Gem considers the reason you give.
+The tools are sharp: children should work with an adult.',
         true,
         true)
 on conflict (sku) do nothing;

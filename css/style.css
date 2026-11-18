@@ -1196,7 +1196,7 @@ html.nav-open .gb-widget { visibility: hidden; }
 .footer-brand p { color: var(--sage-light); font-size: var(--text-sm); max-width: 320px; }
 /* the policy page: the law wants it one tap from every page (docs/design.md, "Pháp lý") */
 .site-footer .footer-policy { display: inline-block; margin-top: var(--space-3); padding: var(--space-2) 0; text-decoration: underline; text-underline-offset: 3px; }
-/* who sells: household business, tax code, registered address (not the studio's) */
+/* who sells: household business and tax code (registered address: policy page) */
 .footer-brand .footer-legal { margin-top: var(--space-2); font-size: var(--text-xs); line-height: 1.6; }
 
 .site-footer a { color: var(--paper-cream); opacity: 0.85; display: block; margin-bottom: var(--space-2); font-size: var(--text-sm); }
@@ -1426,7 +1426,14 @@ html[lang="en"] .season-card.done::before { content: '✓ wrapped'; }
 .stay-list li::before { content: '—'; position: absolute; left: 0; top: var(--space-3); color: var(--sage-deep); font-weight: 700; }
 
 /* POLICY PAGE (chinh-sach.html) */
-.policy h2, .policy h3 { scroll-margin-top: 150px; }   /* the header is sticky: a #link must not land under it */
+/* the header is sticky, and on a phone the contents pills sit under it: a #link must not land under either */
+.policy h2, .policy h3 { scroll-margin-top: calc(var(--header-h) + 72px); }
+@media (min-width: 768px) {
+  .policy h2, .policy h3 { scroll-margin-top: calc(var(--header-h) + var(--space-4)); }
+  /* the text column beside the contents: no centring, the grid places it */
+  .policy-layout .prose { margin-inline: 0; padding-inline: 0; }
+  .policy-layout .product-toc-sidebar { padding-top: var(--space-12); }
+}
 .policy-updated, .policy-change { font-size: var(--text-sm); color: var(--ink-soft); }
 .policy-change { margin-top: var(--space-12); }
 .policy .stay-list a, .policy p a { color: var(--sage-deep); text-decoration: underline; text-underline-offset: 3px; }

@@ -18,13 +18,13 @@ update public.workshop_types
        note_vi = 'Giá theo mẫu tranh:
 60.000đ: tranh nhỏ, mẫu đơn giản hơn, không có khung bọc viền
 99.000đ: tranh không có khung bọc viền
-199.000đ: tranh có khung bọc viền vải hoặc quần bò cũ, như Kit DIY Kinusaiga, làm ngay tại Gem
+199.000đ: tranh có khung bọc viền vải hoặc quần bò cũ, như Kit DIY Kinusaiga, thực hiện tại studio của Gem
 Nguyên liệu: bảng xốp đã cắt sẵn rãnh theo mẫu, vải vụn nhiều màu, băng dính 2 mặt
 Dụng cụ: kéo, que dùi đầu tù để nhét vải vào rãnh',
        note_en = 'Price by design:
 60,000₫: a smaller, simpler picture, no fabric-wrapped frame
 99,000₫: a picture with no fabric-wrapped frame
-199,000₫: a picture framed in fabric or old denim, like the DIY Kinusaiga kit, made here at Gem
+199,000₫: a picture framed in fabric or old denim, like the DIY Kinusaiga kit, made at Gem’s studio
 Materials: foam board with the pattern grooves pre-cut, colourful fabric scraps, double-sided tape
 Tools: scissors, a blunt stick to tuck the fabric into the grooves'
  where slug = 'kinusaiga';

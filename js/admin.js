@@ -360,7 +360,7 @@
               '<textarea class="wt-long" rows="7"></textarea></label>' +
             '<label class="ad-f"><span>Bạn sẽ làm gì — mỗi dòng một ý</span>' +
               '<textarea class="wt-what" rows="4"></textarea></label>' +
-            '<label class="ad-f"><span>Cần biết trước — mỗi dòng một ý</span>' +
+            '<label class="ad-f"><span>Lưu ý — mỗi dòng một ý</span>' +
               '<textarea class="wt-note" rows="4"></textarea></label>' +
             '<div class="ad-f">' +
               '<span>Ảnh bìa</span>' +

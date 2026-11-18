@@ -89,6 +89,37 @@
        (js/basket.js, js/workshop.js, js/studio.js, js/mailerlite.js): change
        the practice and this page together, and the date under the heading.
        What the law asks a sales site to publish: docs/design.md, "Pháp lý". -->
+  <!-- TABLE OF CONTENTS (18/11/2026): the page grew long; the same pills /
+       sidebar as san-pham.html, and the same script (js/main.js, "Product TOC")
+       scrolls to a part and lights up the one being read. -->
+  <nav class="product-toc-mobile" data-i18n-attr="aria-label:policy.toc_title" aria-label="Mục lục">
+    <div class="product-toc-scroll">
+      <a href="#ve-gem" class="toc-item" data-i18n="policy.toc_who">Người bán</a>
+      <a href="#gia" class="toc-item" data-i18n="policy.toc_price">Giá</a>
+      <a href="#dat-hang" class="toc-item" data-i18n="policy.toc_order">Đặt hàng</a>
+      <a href="#thanh-toan" class="toc-item" data-i18n="policy.toc_pay">Thanh toán</a>
+      <a href="#nhan-hang" class="toc-item" data-i18n="policy.toc_ship">Nhận hàng</a>
+      <a href="#doi-tra" class="toc-item" data-i18n="policy.toc_ret">Đổi trả, huỷ đơn</a>
+      <a href="#gop-y" class="toc-item" data-i18n="policy.toc_care">Khiếu nại</a>
+      <a href="#thong-tin-ca-nhan" class="toc-item" data-i18n="policy.toc_data">Thông tin cá nhân</a>
+    </div>
+  </nav>
+
+  <div class="products-layout policy-layout">
+    <aside class="product-toc-sidebar">
+      <h3 class="toc-title" data-i18n="policy.toc_title">Mục lục</h3>
+      <ul class="toc-list">
+        <li><a href="#ve-gem" class="toc-item" data-i18n="policy.who_h">Ai đứng sau trang này</a></li>
+        <li><a href="#gia" class="toc-item" data-i18n="policy.price_h">Giá</a></li>
+        <li><a href="#dat-hang" class="toc-item" data-i18n="policy.order_h">Đặt hàng và giữ chỗ</a></li>
+        <li><a href="#thanh-toan" class="toc-item" data-i18n="policy.pay_h">Thanh toán</a></li>
+        <li><a href="#nhan-hang" class="toc-item" data-i18n="policy.ship_h">Nhận hàng</a></li>
+        <li><a href="#doi-tra" class="toc-item" data-i18n="policy.ret_h">Đổi hàng, hàng lỗi và huỷ đơn</a></li>
+        <li><a href="#gop-y" class="toc-item" data-i18n="policy.care_h">Góp ý và khiếu nại</a></li>
+        <li><a href="#thong-tin-ca-nhan" class="toc-item" data-i18n="policy.data_h">Thông tin cá nhân của bạn</a></li>
+      </ul>
+    </aside>
+
   <section class="section-sm">
     <div class="prose policy">
       <p class="policy-updated" data-i18n="policy.updated">Cập nhật ngày 18/11/2026.</p>
@@ -114,39 +145,39 @@
 
       <h2 id="dat-hang" data-i18n="policy.order_h">Đặt hàng và giữ chỗ</h2>
       <ul class="stay-list">
-        <li data-i18n="policy.order_1">Bạn chọn món vào giỏ, chọn cách nhận hàng (giao tận nơi, hoặc đặt trước rồi tự đến lấy tại studio), rồi gửi đơn kèm tên, số điện thoại và địa chỉ nhận nếu cần giao.</li>
-        <li data-i18n="policy.order_2">Gửi xong, trang hiện mã đơn và nội dung đơn để bạn lưu lại. Trong ngày, Gem nhắn bạn qua Zalo theo số điện thoại bạn để lại, để xác nhận món, giá, phí giao và hẹn giao hoặc hẹn ngày bạn đến lấy. Không dùng Zalo, bạn ghi ở ô ghi chú; Gem gọi điện hoặc nhắn qua kênh khác.</li>
-        <li data-i18n="policy.order_3">Món thiết kế riêng: Gem chọn vải vụn gần nhất với thiết kế, nhắn ảnh vải để bạn duyệt. Duyệt xong bạn trả trước 30%, Gem mới may.</li>
-        <li data-i18n="policy.order_5">Kit Kinusaiga theo yêu cầu: bạn gửi ảnh hoặc ý tưởng, Gem báo giá theo độ chi tiết và độ khó của thiết kế (từ 300.000đ). Chốt giá và nhận khoản trả trước xong, Gem làm kit trong 3–5 ngày; ngày cụ thể chốt khi trao đổi.</li>
-        <li data-i18n="policy.order_4">Workshop: bạn nhắn Gem (Zalo, Messenger, Instagram, Threads hoặc email) workshop bạn chọn, ngày giờ và số người, trước giờ học ít nhất 3 tiếng, hoặc giữ chỗ ở một buổi đã có trên trang. Ngày lễ, bạn nhắn hỏi lịch trước; Tết Gem nghỉ. Gem nhắn xác nhận qua Zalo hoặc email.</li>
+        <li data-i18n="policy.order_1">Bạn chọn sản phẩm vào giỏ, chọn cách nhận hàng (giao tận nơi, hoặc đặt trước và nhận tại studio), rồi gửi đơn kèm họ tên, số điện thoại và địa chỉ nhận hàng nếu cần giao.</li>
+        <li data-i18n="policy.order_2">Sau khi gửi đơn, trang hiển thị mã đơn và nội dung đơn để bạn lưu lại. Trong ngày, Gem liên hệ qua Zalo theo số điện thoại bạn cung cấp để xác nhận sản phẩm, giá, phí giao và thời gian giao hoặc ngày nhận tại studio. Nếu bạn không dùng Zalo, vui lòng ghi rõ trong phần ghi chú; Gem sẽ gọi điện hoặc liên hệ qua kênh khác.</li>
+        <li data-i18n="policy.order_3">Sản phẩm thiết kế riêng: Gem chọn vải vụn gần nhất với thiết kế và gửi ảnh vải để bạn duyệt. Sau khi duyệt, bạn trả trước 30% để Gem bắt đầu may.</li>
+        <li data-i18n="policy.order_5">Kit Kinusaiga theo yêu cầu: bạn gửi ảnh hoặc ý tưởng, Gem báo giá theo độ chi tiết và độ khó của thiết kế (từ 300.000đ). Sau khi chốt giá và nhận khoản trả trước, Gem hoàn thiện kit trong 3–5 ngày; ngày cụ thể được thống nhất khi trao đổi.</li>
+        <li data-i18n="policy.order_4">Workshop: bạn nhắn tin cho Gem (Zalo, Messenger, Instagram, Threads hoặc email) tên workshop, ngày giờ và số người, trước giờ học ít nhất 3 tiếng, hoặc giữ chỗ tại một buổi đã có lịch trên trang. Vào ngày lễ, vui lòng liên hệ trước để hỏi lịch; Gem nghỉ trong dịp Tết. Gem xác nhận qua Zalo hoặc email.</li>
       </ul>
 
       <h2 id="thanh-toan" data-i18n="policy.pay_h">Thanh toán</h2>
       <ul class="stay-list">
         <li data-i18n="policy.pay_1">Trả khi nhận hàng: đưa tiền cho người giao, hoặc trả tại studio khi bạn đến lấy.</li>
-        <li data-i18n="policy.pay_2">Chuyển khoản: quét mã QR hiện sau khi đặt, hoặc mã Gem nhắn cho bạn. Tài khoản nhận tiền đứng tên HO KINH DOANH GEM CHAM SAC. Chuyển xong, bạn gửi ảnh chuyển khoản cho Gem qua Zalo (hoặc kênh bạn đã nhắn) để Gem khớp đơn nhanh; Gem xác nhận khi thấy tiền về tài khoản.</li>
-        <li data-i18n="policy.pay_6">Đơn giao tận nơi từ 250.000đ: chuyển khoản toàn bộ tiền hàng trước khi Gem gửi hàng. Đơn đặt trước, tự đến lấy: trả khi đến lấy hoặc chuyển khoản trước, tuỳ bạn.</li>
-        <li data-i18n="policy.pay_5">Hàng đặt riêng (kit Kinusaiga theo yêu cầu, món thiết kế ở Bàn thiết kế): trả trước 30% sau khi chốt giá hoặc duyệt ảnh vải; Gem nhắn thông tin chuyển khoản qua Zalo. Phần còn lại trả khi nhận.</li>
-        <li data-i18n="policy.pay_3">Workshop ngày thường và mua tại studio: trả bằng tiền mặt hoặc chuyển khoản khi bạn đến. Workshop Thứ Bảy, Chủ Nhật: trả trước 30% khi Gem xác nhận chỗ (Gem nhắn qua Zalo), phần còn lại trả khi đến.</li>
+        <li data-i18n="policy.pay_2">Chuyển khoản: quét mã QR hiển thị sau khi đặt hàng, hoặc mã QR Gem gửi cho bạn. Tài khoản nhận tiền đứng tên HO KINH DOANH GEM CHAM SAC. Sau khi chuyển khoản, bạn gửi ảnh chụp giao dịch cho Gem qua Zalo (hoặc kênh bạn đã liên hệ) để Gem đối chiếu; Gem xác nhận khi tiền đã về tài khoản.</li>
+        <li data-i18n="policy.pay_6">Đơn giao tận nơi có giá trị từ 250.000đ: chuyển khoản toàn bộ tiền hàng trước khi Gem gửi hàng. Đơn đặt trước và nhận tại studio: thanh toán khi đến nhận hoặc chuyển khoản trước, tuỳ bạn chọn.</li>
+        <li data-i18n="policy.pay_5">Hàng đặt riêng (kit Kinusaiga theo yêu cầu, sản phẩm thiết kế tại Bàn thiết kế): trả trước 30% sau khi chốt giá hoặc duyệt mẫu vải; Gem gửi thông tin chuyển khoản qua Zalo. Phần còn lại thanh toán khi nhận hàng.</li>
+        <li data-i18n="policy.pay_3">Workshop ngày thường và mua hàng tại studio: thanh toán bằng tiền mặt hoặc chuyển khoản khi bạn đến. Workshop Thứ Bảy, Chủ Nhật: trả trước 30% khi Gem xác nhận chỗ (Gem gửi thông tin qua Zalo), phần còn lại thanh toán khi đến.</li>
         <li data-i18n="policy.pay_4">Cả trang lẫn studio đều không nhận thẻ. Trang không lưu thông tin thẻ hay tài khoản ngân hàng của bạn.</li>
       </ul>
 
       <h2 id="nhan-hang" data-i18n="policy.ship_h">Nhận hàng</h2>
       <ul class="stay-list">
-        <li data-i18n="policy.ship_1">Đặt trước, tự đến lấy tại studio trong giờ mở cửa (Tết Gem nghỉ). Gem giữ món cho bạn và nhắn hẹn ngày.</li>
-        <li data-i18n="policy.ship_2">Gửi hàng tận nơi: bạn trả phí giao. Gem báo phí giao qua Zalo khi xác nhận đơn.</li>
+        <li data-i18n="policy.ship_1">Đặt trước và nhận tại studio trong giờ mở cửa (Gem nghỉ trong dịp Tết). Gem giữ hàng cho bạn và liên hệ để hẹn ngày nhận.</li>
+        <li data-i18n="policy.ship_2">Giao tận nơi: bạn thanh toán phí giao hàng. Gem báo phí giao qua Zalo khi xác nhận đơn.</li>
       </ul>
 
       <h2 id="doi-tra" data-i18n="policy.ret_h">Đổi hàng, hàng lỗi và huỷ đơn</h2>
       <ul class="stay-list">
-        <li data-i18n="policy.ret_1">Hàng có sẵn của Gem: đổi trong 7 ngày kể từ khi nhận, không hoàn tiền. Món còn nguyên, chưa dùng, còn bao bì và nhãn; bạn nhắn Gem kèm mã đơn.</li>
-        <li data-i18n="policy.ret_2">Bạn đổi sang món cùng giá, hoặc món đắt hơn và bù phần chênh lệch. Phí giao khi đổi do bạn trả.</li>
-        <li data-i18n="policy.ret_3">Không đổi: hàng ký gửi, kit đã bóc túi, túi và những món bạn đã dùng, hàng đặt riêng (kit Kinusaiga theo yêu cầu, món thiết kế ở Bàn thiết kế, dịch vụ làm mới ký ức).</li>
-        <li data-i18n="policy.ret_4">Hàng lỗi do Gem (thiếu vải, xốp gãy, sai món, sai thiết kế đã chốt, hỏng khi giao), kể cả hàng ký gửi và hàng đặt riêng: bạn báo Gem trong 7 ngày kể từ khi nhận, kèm ảnh. Gem đổi món mới hoặc hoàn tiền, và trả phí giao.</li>
-        <li data-i18n="policy.ret_5">Huỷ hàng đặt riêng (kit Kinusaiga theo yêu cầu, món thiết kế ở Bàn thiết kế) sau khi đã trả trước: Gem giữ khoản trả trước. Gem trả lại khoản này nếu Gem không làm kịp ngày đã hẹn hoặc không làm được thiết kế đã chốt; trường hợp khác, Gem xem lý do bạn nêu.</li>
-        <li data-i18n="policy.ret_7">Huỷ đơn hàng có sẵn đã chuyển khoản, trước khi Gem gửi hàng: trong 24 giờ kể từ lúc chuyển khoản, Gem hoàn đủ, không cần nêu lý do. Sau 24 giờ, bạn nhắn Gem lý do; Gem xem từng trường hợp.</li>
-        <li data-i18n="policy.ret_8">Workshop Thứ Bảy, Chủ Nhật đã trả trước: báo huỷ hoặc dời trước giờ học 24 tiếng thì Gem hoàn lại hoặc chuyển sang buổi khác; báo muộn hơn hoặc không đến thì Gem giữ khoản trả trước; Gem huỷ buổi thì hoàn đủ.</li>
-        <li data-i18n="policy.ret_6">Gem hoàn tiền bằng chuyển khoản vào tài khoản bạn nhắn cho Gem.</li>
+        <li data-i18n="policy.ret_1">Hàng có sẵn của Gem: được đổi trong vòng 7 ngày kể từ khi nhận, không hoàn tiền. Sản phẩm cần còn nguyên vẹn, chưa qua sử dụng, còn bao bì và nhãn; bạn liên hệ Gem kèm mã đơn.</li>
+        <li data-i18n="policy.ret_2">Bạn có thể đổi sang sản phẩm cùng giá, hoặc sản phẩm có giá cao hơn và thanh toán phần chênh lệch. Phí giao hàng khi đổi do bạn chi trả.</li>
+        <li data-i18n="policy.ret_3">Không áp dụng đổi hàng với: hàng ký gửi, kit đã mở bao bì, túi và các sản phẩm đã qua sử dụng, hàng đặt riêng (kit Kinusaiga theo yêu cầu, sản phẩm thiết kế tại Bàn thiết kế, dịch vụ làm mới ký ức).</li>
+        <li data-i18n="policy.ret_4">Hàng lỗi do Gem (thiếu vải, nền xốp bị gãy, giao sai sản phẩm, sai thiết kế đã chốt, hư hỏng khi vận chuyển), bao gồm cả hàng ký gửi và hàng đặt riêng: bạn báo cho Gem trong vòng 7 ngày kể từ khi nhận, kèm ảnh chụp. Gem đổi sản phẩm mới hoặc hoàn tiền, và chịu phí giao hàng.</li>
+        <li data-i18n="policy.ret_5">Huỷ hàng đặt riêng (kit Kinusaiga theo yêu cầu, sản phẩm thiết kế tại Bàn thiết kế) sau khi đã trả trước: Gem giữ khoản trả trước. Gem hoàn lại khoản này nếu Gem không hoàn thành đúng ngày đã hẹn hoặc không thực hiện được thiết kế đã chốt; các trường hợp khác, Gem xem xét theo lý do bạn đưa ra.</li>
+        <li data-i18n="policy.ret_7">Huỷ đơn hàng có sẵn đã chuyển khoản, trước khi Gem gửi hàng: trong vòng 24 giờ kể từ khi chuyển khoản, Gem hoàn lại toàn bộ, không cần nêu lý do. Sau 24 giờ, bạn vui lòng cho Gem biết lý do; Gem xem xét từng trường hợp.</li>
+        <li data-i18n="policy.ret_8">Workshop Thứ Bảy, Chủ Nhật đã trả trước: nếu báo huỷ hoặc đổi lịch trước giờ học ít nhất 24 tiếng, Gem hoàn lại khoản trả trước hoặc chuyển sang buổi khác; nếu báo muộn hơn hoặc không đến, Gem giữ khoản trả trước; nếu Gem huỷ buổi học, Gem hoàn lại toàn bộ.</li>
+        <li data-i18n="policy.ret_6">Gem hoàn tiền bằng chuyển khoản vào tài khoản bạn cung cấp.</li>
       </ul>
 
       <h2 id="gop-y" data-i18n="policy.care_h">Góp ý và khiếu nại</h2>
@@ -166,8 +197,8 @@
         <li data-i18n-html="policy.data_w4"><strong>Bảng lời nhắn trong Studio 2D:</strong> lời nhắn và tên nếu bạn ghi. Lời nhắn hiện công khai sau khi Gem đọc; muốn gỡ, bạn nhắn Gem.</li>
         <li data-i18n-html="policy.data_w5"><strong>Thiết kế riêng:</strong> hình bạn vẽ và ảnh tham khảo bạn tải lên. Chỉ nhân sự Gem xem, để may đúng món đó.</li>
         <li data-i18n-html="policy.data_w7"><strong>Tin nhắn cho Gem</strong> (Zalo, Messenger, Instagram, Threads, email), kể cả lời nhắn soạn sẵn ở trang Workshop: tên tài khoản và nội dung bạn gửi. Chúng nằm trên dịch vụ nhắn tin đó; Gem chỉ dùng để trả lời và xếp lịch cho bạn.</li>
-        <li data-i18n-html="policy.data_w8"><strong>Hoàn tiền:</strong> số tài khoản ngân hàng bạn nhắn cho Gem. Chỉ dùng để chuyển lại tiền cho bạn.</li>
-        <li data-i18n-html="policy.data_w9"><strong>Ảnh chuyển khoản</strong> bạn gửi qua tin nhắn: có tên và số tài khoản của bạn. Gem chỉ dùng để khớp khoản tiền với đơn của bạn.</li>
+        <li data-i18n-html="policy.data_w8"><strong>Hoàn tiền:</strong> số tài khoản ngân hàng bạn cung cấp cho Gem. Chỉ dùng để hoàn tiền cho bạn.</li>
+        <li data-i18n-html="policy.data_w9"><strong>Ảnh chụp giao dịch chuyển khoản</strong> bạn gửi qua tin nhắn: có họ tên và số tài khoản của bạn. Gem chỉ dùng để đối chiếu khoản tiền với đơn hàng.</li>
         <li data-i18n-html="policy.data_w6"><strong>Trên máy của bạn:</strong> giỏ hàng, thiết kế đã lưu, Tủ sưu tầm và lựa chọn ngôn ngữ nằm trong trình duyệt của bạn, không gửi về Gem. Trang không dùng cookie theo dõi, không đo lường hành vi, không chạy quảng cáo.</li>
       </ul>
 
@@ -196,6 +227,7 @@
       <p class="policy-change" data-i18n="policy.change">Khi cách làm thay đổi, Gem sửa trang này và ghi lại ngày cập nhật.</p>
     </div>
   </section>
+  </div>
 
   <!-- FOOTER -->
   <footer class="site-footer">
@@ -208,7 +240,7 @@
           </a>
           <p data-i18n="footer.tagline">Mỗi một nỗ lực dù là nhỏ bé nhất, đều đáng được trân quý.</p>
           <a href="chinh-sach.html" class="footer-policy" data-i18n="footer.policy">Chính sách mua hàng &amp; bảo mật</a>
-          <p class="footer-legal" data-i18n-html="footer.legal">HỘ KINH DOANH GEM CHẠM SẮC<br>Mã số thuế: 001300019990<br>Địa chỉ đăng ký: P101-B99 Ngõ 99 Vọng Hà, Phường Hồng Hà, Hà Nội</p>
+          <p class="footer-legal" data-i18n-html="footer.legal">HỘ KINH DOANH GEM CHẠM SẮC<br>Mã số thuế: 001300019990</p>
         </div>
         <div>
           <h4 data-i18n="footer.contact">Liên hệ</h4>
