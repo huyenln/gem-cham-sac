@@ -19,9 +19,12 @@ video/ and images/ files:
 How: studio.html opens from a local server and reads the published layout and
 products from Supabase like any visitor (reads only; it needs the network). A
 fixed walk plays, with a fingertip (phone) or a pointer (computer) drawn on
-the screen: the street, litter falls and is picked up; the đàn tranh; the
-waste-sorting game; in through the door; the try-on corner; a product off the
-shelf; the design table, sewn. Then a closing card. Chrome's screencast
+the screen: the street, litter falls and is picked up; the waste-sorting game
+(a plastic bag first);
+in through the door; the try-on corner; a candle off the shelf beside it, a
+scent picked, into the cart; the design table: an Origami pouch, sewn and
+ordered ("Đặt Gem may"); along to the cashier's counter, the basket. Then a
+closing card. (No đàn tranh since 18/11, Anna.) Chrome's screencast
 records it. The phone version taps with touch events, as a phone does (a
 product: the first tap names it, the second opens it). The browser is a real
 window, on a virtual display when there is no screen: headless Chrome hands the
@@ -210,7 +213,14 @@ class Hand:
     async def tap(self, target, after=350, glide=320):
         x, y = await where(self.page, target)
         await self.glide(x, y, glide)
-        x, y = await where(self.page, target, hit=True)   # still there, and nothing over it
+        for _ in range(12):   # still there, holding still, and nothing over it
+            x, y = await where(self.page, target, hit=True)
+            await self.page.wait_for_timeout(90)
+            x2, y2 = await where(self.page, target, hit=True)
+            if abs(x2 - x) < 2 and abs(y2 - y) < 2:
+                break
+            await self.glide(x2, y2, 120)
+        x, y = x2, y2
         await self.page.wait_for_timeout(60)
         await self.show('down' if self.touch else 'click')
         if self.touch:
@@ -282,6 +292,15 @@ async def scroll_sheet(page, target, block='center', ms=550):
     await page.wait_for_timeout(ms)
 
 
+async def reveal(page, target, block='center', ms=400):
+    """Scroll the open sheet to target only if it is not in view already."""
+    hidden = await page.evaluate("""s => { const e = document.querySelector(s), sh = document.querySelector('.st-sheet');
+        if (!e || !sh) return false; const r = e.getBoundingClientRect(), q = sh.getBoundingClientRect();
+        return r.top < Math.max(q.top, 0) + 8 || r.bottom > Math.min(q.bottom, innerHeight) - 8; }""", target)
+    if hidden:
+        await scroll_sheet(page, target, block=block, ms=ms)
+
+
 async def tag(page, js):
     """Mark the element js finds (in the page) as [data-tr] and return that selector."""
     ok = await page.evaluate(f"""() => {{ document.querySelectorAll('[data-tr]').forEach(e => e.removeAttribute('data-tr'));
@@ -306,8 +325,20 @@ async def sheet_is_open(page):
 
 
 async def close_sheet(page, hand, after=300):
-    if await sheet_is_open(page):
-        await hand.tap('.st-modal .st-close', after=after)
+    if not await sheet_is_open(page):
+        return
+    # a long sheet scrolled down (the design table after "May xong"): back up to its ✕ first
+    if await page.evaluate("(() => { const r = document.querySelector('.st-modal .st-close').getBoundingClientRect(); return r.top < 0 || r.bottom > innerHeight; })()"):
+        await page.evaluate("document.querySelector('.st-sheet').scrollTo({top: 0, behavior: 'smooth'})")
+        await page.wait_for_timeout(500)
+    await hand.tap('.st-modal .st-close', after=after)
+
+
+async def arrive(page, settle=200):
+    """Till the character has stopped walking (and the view with it)."""
+    await page.wait_for_timeout(250)   # the walk has started
+    await page.wait_for_function("(() => { const p = document.querySelector('.st-player'); return p && !p.classList.contains('is-moving'); })()", timeout=10000)
+    await page.wait_for_timeout(settle)
 
 
 async def nav(page, hand, sel, after=120):
@@ -328,22 +359,8 @@ async def s_street(page, hand):
     while await page.evaluate("document.querySelectorAll('.rr-item:not(.is-up)').length"):
         await hand.tap('.rr-item:not(.is-up)', after=120, glide=260)
     await page.wait_for_function("!!document.querySelector('.rr-card')", timeout=5000)
-    await hand.away(1400)
+    await hand.away(1100)
     await hand.tap('.rr-close', after=250)
-    await hand.away()
-
-
-async def s_zither(page, hand):
-    """Over to the đàn tranh; a finger runs across the strings."""
-    await nav(page, hand, await tag(page, street_button(['Chơi đàn tranh', 'Đàn tranh zither'])))
-    await hand.away()
-    await page.wait_for_function("document.documentElement.classList.contains('zt-open')", timeout=10000)
-    await page.wait_for_timeout(300)
-    pts = await page.evaluate("""() => { const s = [...document.querySelectorAll('.zt-str')]; if (s.length < 8) return null;
-        const c = (i, k) => { const r = s[i].getBoundingClientRect(); return [r.x + r.width * k, r.y + r.height / 2]; };
-        return [c(1, 0.55), c(s.length - 2, 0.7)]; }""")
-    await hand.drag(pts[0], pts[1], ms=650, after=350)
-    await close_sheet(page, hand)
     await hand.away()
 
 
@@ -352,14 +369,27 @@ async def s_sorting(page, hand):
     await nav(page, hand, await tag(page, street_button(['Góc Phân Loại', 'Sort the waste'])))
     await hand.away()
     await page.wait_for_function("(() => { const b = document.querySelector('.pl-lv[data-pl-go=\"sort\"]'); return b && b.getBoundingClientRect().width > 0; })()", timeout=12000)
-    await page.wait_for_timeout(500)
-    await hand.tap('.pl-lv[data-pl-go="sort"]', after=550)
-    bin_ = await page.evaluate("""() => { const e = document.querySelector('.pl-one [data-pl-item]'); if (!e) return null;
-        const it = GemPhanLoai.ITEMS.find(x => x.id === e.dataset.plItem); return it && it.bin; }""")
+    await page.wait_for_timeout(350)
+    # The first thing to sort: a plastic bag (Anna 18/11), not whatever the deal
+    # brings (a fish bone came first once). js/phanloai.js deals the round with
+    # Math.random as the level opens: held at 0 for that moment, its shuffles
+    # turn into a rotation and the round leads with the first soft-nylon item of
+    # GemPhanLoai.ITEMS (Túi bóng). Nothing there loops on a random number.
+    await page.evaluate("window.__rnd = Math.random; Math.random = () => 0;")
+    try:
+        await hand.tap('.pl-lv[data-pl-go="sort"]', after=0)
+        await page.wait_for_function("!!document.querySelector('.pl-one [data-pl-item]')", timeout=5000)
+    finally:
+        await page.evaluate("if (window.__rnd) { Math.random = window.__rnd; delete window.__rnd; }")
+    await page.wait_for_timeout(450)
+    first, bin_ = await page.evaluate("""() => { const e = document.querySelector('.pl-one [data-pl-item]'); if (!e) return [null, null];
+        const it = GemPhanLoai.ITEMS.find(x => x.id === e.dataset.plItem); return [e.dataset.plItem, it && it.bin]; }""")
     if not bin_:
         raise SystemExit('the sorting round did not start')
+    if not (bin_.startswith('nilon') or bin_ == 'nhua-1-de'):
+        print(f'  the round starts with {first} ({bin_}), not a bag or a bottle: GemPhanLoai.ITEMS changed?')
     await hand.drag('.pl-one [data-pl-item] img', f'[data-pl-bin="{bin_}"]', ms=650, after=200)
-    await hand.away(1150)
+    await hand.away(950)
     await close_sheet(page, hand)
     await hand.away()
 
@@ -386,18 +416,19 @@ async def s_door(page, hand):
     await page.wait_for_timeout(60)
     await page.evaluate("document.documentElement.classList.remove('tr-hold')")
     await page.wait_for_function("(() => { const b = document.getElementById('st-bubble'); return b && !b.hidden && b.textContent.trim(); })()", timeout=8000)
-    await page.wait_for_timeout(1000)
+    await page.wait_for_timeout(900)
 
 
 async def s_fitting(page, hand):
     """The try-on corner: a bag, tried on, then worn in the studio."""
     await nav(page, hand, '.st-nav [data-go="fitting"]')
-    await hand.away(1500)
+    await hand.away()
+    await arrive(page)
     lab = await tag(page, """() => [...document.querySelectorAll('.st-zone-label')].find(l => !l.hidden && /thử đồ|fitting/i.test(l.textContent.normalize('NFC')))""")
     await hand.tap(lab, after=150)
     await sheet_open(page)
     await page.wait_for_function("document.querySelectorAll('.fit-pick').length > 0", timeout=10000)
-    await hand.away(500)
+    await hand.away(350)
     want = await page.evaluate("""() => { const p = [...document.querySelectorAll('.fit-pick')].map(b => b.dataset.try);
         return p.find(x => x === 'denim') || p.find(x => x.startsWith('tui-di-choi')) || p[1] || p[0]; }""")
     pick = f'.fit-pick[data-try="{want}"]'
@@ -406,32 +437,71 @@ async def s_fitting(page, hand):
     await hand.tap(pick, after=250)
     if hand.touch:   # back up: the picture, and "Đeo thử" under it
         await scroll_sheet(page, '.fit [data-wear]', block='end')
-    await hand.away(700)
+    await hand.away(450)
     await hand.tap('.fit [data-wear]', after=150)
     await hand.away()
     if await sheet_is_open(page):
         raise SystemExit('"Đeo thử" did not close the sheet')
-    await page.wait_for_timeout(1500)
+    await page.wait_for_timeout(1200)
 
 
-async def s_shelf(page, hand):
-    """A product off the shelf: its real photos, its price."""
-    await nav(page, hand, '.st-nav [data-go="shelves"]')
-    await hand.away(1500)
-    vis = """e => { const r = e.getBoundingClientRect(); return r.left > 40 && r.right < innerWidth - 40 && r.top > 80 && r.bottom < innerHeight - 120 && r.width > 24; }"""
-    sku = await page.evaluate(f"""() => {{ const vis = {vis};
-        for (const s of ['goi', 'tui-laptop', 'origami', 'tham', 'bloom']) if ([...document.querySelectorAll('.st-shelf-prod[data-sku="' + s + '"]')].some(vis)) return s;
-        const e = [...document.querySelectorAll('.st-shelf-prod')].find(vis); return e && e.dataset.sku; }}""")
+# What goes in the cart: a product with choices and one price (Anna 18/11: a
+# cushion priced "120.000–300.000đ" left the basket at "từ 120.000đ"). The
+# candles by the try-on corner first: 13 scents, each its own jar, 170.000đ.
+# Else the nearest such one on screen.
+PICK_PRODUCT = """() => {
+  const fits = s => { const i = window.GemBasket && GemBasket.info(s); if (!i || !i.inStock) return false;
+    const cs = i.options && i.options.choices; return !!(cs && cs.filter(c => !c.out).length > 1) && !/–|liên hệ|contact/i.test(i.price || ''); };
+  const all = [...document.querySelectorAll('.st-shelf-prod')].filter(e => fits(e.dataset.sku));
+  if (!all.length) return null;
+  const mid = e => { const r = e.getBoundingClientRect(); return Math.abs(r.left + r.width / 2 - innerWidth / 2); };
+  const pref = all.filter(e => e.dataset.sku === 'nen-thom-120');
+  return (pref.length ? pref : all).sort((a, b) => mid(a) - mid(b))[0].dataset.sku;
+}"""
+
+
+async def s_candle(page, hand):
+    """Off the shelf by the try-on corner: the candle, a scent picked (its own
+    jar shows), into the cart; the character then pushes the cart with it."""
+    sku = await page.evaluate(PICK_PRODUCT)
     if not sku:
-        raise SystemExit('no product in view at the shelves')
+        raise SystemExit('no product with choices and one price on the shelves')
+    # in view, nothing over it (the edge tags sit over the screen's sides), and
+    # clear of the character standing in front of the shelf
+    vis = """e => { const r = e.getBoundingClientRect(); if (!(r.left > 20 && r.right < innerWidth - 20 && r.top > 80 && r.bottom < innerHeight - 120 && r.width > 16)) return false;
+        const p = document.querySelector('.st-player').getBoundingClientRect();
+        if (r.right > p.left && r.left < p.right && r.bottom > p.top && r.top < p.bottom) return false;
+        const u = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return !!u && (u === e || e.contains(u) || u.contains(e)); }"""
+    near = f"""() => {{ const all = [...document.querySelectorAll('.st-shelf-prod[data-sku="{sku}"]')], vis = {vis};
+        if (all.some(vis)) return 0; const r = all[0].getBoundingClientRect(); return r.left + r.width / 2 < innerWidth / 2 ? -1 : 1; }}"""
+    for _ in range(4):   # a few steps over, if it is off screen (the arrow keys walk, as a swipe would)
+        side = await page.evaluate(near)
+        if not side:
+            break
+        await page.keyboard.press('ArrowLeft' if side < 0 else 'ArrowRight')
+        await arrive(page, settle=150)
     prod = await tag(page, f"""() => [...document.querySelectorAll('.st-shelf-prod[data-sku="{sku}"]')].find({vis})""")
-    await hand.tap(prod, after=550)
-    if hand.touch:   # the first tap names it and walks over; the second opens it
-        await hand.tap(prod, after=150)
+    await hand.tap(prod, after=450)
+    if hand.touch:   # the first tap names it and walks over; a tap on its name opens it
+        await page.wait_for_function("(() => { const l = document.querySelector('.st-pick-label'); return l && !l.hidden; })()", timeout=5000)
+        await arrive(page, settle=100)
+        await hand.tap('.st-pick-label', after=150)
     await sheet_open(page)
-    await hand.away(1600)
-    await close_sheet(page, hand)
+    await hand.away(600)
+    # not the first choice: the photo changes to the one picked
+    chip = await tag(page, """() => { const c = [...document.querySelectorAll('.st-modal .pg-chip[data-pd-pick]')].filter(b => !b.disabled && !b.classList.contains('is-out'));
+        return c[Math.min(1, c.length - 1)]; }""")
+    await reveal(page, chip)
+    await hand.tap(chip, after=450)
+    add = '.st-modal [data-pd-add]'
+    await reveal(page, add, block='end', ms=350)
+    before = await page.evaluate("window.GemBasket.count()")
+    await hand.tap(add, after=150)
     await hand.away()
+    await page.wait_for_function(f"window.GemBasket.count() > {before}", timeout=5000)
+    await page.wait_for_timeout(600)   # it flies into the cart
+    await close_sheet(page, hand, after=250)
+    await hand.away(900)
 
 
 # The fabric to drag on and where: the patch nearest the middle of the piece,
@@ -463,37 +533,96 @@ PICK_FABRIC = """() => {
 
 
 async def s_design(page, hand):
-    """The design table: a mood fills the piece, a fabric dragged on, sewn."""
+    """The design table: the Origami pouch, a mood fills it, a fabric dragged
+    on, sewn, "Đặt Gem may"."""
     await nav(page, hand, '.st-nav [data-go="sewing"]')
     await hand.away()
     await page.wait_for_function("document.querySelectorAll('.pt-scrap').length > 2 && document.querySelector('.pt-board svg')", timeout=15000)
-    await page.wait_for_timeout(500)
+    await page.wait_for_timeout(400)
+    # the Origami pouch, not the cushion it opens on (Anna 18/11: it catches the
+    # eye more). Its tab may lie past the row's edge on a phone: the row slides
+    # over first, as a swipe would.
+    tab = '.pt-tabs [data-product="origami"]'
+    if await page.evaluate(f"!!document.querySelector('{tab}')"):
+        await page.evaluate(f"""() => {{ const b = document.querySelector('{tab}'), r = b.getBoundingClientRect();
+            if (r.left < 8 || r.right > innerWidth - 8) b.scrollIntoView({{inline: 'center', block: 'nearest', behavior: 'smooth'}}); }}""")
+        await page.wait_for_timeout(450)
+        await hand.tap(tab, after=150)
+        await page.wait_for_function(f"document.querySelector('{tab}').getAttribute('aria-pressed') === 'true'", timeout=5000)
+        await hand.away(450)
     mood = await tag(page, """() => [...document.querySelectorAll('.pt-mood[data-mood]')].filter(b => !/^(mix|gem)$/.test(b.dataset.mood))[1]""")
-    if hand.touch:
-        await scroll_sheet(page, mood, ms=500)
-    await hand.tap(mood, after=500)
+    await reveal(page, mood, ms=500)
+    await hand.tap(mood, after=450)
     if hand.touch:   # the piece at the top, the basket under it
         await scroll_sheet(page, '.pt-board', block='start', ms=500)
     patch = await page.evaluate(PICK_FABRIC)
     if patch is None:
         raise SystemExit('no fabric in the basket that is not on the piece already')
-    await hand.drag('[data-tr]', f'.pt-board [data-i="{patch}"]', ms=700, after=550)
-    if hand.touch:
-        await scroll_sheet(page, '[data-pt="sew"]', block='end', ms=350)
+    await hand.drag('[data-tr]', f'.pt-board [data-i="{patch}"]', ms=700, after=450)
+    await reveal(page, '[data-pt="sew"]', block='end', ms=350)
     await hand.tap('[data-pt="sew"]', after=150)
     await hand.away()
     await page.wait_for_function("(() => { const s = document.querySelector('.pt-sewer'); return s && s.classList.contains('is-cheer'); })()", timeout=10000)
+    sewn = time.monotonic()
     try:   # the card to share, drawn (not "Đang làm thẻ…")
         await page.wait_for_function("(() => { const b = document.querySelector('.pt-done-card'), i = b && b.querySelector('img');"
                                      " return b && !b.classList.contains('is-wait') && i && i.complete && i.naturalWidth > 0; })()", timeout=6000)
     except PWTimeout:
         print('  the share card was not ready')
-    await page.wait_for_timeout(800)
+    # the studio scrolls to the finished piece 1.7 s after the sewing: past that
+    rest = 2.1 - (time.monotonic() - sewn)
+    if rest > 0:
+        await asyncio.sleep(rest)
+    await page.wait_for_timeout(300)
+    # "Đặt Gem may": the design into the cart, at the one price it shows (Anna
+    # 18/11: only a price that is settled; a design Gem has to quote for is not
+    # one to show ordering)
+    buy = '.pt-done-buy [data-pt="add"]'
+    await reveal(page, buy, block='end', ms=450)
+    price = await page.evaluate("(document.querySelector('.pt-done-buy .pt-price') || {}).textContent || ''")
+    if not price.strip() or await page.evaluate("p => /–|từ|from|liên hệ|contact|báo giá|quote/i.test(p)", price):
+        raise SystemExit(f'the design has no settled price ({price!r}): not one to show ordering')
+    before = await page.evaluate("window.GemBasket.count()")
+    await hand.tap(buy, after=150)
+    await hand.away()
+    await page.wait_for_function(f"window.GemBasket.count() > {before}", timeout=5000)
+    await page.wait_for_timeout(800)   # into the cart
+
+
+COUNTER_TAG = """() => [...document.querySelectorAll('.st-zone-label, .st-hot .st-hot-label')].find(l => /quầy|counter/i.test(l.textContent.normalize('NFC')))"""
+
+
+async def s_to_counter(page, hand):
+    """Out of the design table and along the studio, the cart pushed, to the
+    cashier's counter: the tags at the screen's edge walk there (the nav's
+    "Quầy" would open the basket at once, over the counter). Played fast."""
+    await close_sheet(page, hand, after=200)
+    await hand.away(200)
+    seen = f"""() => {{ const l = ({COUNTER_TAG})(); if (!l) return false; const r = l.getBoundingClientRect();
+        return r.width > 0 && r.left > 20 && r.right < innerWidth - 20; }}"""
+    for _ in range(4):
+        if await page.evaluate(seen):
+            break
+        await hand.tap('.st-edge.is-r', after=100)
+        await hand.away()
+        await arrive(page, settle=150)
+    if not await page.evaluate(seen):
+        raise SystemExit('did not get to the counter')
+
+
+async def s_counter(page, hand):
+    """The counter's tag: the basket (the candle, the design), the total, "Đặt hàng".
+    Nothing is sent: "Đặt hàng" is never tapped."""
+    await page.wait_for_timeout(250)
+    await hand.tap(await tag(page, COUNTER_TAG), after=150)
+    await hand.away()
+    await page.wait_for_function("(() => { const p = document.querySelector('.gb-panel'); return p && p.classList.contains('open'); })()", timeout=8000)
+    await page.wait_for_timeout(1900)
 
 
 # (name, the walk, how much faster it plays in the video)
-SCENES = [('street', s_street, 1.15), ('zither', s_zither, 1.2), ('sorting', s_sorting, 1.2), ('door', s_door, 1.35),
-          ('fitting', s_fitting, 1.3), ('shelf', s_shelf, 1.3), ('design', s_design, 1.15)]
+SCENES = [('street', s_street, 1.2), ('sorting', s_sorting, 1.3), ('door', s_door, 1.35), ('fitting', s_fitting, 1.4),
+          ('candle', s_candle, 1.4), ('design', s_design, 1.45), ('to-counter', s_to_counter, 2.4), ('counter', s_counter, 1.2)]
 
 
 async def end_card(browser, F, out):
