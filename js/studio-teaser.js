@@ -3,9 +3,10 @@
    as the picture's <source> in index.html), each in the page's language: the
    studio's own text is in it. It is fetched only when the block comes near the
    screen, plays muted while a third of it shows, and pauses off screen. A
-   visitor who asked for less motion or to save data sees the first frame and a
-   play button. The button pauses / plays it at any time (a picture that moves
-   by itself for more than five seconds needs a way to stop it). */
+   visitor who asked for less motion or to save data (or whose phone won't
+   start it) sees the first frame and a big play button in the middle. While it
+   plays, a small button in the corner pauses it (a picture that moves by
+   itself for more than five seconds needs a way to stop it). */
 (function () {
   'use strict';
 
@@ -70,7 +71,11 @@
 
   video.addEventListener('playing', function () { box.classList.add('is-on'); });
   video.addEventListener('error', function () { failed = true; box.classList.remove('is-on'); show(); });
-  btn.addEventListener('click', function () { held = !held; sync(); });
+  btn.addEventListener('click', function () {
+    held = !held;
+    if (!held) inView = true;   // play pressed: it plays now, however little of it shows
+    sync();
+  });
 
   if ('IntersectionObserver' in window) {
     // fetched a little before it shows, so it is ready when it does

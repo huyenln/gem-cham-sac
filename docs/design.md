@@ -3738,11 +3738,21 @@ Sản phẩm → Bản tin.
 
 - **Video quay từ studio thật**, tự động, bằng `python3 tools/studio-trailer.py` (Chrome
   screencast; ngón tay vẽ trên màn hình bản điện thoại, con trỏ chuột bản máy tính). Không lời
-  riêng, không tiếng (video tự chạy phải tắt tiếng). Khoảng 35 giây: ngoài phố rác rơi → nhặt
-  (thẻ thông điệp) → đàn tranh → Phân loại rác (màn 2, kéo một món vào đúng bao) → vào cửa (lời
-  chào) → Góc thử đồ (thử rồi "Đeo thử" túi Denim, nhân vật đeo luôn trong studio) → kệ (Gối Chắp
-  Sắc: ảnh thật, giá) → Bàn thiết kế (chọn tâm trạng, kéo một mảnh vải, May xong, thẻ chia sẻ) →
-  thẻ kết (Udon vẫy tay, logo, `gemchamsac.com/studio`). Đoạn đi bộ được tua nhanh 1,15–1,35 lần.
+  riêng, không tiếng (video tự chạy phải tắt tiếng). Ngoài phố rác rơi → nhặt
+  (thẻ thông điệp) → Phân loại rác (màn 2, kéo túi bóng vào bao Nilon mềm) → vào cửa (lời chào) → Góc
+  thử đồ (thử rồi "Đeo thử" túi Denim, nhân vật đeo luôn trong studio) → kệ nến ngay cạnh: Nến thơm
+  hũ 120g (Tiny's Herbal), chọn một mùi (ảnh đổi theo hũ), "Thêm vào giỏ", nhân vật đẩy xe có món →
+  Bàn thiết kế (Túi Origami, chọn tâm trạng, kéo một mảnh vải, May xong, thẻ chia sẻ, "Đặt Gem may")
+  → đi dọc studio tới Quầy thu ngân → giỏ: nến + túi tự thiết kế, tổng tiền, "Đặt hàng" (**không bấm**: video
+  không gửi đơn nào) → thẻ kết (Udon vẫy tay, logo, `gemchamsac.com/studio`). Khoảng 38 giây; đoạn
+  đi bộ tua nhanh 1,2–2,4 lần.
+  Anna 18/11 sau bản đầu: bỏ đàn tranh; thêm cho vào giỏ, "Đặt Gem may" và quầy thu ngân; Bàn thiết
+  kế làm Túi Origami thay cho gối (bắt mắt hơn); Phân loại rác mở bằng túi nilon, không phải xương cá
+  (công cụ giữ `Math.random` = 0 lúc mở màn: lượt chia thành phép xoay, món đầu là món nilon mềm đầu tiên
+  trong `ITEMS`); món nào
+  vào giỏ cũng phải **chốt được giá** (bản thử với Gối Chắp Sắc giá khoảng thì giỏ chỉ ghi "từ
+  120.000đ"). Công cụ tự chọn nến nếu còn hàng (không thì món khác có lựa chọn và một giá đang ở trên
+  màn hình), và dừng nếu thiết kế ở Bàn thiết kế ra giá "từ…" / phải báo giá.
 - **Hai khổ × hai ngôn ngữ** (Anna: điện thoại giữ dọc, máy tính ngang cho giống màn hình khách
   sẽ thấy thật): `video/studio-2d-{doc,ngang}-{vi,en}.mp4` (720×1280 / 1280×720) + khung đầu
   `images/studio/studio-2d-*.webp`. Chữ trong studio theo ngôn ngữ nên mỗi ngôn ngữ một bản. Khách
@@ -3751,10 +3761,15 @@ Sản phẩm → Bản tin.
 - **Bản cho mạng xã hội** (1080×1920 / 1920×1080) nằm ở `tools/out/` (không commit, đã có trong
   `.gitignore`), đưa lên Drive.
 - **`js/studio-teaser.js`:** tải khi khối còn cách màn hình 300px, chạy (tắt tiếng, lặp) khi thấy
-  ≥ 1/3, dừng khi cuộn qua. Nút tạm dừng / phát ở góc (hình tự chuyển động quá 5 giây phải dừng
-  được). Khách chọn giảm chuyển động hoặc bật tiết kiệm dữ liệu: chỉ hiện khung đầu + nút phát,
+  ≥ 1/3, dừng khi cuộn qua. Đang chạy: nút tạm dừng nhỏ ở góc (hình tự chuyển động quá 5 giây phải
+  dừng được). Khách chọn giảm chuyển động hoặc bật tiết kiệm dữ liệu: chỉ hiện khung đầu + nút phát,
   không tải video. Đổi ngôn ngữ hoặc xoay máy qua mốc 800px thì đổi bản. Video nằm trong link
   `studio.html` (như ảnh cũ).
+  **Nút phát to giữa khung** (Anna 18/11: nút ở góc quá bé, tìm mãi mới thấy): mỗi khi video đứng
+  yên — giảm chuyển động, tiết kiệm dữ liệu, iPhone ở chế độ nguồn điện thấp (Safari tự chặn video
+  tự chạy), hoặc khách bấm dừng — nút thành hình tròn 88px (điện thoại) / 104px (máy tính), màu nút
+  chính (`--sage-deep`, viền kem). Bấm phát thì video chạy ngay, kể cả khi khung chưa hiện đủ 1/3.
+  `check-studio.py homevideo` kiểm nút ≥ 80px và nằm giữa.
 - **Bố cục:** điện thoại = tiêu đề → video dọc (rộng tối đa 340px, giữa thẻ) → dòng "mô phỏng
   studio thật" (giờ là chú thích dưới video) → mô tả + nút. Máy tính = tiêu đề | mô tả + nút một
   hàng, video ngang rộng hết thẻ (1008px ở 1440) để chữ trong studio đọc được.
