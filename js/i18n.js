@@ -511,13 +511,19 @@
        policy.updated. */
     'title.policy':         { vi: `Chính sách mua hàng & bảo mật · Gem Chạm Sắc`, en: `Shopping & privacy policy · Gem Chạm Sắc` },
     'footer.policy':        { vi: `Chính sách mua hàng & bảo mật`, en: `Shopping & privacy policy` },
+    // Who sells (the law wants it on the site): the registered household business, its tax code
+    // and registered address (Anna 18/11/2026). The studio is a different address: footer.address.
+    'footer.legal':         { vi: `HỘ KINH DOANH GEM CHẠM SẮC<br>Mã số thuế: 001300019990<br>Địa chỉ đăng ký: P101-B99 Ngõ 99 Vọng Hà, Phường Hồng Hà, Hà Nội`, en: `HỘ KINH DOANH GEM CHẠM SẮC (household business)<br>Tax code: 001300019990<br>Registered address: P101-B99 Ngõ 99 Vọng Hà, Phường Hồng Hà, Hà Nội` },
     'common.ml_note':       { vi: `Gem chỉ dùng email này để gửi bản tin. Bạn huỷ đăng ký lúc nào cũng được, bằng đường link cuối mỗi email. <a href="chinh-sach.html#thong-tin-ca-nhan">Cách Gem dùng thông tin của bạn</a>`, en: `Gem uses this email only to send the newsletter. You can unsubscribe at any time with the link at the end of each email. <a href="chinh-sach.html#thong-tin-ca-nhan">How Gem uses your information</a>` },
     'policy.eyebrow':       { vi: `Chính sách`, en: `Policies` },
     'policy.h1':            { vi: `Mua hàng ở Gem, và thông tin của bạn.`, en: `Buying from Gem, and your information.` },
     'policy.sub':           { vi: `Những điều chúng mình làm khi bạn đặt hàng, giữ chỗ workshop hay để lại thông tin trên trang này.`, en: `What we do when you order, reserve a workshop seat or leave your details on this site.` },
     'policy.updated':       { vi: `Cập nhật ngày 18/11/2026.`, en: `Updated 18 November 2026.` },
     'policy.who_h':         { vi: `Ai đứng sau trang này`, en: `Who runs this site` },
-    'policy.who_p':         { vi: `Trang gemchamsac.com do Gem Chạm Sắc vận hành.`, en: `gemchamsac.com is run by Gem Chạm Sắc.` },
+    'policy.who_p':         { vi: `Trang gemchamsac.com do HỘ KINH DOANH GEM CHẠM SẮC (tên thương hiệu Gem Chạm Sắc) vận hành.`, en: `gemchamsac.com is run by HỘ KINH DOANH GEM CHẠM SẮC, a registered household business trading as Gem Chạm Sắc.` },
+    'policy.who_tax':       { vi: `Mã số thuế`, en: `Tax code` },
+    'policy.who_reg':       { vi: `Địa chỉ đăng ký kinh doanh`, en: `Registered business address` },
+    'policy.who_studio':    { vi: `Studio (ghé thăm, nhận hàng, workshop)`, en: `Studio (visits, pick-ups, workshops)` },
     'policy.who_phone':     { vi: `Điện thoại, Zalo`, en: `Phone, Zalo` },
     'policy.who_msg':       { vi: `Nhắn tin`, en: `Messages` },
     'policy.price_h':       { vi: `Giá`, en: `Prices` },

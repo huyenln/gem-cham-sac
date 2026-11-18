@@ -469,9 +469,10 @@ Công bố (Anna 12/11/2026, chi tiết: `docs/design.md` → "Studio: công b�
   bảng "?" (`gem-batngo`). 55 thông điệp (Tagom, US EPA, EEA, Ủy ban châu Âu, Ellen MacArthur, Climate Box
   của UNDP — bản Đông Nam Á cho khí hậu, sách 2015 cho mẹo) — câu mới chỉ thêm khi đã mở trang nguồn kiểm; không dùng Báo điện tử Chính phủ / mức phạt (Anna 06/11). Chi tiết: `docs/design.md` → "Bất ngờ ngoài phố: rác rơi". Test: `check-studio.py racroi`.
 - ⚖️ Pháp lý (12/11/2026, rà theo luật đang có hiệu lực): đã có `chinh-sach.html`, dòng thông báo ở các form, nội dung đơn
-  trên màn cảm ơn (khách không có tài khoản để xem lại đơn). Còn chờ chủ shop: thông tin pháp lý của hộ kinh doanh
-  (footer + mục "Ai đứng sau trang này"), biểu phí và thời gian giao, điều kiện đổi trả, thời hạn trả lời khiếu nại,
-  cùng các thủ tục với cơ quan nhà nước. Danh sách chi tiết nằm ở tài liệu riêng của chủ shop, **không để trong repo**
+  trên màn cảm ơn (khách không có tài khoản để xem lại đơn). 18/11: thêm người bán (HỘ KINH DOANH GEM CHẠM SẮC, mã số
+  thuế, địa chỉ đăng ký — khác địa chỉ studio) ở footer 10 trang (`footer.legal`) và mục "Ai đứng sau trang này"; mục
+  "Đổi hàng, hàng lỗi và huỷ đơn". Còn chờ chủ shop: số / ngày / nơi cấp giấy đăng ký nếu luật mới bắt, biểu phí và
+  thời gian giao, thời hạn trả lời khiếu nại, cùng các thủ tục với cơ quan nhà nước. Danh sách chi tiết nằm ở tài liệu riêng của chủ shop, **không để trong repo**
   (repo và GitHub Pages đều công khai). Chi tiết: `docs/design.md` → "Pháp lý".
 - Mail báo nhân sự: `notify_log` có hai dòng lời nhắn (04/10, 01/11), theo code thì chỉ ghi khi Gmail đã
   cấu hình và gửi không lỗi; chưa có đơn / giữ chỗ thật nào đi qua. Nên đặt thử một đơn thật rồi huỷ

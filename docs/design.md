@@ -2804,8 +2804,14 @@ có giỏ và form gửi đơn). Văn bản chính:
   khi giỏ bị xoá; chữ khách gõ đi qua `esc()`).
 - **Ưu đãi chia sẻ của Chạm Mùa**: bỏ "Google Maps" (Google cấm đổi quà lấy đánh giá).
 
-**Chưa viết được vì chờ chủ shop chốt** (đừng tự điền): thông tin pháp lý của hộ kinh doanh (tên, mã
-số thuế, số giấy đăng ký, người chịu trách nhiệm nội dung: đưa vào footer và mục `#ve-gem`); biểu phí,
+**Thông tin người bán (18/11/2026, Anna):** HỘ KINH DOANH GEM CHẠM SẮC, mã số thuế, địa chỉ đăng ký
+kinh doanh (khác địa chỉ studio ở Lê Gia Đỉnh) — trong mục `#ve-gem` của `chinh-sach.html` (`policy.who_*`)
+và dòng `.footer-legal` (`footer.legal`) ở footer 10 trang. Lưu ý: từ 01/7/2025 mã số thuế của hộ kinh
+doanh là số định danh cá nhân của chủ hộ (Thông tư 86/2024/TT-BTC); chủ shop đã biết và chọn đăng. Đổi
+địa chỉ đăng ký thì sửa cả hai chỗ.
+
+**Chưa viết được vì chờ chủ shop chốt** (đừng tự điền): số / ngày / nơi cấp giấy đăng ký hộ kinh doanh
+và người chịu trách nhiệm nội dung nếu luật mới bắt (chưa đối chiếu được Nghị định 248/2026); biểu phí,
 khu vực và thời gian giao hàng (luật muốn số tiền phải trả hiện đủ **trước** khi gửi đơn, nên phí giao
 cần hiện trong giỏ; món "Liên hệ" / khoảng giá cũng vướng điểm này); điều kiện, thời hạn đổi trả và
 hoàn tiền; thời hạn trả lời khiếu nại; nội dung nhãn của từng sản phẩm (bên chịu trách nhiệm, xuất xứ,

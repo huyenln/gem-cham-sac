@@ -2764,6 +2764,10 @@ def policy_bits():
     check(len(keys) > 40 and not lost, f'every policy sentence has its text in both languages ({len(keys)} keys, missing {lost})')
     nolink = [f for f in pages if 'href="chinh-sach.html" class="footer-policy"' not in read(f)]
     check(not nolink, f'the footer of every page links to it ({nolink})')
+    # who sells (18/11/2026): the household business, its tax code, its registered address
+    nolegal = [f for f in pages if 'class="footer-legal" data-i18n-html="footer.legal"' not in read(f)]
+    check(not nolegal and 'HỘ KINH DOANH GEM CHẠM SẮC' in pol and 'policy.who_tax' in pol and 'policy.who_reg' in pol,
+          f'the seller\'s registered name, tax code and address: on the policy page and in every footer ({nolegal})')
     nonote = [f for f in ('index.html', 'ghe-tham.html', 'ban-tin.html') if 'class="ml-note"' not in read(f)]
     check(not nonote, f'each newsletter form says what the address is used for ({nonote})')
     check('class="ws-legal"' in read('js/workshop.js') and "'studio.memo_note'" in read('js/studio.js'),

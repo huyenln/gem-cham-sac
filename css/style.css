@@ -1196,6 +1196,8 @@ html.nav-open .gb-widget { visibility: hidden; }
 .footer-brand p { color: var(--sage-light); font-size: var(--text-sm); max-width: 320px; }
 /* the policy page: the law wants it one tap from every page (docs/design.md, "Pháp lý") */
 .site-footer .footer-policy { display: inline-block; margin-top: var(--space-3); padding: var(--space-2) 0; text-decoration: underline; text-underline-offset: 3px; }
+/* who sells: household business, tax code, registered address (not the studio's) */
+.footer-brand .footer-legal { margin-top: var(--space-2); font-size: var(--text-xs); line-height: 1.6; }
 
 .site-footer a { color: var(--paper-cream); opacity: 0.85; display: block; margin-bottom: var(--space-2); font-size: var(--text-sm); }
 .site-footer a:hover { color: var(--sage-light); opacity: 1; }
