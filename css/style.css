@@ -1196,6 +1196,8 @@ html.nav-open .gb-widget { visibility: hidden; }
 .footer-brand p { color: var(--sage-light); font-size: var(--text-sm); max-width: 320px; }
 /* the policy page: the law wants it one tap from every page (docs/design.md, "Pháp lý") */
 .site-footer .footer-policy { display: inline-block; margin-top: var(--space-3); padding: var(--space-2) 0; text-decoration: underline; text-underline-offset: 3px; }
+/* who sells: household business and tax code (registered address: policy page) */
+.footer-brand .footer-legal { margin-top: var(--space-2); font-size: var(--text-xs); line-height: 1.6; }
 
 .site-footer a { color: var(--paper-cream); opacity: 0.85; display: block; margin-bottom: var(--space-2); font-size: var(--text-sm); }
 .site-footer a:hover { color: var(--sage-light); opacity: 1; }
@@ -1424,7 +1426,14 @@ html[lang="en"] .season-card.done::before { content: '✓ wrapped'; }
 .stay-list li::before { content: '—'; position: absolute; left: 0; top: var(--space-3); color: var(--sage-deep); font-weight: 700; }
 
 /* POLICY PAGE (chinh-sach.html) */
-.policy h2, .policy h3 { scroll-margin-top: 150px; }   /* the header is sticky: a #link must not land under it */
+/* the header is sticky, and on a phone the contents pills sit under it: a #link must not land under either */
+.policy h2, .policy h3 { scroll-margin-top: calc(var(--header-h) + 72px); }
+@media (min-width: 768px) {
+  .policy h2, .policy h3 { scroll-margin-top: calc(var(--header-h) + var(--space-4)); }
+  /* the text column beside the contents: no centring, the grid places it */
+  .policy-layout .prose { margin-inline: 0; padding-inline: 0; }
+  .policy-layout .product-toc-sidebar { padding-top: var(--space-12); }
+}
 .policy-updated, .policy-change { font-size: var(--text-sm); color: var(--ink-soft); }
 .policy-change { margin-top: var(--space-12); }
 .policy .stay-list a, .policy p a { color: var(--sage-deep); text-decoration: underline; text-underline-offset: 3px; }
@@ -2129,6 +2138,27 @@ body.pg-lock { overflow: hidden; }
   cursor: default;
 }
 .pg-chip-out { margin-left: 0.35em; font-size: var(--text-xs); }
+
+/* Difficulty (kit Kinusaiga): the name, then five small stars. The filled row
+   sits on the empty one and is cut to level/5 of the width (js/gallery.js). */
+.pg-level-hint { margin: calc(-1 * var(--space-1)) 0 var(--space-2); font-size: var(--text-xs); color: var(--ink-body); }
+.pg-chip.has-level {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 0.4em 0.85em 0.45em;
+  border-radius: var(--radius-lg);
+  line-height: 1.25;
+}
+.pg-stars { position: relative; display: block; width: 70px; height: 14px; flex: none; }
+.pg-stars svg { display: block; width: 70px; height: 14px; }
+.pg-stars > svg { fill: var(--paper-cream-warm); stroke: var(--ink-soft); stroke-width: 0.7; stroke-linejoin: round; }
+.pg-stars-on { position: absolute; top: 0; left: 0; height: 100%; overflow: hidden; }
+.pg-stars-on svg { fill: var(--kraft); stroke: var(--ink-soft); stroke-width: 0.7; stroke-linejoin: round; }
+.pg-chip.has-level .pg-chip-out { margin-left: 0; }
+.pg-chip:disabled .pg-stars { opacity: 0.5; }
 .pg-choice-note {
   margin: var(--space-3) 0 0;
   font-size: var(--text-sm);
@@ -2636,6 +2666,29 @@ body.gb-lock { overflow: hidden; }
 .gb-pay-text small { font-size: var(--text-xs); color: var(--ink-soft); }
 /* Đơn vượt ngưỡng: COD mờ đi và không bấm được */
 .gb-pay-opt.is-off { opacity: 0.45; cursor: default; }
+/* why it is locked: delivery orders from the threshold up (js/basket.js, syncRecv) */
+.gb-pay-note { margin: 0 0 var(--space-2); color: var(--ink-body); }
+/* "Cách nhận hàng" opens the form */
+.gb-recv { margin-bottom: var(--space-1); }
+
+/* after the transfer: send the receipt (js/basket.js, renderSendBill) */
+.gb-bill {
+  width: 100%;
+  margin: 0 0 var(--space-5);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--paper-cream);
+  text-align: left;
+}
+.gb-bill-h {
+  margin: 0 0 var(--space-1);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  color: var(--ink-dark);
+}
+.gb-bill .gb-channels { margin-top: var(--space-3); gap: var(--space-2); }
+.gb-bill .gb-channel { padding: var(--space-3) var(--space-4); background: var(--paper-white); }
 
 /* ---------- màn chuyển khoản ---------- */
 .gb-qr-wrap { margin: var(--space-5) 0; text-align: left; }
@@ -3292,6 +3345,9 @@ html[lang="en"] .gb-channels .gb-ch-zalo { order: 9; }
 }
 .ws-book-steps strong { color: var(--ink-dark); }
 .ws-book-steps a { color: var(--sage-deep); text-decoration: underline; text-underline-offset: 3px; }
+/* weekends: 30% up front and the cancelling rule (js/workshop.js, ws.book_wkend) */
+.ws-book-wkend { font-size: var(--text-sm); color: var(--ink-body); line-height: 1.55; margin: calc(-1 * var(--space-2)) 0 var(--space-5); max-width: none; }
+.ws-page-book .ws-book-wkend { margin: 0 0 var(--space-4); }
 
 /* channel buttons: the first one (Zalo in Vietnamese, Instagram in English) is the primary */
 .ws-ch { display: flex; flex-wrap: wrap; gap: var(--space-2); }

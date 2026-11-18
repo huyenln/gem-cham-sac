@@ -150,13 +150,13 @@ Quick reference:
 - Menu 7 mục: Trang chủ, "Về Gem" (Câu chuyện / Mô hình / Đối tác), Sản phẩm, **Studio 2D** (`studio.html`, từ 11/2026), Workshop, Bản tin, Ghé thăm. Bảy mục không vừa một hàng dưới 1100px nên ở 960–1099px mục "Trang chủ" ẩn đi (`.nav-home`, logo vẫn về trang chủ). Trang phụ: `season-02.html` (không nằm trong nav), `chinh-sach.html` (không nằm trong nav: link ở footer mọi trang, ở form đặt hàng / giữ chỗ / bản tin và bảng "?" của Studio), `admin.html` (nhân sự). Không tạo thêm trang mới trừ khi user yêu cầu rõ.
 - **Có hiện giá** (quyết định D3 trong `docs/design.md`, đảo lại "không hiện giá" cũ). Giá đọc từ bảng `products`; món chưa có giá ghi "Liên hệ".
 - Email signup: **Mailerlite đã tích hợp** (account `2380127`, form `41774242`). `js/mailerlite.js` submit bằng `fetch` mode `no-cors` rồi hiện success inline (`.ml-success`) — KHÔNG load script Mailerlite, KHÔNG redirect. Form ở `index.html`, `ghe-tham.html` và `ban-tin.html`. `action` phải là `…/forms/188507892064716532/subscribe` (mã dài) kèm hai ô ẩn `ml-submit`, `anticsrf`: `…/forms/41774242/subscribe` trả 404, mà `no-cors` không thấy lỗi nên trang vẫn báo thành công (lỗi ở `ban-tin.html`, sửa 12/11/2026).
-- **Có giỏ hàng + đặt đơn** (`js/basket.js`): trả khi nhận (COD) hoặc chuyển khoản VietQR (D14). KHÔNG có cổng thẻ, KHÔNG có tài khoản khách — đăng nhập chỉ dành cho nhân sự (`admin.html`). Khách xem lại món đã mua qua "Tủ sưu tầm" bằng mã đơn + SĐT.
+- **Có giỏ hàng + đặt đơn** (`js/basket.js`): trả khi nhận (COD) hoặc chuyển khoản VietQR (D14). Cách nhận hàng: giao tận nơi hoặc đặt trước, tự đến lấy (`p_pickup`). Giao tận nơi từ 250.000đ phải chuyển khoản trước, tự đến lấy thì không; hàng đặt riêng và workshop Thứ Bảy, Chủ Nhật trả trước 30% (Gem nhắn Zalo); chuyển khoản xong khách gửi ảnh qua Zalo, nhân sự vẫn kiểm tiền về trong app ngân hàng. Chi tiết: `docs/design.md` → "Thanh toán: tự đến lấy, ngưỡng 250.000đ". KHÔNG có cổng thẻ, KHÔNG có tài khoản khách — đăng nhập chỉ dành cho nhân sự (`admin.html`). Khách xem lại món đã mua qua "Tủ sưu tầm" bằng mã đơn + SĐT.
 - Chuyển khoản QR (11/2026): mã QR kèm số tiền **chỉ hiện khi giá đã chốt**. Giỏ có món khoảng giá hoặc "Liên hệ" thì màn cảm ơn chỉ có mã đơn + câu hẹn; nhân sự nhắn tổng tiền kèm mã QR sau (đơn vẫn lưu `payment_method = 'qr'`). Form đặt hàng: số điện thoại 9–15 chữ số, địa chỉ bắt buộc trừ khi tự đến lấy, lỗi hiện dưới từng ô. Chi tiết: `docs/design.md` → "Studio: công bố" → Đợt hai.
 
 - **Workshop: đặt bằng tin nhắn là lối chính** (Anna 14/11/2026): khách đặt lúc nào cũng được, chỉ cần nhắn trước; hướng dẫn bằng tiếng Việt hoặc tiếng Anh. Khung "Đặt lịch" đầu `workshop.html` + nút "Đặt lịch" trên mọi thẻ (`?loai=<slug>#dat-mon`); lịch cố định + form giữ chỗ chỉ hiện khi có buổi. **Studio không nhận thẻ** (tiền mặt / chuyển khoản): chữ "không nhận thẻ" nằm ở nhiều chỗ, danh sách ở `docs/design.md` → §14 "Máy POS".
 
 **Products (7 categories):**
-0. Kit DIY Kinusaiga (`kit`, 13/11/2026): khối `#kit-kinusaiga` đầu `san-pham.html` = giới thiệu + video hướng dẫn (`video/kit-kinusaiga-huong-dan.mp4`, bản nén 720×1280) + "Trong bộ kit" + một thẻ `kit-kinusaiga` có 4 Mẫu (ghế nhựa & cà phê, nón lá, hoa hồng, hướng dương), giá "Liên hệ" đến khi nhân sự nhập giá. Video nằm ngoài `.category-block` để không bị ẩn cùng thẻ; không có nút tải (18/11, `controlslist="nodownload"` + `data-no-save`). **Mã QR trên tờ hướng dẫn trỏ tới `https://gemchamsac.com/san-pham.html#kit-kinusaiga` — đừng đổi id này.** Xốp EPS là "tái sử dụng", không viết "tái chế".
+0. Kit DIY Kinusaiga (`kit`, 13/11/2026): khối `#kit-kinusaiga` đầu `san-pham.html` = giới thiệu + video hướng dẫn (`video/kit-kinusaiga-huong-dan.mp4`, bản nén 720×1280) + "Trong bộ kit" + thẻ `kit-kinusaiga` (đồng giá 250.000đ) có 9 Mẫu xếp từ dễ đến khó, mỗi Mẫu có độ khó 1–5 sao, bước nửa sao (`choices[].level`; admin có ô độ khó, thiếu ô đó thì lần lưu đầu xoá hết sao) + thẻ `kit-kinusaiga-theo-yeu-cau` (giá trống = "Liên hệ", "Từ 300.000đ" ở mô tả, trả trước 30% — viết "trả trước", không viết "cọc"; 18/11/2026, xem `docs/design.md` → "Kit Kinusaiga: 9 mẫu"). Video nằm ngoài `.category-block` để không bị ẩn cùng thẻ; không có nút tải (18/11, `controlslist="nodownload"` + `data-no-save`). **Mã QR trên tờ hướng dẫn trỏ tới `https://gemchamsac.com/san-pham.html#kit-kinusaiga` — đừng đổi id này.** Xốp EPS là "tái sử dụng", không viết "tái chế".
 1. Phụ kiện vải vụn (14 sản phẩm — tên thương hiệu in sẵn trên ảnh: Origami Pouch, Oxford Shirt, Reimagine the Denim, Bloom Charm, Túi bút kẹp sổ, Thảm/Gối Chắp Sắc, Lót Cốc, Túi đeo chéo, Bookmark, Ví & thẻ vải ghép, Bìa sổ, Dây đeo cổ tay, Dây buộc tóc). Túi tái chế (13/10/2026): Túi đi chơi (6 mẫu), Túi đi chợ (2 mẫu), Túi đựng laptop — mỗi túi một chiếc, là một "Mẫu" trong thẻ, bán thì bấm Hết
 2. Văn phòng phẩm bền vững (Sổ kraft spiral)
 3. Quần áo 2hand (1 card → gallery 23 ảnh, mỗi ảnh tự ghi tên món)
@@ -469,9 +469,10 @@ Công bố (Anna 12/11/2026, chi tiết: `docs/design.md` → "Studio: công b�
   bảng "?" (`gem-batngo`). 55 thông điệp (Tagom, US EPA, EEA, Ủy ban châu Âu, Ellen MacArthur, Climate Box
   của UNDP — bản Đông Nam Á cho khí hậu, sách 2015 cho mẹo) — câu mới chỉ thêm khi đã mở trang nguồn kiểm; không dùng Báo điện tử Chính phủ / mức phạt (Anna 06/11). Chi tiết: `docs/design.md` → "Bất ngờ ngoài phố: rác rơi". Test: `check-studio.py racroi`.
 - ⚖️ Pháp lý (12/11/2026, rà theo luật đang có hiệu lực): đã có `chinh-sach.html`, dòng thông báo ở các form, nội dung đơn
-  trên màn cảm ơn (khách không có tài khoản để xem lại đơn). Còn chờ chủ shop: thông tin pháp lý của hộ kinh doanh
-  (footer + mục "Ai đứng sau trang này"), biểu phí và thời gian giao, điều kiện đổi trả, thời hạn trả lời khiếu nại,
-  cùng các thủ tục với cơ quan nhà nước. Danh sách chi tiết nằm ở tài liệu riêng của chủ shop, **không để trong repo**
+  trên màn cảm ơn (khách không có tài khoản để xem lại đơn). 18/11: thêm người bán (HỘ KINH DOANH GEM CHẠM SẮC, mã số
+  thuế ở footer 10 trang (`footer.legal`); địa chỉ đăng ký — khác địa chỉ studio — chỉ ở mục "Ai đứng sau trang này"; mục
+  "Đổi hàng, hàng lỗi và huỷ đơn". Còn chờ chủ shop: số / ngày / nơi cấp giấy đăng ký nếu luật mới bắt, biểu phí và
+  thời gian giao, thời hạn trả lời khiếu nại, cùng các thủ tục với cơ quan nhà nước. Danh sách chi tiết nằm ở tài liệu riêng của chủ shop, **không để trong repo**
   (repo và GitHub Pages đều công khai). Chi tiết: `docs/design.md` → "Pháp lý".
 - Mail báo nhân sự: `notify_log` có hai dòng lời nhắn (04/10, 01/11), theo code thì chỉ ghi khi Gmail đã
   cấu hình và gửi không lỗi; chưa có đơn / giữ chỗ thật nào đi qua. Nên đặt thử một đơn thật rồi huỷ
@@ -494,7 +495,7 @@ Công bố (Anna 12/11/2026, chi tiết: `docs/design.md` → "Studio: công b�
   Chi tiết: `docs/design.md` → "Hàng ký gửi + lựa chọn".
 - 📝 Bản dịch EN là first-pass — Anna review & chỉnh trong `STRINGS` (`js/i18n.js`)
 - 🚚 Chọn đối tác giao hàng cho COD
-- 💳 Quyết định ngưỡng bắt buộc chuyển khoản (hiện đang tắt)
+- ✅ Ngưỡng bắt buộc chuyển khoản: 250.000đ, chỉ đơn giao tận nơi (18/11/2026; đặt bằng SQL sau khi merge, admin chưa có màn cài đặt)
 
 ---
 

@@ -106,7 +106,10 @@ window.GemDB = (function () {
           p_address: o.address || null,
           p_note: o.note || null,
           p_channel: o.channel || null,
-          p_payment: o.payment || null
+          p_payment: o.payment || null,
+          // "tự đến lấy": the transfer-first threshold is for deliveries only
+          // (migration 20261118c_create_order_tu_den_lay.sql)
+          p_pickup: !!o.pickup
         })
       });
     },
