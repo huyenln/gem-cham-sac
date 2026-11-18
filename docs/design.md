@@ -3663,6 +3663,11 @@ thẻ**; khách nước ngoài liên hệ qua **email, Threads, Instagram, Faceb
   199.000đ. Database (đã chạy): `price = 59000`, `price_from = true` → thẻ ghi "Từ 59.000đ"; dòng
   giá theo cỡ là dòng đầu của "Cần biết trước" (`note_vi` / `note_en`). Đổi giá thì sửa cả hai chỗ
   trong admin → Đặt lịch → loại workshop.
+  **18/11:** đổi tên thành "Làm tranh nhét vải Kinusaiga tái chế" (EN "Recycled Kinusaiga: no-sew
+  fabric pictures"), ba mức theo mẫu tranh: 60.000đ (nhỏ hơn, đơn giản hơn, không khung bọc viền) ·
+  99.000đ (không khung bọc viền) · 199.000đ (khung bọc viền vải / quần bò cũ như Kit DIY Kinusaiga,
+  làm tại Gem). `supabase/migrations/20261118b_workshop_kinusaiga_3_muc.sql` (chỉ dữ liệu, chạy lúc
+  nào cũng được); slug `kinusaiga` giữ nguyên.
 - **Còn mở:** `?lang=en` trên link (Anna: chưa).
 
 ### Trang chủ: Studio 2D ngay dưới hero, có video xem trước (18/11/2026)

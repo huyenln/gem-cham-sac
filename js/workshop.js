@@ -253,7 +253,7 @@
   }
 
   /* ---------- dòng thông tin: thời lượng · tuổi · giá ----------
-     Ghi y như bản in Chạm Mùa: "1–1,5 tiếng", "30–60 phút", "Từ 59.000đ".
+     Ghi y như bản in Chạm Mùa: "1–1,5 tiếng", "30–60 phút", "Từ 60.000đ".
      Buổi lấy từ sessions_public không có ba cột mới (duration_max, age_min,
      price_from) — thiếu thì đơn giản là không ghi phần đó. */
   function durText(o) {
