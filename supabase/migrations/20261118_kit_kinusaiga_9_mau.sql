@@ -6,7 +6,7 @@
 --    quai thao: giờ là ảnh riêng của Mẫu nón quai thao, nón lá có ảnh thật.
 --    Chỉ đổi options, gallery, desc: KHÔNG đụng giá (250.000đ), còn/hết, ghi chú.
 -- 2. kit-kinusaiga-theo-yeu-cau: thẻ mới, giá để trống ("Liên hệ") vì Gem báo giá
---    theo thiết kế (từ 300.000đ, ghi ở mô tả). Cọc 30% qua Zalo, không qua web.
+--    theo thiết kế (từ 300.000đ, ghi ở mô tả). Trả trước 30% (không gọi là "cọc": Anna 18/11), Gem nhắn thông tin chuyển khoản.
 --
 -- 0. product_options_ok(): `level`, nếu có, phải là số 1–5 theo bước 0,5. Thân hàm
 --    giữ nguyên như bản đang chạy, chỉ thêm đúng điều kiện đó. CREATE OR REPLACE giữ
@@ -103,18 +103,18 @@ values ('kit-kinusaiga-theo-yeu-cau',
         'Cách đặt:
 1. Gửi ảnh hoặc ý tưởng cho Gem qua Zalo, Messenger, Instagram hoặc email. Hoặc đặt ở đây rồi ghi ý tưởng vào ô ghi chú của đơn.
 2. Gem báo giá theo độ chi tiết và độ khó của thiết kế, từ 300.000đ.
-3. Chốt giá thì bạn cọc 30%: Gem nhắn thông tin chuyển khoản qua Zalo. Phần còn lại trả khi nhận kit.
+3. Chốt giá thì bạn trả trước 30%: Gem nhắn thông tin chuyển khoản qua Zalo. Phần còn lại trả khi nhận kit.
 4. Gem làm kit trong 3–5 ngày, ngày cụ thể chốt khi trao đổi.
 Hàng đặt riêng không đổi trả, trừ khi lỗi do Gem.
-Huỷ sau khi đã cọc: Gem giữ cọc. Gem hoàn cọc nếu Gem không làm kịp ngày đã hẹn hoặc không làm được thiết kế đã chốt; trường hợp khác Gem xem lý do.
+Huỷ sau khi đã trả trước: Gem giữ khoản trả trước. Gem trả lại khoản này nếu Gem không làm kịp ngày đã hẹn hoặc không làm được thiết kế đã chốt; trường hợp khác Gem xem lý do.
 Dụng cụ có đầu nhọn, lưỡi sắc: trẻ em làm tranh cần có người lớn đồng hành.',
         'How to order:
 1. Send Gem your photo or idea on Zalo, Messenger, Instagram or by email. Or order here and write your idea in the order note.
 2. Gem quotes a price by how detailed and how hard the design is, from 300,000₫.
-3. Once the price is agreed, you pay a 30% deposit: Gem messages you the bank details. The rest is paid when you receive the kit.
+3. Once the price is agreed, you pay 30% up front: Gem messages you the bank details. The rest is paid when you receive the kit.
 4. Gem makes the kit in 3–5 days; the exact day is agreed when we talk.
 Made-to-order pieces cannot be exchanged or returned, unless Gem made a mistake.
-Cancelling after the deposit: Gem keeps the deposit. Gem refunds it if Gem misses the agreed day or cannot make the agreed design; otherwise Gem looks at your reason.
+Cancelling after paying up front: Gem keeps the advance payment. Gem pays it back if Gem misses the agreed day or cannot make the agreed design; otherwise Gem looks at your reason.
 The tools are sharp: children should craft with an adult.',
         true,
         true)

@@ -3550,7 +3550,13 @@ web; khối Kit đứng **đầu** `san-pham.html`.
 ### Kit Kinusaiga: 9 mẫu có độ khó, kit theo yêu cầu, đổi trả (18/11/2026)
 
 Anna chốt 18/11: kit thiết kế sẵn **đồng giá 250.000đ**, 9 Mẫu; kit theo yêu cầu **từ 300.000đ**
-tuỳ chi tiết và độ khó, làm 3–5 ngày, cọc 30%; hàng đặt riêng không đổi trả.
+tuỳ chi tiết và độ khó, làm 3–5 ngày, trả trước 30%; hàng đặt riêng không đổi trả.
+
+**Viết "trả trước 30%", không viết "cọc"** (Anna 18/11). "Đặt cọc" theo Bộ luật Dân sự Điều 328:
+bên nhận cọc không thực hiện thì trả lại cọc cộng một khoản bằng tiền cọc, trừ khi thoả thuận khác;
+điều khoản lệch một chiều (khách huỷ mất cọc, Gem huỷ chỉ hoàn) dễ bị coi là bất lợi cho người tiêu
+dùng (Luật BVQLNTD 19/2023 Điều 25). Gọi là khoản trả trước thì không vướng quy tắc phạt cọc. Áp cho
+mọi chữ về khoản 30%, kể cả đợt sau (đơn trên 100.000đ, workshop cuối tuần).
 
 - **Ảnh "nón lá" cũ là nón quai thao** (chụp lúc làm dở). Giờ `kit-kinusaiga-non-la.jpg` là
   nón lá thật (ghi đè cùng tên, nên vừa merge là đúng ảnh); nón quai thao có ảnh riêng. Ảnh mới
@@ -3571,27 +3577,27 @@ tuỳ chi tiết và độ khó, làm 3–5 ngày, cọc 30%; hàng đặt riên
   một giá). Giá để trống → "Liên hệ", "Từ 300.000đ" nằm ở mô tả: cho `price = 300000` thì web coi
   là giá đã chốt và màn cảm ơn hiện QR đúng 300.000đ. Không có thẻ dựng sẵn trong HTML: thẻ đó
   không có giá khi database chưa trả lời, `catalog.js` dựng từ database. Ghi chú của thẻ là cách
-  đặt, cọc, thời gian, huỷ, không đổi trả.
+  đặt, khoản trả trước, thời gian, huỷ, không đổi trả.
 - **Dữ liệu:** `supabase/migrations/20261118_kit_kinusaiga_9_mau.sql` — **chạy ngay sau khi
   merge** (sửa `product_options_ok`, ghi đè `options`/`gallery`/`desc` của kit, thêm thẻ theo yêu
   cầu; không đụng giá, còn/hết, ghi chú).
 - **Chính sách** (`chinh-sach.html`, ngày 18/11): mục mới `#doi-tra` "Đổi hàng, hàng lỗi và huỷ
   đơn" — hàng có sẵn đổi trong 7 ngày, không hoàn tiền, người nhận trả phí giao; không đổi hàng
   ký gửi, kit đã bóc, món đã dùng, hàng đặt riêng; hàng lỗi do Gem (kể cả ký gửi, đặt riêng) báo
-  trong 7 ngày, Gem đổi hoặc hoàn tiền và trả phí giao. Thêm cọc kit theo yêu cầu (`pay_5`,
+  trong 7 ngày, Gem đổi hoặc hoàn tiền và trả phí giao. Thêm khoản trả trước của kit theo yêu cầu (`pay_5`,
   `order_5`, `ret_5`), cách hoàn tiền (`ret_6`) và số tài khoản nhận hoàn tiền (`data_w8`).
 - **Workshop:** nhắn trước giờ học **ít nhất 3 tiếng** (Anna nói 2–3 tiếng; một con số dễ hiểu
   hơn), ngày lễ nhắn hỏi trước, Tết nghỉ (`ws.book_s2`, `ws.page_book_p`, `policy.order_4`).
   `ghe-tham.html` thêm "nghỉ Tết".
-- **Cọc 30% còn chờ (PR sau):** đơn trên 100.000đ (đơn đúng 100.000đ không cọc) và workshop
-  cuối tuần (Thứ Bảy, Chủ Nhật; ngày lễ nhắn trước). Cọc **qua Zalo**, không có mã QR cọc trên web,
-  cho tới khi chốt xong pháp lý. Đơn có sẵn huỷ trong 24 giờ kể từ lúc chuyển cọc, Gem chưa gửi →
-  hoàn đủ cọc; sau đó ghi lý do, Gem xem từng trường hợp. Workshop cuối tuần: báo huỷ / dời trước
-  24 giờ → hoàn cọc hoặc chuyển buổi; muộn hơn / không đến → giữ cọc; Gem huỷ → hoàn đủ. Chưa
-  ghi lên web vì giỏ hàng còn cho chọn "Trả khi nhận" không cọc.
+- **Trả trước 30% còn chờ (PR sau):** đơn trên 100.000đ (đơn đúng 100.000đ thì không) và workshop
+  cuối tuần (Thứ Bảy, Chủ Nhật; ngày lễ nhắn trước). Đơn có sẵn huỷ trong 24 giờ kể từ lúc chuyển
+  khoản trả trước, Gem chưa gửi → hoàn đủ; sau đó ghi lý do, Gem xem từng trường hợp. Workshop cuối
+  tuần: báo huỷ / dời trước 24 giờ → hoàn hoặc chuyển buổi; muộn hơn / không đến → Gem giữ; Gem huỷ
+  → hoàn đủ. Chưa ghi lên web vì giỏ hàng còn cho chọn "Trả khi nhận" không trả trước.
 - **Mã QR chuyển khoản trên web (rà 18/11):** shop tự sinh VietQR vào tài khoản của chính hộ kinh
-  doanh không phải dịch vụ trung gian thanh toán, không cần giấy phép riêng. Điều kiện đi kèm và
-  các điểm còn hỏi luật sư (kể cả cách viết điều khoản cọc) nằm trong danh sách riêng của chủ shop.
+  doanh không phải dịch vụ trung gian thanh toán, không cần giấy phép riêng: **giữ mã QR** (Anna
+  18/11). Giá chuyển khoản và tiền mặt phải như nhau (không thu thêm phí), chỉ dùng tài khoản của
+  hộ kinh doanh. Thủ tục và các điểm còn hỏi luật sư nằm trong danh sách riêng của chủ shop.
 
 ### Khách nước ngoài: đặt lịch bằng tin nhắn, kênh liên hệ, giá tiếng Anh (14/11/2026)
 
