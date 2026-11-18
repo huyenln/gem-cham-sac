@@ -2804,8 +2804,15 @@ có giỏ và form gửi đơn). Văn bản chính:
   khi giỏ bị xoá; chữ khách gõ đi qua `esc()`).
 - **Ưu đãi chia sẻ của Chạm Mùa**: bỏ "Google Maps" (Google cấm đổi quà lấy đánh giá).
 
-**Chưa viết được vì chờ chủ shop chốt** (đừng tự điền): thông tin pháp lý của hộ kinh doanh (tên, mã
-số thuế, số giấy đăng ký, người chịu trách nhiệm nội dung: đưa vào footer và mục `#ve-gem`); biểu phí,
+**Thông tin người bán (18/11/2026, Anna):** HỘ KINH DOANH GEM CHẠM SẮC, mã số thuế, địa chỉ đăng ký
+kinh doanh (khác địa chỉ studio ở Lê Gia Đỉnh) — trong mục `#ve-gem` của `chinh-sach.html` (`policy.who_*`)
+và dòng `.footer-legal` (`footer.legal`: tên + mã số thuế, **không** có địa chỉ đăng ký — Anna muốn địa chỉ
+đó chỉ ở trang Chính sách) ở footer 10 trang. Lưu ý: từ 01/7/2025 mã số thuế của hộ kinh
+doanh là số định danh cá nhân của chủ hộ (Thông tư 86/2024/TT-BTC); chủ shop đã biết và chọn đăng. Đổi
+địa chỉ đăng ký thì sửa cả hai chỗ.
+
+**Chưa viết được vì chờ chủ shop chốt** (đừng tự điền): số / ngày / nơi cấp giấy đăng ký hộ kinh doanh
+và người chịu trách nhiệm nội dung nếu luật mới bắt (chưa đối chiếu được Nghị định 248/2026); biểu phí,
 khu vực và thời gian giao hàng (luật muốn số tiền phải trả hiện đủ **trước** khi gửi đơn, nên phí giao
 cần hiện trong giỏ; món "Liên hệ" / khoảng giá cũng vướng điểm này); điều kiện, thời hạn đổi trả và
 hoàn tiền; thời hạn trả lời khiếu nại; nội dung nhãn của từng sản phẩm (bên chịu trách nhiệm, xuất xứ,
@@ -3554,6 +3561,104 @@ web; khối Kit đứng **đầu** `san-pham.html`.
 - Xốp EPS của Gem là **tái sử dụng**, không viết "tái chế" (câu "Kinusaiga tái chế" là tên
   sáng tạo của Gem, chủ shop duyệt).
 
+### Kit Kinusaiga: 9 mẫu có độ khó, kit theo yêu cầu, đổi trả (18/11/2026)
+
+Anna chốt 18/11: kit thiết kế sẵn **đồng giá 250.000đ**, 9 Mẫu; kit theo yêu cầu **từ 300.000đ**
+tuỳ chi tiết và độ khó, làm 3–5 ngày, trả trước 30%; hàng đặt riêng không đổi trả.
+
+**Viết "trả trước 30%", không viết "cọc"** (Anna 18/11). "Đặt cọc" theo Bộ luật Dân sự Điều 328:
+bên nhận cọc không thực hiện thì trả lại cọc cộng một khoản bằng tiền cọc, trừ khi thoả thuận khác;
+điều khoản lệch một chiều (khách huỷ mất cọc, Gem huỷ chỉ hoàn) dễ bị coi là bất lợi cho người tiêu
+dùng (Luật BVQLNTD 19/2023 Điều 25). Gọi là khoản trả trước thì không vướng quy tắc phạt cọc. Áp cho
+mọi chữ về khoản 30%, kể cả đợt sau (đơn trên 100.000đ, workshop cuối tuần).
+
+- **Ảnh "nón lá" cũ là nón quai thao** (chụp lúc làm dở). Giờ `kit-kinusaiga-non-la.jpg` là
+  nón lá thật (ghi đè cùng tên, nên vừa merge là đúng ảnh); nón quai thao có ảnh riêng. Ảnh mới
+  cắt sát tranh, cạnh dài ≤1600px, q85; ảnh phụ `-2/-3/-4` (túi kit, góc khác) xếp sau 9 ảnh
+  chính trong `gallery`. Ảnh thẻ: lưới 2×2 (rối nước cô tiên · ghế nhựa · hoa sen · mèo béo) và
+  hai ô dọc cho kit theo yêu cầu (thiên thần · cô gái và trăng). Poster 20/10 có ảnh người thật:
+  người trong ảnh đã đồng ý (Anna 18/11), chỉ là ảnh phụ.
+- **Độ khó 1–5 sao, bước nửa sao** = `options.choices[].level`. Mẫu xếp từ dễ đến khó: nón lá 1 ·
+  mèo béo 1 · hoa hồng 2 · hướng dương 2 · hoa sen 3 · rối nước cô tiên 3 · nón quai thao 3,5 ·
+  ghế nhựa & cà phê 4 · mèo nằm ngửa 5. `js/gallery.js` vẽ 5 sao SVG dưới tên trên mỗi nút chọn
+  (hàng sao đặc cắt theo `level/5` chiều rộng, nên 3,5 tô nửa sao thứ tư; trình đọc màn hình
+  đọc "Độ khó 3,5 trên 5"), thêm dòng "Lần đầu làm? Bắt đầu với mẫu 1 sao." (`products.level_*`).
+  Không dùng ký tự ★: phông của web không có, mỗi máy vẽ một kiểu.
+- **Admin giữ `level`:** khi lưu, admin dựng lại `choices` từ các ô nó biết, nên thiếu ô độ khó
+  là lần lưu đầu tiên (vd bấm "Hết" một Mẫu) xoá sạch sao. Mỗi lựa chọn có ô "Độ khó (sao)",
+  để trống với sản phẩm khác. `product_options_ok()` nhận `level` là số 1–5 bước 0,5.
+- **Kit theo yêu cầu** = thẻ riêng `kit-kinusaiga-theo-yeu-cau` (không phải Mẫu thứ 10: một thẻ
+  một giá). Giá để trống → "Liên hệ", "Từ 300.000đ" nằm ở mô tả: cho `price = 300000` thì web coi
+  là giá đã chốt và màn cảm ơn hiện QR đúng 300.000đ. Không có thẻ dựng sẵn trong HTML: thẻ đó
+  không có giá khi database chưa trả lời, `catalog.js` dựng từ database. Ghi chú của thẻ là cách
+  đặt, khoản trả trước, thời gian, huỷ, không đổi trả.
+- **Dữ liệu:** `supabase/migrations/20261118_kit_kinusaiga_9_mau.sql` — **chạy ngay sau khi
+  merge** (sửa `product_options_ok`, ghi đè `options`/`gallery`/`desc` của kit, thêm thẻ theo yêu
+  cầu; không đụng giá, còn/hết, ghi chú).
+- **Chính sách** (`chinh-sach.html`, ngày 18/11): mục mới `#doi-tra` "Đổi hàng, hàng lỗi và huỷ
+  đơn" — hàng có sẵn đổi trong 7 ngày, không hoàn tiền, người nhận trả phí giao; không đổi hàng
+  ký gửi, kit đã bóc, món đã dùng, hàng đặt riêng; hàng lỗi do Gem (kể cả ký gửi, đặt riêng) báo
+  trong 7 ngày, Gem đổi hoặc hoàn tiền và trả phí giao. Thêm khoản trả trước của kit theo yêu cầu (`pay_5`,
+  `order_5`, `ret_5`), cách hoàn tiền (`ret_6`) và số tài khoản nhận hoàn tiền (`data_w8`).
+- **Workshop:** nhắn trước giờ học **ít nhất 3 tiếng** (Anna nói 2–3 tiếng; một con số dễ hiểu
+  hơn), ngày lễ nhắn hỏi trước, Tết nghỉ (`ws.book_s2`, `ws.page_book_p`, `policy.order_4`).
+  `ghe-tham.html` thêm "nghỉ Tết".
+- **Trả trước 30%, ngưỡng 250.000đ, ảnh chuyển khoản:** xem mục ngay dưới.
+- **Mã QR chuyển khoản trên web (rà 18/11):** shop tự sinh VietQR vào tài khoản của chính hộ kinh
+  doanh không phải dịch vụ trung gian thanh toán, không cần giấy phép riêng: **giữ mã QR** (Anna
+  18/11). Giá chuyển khoản và tiền mặt phải như nhau (không thu thêm phí), chỉ dùng tài khoản của
+  hộ kinh doanh. Thủ tục và các điểm còn hỏi luật sư nằm trong danh sách riêng của chủ shop.
+
+### Thanh toán: tự đến lấy, ngưỡng 250.000đ, ảnh chuyển khoản, trả trước 30% (18/11/2026)
+
+Anna chốt 18/11 (bàn kỹ: hàng có sẵn **không** thu trả trước 30% — rủi ro thật là bom hàng khi giao,
+mất phí giao hai chiều chứ không mất 30% giá trị; tự đến lấy thì món vẫn ở studio):
+
+| | Giao tận nơi | Đặt trước, tự đến lấy |
+|---|---|---|
+| Hàng có sẵn < 250.000đ | trả khi nhận / chuyển khoản | trả khi đến lấy / chuyển khoản |
+| Hàng có sẵn ≥ 250.000đ | **chuyển khoản toàn bộ trước** | trả khi đến lấy / chuyển khoản |
+| Hàng đặt riêng (kit theo yêu cầu, món ở Bàn thiết kế) | trả trước 30% sau khi chốt giá / duyệt vải, Gem nhắn Zalo | như bên trái |
+| Workshop Thứ Bảy, Chủ Nhật | trả trước 30% khi Gem xác nhận chỗ, nhắn Zalo | — |
+
+Viết **"trả trước"**, không viết "cọc" (xem mục Kit Kinusaiga: 9 mẫu). Ngày lễ: khách nhắn hỏi trước;
+Tết nghỉ.
+
+- **Form đặt hàng:** "Cách nhận hàng" là hai lựa chọn ở đầu form (`name="recv"`: `ship` / `pickup`),
+  thay ô tick cũ. Chọn tự đến lấy thì ẩn ô địa chỉ, dòng "Trả khi nhận" đổi thành "Trả tại cửa hàng".
+  Giao tận nơi từ ngưỡng: "Trả khi nhận" khoá, kèm dòng `basket.prepay_note` (số tiền lấy từ cài đặt).
+- **Database:** `create_order(…, p_pickup boolean default false)` —
+  `supabase/migrations/20261118c_create_order_tu_den_lay.sql`, **đã chạy 18/11** (trước khi merge; web
+  cũ vẫn gọi được). Ngưỡng chỉ chặn COD khi `not p_pickup`; đơn tự đến lấy ghi địa chỉ cố định "Tự đến
+  lấy tại studio" (không lấy chữ trình duyệt gửi). Thêm tham số = hàm mới: đã DROP bản cũ và cấp lại
+  EXECUTE cho anon + authenticated (PUBLIC không), kiểm bằng `has_function_privilege` và gọi thử qua
+  API công khai bằng tên trống (dừng ở `no_name`, không tạo đơn). Chạy thử trước trong một khối DO
+  tự huỷ: giao + COD ≥ ngưỡng → `prepay_required`; tự đến lấy + COD → được; lời gọi kiểu cũ → như giao.
+- **Ngưỡng 250.000đ** = `settings.payment.prepay_threshold`. **Admin chưa có màn sửa cài đặt này**
+  (khác điều §Sprint 5 tưởng): đổi bằng SQL, **sau khi merge**:
+  `update public.settings set value = jsonb_set(value, '{prepay_threshold}', '250000') where key = 'payment';`
+  Đổi số thì sửa cả `policy.pay_6` ở trang Chính sách.
+- **Ảnh chuyển khoản:** màn cảm ơn có mã QR thì có khối "Chuyển xong, gửi ảnh chuyển khoản cho Gem"
+  (`renderSendBill`): Zalo · Messenger · Instagram (tiếng Anh Instagram đầu, Zalo cuối), bấm là chép
+  câu có mã đơn + số tiền (`basket.bill_msg`) rồi mở khung chat. Ảnh chỉ để khớp nhanh — biên lai sửa
+  bằng app là chiêu lừa hay gặp: admin ghi rõ cạnh nút "Đã nhận tiền" là phải thấy tiền về trong app
+  ngân hàng, có mã đơn ở nội dung, rồi mới bấm.
+- **Hàng đặt riêng:** `CONFIG.madeToOrder` trong `js/basket.js` (hiện `kit-kinusaiga-theo-yeu-cau`)
+  + món có mã thiết kế: không chọn cách trả lúc đặt, chữ nói trả trước 30% khi Gem nhắn duyệt. Admin
+  (`MADE_TO_ORDER`, cùng danh sách) hiện "Làm riêng · trả trước 30% qua Zalo" và nút "Đã nhận trả
+  trước" (vẫn là `payment_status = 'paid'`: bảng chỉ có unpaid / paid / refunded). Thêm món làm riêng
+  thì thêm sku vào **cả hai** danh sách.
+- **Workshop cuối tuần:** khung Đặt lịch, trang từng workshop (`ws.book_wkend`), màn giữ chỗ xong
+  cho buổi Thứ Bảy / Chủ Nhật theo giờ Việt Nam (`ws.done_wkend_p`). Cách huỷ đi kèm.
+- **Chính sách:** cách nhận hàng (`order_1`), Gem nhắn Zalo theo số điện thoại để hẹn giao (`order_2`),
+  ngưỡng (`pay_6`), ảnh chuyển khoản (`pay_2`, `data_w9`), hàng đặt riêng (`pay_5`, `order_3`,
+  `ret_5`), workshop cuối tuần (`pay_3`, `ret_8`), huỷ đơn đã chuyển khoản: 24 giờ hoàn đủ, sau đó
+  xem lý do (`ret_7`, quy tắc Anna đặt cho khoản trả trước, áp cho đơn đã chuyển khoản).
+- **Còn hở (luật):** đơn giao tận nơi chuyển khoản trước tiền hàng, phí giao Gem báo sau — luật muốn
+  tổng số tiền hiện đủ trước khi gửi đơn (đã ghi ở mục Pháp lý: chờ biểu phí giao).
+- Kiểm: `tools/check-studio.py order` (hai lựa chọn nhận hàng, khoá COD chỉ khi giao, `p_pickup`, khối
+  gửi ảnh chuyển khoản, kit theo yêu cầu không có ô chọn cách trả).
+
 ### Khách nước ngoài: đặt lịch bằng tin nhắn, kênh liên hệ, giá tiếng Anh (14/11/2026)
 
 Rà web theo góc nhìn khách nước ngoài quét QR (iPhone, trình duyệt tiếng Anh, bản live). Bản
@@ -3618,6 +3723,11 @@ thẻ**; khách nước ngoài liên hệ qua **email, Threads, Instagram, Faceb
   199.000đ. Database (đã chạy): `price = 59000`, `price_from = true` → thẻ ghi "Từ 59.000đ"; dòng
   giá theo cỡ là dòng đầu của "Cần biết trước" (`note_vi` / `note_en`). Đổi giá thì sửa cả hai chỗ
   trong admin → Đặt lịch → loại workshop.
+  **18/11:** đổi tên thành "Làm tranh nhét vải Kinusaiga tái chế" (EN "Recycled Kinusaiga: no-sew
+  fabric pictures"), ba mức theo mẫu tranh: 60.000đ (nhỏ hơn, đơn giản hơn, không khung bọc viền) ·
+  99.000đ (không khung bọc viền) · 199.000đ (khung bọc viền vải / quần bò cũ như Kit DIY Kinusaiga,
+  làm tại Gem). `supabase/migrations/20261118b_workshop_kinusaiga_3_muc.sql` (chỉ dữ liệu, chạy lúc
+  nào cũng được); slug `kinusaiga` giữ nguyên.
 - **Còn mở:** `?lang=en` trên link (Anna: chưa).
 
 ### Trang chủ: Studio 2D ngay dưới hero, có video xem trước (18/11/2026)

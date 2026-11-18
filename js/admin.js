@@ -68,6 +68,12 @@
       .replace(/"/g, '&quot;');
   }
 
+  // A choice's difficulty: 1 to 5 in half steps, or null (js/gallery.js draws the stars)
+  function cleanLevel(v) {
+    var n = Math.round(parseFloat(String(v == null ? '' : v).replace(',', '.')) * 2) / 2;
+    return n >= 1 && n <= 5 ? n : null;
+  }
+
   function vn(iso) {
     var p = {};
     new Intl.DateTimeFormat('en-CA', {
@@ -354,7 +360,7 @@
               '<textarea class="wt-long" rows="7"></textarea></label>' +
             '<label class="ad-f"><span>Bạn sẽ làm gì — mỗi dòng một ý</span>' +
               '<textarea class="wt-what" rows="4"></textarea></label>' +
-            '<label class="ad-f"><span>Cần biết trước — mỗi dòng một ý</span>' +
+            '<label class="ad-f"><span>Lưu ý — mỗi dòng một ý</span>' +
               '<textarea class="wt-note" rows="4"></textarea></label>' +
             '<div class="ad-f">' +
               '<span>Ảnh bìa</span>' +
@@ -738,9 +744,19 @@
 
   function renderOrders() {
     // Đơn chuyển khoản chưa thấy tiền về — việc đối soát hằng ngày
+    // Made to order (a design from the Bàn thiết kế, or the custom kit): the
+    // customer picks no payment at checkout; Gem asks for 30% up front on Zalo
+    // once the fabrics / the price are agreed (Anna 18/11/2026). Same list as
+    // CONFIG.madeToOrder in js/basket.js.
+    var MADE_TO_ORDER = ['kit-kinusaiga-theo-yeu-cau'];
+    function madeToOrder(o) {
+      return (o.order_items || []).some(function (it) {
+        return /^Thiết kế riêng/.test(it.option_vi || '') || MADE_TO_ORDER.indexOf(it.sku) >= 0;
+      });
+    }
     function waitingMoney(o) {
-      return o.payment_method === 'qr' && o.payment_status !== 'paid' &&
-             o.status !== 'cancelled';
+      return (o.payment_method === 'qr' || (!o.payment_method && madeToOrder(o))) &&
+             o.payment_status !== 'paid' && o.status !== 'cancelled';
     }
 
     var list = orders.filter(function (o) {
@@ -774,8 +790,11 @@
       }).join('');
 
       var paid = o.payment_status === 'paid';
+      var mto = !o.payment_method && madeToOrder(o);
       var pm = o.payment_method === 'qr' ? 'Chuyển khoản'
-             : o.payment_method === 'cod' ? 'Trả khi nhận' : null;
+             : o.payment_method === 'cod' ? 'Trả khi nhận'
+             : mto ? 'Làm riêng · trả trước 30% qua Zalo' : null;
+      var paidWord = mto ? 'trả trước' : 'tiền';
 
       return '<article class="ad-order" data-id="' + esc(o.id) + '">' +
         '<div class="ad-od-head">' +
@@ -784,7 +803,7 @@
         '</div>' +
         (pm ? '<p class="ad-od-pay">' + pm +
               ' · <span class="ad-paid' + (paid ? ' yes' : '') + '">' +
-              (paid ? 'đã nhận tiền' : 'chưa nhận tiền') + '</span></p>' : '') +
+              (paid ? 'đã nhận ' : 'chưa nhận ') + paidWord + '</span></p>' : '') +
         '<p class="ad-od-when">' + esc(whenLabel(o.created_at)) + '</p>' +
         '<p class="ad-od-who"><b>' + esc(o.name) + '</b></p>' +
         phoneLinks(o.phone) +
@@ -794,13 +813,19 @@
         fabricsToTake(o) +
         '<p class="ad-od-sum"><span>Tổng</span><b>' + esc(money(o.subtotal)) +
           (o.has_unpriced ? ' + món Liên hệ' : '') + '</b></p>' +
+        // A screenshot of a transfer proves nothing (it is easy to edit): the
+        // money has to be seen in the bank app, with the order code in the note.
+        ((o.payment_method === 'qr' || mto) && !paid
+          ? '<p class="ad-hint ad-paid-hint">Khách gửi ảnh chuyển khoản qua Zalo chỉ để khớp nhanh. ' +
+            'Mở app ngân hàng, thấy tiền về có mã ' + esc(o.code) + ' trong nội dung rồi mới bấm.</p>'
+          : '') +
         '<div class="ad-acts">' +
           // Web không tự biết tiền đã về. Anna mở app ngân hàng, thấy nội dung
           // chuyển khoản trùng mã đơn, rồi bấm nút này.
-          (o.payment_method
+          (o.payment_method || mto
             ? '<button type="button" class="ad-btn' + (paid ? ' on' : '') + '" data-paid="' +
               (paid ? 'unpaid' : 'paid') + '">' +
-              (paid ? 'Bỏ đánh dấu đã nhận' : 'Đã nhận tiền') + '</button>'
+              (paid ? 'Bỏ đánh dấu đã nhận' : 'Đã nhận ' + paidWord) + '</button>'
             : '') +
           (st.next
             ? '<button type="button" class="ad-btn ad-primary" data-to="' + st.next + '">' +
@@ -1036,6 +1061,15 @@
        adding, moving, removing, Còn/Hết and a new photo redraw the list. A
        choice keeps its key for good once saved: baskets and orders hold it. */
     var chUl = form.querySelector('.ad-choices');
+    // 1 to 5 stars in half steps; "" = no difficulty shown
+    function levelOptions(cur) {
+      var v = cleanLevel(cur), h = '<option value="">—</option>';
+      for (var s = 1; s <= 5; s += 0.5) {
+        h += '<option value="' + s + '"' + (v === s ? ' selected' : '') + '>' +
+          String(s).replace('.', ',') + ' sao</option>';
+      }
+      return h;
+    }
     function renderChoices() {
       chUl.innerHTML = choices.map(function (c, i) {
         return '<li class="ad-choice' + (c.out ? ' is-out' : '') + '" data-i="' + i + '">' +
@@ -1052,6 +1086,9 @@
               '<input data-cf="note_vi" maxlength="300" value="' + esc(c.note_vi || '') + '"></label>' +
             '<label class="ad-f"><span>Mô tả ngắn (EN)</span>' +
               '<input data-cf="note_en" maxlength="300" value="' + esc(c.note_en || '') + '"></label>' +
+            // difficulty, as stars on the choice (kit Kinusaiga: 1 = easiest)
+            '<label class="ad-f ad-f-level"><span>Độ khó (sao) — để trống nếu không dùng</span>' +
+              '<select data-cf="level">' + levelOptions(c.level) + '</select></label>' +
             // the mẫu's own cut-out: what the character wears at Góc thử đồ
             '<div class="ad-choice-cut"><span class="ad-cut-prev ad-cut-sm">' +
               (c.cut ? '<img src="' + esc(c.cut) + '" alt="">' : '') + '</span>' +
@@ -1407,6 +1444,9 @@
           });
           if (c.image) o.image = c.image;
           if (c.cut) o.cut = c.cut;
+          // kept here or a save would wipe the stars of every choice
+          var lv = cleanLevel(c.level);
+          if (lv) o.level = lv;
           if (c.out) o.out = true;
           return o;
         })

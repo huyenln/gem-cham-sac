@@ -15,9 +15,12 @@
     /* Đặt lịch bằng tin nhắn (14/11/2026): khung #dat-lich đầu trang, khung
        #dat-mon trong trang từng workshop, và lời nhắc cuối trang. */
     'ws.book_h':        { vi: `Đặt lịch`, en: `Book a workshop` },
-    'ws.book_s1':       { vi: `<strong>Chọn món</strong> ở <a href="#ws-list-head">danh sách bên dưới</a>.`, en: `<strong>Pick a workshop</strong> from <a href="#ws-list-head">the list below</a>.` },
-    'ws.book_s2':       { vi: `<strong>Nhắn Gem</strong> món muốn làm, ngày giờ và số người.`, en: `<strong>Message us</strong> which workshop, the day &amp; time, and how many of you.` },
-    'ws.book_s3':       { vi: `<strong>Gem xác nhận.</strong> Bạn trả tại studio khi đến: tiền mặt hoặc chuyển khoản, không nhận thẻ.`, en: `<strong>We confirm.</strong> You pay at the studio: cash (VND) or Vietnamese bank transfer — we don't take cards.` },
+    'ws.book_s1':       { vi: `<strong>Chọn workshop</strong> trong <a href="#ws-list-head">danh sách bên dưới</a>.`, en: `<strong>Choose a workshop</strong> from <a href="#ws-list-head">the list below</a>.` },
+    // lead time + holidays (Anna 18/11/2026): one number, 3 hours, reads clearer than "2–3"
+    'ws.book_s2':       { vi: `<strong>Nhắn tin cho Gem</strong> tên workshop, ngày giờ và số người, trước giờ học ít nhất 3 tiếng. Vào ngày lễ, vui lòng liên hệ trước để hỏi lịch; Gem nghỉ trong dịp Tết.`, en: `<strong>Message Gem</strong> with the workshop, the date &amp; time and the number of people, at least 3 hours before the session. On public holidays, please ask about availability first; Gem is closed during Tết (Lunar New Year).` },
+    'ws.book_s3':       { vi: `<strong>Gem xác nhận.</strong> Bạn thanh toán tại studio khi đến: tiền mặt hoặc chuyển khoản, không nhận thẻ. Workshop Thứ Bảy, Chủ Nhật cần trả trước 30%.`, en: `<strong>Gem confirms.</strong> You pay at the studio: cash (VND) or Vietnamese bank transfer; cards are not accepted. Saturday and Sunday workshops require 30% in advance.` },
+    // Weekend sessions (Anna 18/11/2026): 30% up front by message, the cancelling rule beside it
+    'ws.book_wkend':    { vi: `Workshop Thứ Bảy, Chủ Nhật: khi xác nhận chỗ, Gem gửi thông tin chuyển khoản qua Zalo để bạn trả trước 30%; sau khi chuyển khoản, bạn gửi ảnh chụp giao dịch trong cùng cuộc trò chuyện. Nếu báo huỷ hoặc đổi lịch trước giờ học ít nhất 24 tiếng, Gem hoàn lại khoản trả trước hoặc chuyển sang buổi khác; nếu báo muộn hơn hoặc không đến, Gem giữ khoản trả trước.`, en: `Saturday and Sunday workshops: when confirming your seat, Gem sends the bank details by message for a 30% advance payment; after the transfer, please send the receipt in the same conversation. If you cancel or reschedule at least 24 hours before the session, Gem refunds the advance payment or moves you to another session; if you notify later or do not attend, Gem retains it.` },
     'ws.book_or':       { vi: `Hoặc giữ chỗ ở <a href="#ws-sched-h">một buổi đã lên lịch</a>.`, en: `Or reserve a seat in <a href="#ws-sched-h">a scheduled session</a>.` },
     'ws.ch_note':       { vi: `Bấm một kênh: lời nhắn soạn sẵn được chép lại, bạn chỉ cần dán vào khung chat.`, en: `Tap one: a ready-made message is copied, so you just paste it into the chat.` },
     'ws.ch_copied':     { vi: `Đã chép lời nhắn. Dán vào khung chat, điền ngày giờ và số người là xong.`, en: `Message copied. Paste it into the chat and add the day, time and number of people.` },
@@ -31,10 +34,10 @@
     'ws.type_book':     { vi: `Đặt lịch`, en: `Book` },
     'ws.page_book_h':   { vi: `Đặt workshop này`, en: `Book this workshop` },
     'ws.page_book_other': { vi: `Hoặc hẹn một ngày khác`, en: `Or pick another day` },
-    'ws.page_book_p':   { vi: `Nhắn Gem ngày giờ bạn muốn và số người, chúng mình xác nhận lại. Hướng dẫn bằng tiếng Việt hoặc tiếng Anh. Trả tại studio: tiền mặt hoặc chuyển khoản, không nhận thẻ.`, en: `Message us the day & time you'd like and how many of you, and we'll confirm. Taught in English or Vietnamese. Pay at the studio: cash (VND) or Vietnamese bank transfer — no cards.` },
+    'ws.page_book_p':   { vi: `Bạn nhắn tin cho Gem ngày giờ mong muốn và số người, trước giờ học ít nhất 3 tiếng; chúng mình sẽ xác nhận lại. Hướng dẫn bằng tiếng Việt hoặc tiếng Anh. Thanh toán tại studio: tiền mặt hoặc chuyển khoản, không nhận thẻ.`, en: `Message Gem with your preferred date & time and the number of people, at least 3 hours before the session; we will confirm. Taught in English or Vietnamese. Payment at the studio: cash (VND) or Vietnamese bank transfer; cards are not accepted.` },
 
     'ws.loading':       { vi: `Đang tải lịch...`, en: `Loading sessions...` },
-    'ws.empty':         { vi: `Danh sách workshop chưa có ở đây. Bạn nhắn Gem (nút ở trên) để hỏi món đang có nhé.`, en: `The workshop list isn't here yet. Message us (buttons above) to ask what's on.` },
+    'ws.empty':         { vi: `Danh sách workshop hiện chưa hiển thị. Vui lòng nhắn tin cho Gem (nút phía trên) để hỏi các workshop đang mở.`, en: `The workshop list is not available at the moment. Please message Gem (buttons above) to ask which workshops are open.` },
     'ws.error':         { vi: `Chưa tải được lịch. Bạn thử lại sau, hoặc nhắn trực tiếp cho chúng mình nhé.`, en: `Couldn't load the schedule. Please try again later, or message us directly.` },
     'ws.retry':         { vi: `Thử lại`, en: `Try again` },
 
@@ -75,11 +78,12 @@
     'ws.done_title':    { vi: `Đã giữ chỗ cho bạn.`, en: `Your seat is reserved.` },
     'ws.done_code':     { vi: `Mã giữ chỗ`, en: `Reservation code` },
     'ws.done_p':        { vi: `Chúng mình sẽ nhắn xác nhận trước một ngày, qua Zalo hoặc email. Trả tại studio khi bạn đến: tiền mặt hoặc chuyển khoản, không nhận thẻ.`, en: `We'll confirm the day before on Zalo or by email. Pay at the studio when you arrive: cash or bank transfer, no cards.` },
+    'ws.done_wkend_p':  { vi: `Buổi học vào Thứ Bảy, Chủ Nhật: Gem sẽ gửi thông tin chuyển khoản qua Zalo để bạn trả trước 30%; sau khi chuyển khoản, bạn gửi ảnh chụp giao dịch trong cùng cuộc trò chuyện. Phần còn lại thanh toán tại studio: tiền mặt hoặc chuyển khoản, không nhận thẻ. Nếu báo huỷ hoặc đổi lịch trước giờ học ít nhất 24 tiếng, Gem hoàn lại khoản trả trước hoặc chuyển sang buổi khác.`, en: `A Saturday or Sunday session: Gem will send the bank details by message for a 30% advance payment; after the transfer, please send the receipt in the same conversation. The balance is paid at the studio: cash or bank transfer; cards are not accepted. If you cancel or reschedule at least 24 hours before the session, Gem refunds the advance payment or moves you to another session.` },
     'ws.done_ics':      { vi: `Thêm vào lịch`, en: `Add to calendar` },
     'ws.done_more':     { vi: `Xem buổi khác`, en: `See other sessions` },
 
-    'ws.other_h':       { vi: `Chọn được món rồi?`, en: `Found one you like?` },
-    'ws.other_p':       { vi: `Nhắn Gem món muốn làm, ngày giờ và số người. Một người cũng xếp được.`, en: `Message us the workshop, the day & time and how many of you. Just one person is fine too.` },
+    'ws.other_h':       { vi: `Bạn đã chọn được workshop?`, en: `Found a workshop you like?` },
+    'ws.other_p':       { vi: `Nhắn tin cho Gem tên workshop, ngày giờ và số người. Gem nhận lịch cả cho một người.`, en: `Message Gem with the workshop, the date & time and the number of people. Bookings for one person are welcome.` },
 
     'ws.type_more':     { vi: `Xem chi tiết`, en: `See details` },
     'ws.type_next':     { vi: `Buổi gần nhất: {when}`, en: `Next session: {when}` },
@@ -87,9 +91,9 @@
     'ws.type_allfull':  { vi: `Các buổi đã lên lịch đều đủ chỗ, nhắn Gem để hẹn ngày khác`, en: `Scheduled sessions are full — message us for another day` },
     'ws.type_back':     { vi: `Về danh sách workshop`, en: `All workshops` },
     'ws.type_what':     { vi: `Bạn sẽ làm gì`, en: `What you'll do` },
-    'ws.type_note':     { vi: `Cần biết trước`, en: `Good to know` },
+    'ws.type_note':     { vi: `Lưu ý`, en: `Notes` },
     'ws.type_when':     { vi: `Buổi đã lên lịch`, en: `Scheduled sessions` },
-    'ws.list_h':        { vi: `Chọn một món để làm.`, en: `Pick something to make.` },
+    'ws.list_h':        { vi: `Chọn một workshop.`, en: `Pick something to make.` },
     'ws.list_p':        { vi: `Bấm vào từng workshop để xem nguyên liệu, độ tuổi và cách đặt.`, en: `Tap a workshop to see the materials, ages and how to book.` },
 
     /* Chạm Mùa — chuỗi workshop cuối tuần 25/09 – 27/12/2026 (bản in "Thông tin
@@ -252,7 +256,7 @@
   }
 
   /* ---------- dòng thông tin: thời lượng · tuổi · giá ----------
-     Ghi y như bản in Chạm Mùa: "1–1,5 tiếng", "30–60 phút", "Từ 59.000đ".
+     Ghi y như bản in Chạm Mùa: "1–1,5 tiếng", "30–60 phút", "Từ 60.000đ".
      Buổi lấy từ sessions_public không có ba cột mới (duration_max, age_min,
      price_from) — thiếu thì đơn giản là không ghi phần đó. */
   function durText(o) {
@@ -575,6 +579,7 @@
           '<div class="ws-page-book" id="dat-mon">' +
             '<h3 data-i18n="' + (mine.length ? 'ws.page_book_other' : 'ws.page_book_h') + '"></h3>' +
             '<p data-i18n="ws.page_book_p"></p>' +
+            '<p class="ws-book-wkend" data-i18n="ws.book_wkend"></p>' +
             '<div class="ws-ch" data-ws-ch></div>' +
             '<p class="ws-ch-note" data-i18n="ws.ch_note" aria-live="polite"></p>' +
           '</div>' +
@@ -584,7 +589,7 @@
     root.querySelector('.ws-long-slot').replaceWith(longBox);
     var boxes = root.querySelector('.ws-boxes');
     [listBox('ws-box', t('ws.type_what', 'Bạn sẽ làm gì'), pickField(ty, 'what')),
-     listBox('ws-box', t('ws.type_note', 'Cần biết trước'), pickField(ty, 'note'))]
+     listBox('ws-box', t('ws.type_note', 'Lưu ý'), pickField(ty, 'note'))]
       .forEach(function (b) { if (b) boxes.appendChild(b); });
 
     root.querySelector('.ws-back-list').addEventListener('click', function () {
@@ -636,7 +641,7 @@
     });
   }
 
-  // Tiêu đề "Chọn một món để làm" chỉ hợp với danh sách: trong trang giới
+  // Tiêu đề "Chọn một workshop" chỉ hợp với danh sách: trong trang giới
   // thiệu một loại hay form giữ chỗ thì nó nói sai việc đang làm.
   function listHead(show) {
     var h = document.getElementById('ws-list-head');
@@ -843,7 +848,8 @@
         '<p class="ws-code">' + esc(code) + '</p>' +
         '<p class="ws-done-when">' + esc(name) + ' · ' + esc(dayLabel(p.dow)) + ' ' +
           esc(p.date) + ' · ' + esc(p.time) + '</p>' +
-        '<p class="ws-done-p" data-i18n="ws.done_p"></p>' +
+        // Saturday / Sunday (Vietnam time): 30% up front, by message (Anna 18/11/2026)
+        '<p class="ws-done-p" data-i18n="' + (p.dow === 0 || p.dow === 6 ? 'ws.done_wkend_p' : 'ws.done_p') + '"></p>' +
         '<div class="ws-done-act">' +
           '<button type="button" class="btn btn-primary ws-ics" data-i18n="ws.done_ics"></button>' +
           '<button type="button" class="btn btn-ghost ws-more" data-i18n="ws.done_more"></button>' +

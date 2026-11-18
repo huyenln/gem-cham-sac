@@ -295,7 +295,7 @@
 
     'studio.sofa_h':       { vi: `Góc nghỉ chân`, en: `Sofa corner` },
     'studio.sofa_p':       { vi: `Ngồi chút, xem studio dạo này có gì.`, en: `Sit down for a bit and see what's on.` },
-    'studio.sofa_ws':      { vi: `Workshop — tự tay làm một món`, en: `Workshops — make something yourself` },
+    'studio.sofa_ws':      { vi: `Workshop — tự tay làm đồ thủ công`, en: `Workshops — make something yourself` },
     'studio.sofa_news':    { vi: `Bản tin — chuyện ở studio`, en: `Newsletter — studio notes` },
 
     'studio.sewing_h':     { vi: `Bàn thiết kế`, en: `Design table` },

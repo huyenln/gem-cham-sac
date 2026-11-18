@@ -80,6 +80,8 @@
             '<p class="pg-price"></p>' +
             '<div class="pg-opts" hidden>' +
               '<p class="pg-opts-label" id="pg-opts-label"></p>' +
+              '<p class="pg-level-hint" data-i18n="products.level_hint" hidden>' +
+                t('products.level_hint', 'Độ khó từ 1 đến 5 sao. Lần đầu làm? Bắt đầu với mẫu 1 sao.') + '</p>' +
               '<div class="pg-chips" role="group" aria-labelledby="pg-opts-label"></div>' +
               '<p class="pg-choice-note" aria-live="polite"></p>' +
             '</div>' +
@@ -113,6 +115,7 @@
     var optsEl = $('.pg-opts');
     var optsLabel = $('.pg-opts-label');
     var chipsEl = $('.pg-chips');
+    var levelHint = $('.pg-level-hint');
     var noteEl = $('.pg-choice-note');
     var addBtn = $('.pg-add');
     var msgEl = $('.pg-msg');
@@ -198,6 +201,47 @@
     function cName(c) { return (isEn() && c.en) || c.vi || c.key; }
     function cNote(c) { return (isEn() && c.note_en) || c.note_vi || ''; }
 
+    // Difficulty (options.choices[].level, 1–5 in half steps, kit Kinusaiga):
+    // five stars under the name, an empty row with the filled row on top cut
+    // to level/5 of its width, so 3.5 fills half of the fourth star. Drawn as
+    // SVG: the site's fonts have no ★, and emoji are not used in the UI.
+    function cLevel(c) {
+      var n = Math.round(parseFloat(c && c.level) * 2) / 2;
+      return n >= 1 && n <= 5 ? n : 0;
+    }
+    var SVGNS = 'http://www.w3.org/2000/svg';
+    function starRow() {
+      var svg = document.createElementNS(SVGNS, 'svg');
+      svg.setAttribute('viewBox', '0 0 60 12');
+      svg.setAttribute('aria-hidden', 'true');
+      svg.setAttribute('focusable', 'false');
+      for (var s = 0; s < 5; s++) {
+        var pts = [];
+        for (var k = 0; k < 10; k++) {
+          var a = (-90 + k * 36) * Math.PI / 180, r = k % 2 ? 2.3 : 5.5;
+          pts.push((6 + 12 * s + r * Math.cos(a)).toFixed(2) + ',' + (6.4 + r * Math.sin(a)).toFixed(2));
+        }
+        var p = document.createElementNS(SVGNS, 'polygon');
+        p.setAttribute('points', pts.join(' '));
+        svg.appendChild(p);
+      }
+      return svg;
+    }
+    function levelText(n) { return isEn() ? String(n) : String(n).replace('.', ','); }
+    function stars(n) {
+      var box = document.createElement('span');
+      box.className = 'pg-stars';
+      box.setAttribute('role', 'img');
+      box.setAttribute('aria-label', t('products.level_aria', 'Độ khó {x} trên 5').replace('{x}', levelText(n)));
+      box.appendChild(starRow());
+      var on = document.createElement('span');
+      on.className = 'pg-stars-on';
+      on.style.width = (n / 5 * 100) + '%';
+      on.appendChild(starRow());
+      box.appendChild(on);
+      return box;
+    }
+
     function renderSheet() {
       var on = isSheet(info);
       modal.classList.toggle('is-detail', on);
@@ -215,13 +259,24 @@
       var cs = choiceList();
       optsEl.hidden = !cs.length;
       chipsEl.textContent = '';
+      levelHint.hidden = !cs.some(cLevel);
       cs.forEach(function (c) {
         var b = document.createElement('button');
         b.type = 'button';
         b.className = 'pg-chip';
         b.setAttribute('data-key', c.key);
         b.setAttribute('aria-pressed', c.key === picked ? 'true' : 'false');
-        b.appendChild(document.createTextNode(cName(c)));
+        var lv = cLevel(c);
+        if (lv) {
+          b.classList.add('has-level');
+          var nm = document.createElement('span');
+          nm.className = 'pg-chip-name';
+          nm.textContent = cName(c);
+          b.appendChild(nm);
+          b.appendChild(stars(lv));
+        } else {
+          b.appendChild(document.createTextNode(cName(c)));
+        }
         if (c.out) {
           // still listed, so a regular sees it is gone rather than missing
           b.disabled = true;

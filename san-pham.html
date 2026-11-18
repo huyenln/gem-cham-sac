@@ -156,12 +156,14 @@
           <div class="category-block" id="kit-mua">
             <h3 class="kit-buy-h" data-i18n="products.kit_buy_h">Chọn mẫu tranh</h3>
             <div class="product-grid" data-cat="kit">
-              <div class="product-card" data-sku="kit-kinusaiga" data-gallery="kit-kinusaiga-ghe-nhua.jpg,kit-kinusaiga-non-la.jpg,kit-kinusaiga-hoa-hong.jpg,kit-kinusaiga-huong-duong.jpg">
+              <!-- The custom-kit card (kit-kinusaiga-theo-yeu-cau) has no fallback here:
+                   catalog.js builds it from the database, so it never shows without its price. -->
+              <div class="product-card" data-sku="kit-kinusaiga" data-gallery="kit-kinusaiga-non-la.jpg,kit-kinusaiga-meo-beo.jpg,kit-kinusaiga-hoa-hong.jpg,kit-kinusaiga-huong-duong.jpg,kit-kinusaiga-hoa-sen.jpg,kit-kinusaiga-roi-nuoc-co-tien.jpg,kit-kinusaiga-non-quai-thao.jpg,kit-kinusaiga-ghe-nhua.jpg,kit-kinusaiga-meo-nam-ngua.jpg">
                 <div class="product-card-image">
                   <img src="images/products/kit-kinusaiga-thumb.jpg" data-i18n-attr="alt:products.kit_card_h" alt="Kit DIY Kinusaiga" loading="lazy">
                 </div>
                 <h4 data-i18n="products.kit_card_h">Kit DIY Kinusaiga</h4>
-                <p data-i18n="products.kit_card_p">4 mẫu: ghế nhựa &amp; cà phê · nón lá · hoa hồng · hướng dương</p>
+                <p data-i18n="products.kit_card_p">9 mẫu tranh, độ khó từ 1 đến 5 sao</p>
                 <div class="gb-slot"></div>
               </div>
             </div>
@@ -184,7 +186,7 @@
               </li>
               <li>
                 <h4 data-i18n="products.kit_next3_h">Tặng thêm một bộ</h4>
-                <p data-i18n="products.kit_next3_p">Bốn mẫu: ghế nhựa &amp; cà phê, nón lá, hoa hồng, hướng dương.</p>
+                <p data-i18n="products.kit_next3_p">Chín mẫu, độ khó từ 1 sao (nón lá) đến 5 sao (mèo nằm ngửa). Ngoài ra, Gem nhận làm kit theo ảnh hoặc ý tưởng riêng của bạn, giá từ 300.000đ.</p>
                 <a class="btn btn-ghost" href="#kit-mua" data-i18n="products.kit_next3_btn">Chọn mẫu</a>
               </li>
             </ul>
@@ -494,6 +496,7 @@
           </a>
           <p data-i18n="footer.tagline">Mỗi một nỗ lực dù là nhỏ bé nhất, đều đáng được trân quý.</p>
           <a href="chinh-sach.html" class="footer-policy" data-i18n="footer.policy">Chính sách mua hàng &amp; bảo mật</a>
+          <p class="footer-legal" data-i18n-html="footer.legal">HỘ KINH DOANH GEM CHẠM SẮC<br>Mã số thuế: 001300019990</p>
         </div>
         <div>
           <h4 data-i18n="footer.contact">Liên hệ</h4>
