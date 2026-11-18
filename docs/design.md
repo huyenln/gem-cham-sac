@@ -3589,15 +3589,61 @@ mọi chữ về khoản 30%, kể cả đợt sau (đơn trên 100.000đ, works
 - **Workshop:** nhắn trước giờ học **ít nhất 3 tiếng** (Anna nói 2–3 tiếng; một con số dễ hiểu
   hơn), ngày lễ nhắn hỏi trước, Tết nghỉ (`ws.book_s2`, `ws.page_book_p`, `policy.order_4`).
   `ghe-tham.html` thêm "nghỉ Tết".
-- **Trả trước 30% còn chờ (PR sau):** đơn trên 100.000đ (đơn đúng 100.000đ thì không) và workshop
-  cuối tuần (Thứ Bảy, Chủ Nhật; ngày lễ nhắn trước). Đơn có sẵn huỷ trong 24 giờ kể từ lúc chuyển
-  khoản trả trước, Gem chưa gửi → hoàn đủ; sau đó ghi lý do, Gem xem từng trường hợp. Workshop cuối
-  tuần: báo huỷ / dời trước 24 giờ → hoàn hoặc chuyển buổi; muộn hơn / không đến → Gem giữ; Gem huỷ
-  → hoàn đủ. Chưa ghi lên web vì giỏ hàng còn cho chọn "Trả khi nhận" không trả trước.
+- **Trả trước 30%, ngưỡng 250.000đ, ảnh chuyển khoản:** xem mục ngay dưới.
 - **Mã QR chuyển khoản trên web (rà 18/11):** shop tự sinh VietQR vào tài khoản của chính hộ kinh
   doanh không phải dịch vụ trung gian thanh toán, không cần giấy phép riêng: **giữ mã QR** (Anna
   18/11). Giá chuyển khoản và tiền mặt phải như nhau (không thu thêm phí), chỉ dùng tài khoản của
   hộ kinh doanh. Thủ tục và các điểm còn hỏi luật sư nằm trong danh sách riêng của chủ shop.
+
+### Thanh toán: tự đến lấy, ngưỡng 250.000đ, ảnh chuyển khoản, trả trước 30% (18/11/2026)
+
+Anna chốt 18/11 (bàn kỹ: hàng có sẵn **không** thu trả trước 30% — rủi ro thật là bom hàng khi giao,
+mất phí giao hai chiều chứ không mất 30% giá trị; tự đến lấy thì món vẫn ở studio):
+
+| | Giao tận nơi | Đặt trước, tự đến lấy |
+|---|---|---|
+| Hàng có sẵn < 250.000đ | trả khi nhận / chuyển khoản | trả khi đến lấy / chuyển khoản |
+| Hàng có sẵn ≥ 250.000đ | **chuyển khoản toàn bộ trước** | trả khi đến lấy / chuyển khoản |
+| Hàng đặt riêng (kit theo yêu cầu, món ở Bàn thiết kế) | trả trước 30% sau khi chốt giá / duyệt vải, Gem nhắn Zalo | như bên trái |
+| Workshop Thứ Bảy, Chủ Nhật | trả trước 30% khi Gem xác nhận chỗ, nhắn Zalo | — |
+
+Viết **"trả trước"**, không viết "cọc" (xem mục Kit Kinusaiga: 9 mẫu). Ngày lễ: khách nhắn hỏi trước;
+Tết nghỉ.
+
+- **Form đặt hàng:** "Cách nhận hàng" là hai lựa chọn ở đầu form (`name="recv"`: `ship` / `pickup`),
+  thay ô tick cũ. Chọn tự đến lấy thì ẩn ô địa chỉ, dòng "Trả khi nhận" đổi thành "Trả tại cửa hàng".
+  Giao tận nơi từ ngưỡng: "Trả khi nhận" khoá, kèm dòng `basket.prepay_note` (số tiền lấy từ cài đặt).
+- **Database:** `create_order(…, p_pickup boolean default false)` —
+  `supabase/migrations/20261118c_create_order_tu_den_lay.sql`, **đã chạy 18/11** (trước khi merge; web
+  cũ vẫn gọi được). Ngưỡng chỉ chặn COD khi `not p_pickup`; đơn tự đến lấy ghi địa chỉ cố định "Tự đến
+  lấy tại studio" (không lấy chữ trình duyệt gửi). Thêm tham số = hàm mới: đã DROP bản cũ và cấp lại
+  EXECUTE cho anon + authenticated (PUBLIC không), kiểm bằng `has_function_privilege` và gọi thử qua
+  API công khai bằng tên trống (dừng ở `no_name`, không tạo đơn). Chạy thử trước trong một khối DO
+  tự huỷ: giao + COD ≥ ngưỡng → `prepay_required`; tự đến lấy + COD → được; lời gọi kiểu cũ → như giao.
+- **Ngưỡng 250.000đ** = `settings.payment.prepay_threshold`. **Admin chưa có màn sửa cài đặt này**
+  (khác điều §Sprint 5 tưởng): đổi bằng SQL, **sau khi merge**:
+  `update public.settings set value = jsonb_set(value, '{prepay_threshold}', '250000') where key = 'payment';`
+  Đổi số thì sửa cả `policy.pay_6` ở trang Chính sách.
+- **Ảnh chuyển khoản:** màn cảm ơn có mã QR thì có khối "Chuyển xong, gửi ảnh chuyển khoản cho Gem"
+  (`renderSendBill`): Zalo · Messenger · Instagram (tiếng Anh Instagram đầu, Zalo cuối), bấm là chép
+  câu có mã đơn + số tiền (`basket.bill_msg`) rồi mở khung chat. Ảnh chỉ để khớp nhanh — biên lai sửa
+  bằng app là chiêu lừa hay gặp: admin ghi rõ cạnh nút "Đã nhận tiền" là phải thấy tiền về trong app
+  ngân hàng, có mã đơn ở nội dung, rồi mới bấm.
+- **Hàng đặt riêng:** `CONFIG.madeToOrder` trong `js/basket.js` (hiện `kit-kinusaiga-theo-yeu-cau`)
+  + món có mã thiết kế: không chọn cách trả lúc đặt, chữ nói trả trước 30% khi Gem nhắn duyệt. Admin
+  (`MADE_TO_ORDER`, cùng danh sách) hiện "Làm riêng · trả trước 30% qua Zalo" và nút "Đã nhận trả
+  trước" (vẫn là `payment_status = 'paid'`: bảng chỉ có unpaid / paid / refunded). Thêm món làm riêng
+  thì thêm sku vào **cả hai** danh sách.
+- **Workshop cuối tuần:** khung Đặt lịch, trang từng workshop (`ws.book_wkend`), màn giữ chỗ xong
+  cho buổi Thứ Bảy / Chủ Nhật theo giờ Việt Nam (`ws.done_wkend_p`). Cách huỷ đi kèm.
+- **Chính sách:** cách nhận hàng (`order_1`), Gem nhắn Zalo theo số điện thoại để hẹn giao (`order_2`),
+  ngưỡng (`pay_6`), ảnh chuyển khoản (`pay_2`, `data_w9`), hàng đặt riêng (`pay_5`, `order_3`,
+  `ret_5`), workshop cuối tuần (`pay_3`, `ret_8`), huỷ đơn đã chuyển khoản: 24 giờ hoàn đủ, sau đó
+  xem lý do (`ret_7`, quy tắc Anna đặt cho khoản trả trước, áp cho đơn đã chuyển khoản).
+- **Còn hở (luật):** đơn giao tận nơi chuyển khoản trước tiền hàng, phí giao Gem báo sau — luật muốn
+  tổng số tiền hiện đủ trước khi gửi đơn (đã ghi ở mục Pháp lý: chờ biểu phí giao).
+- Kiểm: `tools/check-studio.py order` (hai lựa chọn nhận hàng, khoá COD chỉ khi giao, `p_pickup`, khối
+  gửi ảnh chuyển khoản, kit theo yêu cầu không có ô chọn cách trả).
 
 ### Khách nước ngoài: đặt lịch bằng tin nhắn, kênh liên hệ, giá tiếng Anh (14/11/2026)
 

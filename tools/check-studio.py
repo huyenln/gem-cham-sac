@@ -2787,7 +2787,7 @@ async def order_form(browser, db):
                  'desc_en': None, 'price': 80000, 'price_max': 300000, 'in_stock': True, 'is_published': True,
                  'image': 'images/products/vai-vun-tui-9.jpg', 'gallery': [], 'sort_order': 900, 'shelf': None, 'cutout': None, 'sprite': None}]
     bad = "[...document.querySelectorAll('.gb-field-err')].map(e => e.closest('.gb-field').querySelector('input').name)"
-    hints = "[...document.querySelectorAll('.gb-pay-opt small')].map(e => e.textContent)"
+    hints = "[...document.querySelectorAll('.gb-pay:not(.gb-recv) .gb-pay-opt small')].map(e => e.textContent)"
     after = ("[!!document.querySelector('.gb-qr svg'), document.querySelectorAll('.gb-pay-row').length, !!document.querySelector('.gb-qr-ship'),"
              " document.querySelector('.gb-empty-p').textContent, (document.querySelector('.gb-code') || {}).textContent]")
 
@@ -2841,8 +2841,17 @@ async def order_form(browser, db):
     got = await pg.evaluate(after)
     check(call.get('p_phone') == '0900000000' and call.get('p_address') == '12 Hàng Bông' and call.get('p_payment') == 'qr',
           f'sent with the number as digits ({call.get("p_phone")!r}, {call.get("p_address")!r}, {call.get("p_payment")!r})')
-    check(got[0] and got[1] == 5 and got[2] and 'không cần báo lại' in got[3],
-          f'a fixed price, delivered: the QR code with its amount, and a line that shipping is not in it ({got[:3]})')
+    check(got[0] and got[1] == 5 and got[2] and 'kiểm tiền về' in got[3] and call.get('p_pickup') is False,
+          f'a fixed price, delivered: the QR code with its amount, and a line that shipping is not in it ({got[:3]}, pickup {call.get("p_pickup")!r})')
+    # the receipt (Anna 18/11/2026): one tap copies a line with the code and the sum, then opens the chat
+    await pg.evaluate("navigator.clipboard.writeText = (t) => { window.__copied = t; return Promise.resolve(); }")
+    bill = await pg.evaluate("[...document.querySelectorAll('.gb-bill .gb-channel')].map(a => a.getAttribute('href'))")
+    await pg.evaluate("document.querySelector('.gb-bill .gb-ch-zalo').addEventListener('click', e => e.preventDefault()); document.querySelector('.gb-bill .gb-ch-zalo').click()")
+    await pg.wait_for_timeout(200)
+    copied = await pg.evaluate("[window.__copied || '', !document.querySelector('.gb-bill .gb-copied').hidden]")
+    check(len(bill) == 3 and bill[0].startswith('https://zalo.me/') and copied[1]
+          and 'GEM-TEST1' in copied[0] and '100.000đ' in copied[0],
+          f'after the QR: Zalo / Messenger / Instagram to send the receipt, the line with code and sum copied ({copied[0]!r})')
     kept = await pg.evaluate("(() => { const t = document.querySelector('.gb-order-text'), b = document.querySelector('.gb-order .gb-copy');"
                              " return [t ? t.textContent : '', b ? b.getAttribute('data-copy') : null,"
                              " (document.querySelector('.st-basket-items, .gb-list') || {}).childElementCount || 0]; })()")
@@ -2855,13 +2864,16 @@ async def order_form(browser, db):
     # 2. picked up at the shop
     db.order_calls.clear()
     pg = await form([{'sku': 'origami', 'qty': 1}])
-    await js_click(pg, '.gb-form [name="pickup"]')
+    recv = await pg.evaluate("[...document.querySelectorAll('.gb-form [name=recv]')].map(r => [r.value, r.checked])")
+    check(recv == [['ship', True], ['pickup', False]], f'"Cách nhận hàng" opens the form: delivery or reserve and pick up ({recv})')
+    await js_click(pg, '.gb-form [name="recv"][value="pickup"]')
     h = await pg.evaluate(hints)
     gone = await pg.evaluate("document.querySelector('.gb-addr').hidden")
     await send(pg, 'Khách thử', '+84 90 000 0000')
     call = db.order_calls[-1] if db.order_calls else {}
     got = await pg.evaluate(after)
-    check(gone and h[0] == 'Trả tại cửa hàng khi bạn đến lấy: tiền mặt hoặc chuyển khoản, không nhận thẻ.' and call.get('p_phone') == '+84900000000' and got[0] and not got[2],
+    check(gone and h[0] == 'Trả tại cửa hàng khi bạn đến lấy: tiền mặt hoặc chuyển khoản, không nhận thẻ.' and call.get('p_phone') == '+84900000000' and got[0] and not got[2]
+          and call.get('p_pickup') is True and 'hẹn ngày bạn đến lấy' in got[3],
           f'picked up: no address asked, "pay at the shop", +84… accepted, the QR code without the shipping line ({h[0]!r}, {call.get("p_phone")!r}, {got[:3]})')
     await pg.context.close()
 
@@ -2870,7 +2882,7 @@ async def order_form(browser, db):
     db.order_reply = {'payment_method': 'qr', 'subtotal': 80000}
     pg = await form([{'sku': 'tui-thu', 'qty': 1}])
     h = await pg.evaluate(hints)
-    await js_click(pg, '.gb-form [name="pickup"]')
+    await js_click(pg, '.gb-form [name="recv"][value="pickup"]')
     await send(pg, 'Khách thử', '0900000000')
     got = await pg.evaluate(after)
     await pg.evaluate("window.GemI18n.setLang('en')")
@@ -2884,12 +2896,70 @@ async def order_form(browser, db):
     # 4. the database says a piece has no price yet
     db.order_reply = {'payment_method': 'qr', 'subtotal': 50000, 'has_unpriced': True}
     pg = await form([{'sku': 'origami', 'qty': 1}])
-    await js_click(pg, '.gb-form [name="pickup"]')
+    await js_click(pg, '.gb-form [name="recv"][value="pickup"]')
     await send(pg, 'Khách thử', '0900000000')
     got = await pg.evaluate(after)
-    check(not got[0] and 'chưa đưa mã QR' in got[3], f'has_unpriced from the database: no code either ({got[:2]})')
+    check(not got[0] and 'chưa đưa mã QR' in got[3] and not await pg.evaluate("!!document.querySelector('.gb-bill')"),
+          f'has_unpriced from the database: no code either, no receipt step yet ({got[:2]})')
+    await pg.context.close()
+
+    # 5. transfer first for a big delivery, not for a pick-up (Anna 18/11/2026)
+    db.payment = dict(db.payment, prepay_threshold=100000)
+    db.order_calls.clear()
+    db.order_reply = {'payment_method': 'cod', 'subtotal': 100000}
+    pg = await form([{'sku': 'origami', 'qty': 2}])
+    state = "[document.querySelector('[name=pay][value=cod]').disabled, document.querySelector('[name=pay][value=qr]').checked, (document.querySelector('.gb-pay-note') || {}).hidden, (document.querySelector('.gb-pay-note') || {}).textContent]"
+    ship = await pg.evaluate(state)
+    await js_click(pg, '.gb-form [name="recv"][value="pickup"]')
+    pick = await pg.evaluate(state)
+    check(ship[:3] == [True, True, False] and '100.000đ' in ship[3] and pick[0] is False and pick[2] is True,
+          f'100.000đ delivered: "Trả khi nhận" locked, QR picked, a line says why; picked up: open again ({ship}, {pick[:3]})')
+    await send(pg, 'Khách thử', '0900000000', pay='cod')
+    call = db.order_calls[-1] if db.order_calls else {}
+    check(call.get('p_payment') == 'cod' and call.get('p_pickup') is True, f'a pick-up over the line still goes as "pay at the studio" ({call.get("p_payment")}, {call.get("p_pickup")})')
+    check(not pg.errors, f'no script errors {pg.errors}')
+    await pg.context.close()
+
+    # 6. made to order (the custom kit): nothing to pick at checkout, 30% up front once Gem confirms
+    db.payment = dict(db.payment, prepay_threshold=0)
+    db.extra = kit_rows()
+    db.order_calls.clear()
+    db.order_reply = {'payment_method': None, 'subtotal': 0, 'has_unpriced': True}
+    pg = await form([{'sku': 'kit-kinusaiga-theo-yeu-cau', 'qty': 1}])
+    fine = await pg.evaluate("[document.querySelectorAll('[name=pay]').length, (document.querySelector('.gb-form .gb-fine') || {}).textContent || '']")
+    await pg.fill('.gb-form [name="address"]', '12 Hàng Bông')
+    await pg.fill('.gb-form [name="name"]', 'Khách thử')
+    await pg.fill('.gb-form [name="phone"]', '0900000000')
+    await js_click(pg, '.gb-form .gb-submit')
+    await pg.wait_for_timeout(700)
+    call = db.order_calls[-1] if db.order_calls else {}
+    done = await pg.evaluate("[document.querySelector('.gb-empty-p').textContent, (document.querySelector('.gb-order-text') || {}).textContent || '']")
+    check(fine[0] == 0 and 'trả trước 30%' in fine[1] and call.get('p_payment') is None and 'trả trước 30%' in done[0]
+          and 'Trả trước 30%' in done[1],
+          f'the custom kit: no payment choice, "trả trước 30%" before and after sending ({fine}, {call.get("p_payment")!r})')
+    check(not pg.errors, f'no script errors {pg.errors}')
     await pg.context.close()
     db.order_reply = None; db.payment = None; db.extra = []
+
+    # 7. admin: a transfer waiting, a made-to-order piece waiting for its 30%
+    order = lambda i, pm, items: {'id': i, 'code': 'GEM-' + i, 'status': 'new', 'created_at': '2026-11-18T03:00:00Z', 'name': 'Khách thử',
+                                  'phone': '0900000000', 'address': 'Tự đến lấy tại studio', 'payment_method': pm, 'payment_status': 'unpaid',
+                                  'subtotal': 250000, 'has_unpriced': pm is None, 'note': None, 'order_items': items}
+    db.orders = [order('A1', 'qr', [{'sku': 'kit-kinusaiga', 'name_vi': 'Kit DIY Kinusaiga', 'qty': 1, 'price': 250000, 'price_max': None, 'option_vi': 'Nón lá'}]),
+                 order('A2', None, [{'sku': 'kit-kinusaiga-theo-yeu-cau', 'name_vi': 'Kit Kinusaiga theo yêu cầu', 'qty': 1, 'price': None, 'price_max': None, 'option_vi': None}])]
+    pg = await admin_page(browser, db, 412, 900)
+    await js_click(pg, '[data-tab="orders"]')
+    await pg.wait_for_timeout(1000)
+    got = await pg.evaluate("""[...document.querySelectorAll('.ad-order')].map(a => [
+        (a.querySelector('.ad-od-pay') || {}).textContent || '', !!a.querySelector('.ad-paid-hint'),
+        (a.querySelector('[data-paid]') || {}).textContent || ''])""")
+    money_n = await pg.evaluate("(document.querySelector('.ad-filter[data-filter=\"money\"] b') || {}).textContent || ''")
+    check(len(got) == 2 and got[0][1] and got[0][2] == 'Đã nhận tiền' and 'Làm riêng · trả trước 30%' in got[1][0]
+          and got[1][1] and got[1][2] == 'Đã nhận trả trước' and money_n == '2',
+          f'admin: "check the bank app" over the button; the custom kit waits for its 30% and counts in "Chờ tiền" ({got}, {money_n})')
+    check(not pg.errors, f'admin: no script errors {pg.errors}')
+    await pg.context.close()
+    db.orders = []
 
 
 async def plphone(browser, db):
@@ -3768,7 +3838,7 @@ async def tui(browser, db):
             await pg.wait_for_timeout(300)
             await pg.fill('.gb-form [name="name"]', 'Khách thử')
             await pg.fill('.gb-form [name="phone"]', '0900000000')
-            await js_click(pg, '.gb-form [name="pickup"]')
+            await js_click(pg, '.gb-form [name="recv"][value="pickup"]')
             await js_click(pg, '.gb-form .gb-submit')
             await pg.wait_for_timeout(1200)
             items = db.order_calls[-1]['p_items'] if db.order_calls else []

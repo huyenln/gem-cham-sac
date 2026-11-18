@@ -744,9 +744,19 @@
 
   function renderOrders() {
     // Đơn chuyển khoản chưa thấy tiền về — việc đối soát hằng ngày
+    // Made to order (a design from the Bàn thiết kế, or the custom kit): the
+    // customer picks no payment at checkout; Gem asks for 30% up front on Zalo
+    // once the fabrics / the price are agreed (Anna 18/11/2026). Same list as
+    // CONFIG.madeToOrder in js/basket.js.
+    var MADE_TO_ORDER = ['kit-kinusaiga-theo-yeu-cau'];
+    function madeToOrder(o) {
+      return (o.order_items || []).some(function (it) {
+        return /^Thiết kế riêng/.test(it.option_vi || '') || MADE_TO_ORDER.indexOf(it.sku) >= 0;
+      });
+    }
     function waitingMoney(o) {
-      return o.payment_method === 'qr' && o.payment_status !== 'paid' &&
-             o.status !== 'cancelled';
+      return (o.payment_method === 'qr' || (!o.payment_method && madeToOrder(o))) &&
+             o.payment_status !== 'paid' && o.status !== 'cancelled';
     }
 
     var list = orders.filter(function (o) {
@@ -780,8 +790,11 @@
       }).join('');
 
       var paid = o.payment_status === 'paid';
+      var mto = !o.payment_method && madeToOrder(o);
       var pm = o.payment_method === 'qr' ? 'Chuyển khoản'
-             : o.payment_method === 'cod' ? 'Trả khi nhận' : null;
+             : o.payment_method === 'cod' ? 'Trả khi nhận'
+             : mto ? 'Làm riêng · trả trước 30% qua Zalo' : null;
+      var paidWord = mto ? 'trả trước' : 'tiền';
 
       return '<article class="ad-order" data-id="' + esc(o.id) + '">' +
         '<div class="ad-od-head">' +
@@ -790,7 +803,7 @@
         '</div>' +
         (pm ? '<p class="ad-od-pay">' + pm +
               ' · <span class="ad-paid' + (paid ? ' yes' : '') + '">' +
-              (paid ? 'đã nhận tiền' : 'chưa nhận tiền') + '</span></p>' : '') +
+              (paid ? 'đã nhận ' : 'chưa nhận ') + paidWord + '</span></p>' : '') +
         '<p class="ad-od-when">' + esc(whenLabel(o.created_at)) + '</p>' +
         '<p class="ad-od-who"><b>' + esc(o.name) + '</b></p>' +
         phoneLinks(o.phone) +
@@ -800,13 +813,19 @@
         fabricsToTake(o) +
         '<p class="ad-od-sum"><span>Tổng</span><b>' + esc(money(o.subtotal)) +
           (o.has_unpriced ? ' + món Liên hệ' : '') + '</b></p>' +
+        // A screenshot of a transfer proves nothing (it is easy to edit): the
+        // money has to be seen in the bank app, with the order code in the note.
+        ((o.payment_method === 'qr' || mto) && !paid
+          ? '<p class="ad-hint ad-paid-hint">Khách gửi ảnh chuyển khoản qua Zalo chỉ để khớp nhanh. ' +
+            'Mở app ngân hàng, thấy tiền về có mã ' + esc(o.code) + ' trong nội dung rồi mới bấm.</p>'
+          : '') +
         '<div class="ad-acts">' +
           // Web không tự biết tiền đã về. Anna mở app ngân hàng, thấy nội dung
           // chuyển khoản trùng mã đơn, rồi bấm nút này.
-          (o.payment_method
+          (o.payment_method || mto
             ? '<button type="button" class="ad-btn' + (paid ? ' on' : '') + '" data-paid="' +
               (paid ? 'unpaid' : 'paid') + '">' +
-              (paid ? 'Bỏ đánh dấu đã nhận' : 'Đã nhận tiền') + '</button>'
+              (paid ? 'Bỏ đánh dấu đã nhận' : 'Đã nhận ' + paidWord) + '</button>'
             : '') +
           (st.next
             ? '<button type="button" class="ad-btn ad-primary" data-to="' + st.next + '">' +

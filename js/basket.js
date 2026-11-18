@@ -27,6 +27,10 @@
     messengerHandle: 'gemchamsac',   // m.me/<handle>
     instagramHandle: 'gemchamsac_studio',   // ig.me/m/<handle> mở thẳng khung nhắn tin
 
+    // Món làm riêng theo đơn (ngoài món có mã thiết kế từ Bàn thiết kế): khách
+    // không chọn cách trả lúc đặt — Gem nhắn chốt giá, khách trả trước 30%.
+    madeToOrder: ['kit-kinusaiga-theo-yeu-cau'],
+
     // Để trống = đơn hàng mở sẵn trong app email của khách (mailto), không cần
     // đăng ký gì. Muốn đơn tự chạy về hộp thư mà khách không phải bấm Gửi thì
     // điền endpoint của FormSubmit ('https://formsubmit.co/<email>') hoặc
@@ -190,12 +194,17 @@
     'basket.f_addr':        { vi: `Địa chỉ nhận hàng`, en: `Delivery address` },
     'basket.f_note':        { vi: `Ghi chú (không bắt buộc)`, en: `Note (optional)` },
     'basket.f_note_ph':     { vi: `Màu bạn thích, gói quà, ngày cần nhận…`, en: `Colours you like, gift wrap, when you need it…` },
-    'basket.f_pickup':      { vi: `Mình sẽ tự đến cửa hàng lấy`, en: `I'll pick it up at the store` },
+    // How the order reaches the customer (Anna 18/11/2026): two plain choices at the top of the form
+    'basket.recv_h':        { vi: `Cách nhận hàng`, en: `How you'll get it` },
+    'basket.recv_ship':     { vi: `Giao tận nơi`, en: `Delivery` },
+    'basket.recv_ship_p':   { vi: `Bạn trả phí giao; Gem báo phí qua Zalo theo số điện thoại bạn để lại.`, en: `You pay the shipping; Gem messages you the fee.` },
+    'basket.recv_pick':     { vi: `Đặt trước, tự đến lấy tại studio`, en: `Reserve and pick up at the studio` },
+    'basket.recv_pick_p':   { vi: `Gem giữ món cho bạn. Trả khi đến lấy (tiền mặt hoặc chuyển khoản), hoặc chuyển khoản trước.`, en: `We hold it for you. Pay when you collect (cash or bank transfer), or transfer ahead.` },
     'basket.send':          { vi: `Gửi đơn cho Gem`, en: `Send order to Gem` },
     'basket.sending':       { vi: `Đang gửi...`, en: `Sending...` },
     'basket.err_name':      { vi: `Bạn cho chúng mình xin tên nhé.`, en: `Please tell us your name.` },
     'basket.err_phone':     { vi: `Số điện thoại chưa đúng. Bạn xem lại giúp chúng mình nhé.`, en: `That phone number doesn't look right. Please check it.` },
-    'basket.err_addr':      { vi: `Bạn điền địa chỉ nhận hàng, hoặc chọn tự đến cửa hàng lấy nhé.`, en: `Please give a delivery address, or tick that you'll pick it up at the shop.` },
+    'basket.err_addr':      { vi: `Bạn điền địa chỉ nhận hàng, hoặc chọn “Đặt trước, tự đến lấy” nhé.`, en: `Please give a delivery address, or choose to reserve and pick it up.` },
 
     'basket.chat_h':        { vi: `Bạn muốn nhắn qua đâu?`, en: `Where would you like to message us?` },
     'basket.chat_p':        { vi: `Chúng mình đã copy nội dung giỏ hàng — bạn chỉ cần dán vào cửa sổ chat là xong.`, en: `We've copied your basket — just paste it into the chat window.` },
@@ -205,9 +214,10 @@
     'basket.done_h':        { vi: `Chúng mình nhận được rồi.`, en: `We've got it.` },
     'basket.custom':        { vi: `Thiết kế riêng`, en: `Your own design` },
     'basket.custom_view':   { vi: `xem`, en: `view` },
-    'basket.custom_pay':    { vi: `Đơn có món thiết kế riêng: Gem chọn vải vụn gần nhất với màu bạn chọn, nhắn ảnh vải để bạn duyệt, rồi mới gửi cách trả tiền.`, en: `Your order has a custom piece: Gem picks the closest fabric scraps, sends you a photo to approve, then tells you how to pay.` },
-    'basket.done_custom_p': { vi: `Gem sẽ nhắn ảnh vải cho bạn duyệt trước khi may, rồi mới báo cách trả tiền. Cảm ơn bạn đã tự tay chắp một món.`, en: `Gem will send you a photo of the fabrics to approve before sewing, then tell you how to pay. Thank you for piecing one together yourself.` },
-    'basket.done_p':        { vi: `Gem sẽ nhắn lại cho bạn trong hôm nay để xác nhận món và phí giao. Cảm ơn bạn đã chọn đồ của chúng mình.`, en: `Gem will message you back today to confirm the items and shipping. Thank you for choosing our pieces.` },
+    'basket.custom_pay':    { vi: `Đơn có món làm riêng: Gem nhắn bạn qua Zalo để duyệt ảnh vải (hoặc chốt giá với kit theo yêu cầu). Duyệt xong bạn trả trước 30%, Gem mới bắt tay làm; phần còn lại trả khi nhận.`, en: `Your order has a made-to-order piece: Gem messages you to approve the fabrics (or agree the price of a custom kit). Once approved you pay 30% up front and Gem starts making it; the rest is paid when you receive it.` },
+    'basket.done_custom_p': { vi: `Gem sẽ nhắn bạn qua Zalo để duyệt ảnh vải hoặc chốt giá trước khi làm. Duyệt xong bạn trả trước 30%; phần còn lại trả khi nhận. Cảm ơn bạn đã đặt một món làm riêng.`, en: `Gem will message you to approve the fabrics or agree the price before making it. Once approved you pay 30% up front; the rest when you receive it. Thank you for ordering a piece made for you.` },
+    'basket.done_p':        { vi: `Gem sẽ nhắn bạn qua Zalo trong hôm nay để xác nhận món và phí giao. Cảm ơn bạn đã chọn đồ của chúng mình.`, en: `Gem will message you today to confirm the items and shipping. Thank you for choosing our pieces.` },
+    'basket.done_pick_p':   { vi: `Gem giữ món cho bạn và nhắn qua Zalo trong hôm nay để hẹn ngày bạn đến lấy. Cảm ơn bạn đã chọn đồ của chúng mình.`, en: `We're holding it for you and will message you today to arrange when you collect it. Thank you for choosing our pieces.` },
     'basket.code_label':    { vi: `MÃ ĐƠN`, en: `ORDER CODE` },
     'basket.out_of_stock':  { vi: `Tạm hết hàng`, en: `Out of stock` },
     // {x}: what is chosen, from the product ("mùi hương", "cỡ")
@@ -221,7 +231,9 @@
     'basket.pay_qr':        { vi: `Chuyển khoản QR`, en: `Bank transfer (QR)` },
     'basket.pay_qr_p':      { vi: `Quét mã, số tiền và mã đơn điền sẵn.`, en: `Scan the code — amount and order code are filled in.` },
     'basket.pay_qr_open_p': { vi: `Gem nhắn bạn tổng tiền kèm mã QR sau khi chốt giá.`, en: `Gem will message you the total and a QR code once the price is settled.` },
-    'basket.prepay_required': { vi: `Đơn này cần chuyển khoản trước. Bạn chọn “Chuyển khoản QR” giúp chúng mình nhé.`, en: `This order needs a transfer up front. Please choose “Bank transfer (QR)”.` },
+    'basket.prepay_required': { vi: `Đơn giao tận nơi này cần chuyển khoản trước. Bạn chọn “Chuyển khoản QR”, hoặc “Đặt trước, tự đến lấy”, giúp chúng mình nhé.`, en: `This delivery order needs a transfer up front. Please choose “Bank transfer (QR)”, or reserve and pick it up.` },
+    // {x}: the threshold (settings.payment.prepay_threshold), shown when "Trả khi nhận" is locked
+    'basket.prepay_note':   { vi: `Đơn giao tận nơi từ {x} cần chuyển khoản trước. Tự đến lấy thì trả khi đến lấy cũng được.`, en: `Delivery orders from {x} are paid by transfer up front. If you pick it up, you can pay when you collect.` },
     'basket.copy':          { vi: `Chép`, en: `Copy` },
     'basket.copied':        { vi: `Đã chép`, en: `Copied` },
     'basket.qr_bank':       { vi: `Ngân hàng`, en: `Bank` },
@@ -233,8 +245,15 @@
     'basket.qr_saving':     { vi: `Đang tạo ảnh…`, en: `Making the image…` },
     'basket.qr_save_failed':{ vi: `Chưa lưu được ảnh. Bạn chụp màn hình cũng được nhé.`, en: `Could not save the image — a screenshot works too.` },
     'basket.qr_hint':       { vi: `Đang xem trên chính điện thoại này? Bấm “Lưu ảnh QR” rồi mở app ngân hàng, chọn quét từ ảnh — hoặc bấm “Chép” rồi nhập tay.`, en: `Reading this on the same phone? Tap “Save QR image”, then open your banking app and scan from your photos — or tap “Copy” and type it in.` },
-    'basket.done_qr_p':     { vi: `Chuyển xong bạn không cần báo lại — chúng mình thấy tiền về là nhắn cho bạn ngay.`, en: `No need to tell us once you've sent it — we'll message you as soon as the transfer lands.` },
-    'basket.done_qr_open_p': { vi: `Đơn có món giá tuỳ từng chiếc, nên chúng mình chưa đưa mã QR ngay. Gem sẽ nhắn bạn tổng tiền kèm mã QR trong hôm nay. Cảm ơn bạn đã chọn đồ của chúng mình.`, en: `Some pieces in this order are priced one by one, so there is no QR code yet. Gem will message you the total and a QR code today. Thank you for choosing our pieces.` },
+    'basket.done_qr_p':     { vi: `Gem kiểm tiền về rồi nhắn bạn qua Zalo để báo phí giao và hẹn giao. Cảm ơn bạn đã chọn đồ của chúng mình.`, en: `Once the transfer lands, Gem messages you about shipping. Thank you for choosing our pieces.` },
+    'basket.done_qr_pick_p': { vi: `Gem kiểm tiền về rồi nhắn bạn qua Zalo để hẹn ngày bạn đến lấy. Cảm ơn bạn đã chọn đồ của chúng mình.`, en: `Once the transfer lands, Gem messages you to arrange when you collect it. Thank you for choosing our pieces.` },
+    // the receipt (Anna 18/11/2026): one tap copies a line with the order code, then opens the chat
+    'basket.bill_h':        { vi: `Chuyển xong, gửi ảnh chuyển khoản cho Gem`, en: `Sent it? Send us the receipt` },
+    'basket.bill_p':        { vi: `Bấm một kênh: mã đơn được chép sẵn, bạn dán vào khung chat rồi gửi kèm ảnh chuyển khoản.`, en: `Tap one: the order code is copied, so paste it into the chat and add a screenshot of the transfer.` },
+    'basket.bill_copied':   { vi: `Đã chép mã đơn. Dán vào khung chat rồi gửi kèm ảnh chuyển khoản nhé.`, en: `Order code copied. Paste it into the chat and add the screenshot.` },
+    // {code}, {sum}: the line copied for the chat
+    'basket.bill_msg':      { vi: `Đơn {code}: mình đã chuyển khoản {sum}. Mình gửi Gem ảnh chuyển khoản.`, en: `Order {code}: I've sent the bank transfer of {sum}. Here's the receipt.` },
+    'basket.done_qr_open_p': { vi: `Đơn có món giá tuỳ từng chiếc, nên chúng mình chưa đưa mã QR ngay. Gem sẽ nhắn bạn tổng tiền kèm mã QR qua Zalo trong hôm nay; chuyển xong bạn gửi ảnh chuyển khoản lại trong khung chat đó. Cảm ơn bạn đã chọn đồ của chúng mình.`, en: `Some pieces in this order are priced one by one, so there is no QR code yet. Gem will message you the total and a QR code today; once you've paid, send the receipt in that chat. Thank you for choosing our pieces.` },
     // over the send button. What the law asks: docs/design.md, "Pháp lý"
     'basket.legal':         { vi: `Gem dùng thông tin này chỉ để xử lý đơn và liên lạc với bạn về đơn. Bấm “Gửi đơn cho Gem” là bạn đồng ý với <a href="chinh-sach.html" target="_blank" rel="noopener">điều kiện mua hàng và cách Gem dùng thông tin của bạn</a>.`, en: `Gem uses these details only to handle your order and to contact you about it. By pressing “Send order to Gem” you agree to <a href="chinh-sach.html" target="_blank" rel="noopener">the terms of purchase and how Gem uses your information</a>.` },
     'basket.done_order':    { vi: `Nội dung đơn`, en: `Your order` },
@@ -252,7 +271,8 @@
     'basket.txt_name':      { vi: `Tên`, en: `Name` },
     'basket.txt_phone':     { vi: `SĐT`, en: `Phone` },
     'basket.txt_addr':      { vi: `Địa chỉ`, en: `Address` },
-    'basket.txt_pickup':    { vi: `Tự đến cửa hàng lấy`, en: `Will pick up at the store` },
+    'basket.txt_pickup':    { vi: `Đặt trước, tự đến lấy tại studio`, en: `Reserved, will pick up at the studio` },
+    'basket.txt_prepay':    { vi: `Trả trước 30% khi Gem nhắn duyệt`, en: `30% up front once Gem confirms` },
     'basket.txt_note':      { vi: `Ghi chú`, en: `Note` }
   };
 
@@ -313,8 +333,11 @@
     return !!(spec && window.GemPatch && window.GemPatch.isComplete(window.GemPatch.parse(spec)));
   }
 
+  // Made to order: a design from the Bàn thiết kế, or a product Gem makes for
+  // this order (CONFIG.madeToOrder). Nothing is paid at checkout: Gem messages
+  // to approve the fabrics / agree the price, then takes 30% up front.
   function hasCustom() {
-    return items.some(function (it) { return !!it.spec; });
+    return items.some(function (it) { return !!it.spec || CONFIG.madeToOrder.indexOf(it.sku) >= 0; });
   }
 
   function bySku(sku) {
@@ -963,6 +986,17 @@
       '<button type="button" class="gb-back" data-i18n="basket.back">Quay lại giỏ</button>' +
       '<p class="gb-form-h" data-i18n="basket.form_h"></p>' +
       '<form class="gb-form" novalidate>' +
+        // How it reaches them, first: it decides whether an address is needed
+        // and, over the threshold, whether "Trả khi nhận" is open (Anna 18/11/2026)
+        '<fieldset class="gb-pay gb-recv">' +
+          '<legend data-i18n="basket.recv_h">Cách nhận hàng</legend>' +
+          '<label class="gb-pay-opt"><input type="radio" name="recv" value="ship" checked>' +
+            '<span class="gb-pay-text"><b data-i18n="basket.recv_ship">Giao tận nơi</b>' +
+            '<small data-i18n="basket.recv_ship_p"></small></span></label>' +
+          '<label class="gb-pay-opt"><input type="radio" name="recv" value="pickup">' +
+            '<span class="gb-pay-text"><b data-i18n="basket.recv_pick">Đặt trước, tự đến lấy tại studio</b>' +
+            '<small data-i18n="basket.recv_pick_p"></small></span></label>' +
+        '</fieldset>' +
         '<label class="gb-field">' +
           '<span data-i18n="basket.f_name">Tên của bạn</span>' +
           '<input type="text" name="name" autocomplete="name" required>' +
@@ -970,10 +1004,6 @@
         '<label class="gb-field">' +
           '<span data-i18n="basket.f_phone">Số điện thoại</span>' +
           '<input type="tel" name="phone" autocomplete="tel" required>' +
-        '</label>' +
-        '<label class="gb-check">' +
-          '<input type="checkbox" name="pickup">' +
-          '<span data-i18n="basket.f_pickup">Mình sẽ tự đến cửa hàng lấy</span>' +
         '</label>' +
         '<label class="gb-field gb-addr">' +
           '<span data-i18n="basket.f_addr">Địa chỉ nhận hàng</span>' +
@@ -997,42 +1027,54 @@
       '</form>';
 
     var form = panelBody.querySelector('.gb-form');
-    var pickup = form.querySelector('[name="pickup"]');
     var addrField = form.querySelector('.gb-addr');
+    var codInput = form.querySelector('[name="pay"][value="cod"]');
+    var codHint = codInput && codInput.closest('.gb-pay-opt').querySelector('small');
+    var payNote = null;
+    if (codInput) {
+      payNote = document.createElement('p');
+      payNote.className = 'gb-fine gb-pay-note';
+      payNote.hidden = true;
+      codInput.closest('.gb-pay').appendChild(payNote);
+    }
 
-    // picked up at the shop: no address to give, and nobody to hand the cash to
-    var codHint = form.querySelector('.gb-pay-opt input[value="cod"]');
-    codHint = codHint && codHint.closest('.gb-pay-opt').querySelector('small');
-    function syncAddr() {
-      addrField.hidden = pickup.checked;
-      if (pickup.checked) fieldError(form, 'address', null);
-      if (codHint) {
-        var key = pickup.checked ? 'basket.pay_cod_pick_p' : 'basket.pay_cod_p';
-        codHint.setAttribute('data-i18n', key);
-        codHint.textContent = t(key, pickup.checked ? 'Trả tại cửa hàng khi bạn đến lấy.' : 'Đưa tiền cho người giao.');
+    // Picked up at the studio: no address to give, nobody to hand the cash to,
+    // and no transfer needed up front — the piece stays in the shop until they
+    // come. A delivery order from the threshold up must be paid by transfer:
+    // "Trả khi nhận" is locked here so nobody picks it and is turned away on
+    // sending (the database refuses it too: create_order, p_pickup).
+    function syncRecv() {
+      var pick = isPickup(form);
+      addrField.hidden = pick;
+      if (pick) fieldError(form, 'address', null);
+      if (!codInput) return;
+      var key = pick ? 'basket.pay_cod_pick_p' : 'basket.pay_cod_p';
+      codHint.setAttribute('data-i18n', key);
+      codHint.textContent = t(key, pick ? 'Trả tại cửa hàng khi bạn đến lấy.' : 'Đưa tiền cho người giao.');
+      var thresh = (PAY && PAY.prepay_threshold) || 0;
+      var over = thresh > 0 && !pick && subtotal() >= thresh;
+      codInput.disabled = over;
+      codInput.closest('.gb-pay-opt').classList.toggle('is-off', over);
+      if (over && codInput.checked) {
+        var qrInput = form.querySelector('[name="pay"][value="qr"]');
+        if (qrInput) qrInput.checked = true;
       }
+      payNote.hidden = !over;
+      payNote.textContent = over ? t('basket.prepay_note', '').replace('{x}', money(thresh)) : '';
     }
     // a field's complaint goes as soon as it is typed in again
     form.addEventListener('input', function (e) {
       if (e.target && e.target.name) fieldError(form, e.target.name, null);
     });
-    pickup.addEventListener('change', syncAddr);
-    syncAddr();
-
-    // Đơn to thì khoá COD lại ngay trên giao diện, đừng để khách chọn xong
-    // rồi mới bị từ chối lúc gửi.
-    var codInput = form.querySelector('[name="pay"][value="cod"]');
-    if (codInput) {
-      var thresh = (PAY && PAY.prepay_threshold) || 0;
-      var over = thresh > 0 && subtotal() >= thresh;
-      codInput.disabled = over;
-      var codLabel = codInput.closest('.gb-pay-opt');
-      if (codLabel) codLabel.classList.toggle('is-off', over);
-      if (over) {
-        var qrInput = form.querySelector('[name="pay"][value="qr"]');
-        if (qrInput) qrInput.checked = true;
-      }
-    }
+    form.querySelectorAll('[name="recv"]').forEach(function (r) { r.addEventListener('change', syncRecv); });
+    syncRecv();
+    // The note is built text (the threshold filled in), not a data-i18n key: redo
+    // it on a language switch. syncRecv never calls translate(), so no loop; the
+    // listener goes once this form is no longer on the page.
+    document.addEventListener('gem:langchange', function relang() {
+      if (!form.isConnected) { document.removeEventListener('gem:langchange', relang); return; }
+      syncRecv();
+    });
 
     panelBody.querySelector('.gb-back').addEventListener('click', function () {
       view = 'basket'; renderPanel();
@@ -1149,6 +1191,38 @@
     '</div>';
   }
 
+  /* Sau khi chuyển khoản: khách gửi ảnh chuyển khoản cho Gem (Anna 18/11/2026),
+     để nhân sự khớp đơn nhanh, rồi hẹn giao trong cùng khung chat. Zalo,
+     Messenger, Instagram không nhận lời nhắn điền sẵn qua link, nên bấm kênh là
+     chép một câu có mã đơn + số tiền rồi mở khung chat. Tiếng Anh: Instagram
+     lên đầu, Zalo cuối (CSS, như "Hỏi thêm qua chat"). Ảnh chỉ giúp khớp nhanh:
+     nhân sự vẫn kiểm tiền về trong app ngân hàng rồi mới bấm "Đã nhận tiền". */
+  function renderSendBill() {
+    var ch = function (cls, href, mark, label) {
+      return '<a class="gb-channel ' + cls + '" href="' + href + '" target="_blank" rel="noopener" data-bill="1">' +
+        '<span class="gb-channel-mark">' + mark + '</span><span>' + label + '</span></a>';
+    };
+    return '<div class="gb-bill">' +
+      '<p class="gb-bill-h" data-i18n="basket.bill_h">Chuyển xong, gửi ảnh chuyển khoản cho Gem</p>' +
+      '<p class="gb-fine" data-i18n="basket.bill_p"></p>' +
+      '<div class="gb-channels">' +
+        ch('gb-ch-zalo', 'https://zalo.me/' + CONFIG.zaloPhone, 'Zalo', 'Zalo') +
+        ch('', 'https://m.me/' + CONFIG.messengerHandle,
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+          '<path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>', 'Messenger') +
+        ch('gb-ch-ig', 'https://ig.me/m/' + CONFIG.instagramHandle,
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+          '<rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.4a4 4 0 11-8 0 4 4 0 018 0zM17.5 6.5h.01"/></svg>', 'Instagram') +
+      '</div>' +
+      '<p class="gb-copied" hidden data-i18n="basket.bill_copied"></p>' +
+    '</div>';
+  }
+
+  function billMessage() {
+    return t('basket.bill_msg', 'Đơn {code}: mình đã chuyển khoản {sum}. Mình gửi Gem ảnh chuyển khoản.')
+      .replace('{code}', orderCode || '').replace('{sum}', orderSum > 0 ? money(orderSum) : '');
+  }
+
   function renderDone() {
     panelBody.innerHTML =
       '<div class="gb-empty">' +
@@ -1161,11 +1235,12 @@
             '<p class="gb-code">' + esc(orderCode) + '</p>'
           : '') +
         // a price still open: no code and no amount yet, Gem sends both once it is settled
-        (orderPay === 'qr' && PAY && orderCode && !orderOpen ? renderQrPay() : '') +
+        (orderPay === 'qr' && PAY && orderCode && !orderOpen ? renderQrPay() + renderSendBill() : '') +
         '<p class="gb-empty-p" data-i18n="' +
           (doneMode === 'mailto' ? 'basket.done_mail_p'
             : orderCustom ? 'basket.done_custom_p'
-            : orderPay === 'qr' ? (orderOpen ? 'basket.done_qr_open_p' : 'basket.done_qr_p') : 'basket.done_p') + '"></p>' +
+            : orderPay === 'qr' ? (orderOpen ? 'basket.done_qr_open_p' : orderShip ? 'basket.done_qr_p' : 'basket.done_qr_pick_p')
+            : orderShip ? 'basket.done_p' : 'basket.done_pick_p') + '"></p>' +
         // what was ordered: the customer's own words go through esc()
         (orderBody
           ? '<div class="gb-order">' +
@@ -1240,6 +1315,14 @@
           try { document.execCommand('copy'); done(); } catch (e) { /* im lặng */ }
           document.body.removeChild(ta);
         }
+      });
+    });
+
+    panelBody.querySelectorAll('.gb-channel[data-bill]').forEach(function (a) {
+      a.addEventListener('click', function () {
+        copyText(billMessage());   // built on click: the language picked right now
+        var note = panelBody.querySelector('.gb-bill .gb-copied');
+        if (note) note.hidden = false;
       });
     });
 
@@ -1320,6 +1403,12 @@
     box.appendChild(msg);
   }
 
+  // "Đặt trước, tự đến lấy tại studio" picked in the form
+  function isPickup(form) {
+    var r = form.querySelector('[name="recv"]:checked');
+    return !!r && r.value === 'pickup';
+  }
+
   function submitOrder(form) {
     // form.elements[...] rather than form[...] — HTMLFormElement has its own
     // `name` property, which would shadow the input named "name".
@@ -1329,7 +1418,7 @@
       phone: f['phone'].value.trim(),
       address: f['address'].value.trim(),
       note: f['note'].value.trim(),
-      pickup: f['pickup'].checked
+      pickup: isPickup(form)
     };
     var err = panelBody.querySelector('.gb-err');
     err.hidden = true;
@@ -1361,6 +1450,7 @@
     var submitBtn = form.querySelector('.gb-submit');
 
     var custom = hasCustom();
+    orderShip = !customer.pickup;   // whichever way the order goes, the thank-you text follows it
 
     function finish(mode) {
       doneMode = mode;
@@ -1405,6 +1495,8 @@
         name: customer.name,
         phone: customer.phone,
         address: customer.pickup ? t('basket.txt_pickup', 'Nhận tại cửa hàng') : customer.address,
+        // the database lets a picked-up order pay at the studio whatever its size
+        pickup: customer.pickup,
         note: note,
         payment: picked ? picked.value : null,
         // option: the key of the scent / size picked — the database checks it
@@ -1431,7 +1523,8 @@
           orderShip = !customer.pickup;
           orderBody = orderText({ customer: customer, code: res.code,
             pay: res.payment_method === 'qr' ? t('basket.pay_qr', 'Chuyển khoản QR')
-               : res.payment_method === 'cod' ? t('basket.pay_cod', 'Trả khi nhận hàng') : '' });
+               : res.payment_method === 'cod' ? t('basket.pay_cod', 'Trả khi nhận hàng')
+               : custom ? t('basket.txt_prepay', 'Trả trước 30% khi Gem nhắn duyệt') : '' });
           finish('sent');
           return;
         }
