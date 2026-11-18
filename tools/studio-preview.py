@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
-"""Still pictures of the street in front of Studio Gem, taken from the real page.
+"""A still picture of the street in front of Studio Gem, taken from the real page.
 
     images/studio/og-studio.jpg             1200 x 630: the picture a shared link
                                             shows (og:image in studio.html)
-    images/studio/xem-truoc-mat-tien.webp   720 x 900: the "Studio 2D" section
-                                            on the home page
+
+(The "Studio 2D" block on the home page has a video now, made by
+tools/studio-trailer.py; its still picture, xem-truoc-mat-tien.webp, is gone.)
 
 Run by hand when the street changes (new drawings, the layout moved in
-"Lắp studio" and published), then commit the two files:
+"Lắp studio" and published), then commit the file:
 
     python3 tools/studio-preview.py
 
 It opens studio.html from a local server and lets the page read the published
 layout from Supabase as any visitor does (reads only, so it needs the network),
-hides the bars and labels, and takes the two pictures with the character
+hides the bars and labels, and takes the picture with the character
 standing at the door. Facebook and Zalo keep a link's picture for a long time:
 after it changes, change the number after og-studio.jpg?v= in studio.html (a new
 address makes them fetch it again) and ask Facebook's Sharing Debugger to
@@ -42,7 +43,6 @@ ROOT = Path(__file__).resolve().parent.parent
 PORT = 8766
 SHOTS = [
     ('images/studio/og-studio.jpg', 1200, 630),
-    ('images/studio/xem-truoc-mat-tien.webp', 720, 900),
 ]
 # No first-visit tips, no litter falling into the picture, no offer of English.
 QUIET = ("localStorage.setItem('gem-guide', JSON.stringify({seen: {}, off: true}));"
