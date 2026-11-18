@@ -146,6 +146,53 @@
     </div>
   </section>
 
+  <!-- STUDIO 2D — right under the hero (18/11/2026), with a preview video
+       recorded from the real studio (tools/studio-trailer.py): portrait on a
+       phone, landscape on a computer, in the page's language. js/studio-teaser.js
+       loads it when the block comes near, plays it muted while on screen and
+       pauses it off screen; with less motion / data saver asked for, the first
+       frame stays with a play button. Not the studio itself in a frame: it
+       loads about 3 MB of drawings, and swiping to walk would fight the scroll. -->
+  <section class="section">
+    <div class="container">
+      <div class="studio-teaser">
+        <div class="studio-teaser-head">
+          <span class="hand" data-i18n="home.studio_eyebrow">Studio 2D,</span>
+          <h2 data-i18n="home.studio_title">Dạo một vòng studio, ngay trên màn hình.</h2>
+        </div>
+        <div class="studio-teaser-media">
+          <!-- the video repeats the button's link: one stop for the keyboard and for screen readers -->
+          <a href="studio.html" tabindex="-1" aria-hidden="true">
+            <picture>
+              <source media="(min-width: 800px)" srcset="images/studio/studio-2d-ngang-vi.webp" width="1280" height="720">
+              <img src="images/studio/studio-2d-doc-vi.webp" alt="" width="720" height="1280" loading="lazy">
+            </picture>
+            <video muted playsinline loop preload="none" disablepictureinpicture disableremoteplayback></video>
+          </a>
+          <button type="button" class="studio-teaser-play" hidden
+                  data-i18n-attr="aria-label:home.studio_pause" aria-label="Tạm dừng video">
+            <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+            <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>
+          </button>
+        </div>
+        <p class="studio-teaser-real">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <span data-i18n="home.studio_real">Studio 2D mô phỏng studio thật của Gem ở 114 Lê Gia Đỉnh. Dạo một vòng trên màn hình, rồi ghé chơi tận nơi nhé.</span>
+        </p>
+        <div class="studio-teaser-text">
+          <p data-i18n="home.studio_desc">
+            Chọn một nhân vật rồi đi dạo: thử phụ kiện, ghép vải vụn thành món của riêng bạn ở Bàn thiết kế,
+            chơi phân loại rác cùng Udon và chọn quà ngay trên kệ.
+          </p>
+          <a href="studio.html" class="btn btn-primary">
+            <span data-i18n="home.studio_cta">Vào Studio 2D</span>
+            <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- SEASON 01 -->
   <section class="section">
     <div class="container">
@@ -210,39 +257,6 @@
             <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </a>
         </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- STUDIO 2D TEASER — right under the workshop block (Anna 15/11/2026), with a
-       line saying the 2D studio is modelled on the real one. Picture on the left
-       (is-flip): the cards above alternate Season (left) / Workshop (right).
-       Ảnh là bản tĩnh chụp từ cảnh ngoài phố của studio (tools/studio-preview.py),
-       không nhúng studio thật: studio tải khoảng 3 MB tranh, và vuốt để đi dạo sẽ
-       tranh với cuộn trang. -->
-  <section class="section">
-    <div class="container">
-      <div class="studio-teaser is-flip">
-        <div class="studio-teaser-text">
-          <span class="hand" data-i18n="home.studio_eyebrow">Studio 2D,</span>
-          <h2 data-i18n="home.studio_title">Dạo một vòng studio, ngay trên màn hình.</h2>
-          <p class="studio-teaser-real">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            <span data-i18n="home.studio_real">Studio 2D mô phỏng studio thật của Gem ở 114 Lê Gia Đỉnh. Dạo một vòng trên màn hình, rồi ghé chơi tận nơi nhé.</span>
-          </p>
-          <p data-i18n="home.studio_desc">
-            Chọn một nhân vật rồi đi dạo: thử phụ kiện, ghép vải vụn thành món của riêng bạn ở Bàn thiết kế,
-            chơi phân loại rác cùng Udon và chọn quà ngay trên kệ.
-          </p>
-          <a href="studio.html" class="btn btn-primary">
-            <span data-i18n="home.studio_cta">Vào Studio 2D</span>
-            <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-          </a>
-        </div>
-        <!-- the picture repeats the button's link: one stop for the keyboard and for screen readers -->
-        <a href="studio.html" class="studio-teaser-img" tabindex="-1" aria-hidden="true">
-          <img src="images/studio/xem-truoc-mat-tien.webp" alt="" width="720" height="900" loading="lazy">
-        </a>
       </div>
     </div>
   </section>
@@ -450,6 +464,7 @@
   </div>
 
   <script src="js/main.js"></script>
+  <script src="js/studio-teaser.js" defer></script>
   <script src="js/mailerlite.js" defer></script>
 </body>
 </html>

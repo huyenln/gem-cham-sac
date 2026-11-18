@@ -38,6 +38,7 @@ Static website cho cửa hàng **Gem Chạm Sắc** — pop-up store sustainabil
 ├── js/catalog.js             san-pham.html: thẻ sản phẩm theo database (món mới tự có thẻ, đúng danh mục + thứ tự; nhãn "Ký gửi · …")
 ├── js/img-tools.js           Thu nhỏ ảnh (1280px WebP + thumb 600px) và "Xoá nền trắng" ngay trong trình duyệt
 ├── js/mailerlite.js          Email subscribe handler (fetch no-cors → inline success)
+├── js/studio-teaser.js       Trang chủ: video xem trước Studio 2D (dọc / ngang theo màn hình, VI / EN), chạy khi thấy, dừng khi cuộn qua, nút tạm dừng
 ├── js/gem-db.js              Client Supabase tự viết bằng fetch (KHÔNG dùng supabase-js)
 ├── js/basket.js              Giỏ hàng + đặt đơn + chọn cách trả tiền
 ├── js/workshop.js            Danh sách buổi, form giữ chỗ, .ics
@@ -59,7 +60,8 @@ Static website cho cửa hàng **Gem Chạm Sắc** — pop-up store sustainabil
 ├── tools/design-assets.py    Chạy tay khi có tranh bàn thiết kế mới: cắt vải, khuôn mảnh, rổ, món → images/studio/vai/
 ├── tools/bag-assets.py       Chạy tay khi có tranh túi mới: dáng túi (tranh của Gem + dáng vẽ đứng thẳng), phần quai/lót/đáy → images/studio/vai/mon-*; `--pencil` cho tranh vẽ chì nền trong (ChatGPT, 10/2026)
 ├── tools/check-studio.py     Kiểm tra studio + trình lắp bằng Playwright (Supabase giả lập)
-├── tools/studio-preview.py   Chạy tay khi cảnh ngoài phố đổi: chụp ảnh chia sẻ link (og-studio.jpg) + ảnh khối Studio ở trang chủ
+├── tools/studio-preview.py   Chạy tay khi cảnh ngoài phố đổi: chụp ảnh chia sẻ link (og-studio.jpg)
+├── tools/studio-trailer.py   Chạy tay khi studio đổi (tranh, bố cục phát hành, kệ): quay video xem trước cho trang chủ → video/studio-2d-*, bản mạng xã hội ở tools/out/ (không commit)
 ├── tools/kv-swatches.py      Chạy tay khi làm lại ảnh các tấm vải nhập sẵn (ảnh gốc trên Drive) → images/studio/vai-that/
 ├── tools/rac-assets.py       Chạy tay khi có tranh Phân loại rác mới (ChatGPT) / poster Tagom → images/studio/rac/, tagom/
 ├── tools/wear-cuts.py        Tách túi từng Mẫu ra khỏi poster sản phẩm → images/studio/wear/<sku>-<mẫu>.webp (Góc thử đồ)
@@ -72,7 +74,7 @@ Static website cho cửa hàng **Gem Chạm Sắc** — pop-up store sustainabil
 │   ├── space/                Ảnh studio + sự kiện (WebP, từ Portfolio 2026)
 │   ├── workshop/             Ảnh workshop / Chạm Mùa (WebP)
 │   └── partners/             Logo đối tác (mo-hinh.html)
-├── video/                    Video hướng dẫn kit Kinusaiga (bản nén cho web; bản gốc 1080p không vào repo)
+├── video/                    Video hướng dẫn kit Kinusaiga (bản nén cho web; bản gốc 1080p không vào repo) + 4 video xem trước Studio 2D (studio-2d-{doc,ngang}-{vi,en}.mp4)
 ├── docs/
 │   ├── design.md             Nguồn sự thật: quyết định, sprint, cấu hình, bảo mật
 │   └── prompts.md            Ghi chú prompt
@@ -385,13 +387,13 @@ the testing before bothering the user.
 - ✅ Trang quản trị: Hôm nay / Đơn hàng / Đặt lịch / Sản phẩm / Bản tin
 - ✅ UX đợt 2: bỏ lặp, căn trái đoạn dài, badge Season thành dải, vùng bấm 44px, lazy-load
 
-**Gem Studio 2D (`studio.html`, công bố 14/11/2026 — trên menu, có khối ở trang chủ ngay sau khối Workshop, ghi rõ là mô phỏng studio thật):** mặt tiền → vào studio, 4
+**Gem Studio 2D (`studio.html`, công bố 14/11/2026 — trên menu, có khối ở trang chủ ngay dưới hero (18/11) với video xem trước quay từ studio thật (`tools/studio-trailer.py`, xem lại cả bốn video trước khi commit), ghi rõ là mô phỏng studio thật):** mặt tiền → vào studio, 4
 nhân vật, phụ kiện đeo thử, bàn thiết kế, tủ sưu tầm, bảng lời nhắn; owner lắp
 bố cục ở tab "Lắp studio". Chi tiết + cách đưa tranh mới vào: `docs/design.md`.
 Kiểm tra nhanh sau khi sửa: `python3 tools/check-studio.py`.
 Công bố (Anna 12/11/2026, chi tiết: `docs/design.md` → "Studio: công bố"):
 - Tranh vẫn là bản tạm, chưa có ngày thay: chữ cho khách không ghi "vẽ tay", không gắn nhãn "bản thử"; đã bỏ `noindex`.
-- Ảnh khi chia sẻ link: thẻ `og:*` trong `studio.html`, ảnh `images/studio/og-studio.jpg` (URL tuyệt đối). **Không thêm `og:url` / `rel=canonical`**: Facebook sẽ dẫn về địa chỉ đó và làm rơi `?d=` (thiết kế được chia sẻ) lẫn `?src=`. Cảnh ngoài phố đổi thì chạy `tools/studio-preview.py`, **mở hai ảnh xem ở kích thước thật**, đổi số sau `og-studio.jpg?v=` trong `studio.html` (địa chỉ mới thì Facebook / Zalo mới lấy ảnh mới), rồi bấm "Scrape again" ở Facebook Sharing Debugger. Công cụ chạy trình duyệt `vi-VN` và dừng nếu có gì đè lên cảnh (ảnh đầu tiên từng dính thanh "This site is also available in English").
+- Ảnh khi chia sẻ link: thẻ `og:*` trong `studio.html`, ảnh `images/studio/og-studio.jpg` (URL tuyệt đối). **Không thêm `og:url` / `rel=canonical`**: Facebook sẽ dẫn về địa chỉ đó và làm rơi `?d=` (thiết kế được chia sẻ) lẫn `?src=`. Cảnh ngoài phố đổi thì chạy `tools/studio-preview.py`, **mở ảnh xem ở kích thước thật**, đổi số sau `og-studio.jpg?v=` trong `studio.html` (địa chỉ mới thì Facebook / Zalo mới lấy ảnh mới), rồi bấm "Scrape again" ở Facebook Sharing Debugger. Công cụ chạy trình duyệt `vi-VN` và dừng nếu có gì đè lên cảnh (ảnh đầu tiên từng dính thanh "This site is also available in English").
 - `?src=` trong link (`studio.html?src=fb`, `?src=qr`…): `js/basket.js` giữ trong `sessionStorage gem-src`, đơn đặt trong lượt ghé đó ghi `[nguồn: fb]` vào ghi chú. Không đếm gì khác.
 - Lần tải đầu (`html.st-boot`): Udon + "Đang mở cửa studio…", thanh nút / "?" / giỏ ẩn cho tới khi bố cục về.
 - Khu chỉ có tên tiếng Việt (Lắp studio) thì bản tiếng Anh dùng tên có sẵn của khu đó (`enName` trong `js/studio.js`); muốn tên riêng thì điền "Tên tiếng Anh".

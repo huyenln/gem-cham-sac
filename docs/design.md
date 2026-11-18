@@ -2687,7 +2687,8 @@ Anna chốt 12/11/2026, sau một lượt kiểm toàn bộ web (11/11):
 - **Lối vào:** mục "Studio 2D" trên menu (sau Sản phẩm, cả menu điện thoại) + khối "Studio 2D"
   ở trang chủ, giữa Sản phẩm và Workshop. Ảnh của khối là bản tĩnh
   (`images/studio/xem-truoc-mat-tien.webp`), **không nhúng studio thật**: studio tải khoảng 3 MB
-  tranh, và vuốt để đi dạo sẽ tranh với cuộn trang. PR #47 (ra mắt thử 12/10, chưa merge) được
+  tranh, và vuốt để đi dạo sẽ tranh với cuộn trang. (18/11: khối lên ngay dưới hero, ảnh tĩnh thay
+  bằng video — xem "Trang chủ: Studio 2D ngay dưới hero".) PR #47 (ra mắt thử 12/10, chưa merge) được
   thay bằng đợt này.
 - **Menu 7 mục** không vừa một hàng dưới 1100px (nút ngôn ngữ rớt xuống hàng hai, đo ở cả hai
   ngôn ngữ). Ở 960–1099px mục "Trang chủ" ẩn đi (`.nav-menu > .nav-home`); logo vẫn về trang chủ.
@@ -3577,7 +3578,8 @@ thẻ**; khách nước ngoài liên hệ qua **email, Threads, Instagram, Faceb
   (`policy.who_msg`, `policy.care_1`) và dòng "Tin nhắn cho Gem" (`policy.data_w7`).
 - **Giá bản tiếng Anh: "39,000₫"** (bản Việt giữ "39.000đ"): "39.000" đọc theo kiểu Anh là
   ba mươi chín. Sửa ở `money()` của `workshop.js` / `basket.js`, `priceRange()` của `patch.js`.
-- **Trang chủ:** thứ tự mới Hero → Season 02 → Workshop → Studio 2D → Ba điều → Sản phẩm → Bản tin.
+- **Trang chủ:** thứ tự mới Hero → Season 02 → Workshop → Studio 2D → Ba điều → Sản phẩm → Bản tin
+  (18/11: Studio 2D lên ngay dưới hero).
   Khối Workshop ảnh bên phải (`.ws-teaser.is-flip`), thêm hai dòng "Đặt lúc nào cũng được…" /
   "Hướng dẫn bằng tiếng Việt hoặc tiếng Anh". Khối Studio 2D (Anna 15/11) ảnh bên trái
   (`.studio-teaser.is-flip`) và có dòng "Studio 2D mô phỏng studio thật của Gem ở 114 Lê Gia Đỉnh…"
@@ -3610,6 +3612,50 @@ thẻ**; khách nước ngoài liên hệ qua **email, Threads, Instagram, Faceb
   giá theo cỡ là dòng đầu của "Cần biết trước" (`note_vi` / `note_en`). Đổi giá thì sửa cả hai chỗ
   trong admin → Đặt lịch → loại workshop.
 - **Còn mở:** `?lang=en` trên link (Anna: chưa).
+
+### Trang chủ: Studio 2D ngay dưới hero, có video xem trước (18/11/2026)
+
+Anna 18/11: đưa Studio 2D lên đầu trang chủ, chọn **ngay dưới hero** (không thay hero). Thêm
+video kiểu "preview game". Thứ tự mới: Hero → **Studio 2D** → Season 02 → Workshop → Ba điều →
+Sản phẩm → Bản tin.
+
+- **Video quay từ studio thật**, tự động, bằng `python3 tools/studio-trailer.py` (Chrome
+  screencast; ngón tay vẽ trên màn hình bản điện thoại, con trỏ chuột bản máy tính). Không lời
+  riêng, không tiếng (video tự chạy phải tắt tiếng). Khoảng 35 giây: ngoài phố rác rơi → nhặt
+  (thẻ thông điệp) → đàn tranh → Phân loại rác (màn 2, kéo một món vào đúng bao) → vào cửa (lời
+  chào) → Góc thử đồ (thử rồi "Đeo thử" túi Denim, nhân vật đeo luôn trong studio) → kệ (Gối Chắp
+  Sắc: ảnh thật, giá) → Bàn thiết kế (chọn tâm trạng, kéo một mảnh vải, May xong, thẻ chia sẻ) →
+  thẻ kết (Udon vẫy tay, logo, `gemchamsac.com/studio`). Đoạn đi bộ được tua nhanh 1,15–1,35 lần.
+- **Hai khổ × hai ngôn ngữ** (Anna: điện thoại giữ dọc, máy tính ngang cho giống màn hình khách
+  sẽ thấy thật): `video/studio-2d-{doc,ngang}-{vi,en}.mp4` (720×1280 / 1280×720) + khung đầu
+  `images/studio/studio-2d-*.webp`. Chữ trong studio theo ngôn ngữ nên mỗi ngôn ngữ một bản. Khách
+  chỉ tải một bản: ~2 MB (dọc), ~1,5 MB (ngang). Nén CRF 31 + `tune animation`: so với CRF 28
+  không thấy khác trên tranh màu nước mà nhẹ hơn ~35%.
+- **Bản cho mạng xã hội** (1080×1920 / 1920×1080) nằm ở `tools/out/` (không commit, đã có trong
+  `.gitignore`), đưa lên Drive.
+- **`js/studio-teaser.js`:** tải khi khối còn cách màn hình 300px, chạy (tắt tiếng, lặp) khi thấy
+  ≥ 1/3, dừng khi cuộn qua. Nút tạm dừng / phát ở góc (hình tự chuyển động quá 5 giây phải dừng
+  được). Khách chọn giảm chuyển động hoặc bật tiết kiệm dữ liệu: chỉ hiện khung đầu + nút phát,
+  không tải video. Đổi ngôn ngữ hoặc xoay máy qua mốc 800px thì đổi bản. Video nằm trong link
+  `studio.html` (như ảnh cũ).
+- **Bố cục:** điện thoại = tiêu đề → video dọc (rộng tối đa 340px, giữa thẻ) → dòng "mô phỏng
+  studio thật" (giờ là chú thích dưới video) → mô tả + nút. Máy tính = tiêu đề | mô tả + nút một
+  hàng, video ngang rộng hết thẻ (1008px ở 1440) để chữ trong studio đọc được.
+- **Chạy lại video khi** tranh mới, bố cục phát hành ở Lắp studio, kệ / món đeo thử đổi. Mỗi lần
+  chạy hơi khác (rác, món phân loại, tổ hợp vải là ngẫu nhiên): **xem lại cả bốn video trước khi
+  commit**. Bước nào không làm được (nút bị che, thiếu món) thì công cụ dừng và lưu ảnh màn hình
+  lỗi vào `tools/out/`.
+- **Lúc vào cửa**, studio hiện tường ngay khi ảnh tường tải xong (`goScene` chỉ chờ `.st-bg`), kệ,
+  giá treo, sofa hiện dần theo từng ảnh — trên video trông như đồ "nhảy ra". Công cụ quay đi một
+  vòng trong studio ở tab khác trước (cho tranh vào bộ nhớ đệm) và giữ phòng ẩn tới khi tranh trong
+  khung nhìn tải + giải mã xong rồi mới cho hiện dần. Chỉ ở video; studio thật vẫn như cũ (khách
+  mạng chậm vẫn thấy đồ hiện dần) — muốn sửa thì `goScene` chờ các ảnh trong khung nhìn, có giới
+  hạn thời gian.
+- `tools/studio-preview.py` giờ chỉ chụp `og-studio.jpg`; ảnh tĩnh `xem-truoc-mat-tien.webp` đã bỏ.
+- **Lỗi phát hiện khi quay:** bản tiếng Anh ghi "You've picked up 1 bits of litter" — thêm
+  `rr.count1` cho trường hợp 1 món (`js/racroi.js`). Tên khu owner gõ ở Lắp studio có thể lưu dạng
+  Unicode tách dấu (NFD, vd "Góc Phân Loại"): hiển thị bình thường, nhưng so chữ phải
+  `normalize('NFC')` trước (công cụ quay đã làm).
 
 ---
 

@@ -942,48 +942,74 @@ html.nav-open .gb-widget { visibility: hidden; }
   .ws-teaser.is-flip .ws-teaser-img { order: 1; }
 }
 
-/* HOME STUDIO 2D TEASER — text left, picture right; on the home page it sits
-   under the workshop teaser and is flipped (.is-flip, picture left) */
+/* HOME STUDIO 2D — right under the hero (18/11/2026), around a preview video
+   recorded from the studio (js/studio-teaser.js). Phone: the title, the video
+   (portrait, as the studio is on a phone), what it is, the button. Computer:
+   the title and the button side by side, the video (landscape) the full width
+   under them, so the studio's own screen is big enough to read. */
 .studio-teaser {
   display: grid;
-  gap: var(--space-8);
-  align-items: center;
+  grid-template-areas: "head" "media" "real" "text";
+  gap: var(--space-6);
   background: var(--paper-white);
   border-radius: var(--radius-lg);
   padding: var(--space-8);
   box-shadow: var(--shadow-paper);
 }
-@media (min-width: 800px) {
-  .studio-teaser { grid-template-columns: 1.1fr 1fr; gap: var(--space-12); padding: var(--space-12); }
-}
-/* phone: the picture above the text, cut to the door, the character and Udon */
-.studio-teaser-img {
-  order: -1;
-  display: block;
+.studio-teaser-head { grid-area: head; }
+.studio-teaser h2 { margin-bottom: 0; }
+.studio-teaser-media {
+  grid-area: media;
+  position: relative;
+  justify-self: center;
+  width: min(100%, 340px);
+  aspect-ratio: 9 / 16;
   border-radius: var(--radius-md);
   overflow: hidden;
-  aspect-ratio: 4 / 3;
   background: var(--paper-cream);
+  box-shadow: 0 2px 14px rgba(61, 74, 46, 0.12);
 }
-@media (min-width: 800px) {
-  .studio-teaser-img { order: 0; aspect-ratio: 4 / 5; max-height: 520px; justify-self: center; }
+.studio-teaser-media > a,
+.studio-teaser-media img,
+.studio-teaser-media video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
 }
-.studio-teaser-img img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 72%; display: block; }
-.studio-teaser h2 { margin-bottom: var(--space-4); }
-.studio-teaser-text > p { color: var(--ink-body); margin-bottom: var(--space-6); line-height: 1.75; }
-/* Right under the workshop block (picture on the right), so this one puts its
-   picture on the left */
-@media (min-width: 800px) {
-  .studio-teaser.is-flip { grid-template-columns: 1fr 1.1fr; }
-  .studio-teaser.is-flip .studio-teaser-img { order: -1; }
+/* the first frame (the picture) shows until the video plays, then it fades in */
+.studio-teaser-media video { opacity: 0; transition: opacity 0.4s ease; }
+.studio-teaser-media.is-on video { opacity: 1; }
+.studio-teaser-play {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(251, 246, 238, 0.92);
+  color: var(--ink-dark);
+  box-shadow: 0 2px 8px rgba(61, 74, 46, 0.25);
+  cursor: pointer;
 }
-/* "a model of the real studio" (Anna 15/11/2026): ties the 2D studio to the
-   place you can visit */
-.studio-teaser-text > .studio-teaser-real {
+.studio-teaser-play[hidden] { display: none; }
+.studio-teaser-play svg { width: 20px; height: 20px; fill: currentColor; }
+.studio-teaser-play .i-play { display: none; }
+.studio-teaser-media.is-paused .studio-teaser-play .i-play { display: block; }
+.studio-teaser-media.is-paused .studio-teaser-play .i-pause { display: none; }
+.studio-teaser-play:focus-visible { outline: 2px solid var(--sage-deep); outline-offset: 2px; }
+/* "a model of the real studio" (Anna 15/11/2026): under the video, as its caption */
+.studio-teaser-real {
+  grid-area: real;
   display: flex;
   gap: var(--space-3);
   align-items: flex-start;
-  margin-bottom: var(--space-4);
+  margin: 0;
   padding: var(--space-3) var(--space-4);
   background: var(--paper-cream);
   border-radius: var(--radius-md);
@@ -993,6 +1019,20 @@ html.nav-open .gb-widget { visibility: hidden; }
   line-height: 1.55;
 }
 .studio-teaser-real svg { width: 18px; height: 18px; flex-shrink: 0; color: var(--sage-deep); margin-top: 0.15em; }
+.studio-teaser-text { grid-area: text; }
+.studio-teaser-text p { color: var(--ink-body); margin-bottom: var(--space-6); line-height: 1.75; }
+@media (min-width: 800px) {
+  .studio-teaser {
+    grid-template-columns: 1fr 1.15fr;
+    grid-template-areas: "head text" "media media" "real real";
+    column-gap: var(--space-12);
+    row-gap: var(--space-8);
+    padding: var(--space-12);
+  }
+  .studio-teaser-head { align-self: start; }
+  .studio-teaser-media { width: 100%; aspect-ratio: 16 / 9; }
+  .studio-teaser-real { margin-top: calc(-1 * var(--space-4)); justify-self: start; }
+}
 
 /* LANGUAGE HINT — offered to non-Vietnamese browsers, never auto-applied */
 .lang-hint {

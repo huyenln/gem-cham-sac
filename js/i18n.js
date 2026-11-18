@@ -102,12 +102,14 @@
     'home.ws_cta':     { vi: `Xem workshop & đặt lịch`, en: `See workshops & book` },
     'home.ws_img_alt': { vi: `Tranh kinusaiga đầu ngựa ghép từ vải vụn`, en: `A kinusaiga horse's head pieced from fabric scraps` },
 
-    /* HOME: Studio 2D teaser (ảnh tĩnh từ tools/studio-preview.py) */
+    /* HOME: Studio 2D, ngay dưới hero (video từ tools/studio-trailer.py, js/studio-teaser.js) */
     'home.studio_eyebrow': { vi: `Studio 2D,`, en: `Studio 2D,` },
     'home.studio_title':   { vi: `Dạo một vòng studio, ngay trên màn hình.`, en: `Walk around the studio, right on your screen.` },
     'home.studio_desc':    { vi: `Chọn một nhân vật rồi đi dạo: thử phụ kiện, ghép vải vụn thành món của riêng bạn ở Bàn thiết kế, chơi phân loại rác cùng Udon và chọn quà ngay trên kệ.`, en: `Pick a character and wander: try on accessories, piece fabric scraps into something of your own at the Design table, play the waste-sorting game with Udon, and choose gifts straight off the shelves.` },
     'home.studio_real':  { vi: `Studio 2D mô phỏng studio thật của Gem ở 114 Lê Gia Đỉnh. Dạo một vòng trên màn hình, rồi ghé chơi tận nơi nhé.`, en: `Studio 2D is modelled on our real studio at 114 Le Gia Dinh, Hanoi. Look around on screen, then come and see it for real.` },
     'home.studio_cta':     { vi: `Vào Studio 2D`, en: `Enter Studio 2D` },
+    'home.studio_pause':   { vi: `Tạm dừng video`, en: `Pause the video` },
+    'home.studio_play':    { vi: `Phát video`, en: `Play the video` },
 
     'home.products_eyebrow': { vi: `Sản phẩm,`, en: `Products,` },
     'home.products_title':   { vi: `Đa dạng các sắc màu từ Gem.`, en: `A spectrum of colors from Gem.` },
