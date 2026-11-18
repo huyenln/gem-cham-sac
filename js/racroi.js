@@ -22,6 +22,7 @@ window.GemRacRoi = (function () {
     'rr.wait':     { vi: `Udon chờ bạn nhặt nè`, en: `Udon is waiting for you to pick it up` },
     'rr.item':     { vi: `Nhặt {mon}`, en: `Pick up {mon}` },
     'rr.thanks':   { vi: `Cảm ơn bạn đã nhặt rác!`, en: `Thank you for picking it up!` },
+    'rr.count1':   { vi: `Bạn đã nhặt 1 món rác ngoài phố.`, en: `You've picked up 1 bit of litter on the street.` },
     'rr.count':    { vi: `Bạn đã nhặt {n} món rác ngoài phố.`, en: `You've picked up {n} bits of litter on the street.` },
     'rr.msg_h':    { vi: `Thông điệp`, en: `A note` },
     'rr.source':   { vi: `Nguồn`, en: `Source` },
@@ -548,7 +549,7 @@ window.GemRacRoi = (function () {
         card.innerHTML = (badge ? '<div class="rr-card-badge">' + badgeSvg(badge) + '<div><p class="rr-cat">' + esc(t('rr.badge_h')) + '</p>' +
             '<p class="rr-text"><b>' + esc(t('rr.b' + badge)) + '</b> · ' + esc(t('rr.badge_p').replace('{n}', badge)) + '</p></div></div>' : '') +
           (m ? msgHtml(m) : '<p class="rr-text">' + esc(t('rr.thanks')) + '</p>') +
-          '<p class="rr-count">' + esc(t('rr.count').replace('{n}', s.n)) + '</p>' +
+          '<p class="rr-count">' + esc(t(s.n === 1 ? 'rr.count1' : 'rr.count').replace('{n}', s.n)) + '</p>' +   // not "1 bits"
           '<button type="button" class="st-btn rr-close">' + esc(t('rr.close')) + '</button>';
         ['pointerdown', 'click'].forEach(function (ev) { card.addEventListener(ev, function (e) { e.stopPropagation(); }); });
         ctx.stage.appendChild(card);
