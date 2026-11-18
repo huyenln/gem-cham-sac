@@ -23,3 +23,6 @@ npm-debug.log*
 # /drafts/
 # /raw-photos/
 __pycache__/
+
+# studio-trailer.py: the social-media copies (big, not for the site)
+tools/out/
