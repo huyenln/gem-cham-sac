@@ -3651,10 +3651,15 @@ Sản phẩm → Bản tin.
 - **Bản cho mạng xã hội** (1080×1920 / 1920×1080) nằm ở `tools/out/` (không commit, đã có trong
   `.gitignore`), đưa lên Drive.
 - **`js/studio-teaser.js`:** tải khi khối còn cách màn hình 300px, chạy (tắt tiếng, lặp) khi thấy
-  ≥ 1/3, dừng khi cuộn qua. Nút tạm dừng / phát ở góc (hình tự chuyển động quá 5 giây phải dừng
-  được). Khách chọn giảm chuyển động hoặc bật tiết kiệm dữ liệu: chỉ hiện khung đầu + nút phát,
+  ≥ 1/3, dừng khi cuộn qua. Đang chạy: nút tạm dừng nhỏ ở góc (hình tự chuyển động quá 5 giây phải
+  dừng được). Khách chọn giảm chuyển động hoặc bật tiết kiệm dữ liệu: chỉ hiện khung đầu + nút phát,
   không tải video. Đổi ngôn ngữ hoặc xoay máy qua mốc 800px thì đổi bản. Video nằm trong link
   `studio.html` (như ảnh cũ).
+  **Nút phát to giữa khung** (Anna 18/11: nút ở góc quá bé, tìm mãi mới thấy): mỗi khi video đứng
+  yên — giảm chuyển động, tiết kiệm dữ liệu, iPhone ở chế độ nguồn điện thấp (Safari tự chặn video
+  tự chạy), hoặc khách bấm dừng — nút thành hình tròn 88px (điện thoại) / 104px (máy tính), màu nút
+  chính (`--sage-deep`, viền kem). Bấm phát thì video chạy ngay, kể cả khi khung chưa hiện đủ 1/3.
+  `check-studio.py homevideo` kiểm nút ≥ 80px và nằm giữa.
 - **Bố cục:** điện thoại = tiêu đề → video dọc (rộng tối đa 340px, giữa thẻ) → dòng "mô phỏng
   studio thật" (giờ là chú thích dưới video) → mô tả + nút. Máy tính = tiêu đề | mô tả + nút một
   hàng, video ngang rộng hết thẻ (1008px ở 1440) để chữ trong studio đọc được.

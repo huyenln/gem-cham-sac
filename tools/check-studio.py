@@ -5368,6 +5368,9 @@ async def home_video(browser, db):
     shown = await pg.evaluate("document.querySelector('.studio-teaser-media img').currentSrc")
     check(calm[0] is None and calm[1] and calm[3] == 'Phát video' and shown.endswith('studio-2d-doc-vi.webp'),
           f'less motion: the first frame and a play button, no video fetched ({calm}, {shown})')
+    big = await pg.evaluate("""(() => { const b = document.querySelector('.studio-teaser-play').getBoundingClientRect(), m = document.querySelector('.studio-teaser-media').getBoundingClientRect();
+        return [Math.round(b.width), Math.abs(b.left + b.width / 2 - m.left - m.width / 2) < 2 && Math.abs(b.top + b.height / 2 - m.top - m.height / 2) < 2]; })()""")
+    check(big[0] >= 80 and big[1], f'less motion: the play button is big, in the middle (Anna 18/11: the corner one was hard to find) ({big})')
     await ctx.close()
 
 

@@ -1003,6 +1003,29 @@ html.nav-open .gb-widget { visibility: hidden; }
 .studio-teaser-media.is-paused .studio-teaser-play .i-play { display: block; }
 .studio-teaser-media.is-paused .studio-teaser-play .i-pause { display: none; }
 .studio-teaser-play:focus-visible { outline: 2px solid var(--sage-deep); outline-offset: 2px; }
+/* Not playing by itself (less motion or data saver asked for, a phone that
+   won't start it, or paused by hand): one big play button in the middle, in
+   the colours of the site's main button (Anna 18/11: the corner one was too
+   small to find). Playing: the small pause button in the corner. */
+.studio-teaser-media.is-paused .studio-teaser-play {
+  top: 50%;
+  left: 50%;
+  right: auto;
+  width: 88px;
+  height: 88px;
+  transform: translate(-50%, -50%);
+  border: 3px solid var(--paper-white);
+  background: var(--sage-deep);
+  color: var(--paper-white);
+  box-shadow: 0 6px 24px rgba(61, 74, 46, 0.35);
+}
+.studio-teaser-media.is-paused .studio-teaser-play:hover { background: var(--ink-dark); }
+.studio-teaser-media.is-paused .studio-teaser-play svg { width: 38px; height: 38px; }
+.studio-teaser-media.is-paused .studio-teaser-play:focus-visible { outline-offset: 3px; }
+@media (min-width: 800px) {   /* the landscape video is 1000px wide there */
+  .studio-teaser-media.is-paused .studio-teaser-play { width: 104px; height: 104px; }
+  .studio-teaser-media.is-paused .studio-teaser-play svg { width: 44px; height: 44px; }
+}
 /* "a model of the real studio" (Anna 15/11/2026): under the video, as its caption */
 .studio-teaser-real {
   grid-area: real;
