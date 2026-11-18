@@ -17,6 +17,14 @@
   else window.addEventListener('resize', setH);
 })();
 
+// Videos marked data-no-save (the kit tutorial): no right-click / long-press
+// menu, so no "Save video as…". Only stops the casual way: the file is still
+// public at its URL (Anna 18/11/2026).
+document.addEventListener('contextmenu', function (e) {
+  var t = e.target;
+  if (t && t.closest && t.closest('video[data-no-save]')) e.preventDefault();
+});
+
 // Mobile menu toggle
 document.addEventListener('DOMContentLoaded', function() {
   const toggle = document.querySelector('.nav-toggle');

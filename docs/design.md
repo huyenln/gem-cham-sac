@@ -3546,6 +3546,13 @@ web; khối Kit đứng **đầu** `san-pham.html`.
   (bản gốc 1080×1920 161 MB vượt giới hạn 100 MB của GitHub, nằm ở Drive của Gem). Chữ
   VI/EN in sẵn trong hình nên không có track phụ đề. Poster:
   `images/products/kit-kinusaiga-video-poster.jpg`. Không nhúng YouTube: không cookie.
+- **Không cho tải video** (chủ shop 18/11/2026): bỏ link "Tải video về máy"; `<video>` có
+  `controlslist="nodownload"` (mất nút Tải xuống trong menu trình phát Chrome / Edge),
+  `disablepictureinpicture`, và `data-no-save` (`js/main.js` chặn menu chuột phải / nhấn giữ).
+  Chỉ chặn cách tải thông thường: file vẫn công khai ở đường dẫn của nó và trong repo GitHub.
+  Chặn quay màn hình thì web không làm được (chỉ DRM qua dịch vụ video trả phí, mà vẫn quay
+  được trên Chrome máy tính và bằng điện thoại khác) — chủ shop chọn không làm, không thêm
+  dòng nhắc dưới video.
 - **Dữ liệu:** `supabase/migrations/20261113b_kit_kinusaiga.sql` — **chạy sau khi merge**
   (ảnh `images/products/kit-kinusaiga-*.jpg` phải có trên web trước). Chỉ thêm 1 dòng
   `products` (sku `kit-kinusaiga`, `price` null, `options` 4 Mẫu), không đổi bảng / quyền.

@@ -331,7 +331,6 @@
     'products.kit_video_cap':{ vi: `Video hướng dẫn · 3 phút · chữ Việt và Anh`, en: `Video guide · 3 min · Vietnamese and English text` },
     'products.kit_video_aria':{ vi: `Video hướng dẫn làm tranh Kinusaiga với bộ kit của Gem`, en: `Video guide: making a Kinusaiga picture with Gem's kit` },
     'products.kit_video_fallback':{ vi: `Trình duyệt chưa phát được video.`, en: `Your browser can't play this video.` },
-    'products.kit_video_dl': { vi: `Tải video về máy`, en: `Download the video` },
     'products.kit_box_h':    { vi: `Trong bộ kit`, en: `What's in the kit` },
     'products.kit_i1':       { vi: `<strong>Nền xốp tái sử dụng</strong> đã bọc viền vải bò, tạo rãnh, phủ keo`, en: `<strong>Reused foam board</strong>, denim-edged, grooved and coated with adhesive` },
     'products.kit_i2':       { vi: `<strong>Vải vụn nhiều màu</strong> Gem cắt sẵn`, en: `<strong>Pre-cut fabric scraps</strong> in many colours` },
