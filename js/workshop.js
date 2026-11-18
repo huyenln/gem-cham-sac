@@ -16,7 +16,8 @@
        #dat-mon trong trang từng workshop, và lời nhắc cuối trang. */
     'ws.book_h':        { vi: `Đặt lịch`, en: `Book a workshop` },
     'ws.book_s1':       { vi: `<strong>Chọn món</strong> ở <a href="#ws-list-head">danh sách bên dưới</a>.`, en: `<strong>Pick a workshop</strong> from <a href="#ws-list-head">the list below</a>.` },
-    'ws.book_s2':       { vi: `<strong>Nhắn Gem</strong> món muốn làm, ngày giờ và số người.`, en: `<strong>Message us</strong> which workshop, the day &amp; time, and how many of you.` },
+    // lead time + holidays (Anna 18/11/2026): one number, 3 hours, reads clearer than "2–3"
+    'ws.book_s2':       { vi: `<strong>Nhắn Gem</strong> món muốn làm, ngày giờ và số người, trước giờ học ít nhất 3 tiếng. Ngày lễ, nhắn hỏi lịch trước; Tết Gem nghỉ.`, en: `<strong>Message us</strong> which workshop, the day &amp; time, and how many of you, at least 3 hours ahead. On public holidays, ask first; we're closed over Tết (Lunar New Year).` },
     'ws.book_s3':       { vi: `<strong>Gem xác nhận.</strong> Bạn trả tại studio khi đến: tiền mặt hoặc chuyển khoản, không nhận thẻ.`, en: `<strong>We confirm.</strong> You pay at the studio: cash (VND) or Vietnamese bank transfer — we don't take cards.` },
     'ws.book_or':       { vi: `Hoặc giữ chỗ ở <a href="#ws-sched-h">một buổi đã lên lịch</a>.`, en: `Or reserve a seat in <a href="#ws-sched-h">a scheduled session</a>.` },
     'ws.ch_note':       { vi: `Bấm một kênh: lời nhắn soạn sẵn được chép lại, bạn chỉ cần dán vào khung chat.`, en: `Tap one: a ready-made message is copied, so you just paste it into the chat.` },
@@ -31,7 +32,7 @@
     'ws.type_book':     { vi: `Đặt lịch`, en: `Book` },
     'ws.page_book_h':   { vi: `Đặt workshop này`, en: `Book this workshop` },
     'ws.page_book_other': { vi: `Hoặc hẹn một ngày khác`, en: `Or pick another day` },
-    'ws.page_book_p':   { vi: `Nhắn Gem ngày giờ bạn muốn và số người, chúng mình xác nhận lại. Hướng dẫn bằng tiếng Việt hoặc tiếng Anh. Trả tại studio: tiền mặt hoặc chuyển khoản, không nhận thẻ.`, en: `Message us the day & time you'd like and how many of you, and we'll confirm. Taught in English or Vietnamese. Pay at the studio: cash (VND) or Vietnamese bank transfer — no cards.` },
+    'ws.page_book_p':   { vi: `Nhắn Gem ngày giờ bạn muốn và số người, trước giờ học ít nhất 3 tiếng, chúng mình xác nhận lại. Hướng dẫn bằng tiếng Việt hoặc tiếng Anh. Trả tại studio: tiền mặt hoặc chuyển khoản, không nhận thẻ.`, en: `Message us the day & time you'd like and how many of you, at least 3 hours ahead, and we'll confirm. Taught in English or Vietnamese. Pay at the studio: cash (VND) or Vietnamese bank transfer — no cards.` },
 
     'ws.loading':       { vi: `Đang tải lịch...`, en: `Loading sessions...` },
     'ws.empty':         { vi: `Danh sách workshop chưa có ở đây. Bạn nhắn Gem (nút ở trên) để hỏi món đang có nhé.`, en: `The workshop list isn't here yet. Message us (buttons above) to ask what's on.` },

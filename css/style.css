@@ -2137,6 +2137,27 @@ body.pg-lock { overflow: hidden; }
   cursor: default;
 }
 .pg-chip-out { margin-left: 0.35em; font-size: var(--text-xs); }
+
+/* Difficulty (kit Kinusaiga): the name, then five small stars. The filled row
+   sits on the empty one and is cut to level/5 of the width (js/gallery.js). */
+.pg-level-hint { margin: calc(-1 * var(--space-1)) 0 var(--space-2); font-size: var(--text-xs); color: var(--ink-body); }
+.pg-chip.has-level {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 0.4em 0.85em 0.45em;
+  border-radius: var(--radius-lg);
+  line-height: 1.25;
+}
+.pg-stars { position: relative; display: block; width: 70px; height: 14px; flex: none; }
+.pg-stars svg { display: block; width: 70px; height: 14px; }
+.pg-stars > svg { fill: var(--paper-cream-warm); stroke: var(--ink-soft); stroke-width: 0.7; stroke-linejoin: round; }
+.pg-stars-on { position: absolute; top: 0; left: 0; height: 100%; overflow: hidden; }
+.pg-stars-on svg { fill: var(--kraft); stroke: var(--ink-soft); stroke-width: 0.7; stroke-linejoin: round; }
+.pg-chip.has-level .pg-chip-out { margin-left: 0; }
+.pg-chip:disabled .pg-stars { opacity: 0.5; }
 .pg-choice-note {
   margin: var(--space-3) 0 0;
   font-size: var(--text-sm);

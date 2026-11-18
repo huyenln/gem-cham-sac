@@ -68,6 +68,12 @@
       .replace(/"/g, '&quot;');
   }
 
+  // A choice's difficulty: 1 to 5 in half steps, or null (js/gallery.js draws the stars)
+  function cleanLevel(v) {
+    var n = Math.round(parseFloat(String(v == null ? '' : v).replace(',', '.')) * 2) / 2;
+    return n >= 1 && n <= 5 ? n : null;
+  }
+
   function vn(iso) {
     var p = {};
     new Intl.DateTimeFormat('en-CA', {
@@ -1036,6 +1042,15 @@
        adding, moving, removing, Còn/Hết and a new photo redraw the list. A
        choice keeps its key for good once saved: baskets and orders hold it. */
     var chUl = form.querySelector('.ad-choices');
+    // 1 to 5 stars in half steps; "" = no difficulty shown
+    function levelOptions(cur) {
+      var v = cleanLevel(cur), h = '<option value="">—</option>';
+      for (var s = 1; s <= 5; s += 0.5) {
+        h += '<option value="' + s + '"' + (v === s ? ' selected' : '') + '>' +
+          String(s).replace('.', ',') + ' sao</option>';
+      }
+      return h;
+    }
     function renderChoices() {
       chUl.innerHTML = choices.map(function (c, i) {
         return '<li class="ad-choice' + (c.out ? ' is-out' : '') + '" data-i="' + i + '">' +
@@ -1052,6 +1067,9 @@
               '<input data-cf="note_vi" maxlength="300" value="' + esc(c.note_vi || '') + '"></label>' +
             '<label class="ad-f"><span>Mô tả ngắn (EN)</span>' +
               '<input data-cf="note_en" maxlength="300" value="' + esc(c.note_en || '') + '"></label>' +
+            // difficulty, as stars on the choice (kit Kinusaiga: 1 = easiest)
+            '<label class="ad-f ad-f-level"><span>Độ khó (sao) — để trống nếu không dùng</span>' +
+              '<select data-cf="level">' + levelOptions(c.level) + '</select></label>' +
             // the mẫu's own cut-out: what the character wears at Góc thử đồ
             '<div class="ad-choice-cut"><span class="ad-cut-prev ad-cut-sm">' +
               (c.cut ? '<img src="' + esc(c.cut) + '" alt="">' : '') + '</span>' +
@@ -1407,6 +1425,9 @@
           });
           if (c.image) o.image = c.image;
           if (c.cut) o.cut = c.cut;
+          // kept here or a save would wipe the stars of every choice
+          var lv = cleanLevel(c.level);
+          if (lv) o.level = lv;
           if (c.out) o.out = true;
           return o;
         })

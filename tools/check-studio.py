@@ -1929,6 +1929,87 @@ def choice_rows():
     ]
 
 
+def kit_rows():
+    """The Kinusaiga kit as supabase/migrations/20261118_kit_kinusaiga_9_mau.sql
+    writes it (9 Mẫu with a difficulty each), and the custom kit, no price."""
+    sql = (ROOT / 'supabase/migrations/20261118_kit_kinusaiga_9_mau.sql').read_text(encoding='utf-8')
+    opts = json.loads(re.search(r"set options = '(.*?)'::jsonb", sql, re.S).group(1))
+    base = {'category': 'kit', 'price_max': None, 'in_stock': True, 'is_published': True, 'cutout': None,
+            'sprite': None, 'shelf': None, 'consignor': None}
+    return [
+        dict(base, id='kit1', sku='kit-kinusaiga', sort_order=10, name_vi='Kit DIY Kinusaiga', name_en='DIY Kinusaiga kit',
+             desc_vi='9 mẫu tranh, độ khó từ 1 đến 5 sao', desc_en='9 designs, difficulty from 1 to 5 stars', price=250000,
+             image='images/products/kit-kinusaiga-thumb.jpg', gallery=[c['image'] for c in opts['choices']], options=opts,
+             notes_vi='Bộ kit gồm…', notes_en='The kit has…'),
+        dict(base, id='kit2', sku='kit-kinusaiga-theo-yeu-cau', sort_order=20, name_vi='Kit Kinusaiga theo yêu cầu',
+             name_en='Custom Kinusaiga kit', desc_vi='Từ 300.000đ · Gem thiết kế từ ảnh hoặc ý tưởng của bạn',
+             desc_en='From 300,000₫ · Gem designs it from your photo or idea', price=None,
+             image='images/products/kit-kinusaiga-theo-yeu-cau-thumb.jpg',
+             gallery=['images/products/kit-kinusaiga-theo-yeu-cau.jpg'], options=None,
+             notes_vi='Cách đặt: …', notes_en='How to order: …'),
+    ]
+
+
+async def kit_levels(browser, db):
+    """Kit Kinusaiga (18/11/2026): each Mẫu shows its difficulty as five stars
+    (3.5 fills half of the fourth), read out as "Độ khó 3,5 trên 5"; a product
+    without levels shows none; admin keeps every level when it saves."""
+    print('kitlevel')
+    db.rows.clear(); db.info.clear(); db.patches.clear()
+    db.extra = kit_rows() + choice_rows()
+    pg = await page(browser, db, 1440, 900)
+    await pg.goto(f'{BASE}/san-pham.html')
+    await pg.wait_for_timeout(1500)
+    custom = await pg.evaluate("(() => { const c = document.querySelector('.product-card[data-sku=\"kit-kinusaiga-theo-yeu-cau\"]');"
+                               " return c ? [c.closest('.product-grid').dataset.cat, c.querySelector('.gb-price').textContent, c.hidden] : null; })()")
+    check(custom == ['kit', 'Liên hệ', False], f'the custom kit gets a card in the kit grid, "Liên hệ" ({custom})')
+    await pg.evaluate("document.querySelector('.product-card[data-sku=\"kit-kinusaiga\"]').click()")
+    await pg.wait_for_timeout(600)
+    stars = """[...document.querySelectorAll('.pg-chip')].map(b => { const s = b.querySelector('.pg-stars');
+        return s ? [b.dataset.key, s.getAttribute('aria-label'), s.querySelector('.pg-stars-on').style.width] : [b.dataset.key, null, null]; })"""
+    got = await pg.evaluate(stars)
+    check(len(got) == 9 and [g[0] for g in got][:2] == ['non-la', 'meo-beo'] and got[-1][0] == 'meo-nam-ngua',
+          f'9 Mẫu, easiest first ({[g[0] for g in got]})')
+    qt = dict((g[0], g) for g in got).get('non-quai-thao')
+    check(qt == ['non-quai-thao', 'Độ khó 3,5 trên 5', '70%'] and all(g[1] for g in got),
+          f'every Mẫu has stars; nón quai thao 3,5 = 70% filled ({qt})')
+    check(await pg.evaluate("!document.querySelector('.pg-level-hint').hidden"), 'the "start with 1 star" line shows')
+    await pg.screenshot(path=OUT / 'kitlevel-sheet.png')
+    await pg.evaluate("window.GemI18n.setLang('en')")
+    await pg.wait_for_timeout(300)
+    en = await pg.evaluate("document.querySelector('.pg-chip[data-key=\"non-quai-thao\"] .pg-stars').getAttribute('aria-label')")
+    check(en == 'Difficulty 3.5 out of 5', f'in English: "Difficulty 3.5 out of 5" ({en})')
+    await pg.evaluate("window.GemI18n.setLang('vi')")
+    await pg.keyboard.press('Escape')
+    await pg.wait_for_timeout(300)
+    await pg.evaluate("document.querySelector('.product-card[data-sku=\"nen-thom-120\"]').click()")
+    await pg.wait_for_timeout(600)
+    plain = await pg.evaluate("[document.querySelectorAll('.pg-stars').length, document.querySelector('.pg-level-hint').hidden]")
+    check(plain == [0, True], f'a product without levels: no stars, no line ({plain})')
+    check(not pg.errors, f'no script errors {pg.errors}')
+    await pg.context.close()
+
+    pg = await admin_page(browser, db, 1440, 900)
+    await js_click(pg, '[data-tab="products"]')
+    await pg.wait_for_timeout(800)
+    await pg.evaluate("(() => { const c = [...document.querySelectorAll('.ad-edit-prod')].find(b => (b.closest('li, article, .ad-prod, tr') || b.parentNode).textContent.includes('Kit DIY Kinusaiga')); c.click(); })()")
+    await pg.wait_for_timeout(400)
+    sel = await pg.evaluate("[...document.querySelectorAll('[data-cf=\"level\"]')].map(s => s.value)")
+    check(sel == ['1', '1', '2', '2', '3', '3', '3.5', '4', '5'], f'admin: each Mẫu shows its level ({sel})')
+    await pg.evaluate("""(() => { const s = [...document.querySelectorAll('[data-cf="level"]')];
+        s[1].value = '1.5'; s[1].dispatchEvent(new Event('input', {bubbles: true}));
+        s[8].value = ''; s[8].dispatchEvent(new Event('input', {bubbles: true})); })()""")
+    await pg.screenshot(path=OUT / 'kitlevel-admin.png')
+    await js_click(pg, '.ad-post-form [type="submit"]')
+    await pg.wait_for_timeout(1200)
+    body = db.patches[-1] if db.patches else {}
+    lv = [c.get('level') for c in (body.get('options') or {}).get('choices', [])]
+    check(lv == [1, 1.5, 2, 2, 3, 3, 3.5, 4, None], f'admin: saving keeps every level, a changed one, an emptied one gone ({lv})')
+    check(not pg.errors, f'admin: no script errors {pg.errors}')
+    await pg.context.close()
+    db.extra = []
+
+
 async def choices(browser, db):
     """One drawing on the shelf stands for a whole range; its sheet is where
     people pick the real thing by its photo."""
@@ -2676,8 +2757,8 @@ def policy_bits():
     pages = ['index.html', 'cau-chuyen.html', 'mo-hinh.html', 'doi-tac.html', 'san-pham.html', 'ghe-tham.html',
              'season-02.html', 'workshop.html', 'ban-tin.html', 'chinh-sach.html']
     pol = read('chinh-sach.html')
-    ids = [i for i in ('ve-gem', 'gia', 'dat-hang', 'thanh-toan', 'nhan-hang', 'gop-y', 'thong-tin-ca-nhan') if f'id="{i}"' not in pol]
-    check(not ids, f'chinh-sach.html has its seven parts ({ids})')
+    ids = [i for i in ('ve-gem', 'gia', 'dat-hang', 'thanh-toan', 'nhan-hang', 'doi-tra', 'gop-y', 'thong-tin-ca-nhan') if f'id="{i}"' not in pol]
+    check(not ids, f'chinh-sach.html has its eight parts, exchanges and cancelling included ({ids})')
     keys = set(re.findall(r'data-i18n(?:-html)?="(policy\.[a-z0-9_]+)"', pol))
     lost = sorted(k for k in keys if f"'{k}':" not in read('js/i18n.js'))
     check(len(keys) > 40 and not lost, f'every policy sentence has its text in both languages ({len(keys)} keys, missing {lost})')
@@ -5381,7 +5462,7 @@ async def main(which):
         browser = await launch(p)
         for name, fn in (('street', street), ('wear', wear), ('shop', shop), ('spots', spots), ('editor', editor),
                          ('library', library), ('product', product), ('prodlib', prodlib), ('workshop', workshop), ('design', design), ('catalog', catalog), ('kinds', kinds),
-                         ('layers', layers), ('zones', zones), ('cart', cart), ('choices', choices), ('zither', zither), ('guide', guide), ('vai', vai), ('tui', tui), ('kho', kho), ('guidance', guidance), ('onefab', onefab), ('mau', mau), ('phoi', phoi), ('thudo', thudo), ('taggroup', taggroup), ('phanloai', phanloai), ('phanloai_lv', phanloai_lv), ('racroi', racroi), ('plphone', plphone), ('order', order_form), ('slow', slow), ('launch', launch_bits), ('topbar', topbar), ('motion', motion),
+                         ('layers', layers), ('zones', zones), ('cart', cart), ('choices', choices), ('kitlevel', kit_levels), ('zither', zither), ('guide', guide), ('vai', vai), ('tui', tui), ('kho', kho), ('guidance', guidance), ('onefab', onefab), ('mau', mau), ('phoi', phoi), ('thudo', thudo), ('taggroup', taggroup), ('phanloai', phanloai), ('phanloai_lv', phanloai_lv), ('racroi', racroi), ('plphone', plphone), ('order', order_form), ('slow', slow), ('launch', launch_bits), ('topbar', topbar), ('motion', motion),
                          ('phone', phone), ('taps', taps), ('homevideo', home_video)):
             if which in (None, name):
                 await fn(browser, db)
